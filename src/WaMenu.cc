@@ -1443,7 +1443,7 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
    
     if (menu->waimea->eh->move_resize != EndMoveResizeType)
         ed->mod |= MoveResizeMask;
-    
+
     list<WaAction *>::iterator it = acts->begin();
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
