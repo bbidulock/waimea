@@ -183,7 +183,7 @@ void WaMenu::Build(WaScreen *screen) {
     XGlyphInfo extents;
     XftFont *xft_font;
     for (it = item_list.begin(); it != item_list.end(); ++it) {
-        if ((*it)->type == MenuSubType && wascreen->mstyle.wa_f_font.xft) {
+        if ((*it)->type == MenuSubType && wascreen->mstyle.wa_b_font.xft) {
             XftTextExtents8(display, wascreen->mstyle.b_xftfont,
                             (unsigned char *) wascreen->mstyle.bullet,
                             strlen(wascreen->mstyle.bullet), &extents);
@@ -215,8 +215,7 @@ void WaMenu::Build(WaScreen *screen) {
     XFontStruct *font;
     int tmp_w;
     for (it = item_list.begin(); it != item_list.end(); ++it) {    
-        if ((*it)->type == MenuSubType && !wascreen->mstyle.wa_f_font.xft)
-            
+        if ((*it)->type == MenuSubType && !wascreen->mstyle.wa_b_font.xft)
             bullet_width = XTextWidth(wascreen->mstyle.b_font,
                                       wascreen->mstyle.bullet,
                                       strlen(wascreen->mstyle.bullet));
@@ -890,8 +889,6 @@ void WaMenuItem::DrawFg(void) {
     cbox_xft_font = menu->wascreen->mstyle.cf_xftfont;
 #endif // XFT
     
-    cbox_gc = &menu->wascreen->mstyle.cf_text_gc;
-    
     cb_y = menu->wascreen->mstyle.cf_y_pos;
     cbox = menu->wascreen->mstyle.checkbox_false;
     if (cb) UpdateCBox();
@@ -995,8 +992,11 @@ void WaMenuItem::DrawFg(void) {
     }
     if (type == MenuSubType) {
         if (! draw_b) {
+            GC *bullet_gc;
+            if (hilited) bullet_gc = &menu->wascreen->mstyle.bh_text_gc;
+            else bullet_gc = &menu->wascreen->mstyle.b_text_gc;
             y = menu->wascreen->mstyle.b_y_pos;
-            XDrawString(menu->display, (Drawable) id, *bgc,
+            XDrawString(menu->display, (Drawable) id, *bullet_gc,
                         menu->width - (menu->bullet_width + 5), y,
                         menu->wascreen->mstyle.bullet,
                         strlen(menu->wascreen->mstyle.bullet));
