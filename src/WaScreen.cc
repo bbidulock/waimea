@@ -104,7 +104,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
 #endif // SHAPE
 
     strut_list = new list<WMstrut *>;
-    workarea = (Workarea *) malloc(sizeof(Workarea));
+    workarea = new Workarea;
     workarea->x = workarea->y = 0;
     workarea->width = width;
     workarea->height = height;
@@ -168,21 +168,37 @@ WaScreen::~WaScreen(void) {
     delete north;
     delete south;
     delete ic;
+    delete workarea;
 
+    delete [] wstyle.fontname;
+    delete [] mstyle.f_fontname;
+    delete [] mstyle.t_fontname;
+    delete [] mstyle.b_fontname;
+    delete [] mstyle.ct_fontname;
+    delete [] mstyle.cf_fontname;
     delete [] mstyle.bullet;
-    delete [] mstyle.checkbox_false;
     delete [] mstyle.checkbox_true;
-    
+    delete [] mstyle.checkbox_false;
+
     XFreeGC(display, wstyle.b_pic_focus_gc);
     XFreeGC(display, wstyle.b_pic_unfocus_gc);
     XFreeGC(display, wstyle.b_pic_hilite_gc);
+    
 #ifdef XFT
-    XFree(wstyle.xftfont);
-    XFree(mstyle.f_xftfont);
-    XFree(mstyle.t_xftfont);
-    XFree(mstyle.ct_xftfont);
-    XFree(mstyle.cf_xftfont);
-#else // ! XFT    
+    delete [] wstyle.xftfontname;
+    delete [] mstyle.f_xftfontname;
+    delete [] mstyle.t_xftfontname;
+    delete [] mstyle.b_xftfontname;
+    delete [] mstyle.ct_xftfontname;
+    delete [] mstyle.cf_xftfontname;
+
+    XftFontClose(display, wstyle.xftfont);
+    XftFontClose(display, mstyle.f_xftfont);
+    XftFontClose(display, mstyle.t_xftfont);
+    XftFontClose(display, mstyle.b_xftfont);
+    XftFontClose(display, mstyle.ct_xftfont);
+    XftFontClose(display, mstyle.cf_xftfont);
+#else // ! XFT
     XFreeFont(display, wstyle.font);
     XFreeFont(display, mstyle.f_font);
     XFreeFont(display, mstyle.t_font);
@@ -198,6 +214,7 @@ WaScreen::~WaScreen(void) {
     XFreeGC(display, mstyle.cfh_text_gc);
     XFreeGC(display, mstyle.cf_text_gc);
 #endif // XFT
+    
     XDestroyWindow(display, wm_check);
     waimea->window_table->erase(id);
 }

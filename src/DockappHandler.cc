@@ -66,7 +66,7 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) {
     else
         waimea->always_at_bottom_list->push_back(id);
 
-    wm_strut = (WMstrut *) malloc(sizeof(WMstrut));
+    wm_strut = new WMstrut;
     wm_strut->window = id;
     wm_strut->left = 0;
     wm_strut->right = 0;
@@ -89,7 +89,7 @@ DockappHandler::~DockappHandler(void) {
     LISTCLEAR2(dockapp_list);
     XDestroyWindow(display, id);
     wascreen->strut_list->remove(wm_strut);
-    free(wm_strut);
+    delete wm_strut;
 }
 
 

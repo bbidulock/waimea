@@ -33,6 +33,7 @@
 WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     WindowObject(win_id, WindowType) {
     XWindowAttributes init_attrib;
+    char *tmp_name;
     
     id = win_id;
     wascreen = scrn;
@@ -43,8 +44,12 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     net = waimea->net;
     wm_strut = NULL;
 
-    if (! XFetchName(display, id, &name)) {
-        name = strdup("");
+    if (! XFetchName(display, id, &tmp_name)) {
+        name = wastrdup("");
+    }
+    else {
+        name = wastrdup(tmp_name);
+        XFree(tmp_name);
     }
     XGetWindowAttributes(display, id, &init_attrib);
     attrib.colormap = init_attrib.colormap;
@@ -154,7 +159,7 @@ WaWindow::~WaWindow(void) {
     XDestroyWindow(display, o_east);
     XDestroyWindow(display, o_north);
     XDestroyWindow(display, o_south);
-    XFree(name);
+    delete [] name;
 
     waimea->wawindow_list->remove(this);
     waimea->wawindow_list_map_order->remove(this);

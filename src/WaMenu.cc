@@ -1354,16 +1354,14 @@ void WaMenuItem::UpdateCBox(void) {
 
 
 /** 
- * @fn    TaskSwitcher(void) : WaMenu(new char[strlen("__taskswitcher__")])
+ * @fn    TaskSwitcher(void) : WaMenu(wastrdup("__taskswitcher__"))
  * @brief Constructor for TaskSwitcher class
  *
  * Creates a TaskSwitcher object, used for fast switching between windows.
  * This is a WaMenu with some extra functionality.
  * 
  */
-TaskSwitcher::TaskSwitcher(void) :
-    WaMenu(new char[strlen("__taskswitcher__") + 1]) {
-    sprintf(name, "__taskswitcher__");
+TaskSwitcher::TaskSwitcher(void) : WaMenu(wastrdup("__taskswitcher__")) {
     tasksw = True;
 }
 
@@ -1387,16 +1385,14 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
     }
     built = False;
    
-    m = new WaMenuItem(new char[strlen("Window List") + 1]);
-    sprintf(m->label1, "Window List");
+    m = new WaMenuItem(wastrdup("Window List"));
     m->type = MenuTitleType;
     AddItem(m);
 
     list<WaWindow *>::iterator it = wawindow_list->begin();
     for (++it; it != wawindow_list->end(); ++it) {
         ww = (WaWindow *) *it;
-        m = new WaMenuItem(new char[strlen(ww->name) + 1]);
-        sprintf(m->label1, ww->name);
+        m = new WaMenuItem(wastrdup(ww->name));
         m->type = MenuItemType;
         m->wfunc = &WaWindow::RaiseFocus;
         m->func_mask |= MenuWFuncMask;
@@ -1405,8 +1401,7 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
     }
     if (! wawindow_list->empty()) {
         ww = (WaWindow *) wawindow_list->front();
-        m = new WaMenuItem(new char[strlen(ww->name) + 1]);
-        sprintf(m->label1, ww->name);
+        m = new WaMenuItem(wastrdup(ww->name));
         m->type = MenuItemType;
         m->wfunc = &WaWindow::RaiseFocus;
         m->func_mask |= MenuWFuncMask;

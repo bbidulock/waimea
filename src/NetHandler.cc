@@ -623,7 +623,7 @@ void NetHandler::GetWmStrut(WaWindow *ww) {
             }
         }
         if (! found) {
-            wm_strut = (WMstrut *) malloc(sizeof(WMstrut));
+            wm_strut = new WMstrut;
             wm_strut->window = ww->id;
             wm_strut->left = data[0];
             wm_strut->right = data[1];

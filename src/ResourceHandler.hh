@@ -35,7 +35,7 @@ typedef struct _DockStyle DockStyle;
     while (! list->empty()) { \
         if (list->back()->exec) \
             delete [] list->back()->exec; \
-        free(list->back()); \
+        delete list->back(); \
         list->pop_back(); \
     } \
     delete list;

@@ -119,6 +119,7 @@ void waexec(const char *, char *);
 int xerrorhandler(Display *, XErrorEvent *);
 int wmrunningerror(Display *, XErrorEvent *);
 void signalhandler(int);
+char *wastrdup(char *);
 void restart(void);
 void quit(int);
 

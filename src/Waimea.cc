@@ -358,6 +358,25 @@ void signalhandler(int sig) {
 }
 
 /**
+ * @fn    wastrdup(char *s)
+ * @brief Waimea version of strdup
+ *
+ * Duplicates a string. Uses new operator to allocate memory and must be
+ * freed with delete operator.
+ *
+ * @param s String to duplicate
+ *
+ * @return Duplicated string
+ */
+char *wastrdup(char *s) {
+    char *tmp;
+    tmp = new char[strlen(s) + 1];
+    sprintf(tmp, s);
+    return tmp;
+}
+
+
+/**
  * @fn    restart(void)   
  * @brief Restarts program
  *
