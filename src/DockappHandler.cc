@@ -53,7 +53,7 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
     attrib_set.colormap = wascreen->colormap;
     attrib_set.override_redirect = true;
     attrib_set.event_mask = SubstructureRedirectMask | ButtonPressMask |
-        EnterWindowMask | LeaveWindowMask;
+        EnterWindowMask | LeaveWindowMask | ExposureMask;
     
     id = XCreateWindow(display, wascreen->id, 0, 0,
                        1, 1, style->style.border_width,
