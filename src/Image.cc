@@ -1,6 +1,6 @@
 /**
  * @file   Image.cc
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   18-Jul-2001 01:45:32
  *
  * @brief Implementation of WaImage and WaImageControl classes

@@ -1,6 +1,6 @@
 /**
  * @file   Window.cc
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   02-May-2001 21:43:03
  *
  * @brief Implementation of WaWindow and WaChildWindow classes

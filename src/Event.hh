@@ -1,6 +1,6 @@
 /**
  * @file   Event.hh
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   11-May-2001 11:48:03
  *
  * @brief Definition of EventHandler class  

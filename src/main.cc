@@ -1,6 +1,6 @@
 /**
  * @file   main.cc
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   01-May-2001 17:58:24
  *
  * @brief Main body implementation
@@ -140,5 +140,5 @@ void help(void) {
     cout << "   --help                   Show this help message" << endl;
     cout << "   --version                Output version information and exit"
          << endl << endl;
-    cout << "Report bugs to <c99drn@cs.umu.se>." << endl;
+    cout << "Report bugs to <david@waimea.org>." << endl;
 }

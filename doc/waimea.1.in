@@ -2,9 +2,9 @@
 .\" Man page for Waimea
 .\" 
 .\" This manual page may be freely distributed and modified.
-.\" Author: David Reveman <c99drn@cs.umu.se>
+.\" Author: David Reveman <david@waimea.org>
 .\" 
-.TH WAIMEA 1 "Oct 14 2002" "0.3.5" "User Manual"
+.TH WAIMEA 1 "Oct 31 2002" "0.4.0" "User Manual"
 
 
 .SH NAME
@@ -2044,11 +2044,11 @@ section for further details.
 Bug reports, patches and suggestions are much appreciated,
 send them to the author.
 .SH AUTHOR
-David Reveman <c99drn@cs.umu.se>
+David Reveman <david@waimea.org>
 
 The Waimea website:
 .nh
-.B http://waimea.sourceforge.net
+.B http://www.waimea.org
 .ny
 .SH "SEE ALSO"
 .BR blackbox (1), 

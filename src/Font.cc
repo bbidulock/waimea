@@ -1,6 +1,6 @@
 /**
  * @file   Font.cc
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   08-Oct-2002 11:05:01
  *
  * @brief Implementation of WaFont class  

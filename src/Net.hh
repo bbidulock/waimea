@@ -1,6 +1,6 @@
 /**
  * @file   NetHandler.hh
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   11-Oct-2001 22:36:12
  *
  * @brief Definition of NetHandler class  

@@ -1,6 +1,6 @@
 /**
  * @file   Waimea.hh
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   02-May-2001 00:49:45
  *
  * @brief Definition of Waimea and WindowObject classes

@@ -1,6 +1,6 @@
 /**
  * @file   Event.cc
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   11-May-2001 11:48:03
  *
  * @brief Implementation of EventHandler class  
@@ -16,7 +16,17 @@
 #endif // HAVE_CONFIG_H
 
 extern "C" {
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <X11/Xatom.h>
+
+#ifdef    SHAPE
+#  include <X11/extensions/shape.h>
+#endif // SHAPE
+    
+#ifdef    RANDR
+#  include <X11/extensions/Xrandr.h>
+#endif // RANDR
 
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
@@ -211,16 +221,31 @@ void EventHandler::HandleEvent(XEvent *event) {
         case ClientMessage:
             EvClientMessage(event, ed);
             break;
-            
+
+        default:
 #ifdef SHAPE
-        default:                
             if (event->type == waimea->shape_event) {
+                XShapeEvent *e = (XShapeEvent *) event;
                 WaWindow *ww = (WaWindow *)
-                    waimea->FindWin(event->xany.window, WindowType);
+                    waimea->FindWin(e->window, WindowType);
                 if (ww && waimea->shape)
                     ww->Shape();
-            }
+            }            
 #endif // SHAPE
+
+#ifdef RANDR
+            if (event->type == waimea->randr_event) {
+                XRRScreenChangeNotifyEvent *e =
+                    (XRRScreenChangeNotifyEvent *) event;
+                WaScreen *ws = (WaScreen *)
+                    waimea->FindWin(e->window, RootType);
+                if (ws) {
+                    ws->width = e->width;
+                    ws->height = e->height;
+                    ws->RRUpdate();
+                }
+            }
+#endif // RANDR
             
     }
     delete ed;

@@ -1,6 +1,6 @@
 /**
  * @file   Menu.hh
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   02-Aug-2001 22:40:01
  *
  * @brief Definition of WaMenu, WaMenuItem and TaskSwitcher classes

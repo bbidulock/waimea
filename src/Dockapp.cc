@@ -1,6 +1,6 @@
 /**
  * @file   Dockapp.cc
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   29-Nov-2001 22:13:22
  *
  * @brief Implementation of DockappHandler class  

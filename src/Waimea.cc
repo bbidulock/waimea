@@ -1,6 +1,6 @@
 /**
  * @file   Waimea.cc
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   02-May-2001 00:48:03
  *
  * @brief Implementation of Waimea and WindowObject classes

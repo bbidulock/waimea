@@ -1,6 +1,6 @@
 /**
  * @file   Screen.cc
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   25-Jul-2001 23:26:22
  *
  * @brief Implementation of WaScreen and ScreenEdge classes
@@ -18,7 +18,13 @@
 #endif // HAVE_CONFIG_H
 
 extern "C" {
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <X11/cursorfont.h>
+
+#ifdef    RANDR
+#  include <X11/extensions/Xrandr.h>
+#endif // RANDR
 
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
@@ -128,6 +134,10 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     render_extension =
       XRenderQueryExtension(pdisplay, &event_basep, &error_basep);
 #endif // RENDER
+
+#ifdef RANDR
+    XRRSelectInput(display, id, RRScreenChangeNotifyMask);
+#endif // RANDR
 
     rh->LoadConfig(this);
     
@@ -1725,6 +1735,32 @@ void WaScreen::AddDockapp(Window window) {
     XFree(c_hint);
 }
 
+#ifdef RANDR
+/**
+ * @fn    RRUpdate(void)
+ * @brief Update screen size
+ *
+ * Updates screen edge positions/sizes, dockappholder positions and
+ * workarea size.
+ */
+void WaScreen::RRUpdate(void) {
+    v_xmax = (config.virtual_x - 1) * width;
+    v_ymax = (config.virtual_y - 1) * height;
+
+    XMoveResizeWindow(display, west->id, 0, 0, 2, height);
+    XMoveResizeWindow(display, east->id, width - 2, 0, 2, height);
+    XMoveResizeWindow(display, north->id, 0, 0, width, 2);
+    XMoveResizeWindow(display, south->id, 0, height - 2, width, 2);
+
+    list<DockappHandler *>::iterator dit = docks.begin();
+    for (; dit != docks.end(); ++dit)
+        (*dit)->Update();
+
+    UpdateWorkarea();
+
+    net->SetDesktopGeometry(this);
+}
+#endif // RANDR
 
 /**
  * @fn    ScreenEdge(WaScreen *wascrn, int x, int y, int width, int height,

@@ -1,6 +1,6 @@
 /**
  * @file   Timer.hh
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   05-Aug-2002 09:05:11
  *
  * @brief Definition of Timer and Interrupt classes

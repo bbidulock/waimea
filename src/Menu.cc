@@ -1,6 +1,6 @@
 /**
  * @file   Menu.cc
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   02-Aug-2001 22:40:20
  *
  * @brief Implementation of WaMenu, WaMenuItem and TaskSwitcher classes  

@@ -1,6 +1,6 @@
 /**
  * @file   Resources.hh
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   18-Jul-2001 00:31:06
  *
  * @brief Definition of ResourceHandler and StrComp classes

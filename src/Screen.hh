@@ -1,6 +1,6 @@
 /**
  * @file   Screen.hh
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   25-Jul-2001 23:25:51
  *
  * @brief Definition of WaScreen and ScreenEdge classes
@@ -147,6 +147,10 @@ public:
     void GetWorkareaSize(int *, int *, int *, int *);
     void AddDockapp(Window window);
     void GoToDesktop(unsigned int);
+
+#ifdef RANDR
+    void RRUpdate(void);
+#endif // RANDR
     
     inline void MenuMap(XEvent *e, WaAction *ac) {
         MenuMap(e, ac, false);

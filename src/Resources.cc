@@ -1,6 +1,6 @@
 /**
  * @file   Resources.cc
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   18-Jul-2001 00:31:22
  *
  * @brief Implementation of ResourceHandler and StrComp classes

@@ -1,6 +1,6 @@
 /**
  * @file   Regex.cc
- * @author David Reveman <c99drn@cs.umu.se>
+ * @author David Reveman <david@waimea.org>
  * @date   4-Oct-2001 22:24:11
  *
  * @brief Implementation of Regex class  
