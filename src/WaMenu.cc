@@ -412,12 +412,15 @@ void WaMenu::Unmap(bool focus) {
 
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {        
-        if ((*it)->hilited && ((*it)->type == MenuItemType ||
-                               (*it)->type == MenuCBItemType ||
-                               ((*it)->type == MenuSubType && focus)))
-            (*it)->DeHilite();
+        if ((*it)->hilited) {
+            if ((*it)->func_mask & MenuSubMask) {
+                if (! (*it)->submenu->mapped)
+                    (*it)->DeHilite();
+            }
+            else
+                (*it)->DeHilite();
+        }
     }
-
     if (focus) {
         XSync(display, False);
         while (XCheckTypedEvent(display, EnterNotify, &e));
@@ -429,10 +432,9 @@ void WaMenu::Unmap(bool focus) {
             root_item->DeHilite();
     }
     else {
-        if (wascreen->focus) wascreen->Focus(&e, ac);
-        else waimea->wawindow_list->front()->Focus(False);
+        if (! waimea->wawindow_list->empty())
+            waimea->wawindow_list->front()->Focus(False);
     }
-    
     root_item = NULL;
     mapped = False;
 }
@@ -617,8 +619,8 @@ WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     wfunc = wfunc2 = NULL;
     rfunc = rfunc2 = NULL;
     mfunc = mfunc2 = NULL;
-    sub = NULL;
     wf = (Window) 0;
+    submenu = submenu1 = submenu2 = NULL;
     exec = sub = exec1 = param1 = sub1 = label2 = exec2 = param2 =
         sub2 = cbox = NULL;
     
@@ -1266,8 +1268,8 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
         if (menu->has_focus && type != MenuTitleType) Focus();
     }
     else if (ed->type == LeaveNotify) {
-        if (type == MenuSubType) {
-            if (! sub1) 
+        if (func_mask & MenuSubMask) {
+            if (! submenu->mapped) 
                 DeHilite();
         } else DeHilite();
     }
