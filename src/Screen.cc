@@ -1459,6 +1459,8 @@ void WaScreen::GoToDesktop(unsigned int number) {
         if ((unsigned int) (*dit)->number == number) break;
     
     if (dit != desktop_list.end() && *dit != current_desktop) {
+        Window oldf = waimea->eh->focused;
+        XSetInputFocus(display, id, RevertToPointerRoot, CurrentTime);
         (*dit)->workarea.x = current_desktop->workarea.x;
         (*dit)->workarea.y = current_desktop->workarea.y;
         (*dit)->workarea.width = current_desktop->workarea.width;
@@ -1474,6 +1476,14 @@ void WaScreen::GoToDesktop(unsigned int number) {
             else
                 (*it)->Hide();
         }
+
+        WaWindow *ww = (WaWindow *) waimea->FindWin(oldf, WindowType);
+        if (ww) {
+            if (ww->desktop_mask & (1L << current_desktop->number)) {
+                ww->Focus(false);
+            }
+        }
+        
         list<DockappHandler *>::iterator dock_it = docks.begin();
         for (; dock_it != docks.end(); ++dock_it) {
             if ((*dock_it)->style->desktop_mask &
