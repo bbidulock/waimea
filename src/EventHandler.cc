@@ -1,4 +1,4 @@
-/** -*- Mode: C++ -*-
+/**
  *
  * @file   EventHandler.cc
  * @author David Reveman <c99drn@cs.umu.se>
@@ -253,7 +253,7 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
                 if (validateclient(ww->id)) {
                     if (XFetchName(ww->display, ww->id, &tmp_name)) {
                         delete [] ww->name;
-                        ww->name = wastrdup(tmp_name);
+                        ww->name = wastrdup(tmp_name);                        
                         if (ww->title_w) ww->DrawLabelFg();
                         XFree(tmp_name);
                     }
@@ -370,6 +370,7 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
         if (((*it).second)->type == WindowType) {
             ww = (WaWindow *) (*it).second;
             waimea->net->GetWMNormalHints(ww);
+            if (ww->ign_config_req) return;
             ww->Gravitate(RemoveGravity);
             if (e->value_mask & CWX) ww->attrib.x = e->x;
             if (e->value_mask & CWY) ww->attrib.y = e->y;

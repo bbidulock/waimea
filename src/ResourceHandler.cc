@@ -1,4 +1,4 @@
-/** -*- Mode: C++ -*-
+/**
  *
  * @file   ResourceHandler.cc
  * @author David Reveman <c99drn@cs.umu.se>
@@ -152,7 +152,16 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaWindow::AlwaysontopToggle));
     wacts->push_back(new StrComp("alwaysatbottomtoggle",
                                  &WaWindow::AlwaysatbottomToggle));
+    wacts->push_back(new StrComp("acceptconfigrequeston",
+                                 &WaWindow::AcceptConfigRequestOn));
+    wacts->push_back(new StrComp("acceptconfigrequestoff",
+                                 &WaWindow::AcceptConfigRequestOff));
+    wacts->push_back(new StrComp("acceptconfigrequesttoggle",
+                                 &WaWindow::AcceptConfigRequestToggle));
     wacts->push_back(new StrComp("pointerwarp", &WaWindow::PointerWarp));
+    wacts->push_back(new StrComp("MoveResize", &WaWindow::MoveResize));
+    wacts->push_back(new StrComp("MoveResizeVirtual",
+                                 &WaWindow::MoveResizeVirtual));
     wacts->push_back(new StrComp("nop", &WaWindow::Nop));
     
     racts = new list<StrComp *>;
@@ -1107,7 +1116,8 @@ void ResourceHandler::LoadActions(void) {
                             }
                             str[i3] = '\0';
                             ext_list = new WaActionExtList(NULL,
-                                                           wastrdup(str + 6));
+                                                           wastrdup(str + 6),
+                                                           NULL);
                             str = str + i3 + 1;
                             ReadActions(buffer2, defs, wacts, &ext_list->list);
                         }
@@ -1120,7 +1130,22 @@ void ResourceHandler::LoadActions(void) {
                             }
                             str[i3] = '\0';
                             ext_list = new WaActionExtList(wastrdup(str + 5),
+                                                           NULL,
                                                            NULL);
+                            str = str + i3 + 1;
+                            ReadActions(buffer2, defs, wacts, &ext_list->list);
+                        }
+                        else if (! strncasecmp(str, "title", 5)) {
+                            for (i3 = 5; str[i3] != ']' && str[i3] != '\0';
+                                 i3++);
+                            if (str[i3] == '\0') {
+                                WARNING << "missing ']'" << endl;
+                                break;
+                            }
+                            str[i3] = '\0';
+                            ext_list = new WaActionExtList(NULL,
+                                                           NULL,
+                                                           wastrdup(str + 6));
                             str = str + i3 + 1;
                             ReadActions(buffer2, defs, wacts, &ext_list->list);
                         }

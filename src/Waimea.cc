@@ -1,4 +1,4 @@
-/** -*- Mode: C++ -*-
+/**
  *
  * @file   Waimea.cc
  * @author David Reveman <c99drn@cs.umu.se>

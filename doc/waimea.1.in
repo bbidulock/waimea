@@ -196,21 +196,21 @@ Define dockapp holder position, X11 offset string of form:
 A whitespace separated list describing how to order the
 dockapps in the dockapp holder. Dockapps can be ordered
 by window name and class. For window name use 
-.I "N_" 
-prefix followed by window name and for window class use 
-.I "C_" 
-prefix followed by window class.
+.I "name[NAME]" 
+, NAME is the window name. For window class use 
+.I "class[CLASS]" 
+, CLASS is the window class.
 
 Example:
 
-dock0.order:    N_cpumeter C_pager UNKNOWN
+dock0.order:    name[cpumeter] class[pager] UNKNOWN
 
 This will put dockapp window named cpumeter at the first
 position in dockapp holder and pager dockapp at second
 position. All dockapp windows that doesn't match any 
-.I "N_*"
+.I "name[NAME]"
 or
-.I "C_*" 
+.I "class[CLASS]" 
 will be but at the position of the 
 .I UNKNOWN 
 string.
@@ -537,29 +537,38 @@ The idea is that you could specify an
 .I action 
 for every useful X event received.
 .PP
-To understand how the action file mechanism works, you should have a little 
-knowledge of how X resources work. See 
-.BR X(1) 
-for this.
+An action file should contain action lists for different types of windows.
+An action list looks like this:
+.nf
+
+WINDOW {
+   ACTIONLINE,
+   ACTIONLINE
+}
+.fi
 .PP
-When 
-.I waimea 
-parses the action file it creates lists with actions for the
-different type if windows. A line in the action file should begin with a key
-defining the window that the action should apply to and the position of the
-.I action
-in the windows action list. 
+WINDOW is a window that you can create actions for, a list of windows that you
+can assign actions for follows below. ACTIONLINE is a string describing the
+action to be performed and when. Actions are matched in the same order as
+the order of the action lines.
 .PP
-Remember that when waimea creates an action list
-for a window it first tries to find a key with position number 1 then if
-number 1 was find it continues with number 2 and so on 
-until a position number isn't found. This means that you can't have 
-a key with number 3 if you don't have a key with number 2.
-Keys can't have the same position numbers.
-.PP
-The key should be followed by a value string,
-containing an action and an event type.
-The value string should start with an action and then a ':' character
+For convenience it's also possible to define lists of action lines. e.g.:
+.nf
+
+DEF definedTitleActions {
+    StartMove     : ButtonPress = Button1,
+    EndMoveResize : ButtonRelease = Button1
+}
+window.title {
+   definedTitleActions,
+   ToggleShade : DoubleClick = Button1
+}
+
+.fi
+In window.title action list 'definedTitleActions' will be replaced by
+the action lines defined above.
+.PP 
+An action line should start with an action and then a ':' character
 followed by an event description.
 .PP
 The event description contains an event type, an optional event detail and 
@@ -568,8 +577,8 @@ a modifier mask.
 Here are two good examples:
 .nf
 
-window.label.1: StartMove   : ButtonPress = Button1 & Mod1Mask & ControlMask
-window.label.2: StartResize : ButtonPress = Button1 & Mod1Mask & !ControlMask
+StartMove   : ButtonPress = Button1 & Mod1Mask & ControlMask
+StartResize : ButtonPress = Button1 & Mod1Mask & !ControlMask
 
 .fi
 The first line will create a startmove 
@@ -583,7 +592,9 @@ that will be performed when a ButtonPress
 event is received from Button1 and at least mod1 modifier is active
 and the control modifier is not active.
 .PP
-Here is the key list for all windows that you can create actions for:
+Here is the list of all windows that you can create actions for
+(to define individual actions for a specific window just replace 'window.*'
+with name[NAME].*, class[CLASS].* or title[TITLE].*):
 .TP
 .B window.frame
 This is the parent window for the client window and all decoration
@@ -601,14 +612,14 @@ want this window to have the same action list as the label window.
 This is the window that holds the titlebar text.
 
 .PP
-.B window.client.active
+.B window.clientactive
 .br
-.B window.client.passive
+.B window.clientpassive
 .RS
 This is the actual window created by the client.
-.I window.client.active
+.I window.clientactive
 is the action list for active (focused) windows and
-.I window.client.passive
+.I window.clientpassive
 is the action list for passive (unfocused) windows.
 All actions for window.client.* can be prefixed with a '*' character
 to make them pass-through actions (Events matching pass-through actions
@@ -616,11 +627,11 @@ will also be sent to the client window).
 .RE
 
 .PP
-.B window.closeButton
+.B window.closebutton
 .br
-.B window.iconifyButton
+.B window.iconifybutton
 .br
-.B window.maximizeButton
+.B window.maximizebutton
 .RS
         Titlebar button windows.
 .RE
@@ -828,6 +839,11 @@ action.
 
 .PP
 .TP
+.B endmoveresize
+Ends a move or resize process.
+
+.PP
+.TP
 .B close
 Sends a delete message to the client window. A normal running X window
 should accept this event and destroy itself.
@@ -982,9 +998,27 @@ bottom windows are always at the bottom of the display stack.
 .RE
 
 .PP
-.TP
-.B endmoveresize
-Ends a move or resize process.
+.B acceptconfigrequeston
+.br
+.B acceptconfigrequestoff
+.br
+.B acceptconfigrequesttoggle
+.RS
+Turn on, off or toggle if window should handle received configure request 
+events.
+.RE
+
+.PP
+.B moveresize(X11 geometry string)
+.br
+.B moveresizevirtual(X11 geometry string)
+.RS
+MUST have an X11 geometry string as parameter:
+[<width>{xX}<height>][{+-}<xoffset>{+-}<yoffset>] See
+.BR X(1).
+Sets window geometry. moveresize action moves window to a actual screen 
+position. moveresizevirtual action moves window to a virtual screen position.
+.RE
 
 .PP
 Here is the list of additional actions for menu.* windows:
@@ -1014,6 +1048,11 @@ ended with
 .B endmoveresize 
 action.
 .RE
+
+.PP
+.TP
+.B endmoveresize
+Ends a move or resize process.
 
 .PP
 .B mapsub
@@ -1069,11 +1108,6 @@ have a linked command line, nothing is done.
 .B unlink
 unlinks menu containing the menu item from its menu tree.
 
-.PP
-.TP
-.B endmoveresize
-Ends a move or resize process.
-
 
 .PP
 Here is the list of additional actions for root, *edge windows:
@@ -1113,12 +1147,6 @@ Shutdowns waimea and executes command line parameter. If no command line
 parameter was given this 
 .I action
 executes the same command line as waimea was started with.
-
-.PP
-.TP
-.B endmoveresize
-Ends a move or resize process.
-
 
 .PP
 Here is the list of event types that can be linked to an 

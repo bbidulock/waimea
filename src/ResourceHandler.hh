@@ -1,4 +1,4 @@
-/** -*- Mode: C++ -*-
+/**
  *
  * @file   ResourceHandler.hh
  * @author David Reveman <c99drn@cs.umu.se>
@@ -161,7 +161,11 @@ public:
 
 class WaActionExtList {
 public:
-    inline WaActionExtList(char *n, char *c) { name = n; cl = c; }
+    inline WaActionExtList(char *n, char *c, char *t) {
+        name = n;
+        cl = c;
+        title = t;
+    }
     inline ~WaActionExtList(void) {
         if (name) delete name;
         if (cl) delete cl;
@@ -170,6 +174,7 @@ public:
     
     char *name;
     char *cl;
+    char *title;
     list<WaAction *> list;
 };
 

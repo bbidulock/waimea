@@ -1,4 +1,4 @@
-/** -*- Mode: C++ -*-
+/**
  *
  * @file   WaMenu.cc
  * @author David Reveman <c99drn@cs.umu.se>

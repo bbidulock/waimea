@@ -1,4 +1,4 @@
-/** -*- Mode: C++ -*-
+/**
  *
  * @file   EventHandler.hh
  * @author David Reveman <c99drn@cs.umu.se>

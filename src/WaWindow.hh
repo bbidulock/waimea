@@ -1,4 +1,4 @@
-/** -*- Mode: C++ -*-
+/**
  *
  * @file   WaWindow.cc
  * @author David Reveman <c99drn@cs.umu.se>
@@ -198,17 +198,22 @@ public:
     void AlwaysatbottomOff(XEvent *, WaAction *);
     void AlwaysontopToggle(XEvent *, WaAction *);
     void AlwaysatbottomToggle(XEvent *, WaAction *);
+    void AcceptConfigRequestOn(XEvent *, WaAction *);
+    void AcceptConfigRequestOff(XEvent *, WaAction *);
+    void AcceptConfigRequestToggle(XEvent *, WaAction *);
     void PointerWarp(XEvent *, WaAction *);
     inline void RaiseFocus(XEvent *e, WaAction *ac) {
         Raise(e, ac);
         Focus(true);
     }
+    void MoveResize(XEvent *, WaAction *);
+    void MoveResizeVirtual(XEvent *, WaAction *);
     inline void Nop(XEvent *, WaAction *) {}
 
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
     
     char *name;
-    bool has_focus, want_focus, mapped, dontsend, deleted;
+    bool has_focus, want_focus, mapped, dontsend, deleted, ign_config_req;
     Display *display;
     Waimea *waimea;
     WaScreen *wascreen;

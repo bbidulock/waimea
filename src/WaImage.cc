@@ -1,4 +1,4 @@
-/** -*- Mode: C++ -*-
+/**
  *
  * @file   WaImage.cc
  * @author David Reveman <c99drn@cs.umu.se>

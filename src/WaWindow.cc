@@ -1,4 +1,4 @@
-/** -*- Mode: C++ -*-
+/**
  *
  * @file   WaWindow.cc
  * @author David Reveman <c99drn@cs.umu.se>
@@ -58,7 +58,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     attrib.width  = init_attrib.width;
     attrib.height = init_attrib.height;
     
-    want_focus = mapped = dontsend = deleted = false;
+    want_focus = mapped = dontsend = deleted = ign_config_req = false;
     
 #ifdef SHAPE
     shaped = false;
@@ -195,6 +195,16 @@ WaWindow::~WaWindow(void) {
     }
 }
 
+/**
+ * @fn    GetActionList(list<WaActionExtList *> *e)
+ * @brief Finds individual action list
+ *
+ * Matches windows class name, class and title with WaActionExtLists. Returns
+ * WaActionExtLists action list if a match is found. If no match is found,
+ * NULL is returned.
+ *
+ * @param e List with WaActionExtLists to try to match with
+ */
 list <WaAction *> *WaWindow::GetActionList(list<WaActionExtList *> *e) {
     XClassHint *c_hint;
     
@@ -205,6 +215,8 @@ list <WaAction *> *WaWindow::GetActionList(list<WaActionExtList *> *e) {
             if ((*it)->name && ! strcmp(c_hint->res_name, (*it)->name))
                 return &((*it)->list);
             else if ((*it)->cl && ! strcmp(c_hint->res_class, (*it)->cl))
+                return &((*it)->list);
+            else if ((*it)->title && ! strcmp(name, (*it)->title))
                 return &((*it)->list);
         }
     }
@@ -2653,6 +2665,113 @@ void WaWindow::AlwaysatbottomToggle(XEvent *e, WaAction *ac) {
     if (flags.alwaysatbottom) AlwaysatbottomOff(e, ac);
     else AlwaysatbottomOn(e, ac);
 }
+
+
+/**
+ * @fn    AcceptConfigRequestOn(XEvent *, WaAction *)
+ * @brief Accept ConfigureRequests from this window
+ *
+ * Sets flag so the configure request events from this window are handled as
+ * usual.
+ */
+void WaWindow::AcceptConfigRequestOn(XEvent *, WaAction *) {
+    ign_config_req = false;
+}
+
+/**
+ * @fn    AcceptConfigRequestOff(XEvent *, WaAction *)
+ * @brief Don't accept ConfigureRequests from this window
+ *
+ * Sets flag so the configure request events from this window are ignored.
+ */
+void WaWindow::AcceptConfigRequestOff(XEvent *, WaAction *) {
+    ign_config_req = true;
+}
+
+/**
+ * @fn    AcceptConfigRequestToggle(XEvent *, WaAction *)
+ * @brief Toggle ign_config_req flag
+ *
+ * Toggles configure request ignore flag.
+ */
+void WaWindow::AcceptConfigRequestToggle(XEvent *, WaAction *) {
+    ign_config_req = !ign_config_req;
+}
+
+/**
+ * @fn    MoveResize(XEvent *e, WaAction *ac)
+ * @brief Moves and resizes window
+ *
+ * X geomtry string as WaAction parameter. Moves and resizes window to
+ * the size and position in the actual screen area specified by X geometry
+ * string.
+ *
+ * @param e XEvent causing function call
+ * @param ac WaAction object
+ */
+void WaWindow::MoveResize(XEvent *e, WaAction *ac) {
+    int x, y, geometry;
+    unsigned int width, height;
+    
+    if (waimea->eh->move_resize != EndMoveResizeType || ! ac->param) return;
+    width = attrib.width;
+    height = attrib.height;
+
+    geometry = XParseGeometry(ac->param, &x, &y, &width, &height);
+    IncSizeCheck(width, height, &attrib.width, &attrib.height);
+    
+    if (geometry & XValue) {
+        if (geometry & XNegative)
+            attrib.x = wascreen->width + x - attrib.width;
+        else attrib.x = x;
+    }
+    if (geometry & YValue) {
+        if (geometry & YNegative)
+            attrib.y = wascreen->height + y - attrib.height;
+        else attrib.y = y;
+    }
+
+    RedrawWindow();
+}
+
+/**
+ * @fn    MoveResizeVirtual(XEvent *e, WaAction *ac)
+ * @brief Moves and resizes window
+ *
+ * X geomtry string as WaAction parameter. Moves and resizes window to
+ * the size and position in the virtual screen area specified by X geometry
+ * string.
+ *
+ * @param e XEvent causing function call
+ * @param ac WaAction object
+ */
+void WaWindow::MoveResizeVirtual(XEvent *e, WaAction *ac) {
+    int x, y, geometry;
+    unsigned int width, height;
+    
+    if (waimea->eh->move_resize != EndMoveResizeType || ! ac->param) return;
+    width = attrib.width;
+    height = attrib.height;
+
+    geometry = XParseGeometry(ac->param, &x, &y, &width, &height);
+    IncSizeCheck(width, height, &attrib.width, &attrib.height);
+    
+    if (geometry & XValue) {
+        if (geometry & XNegative)
+            attrib.x = ((wascreen->v_xmax + wascreen->width) +
+                        x - attrib.width) - wascreen->v_x;
+        else attrib.x = x - wascreen->v_x;
+    }
+    if (geometry & YValue) {
+        if (geometry & YNegative)
+            attrib.y = ((wascreen->v_ymax + wascreen->height) +
+                        y - attrib.height) - wascreen->v_y;
+        else attrib.y = y - wascreen->v_y;
+    }
+
+    RedrawWindow();
+}
+
 
 /**
  * @fn    EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
