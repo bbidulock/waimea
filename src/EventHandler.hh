@@ -17,7 +17,7 @@
 
 #include <sys/timeb.h>
 #include <X11/Xlib.h>
-#include <hash_set>
+#include <hash_set.h>
 
 class EventHandler;
 typedef struct _EventDetail EventDetail;

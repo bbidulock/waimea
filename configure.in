@@ -1,5 +1,5 @@
 AC_INIT(src/main.cc)
-AM_INIT_AUTOMAKE(Waimea, 0.1.6)
+AM_INIT_AUTOMAKE(Waimea, 0.1.7)
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
@@ -11,6 +11,16 @@ CFLAGS="$CFLAGS $X_CFLAGS"
 CXXFLAGS="$CXXFLAGS $X_CFLAGS"
 LIBS="$LIBS $X_LIBS"
 LDFLAGS="$LDFLAGS $LIBS $X_PRE_LIBS"
+
+AC_LANG_CPLUSPLUS
+
+AC_CHECK_HEADER(hash_map.h,,
+AC_MSG_ERROR([Your libstdc++ installation does not have the extra hash classes]))
+AC_CHECK_HEADER(hash_set.h,,
+AC_MSG_ERROR([Your libstdc++ installation does not have the extra hash classes]))
+AC_CHECK_HEADER(list.h,,
+AC_MSG_ERROR([Your libstdc++ installation does not have the extra list classes]))
+
 
 AC_CHECK_PROGS(regex_cmd, sed)
 if test x$regex_cmd = "x"; then
@@ -61,7 +71,7 @@ if test x$enableval = "xyes"; then
   AC_MSG_RESULT([yes])
   AC_CHECK_LIB(Xft, XftDefaultHasRender,
     AC_CHECK_HEADER(X11/Xft/Xft.h,
-    XFT="-DXFT"; LIBS="$LIBS -lXft",
+    XFT="-DXFT"; Xft_lib="-lXft",
     AC_MSG_RESULT([** WARNING: X11/Xft/Xft.h is missing])
     AC_MSG_RESULT([** WARNING: Disabled xft extension support])
   ),
@@ -72,6 +82,8 @@ else
   AC_MSG_RESULT([no])
 fi
 AC_SUBST(XFT)
+
+LIBS="$LIBS $Xft_lib"
 
 dnl Check for Interlacing
 INTERLACE=""
@@ -104,7 +116,6 @@ AC_ARG_ENABLE(ordered-pseudo,
   AC_MSG_RESULT([no])
 )
 AC_SUBST(ORDEREDPSEUDO)
-
 
 AC_OUTPUT(Makefile 
 src/Makefile

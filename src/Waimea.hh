@@ -17,8 +17,8 @@
 
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
-#include <hash_map>
-#include <list>
+#include <hash_map.h>
+#include <list.h>
 
 struct waoptions {
     char *display;

@@ -1329,9 +1329,9 @@ void WaImage::rgradient(void) {
     // normal rgradient
     for (yt = ytable, y = 0; y < height; y++, yt += 3) {
       for (xt = xtable, x = 0; x < width; x++) {
-        *(pr++) = (unsigned char) (tr - (rsign * max(*(xt++), *(yt))));
-        *(pg++) = (unsigned char) (tg - (gsign * max(*(xt++), *(yt + 1))));
-        *(pb++) = (unsigned char) (tb - (bsign * max(*(xt++), *(yt + 2))));
+        *(pr++) = (unsigned char) (tr - (rsign * wamax(*(xt++), *(yt))));
+        *(pg++) = (unsigned char) (tg - (gsign * wamax(*(xt++), *(yt + 1))));
+        *(pb++) = (unsigned char) (tb - (bsign * wamax(*(xt++), *(yt + 2))));
       }
     }
 
@@ -1343,32 +1343,32 @@ void WaImage::rgradient(void) {
     for (yt = ytable, y = 0; y < height; y++, yt += 3) {
       for (xt = xtable, x = 0; x < width; x++) {
         if (y & 1) {
-          channel = (unsigned char) (tr - (rsign * max(*(xt++), *(yt))));
+          channel = (unsigned char) (tr - (rsign * wamax(*(xt++), *(yt))));
           channel2 = (channel >> 1) + (channel >> 2);
           if (channel2 > channel) channel2 = 0;
           *(pr++) = channel2;
 
-          channel = (unsigned char) (tg - (gsign * max(*(xt++), *(yt + 1))));
+          channel = (unsigned char) (tg - (gsign * wamax(*(xt++), *(yt + 1))));
           channel2 = (channel >> 1) + (channel >> 2);
           if (channel2 > channel) channel2 = 0;
           *(pg++) = channel2;
 
-          channel = (unsigned char) (tb - (bsign * max(*(xt++), *(yt + 2))));
+          channel = (unsigned char) (tb - (bsign * wamax(*(xt++), *(yt + 2))));
           channel2 = (channel >> 1) + (channel >> 2);
           if (channel2 > channel) channel2 = 0;
           *(pb++) = channel2;
         } else {
-          channel = (unsigned char) (tr - (rsign * max(*(xt++), *(yt))));
+          channel = (unsigned char) (tr - (rsign * wamax(*(xt++), *(yt))));
           channel2 = channel + (channel >> 3);
           if (channel2 < channel) channel2 = ~0;
           *(pr++) = channel2;
 
-          channel = (unsigned char) (tg - (gsign * max(*(xt++), *(yt + 1))));
+          channel = (unsigned char) (tg - (gsign * wamax(*(xt++), *(yt + 1))));
           channel2 = channel + (channel >> 3);
           if (channel2 < channel) channel2 = ~0;
           *(pg++) = channel2;
 
-          channel = (unsigned char) (tb - (bsign * max(*(xt++), *(yt + 2))));
+          channel = (unsigned char) (tb - (bsign * wamax(*(xt++), *(yt + 2))));
           channel2 = channel + (channel >> 3);
           if (channel2 < channel) channel2 = ~0;
           *(pb++) = channel2;
@@ -1574,9 +1574,9 @@ void WaImage::pcgradient(void) {
     // normal pcgradient
     for (yt = ytable, y = 0; y < height; y++, yt += 3) {
       for (xt = xtable, x = 0; x < width; x++) {
-        *(pr++) = (unsigned char) (tr - (rsign * min(*(xt++), *(yt))));
-        *(pg++) = (unsigned char) (tg - (gsign * min(*(xt++), *(yt + 1))));
-        *(pb++) = (unsigned char) (tb - (bsign * min(*(xt++), *(yt + 2))));
+        *(pr++) = (unsigned char) (tr - (rsign * wamin(*(xt++), *(yt))));
+        *(pg++) = (unsigned char) (tg - (gsign * wamin(*(xt++), *(yt + 1))));
+        *(pb++) = (unsigned char) (tb - (bsign * wamin(*(xt++), *(yt + 2))));
       }
     }
 
@@ -1588,32 +1588,32 @@ void WaImage::pcgradient(void) {
     for (yt = ytable, y = 0; y < height; y++, yt += 3) {
       for (xt = xtable, x = 0; x < width; x++) {
         if (y & 1) {
-          channel = (unsigned char) (tr - (rsign * min(*(xt++), *(yt))));
+          channel = (unsigned char) (tr - (rsign * wamin(*(xt++), *(yt))));
           channel2 = (channel >> 1) + (channel >> 2);
           if (channel2 > channel) channel2 = 0;
           *(pr++) = channel2;
 
-          channel = (unsigned char) (tg - (bsign * min(*(xt++), *(yt + 1))));
+          channel = (unsigned char) (tg - (bsign * wamin(*(xt++), *(yt + 1))));
           channel2 = (channel >> 1) + (channel >> 2);
           if (channel2 > channel) channel2 = 0;
           *(pg++) = channel2;
 
-          channel = (unsigned char) (tb - (gsign * min(*(xt++), *(yt + 2))));
+          channel = (unsigned char) (tb - (gsign * wamin(*(xt++), *(yt + 2))));
           channel2 = (channel >> 1) + (channel >> 2);
           if (channel2 > channel) channel2 = 0;
           *(pb++) = channel2;
         } else {
-          channel = (unsigned char) (tr - (rsign * min(*(xt++), *(yt))));
+          channel = (unsigned char) (tr - (rsign * wamin(*(xt++), *(yt))));
           channel2 = channel + (channel >> 3);
           if (channel2 < channel) channel2 = ~0;
           *(pr++) = channel2;
 
-          channel = (unsigned char) (tg - (gsign * min(*(xt++), *(yt + 1))));
+          channel = (unsigned char) (tg - (gsign * wamin(*(xt++), *(yt + 1))));
           channel2 = channel + (channel >> 3);
           if (channel2 < channel) channel2 = ~0;
           *(pg++) = channel2;
 
-          channel = (unsigned char) (tb - (bsign * min(*(xt++), *(yt + 2))));
+          channel = (unsigned char) (tb - (bsign * wamin(*(xt++), *(yt + 2))));
           channel2 = channel + (channel >> 3);
           if (channel2 < channel) channel2 = ~0;
           *(pb++) = channel2;

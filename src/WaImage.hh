@@ -100,8 +100,8 @@ public:
 #  define WaImage_Interlaced   (1l<<18)
 #endif // INTERLACE
 
-template <typename Z> inline Z min(Z a, Z b) { return ((a < b) ? a : b); }
-template <typename Z> inline Z max(Z a, Z b) { return ((a > b) ? a : b); }
+template <typename Z> inline Z wamin(Z a, Z b) { return ((a < b) ? a : b); }
+template <typename Z> inline Z wamax(Z a, Z b) { return ((a > b) ? a : b); }
 
 class WaImage {
 private:
@@ -146,7 +146,7 @@ public:
   Pixmap render_gradient(WaTexture *);
 };
 
-#include <list>
+#include <list.h>
 #include "WaScreen.hh"
 
 class WaImageControl {
