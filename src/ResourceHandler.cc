@@ -548,33 +548,54 @@ void ResourceHandler::LoadMenus(void) {
     FILE *file;
     char *s, line[1024];
     int i;
-    
+    WaMenu *menu;
+    WaMenuItem *m;
+
+    linenr = 0;
     if (! (file = fopen(menu_file, "r"))) {
         ERROR << "can't open menufile \"" << menu_file << 
 		"\" for reading" << endl; exit(1);
     }
     while (fgets(line, 1024, file)) {
+        linenr++;
         for (i = 0; line[i] == ' '; i++);
         if (line[i] == '\n') continue;
         if (line[i] == '#') continue;
+        if (line[i] == '!') continue;
         
-        if ((s = strwithin(line, '[', ']')))
-            if (! strcasecmp("begin", s)) {
+        if ((s = strwithin(line, '[', ']'))) {
+            if (! strcasecmp("start", s)) {
                 free(s);
                 if ((s = strwithin(line, '(', ')')))
-                    ParseMenu(s, file);
+                    ParseMenu(new WaMenu(s), file);
                 else
-                    WARNING << "failed to find menu name in line \"" <<
-                        line << "\"" << endl;
+                    WARNING << "failed to find menu name at line " <<
+                        linenr << endl;
             }
-            else {
+            else if (! strcasecmp("begin", s)) {
                 free(s);
-                WARNING << "missing [begin] statement in line \"" << line <<
-                    "\"" << endl;
+                if ((s = strwithin(line, '(', ')'))) {
+                    menu = new WaMenu(s);
+                    m = new WaMenuItem(s);
+                    m->type = MenuTitleType;
+                    menu->AddItem(m);
+                    ParseMenu(menu, file);
+                } else {
+                    free(s);
+                    WARNING << "failed to find menu name at line " <<
+                        linenr << endl;
+                }
+            } else {
+                free(s);
+                WARNING << "missing [start] or [begin] statement at line " <<
+                    linenr << endl;
             }
-        else
-            WARNING << "missing [begin] statement in line \"" << line 
-		    << "\"" << endl;
+        }
+        else {
+            free(s);
+            WARNING << "missing [start] or [begin] statement at line " <<
+                linenr << endl;
+        }
     }
     fclose(file);
 }
@@ -1039,82 +1060,129 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
 }
 
 /**
- * @fn    ParseMenu(char *name, FILE *file)
+ * @fn    ParseMenu(WaMenu *menu, FILE *file)
  * @brief Parses a menu
  *
  * Parses a menu section of the menu file and creates a menu object for the
- * menu. If a [begin] statement is found then parsing a menu we make a
- * recursive function call to this function. This makes it possible to
+ * menu. If a [start] or [begin] statement is found when parsing a menu, we
+ * make a recursive function call to this function. This makes it possible to
  * to define a submenu within a the menu itself.
  *
- * @param name Menu name
+ * @param menu Menu to add items to
  * @param file File descriptor for menu file
  */
-void ResourceHandler::ParseMenu(char *name, FILE *file) {
+void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
     char *s, line[8192];
-    WaMenu *menu;
     WaMenuItem *m;
     int i, type;
-
-    menu = new WaMenu(name);
+    WaMenu *tmp_menu;
     
     while (fgets(line, 8192, file)) {
+        linenr++;
         for (i = 0; line[i] == ' '; i++);
         if (line[i] == '\n') continue;
         if (line[i] == '#') continue;
         if (line[i] == '!') continue;
-
+        
         if (! (s = strwithin(line, '[', ']'))) {
-            WARNING << "failed to find menu item type in line \"" << line
-                    << "\"" << endl;
+            WARNING << "failed to find menu item type at line " << 
+                linenr << endl;
             continue;
         }
-        if (! strcmp(s, "begin")) {
+        if (! strcasecmp(s, "start")) {
             free(s);
             if ((s = strwithin(line, '(', ')'))) {
-                ParseMenu(s, file);
-                continue;
-            } else {
-                WARNING << "failed to find menu name in line \"" << line <<
-                    "\"" << endl;
-                continue;
-            }
+                menu = new WaMenu(s);
+                ParseMenu(menu, file);
+            } else
+                WARNING << "failed to find menu name at line " <<
+                    linenr << endl;
+            continue;
         }
-        else if (! strcmp(s, "end")) {
+        else if ((! strcasecmp(s, "submenu")) || (! strcasecmp(s, "begin"))) {
+            free(s);
+            if ((s = strwithin(line, '(', ')'))) {
+                m = new WaMenuItem(s);
+                m->type = MenuSubType;
+                m->func_mask = MenuSubMask;
+                m->sub = s;
+                menu->AddItem(m);
+                tmp_menu = new WaMenu(s);
+                m = new WaMenuItem(s);
+                m->type = MenuTitleType;
+                tmp_menu->AddItem(m);
+                ParseMenu(tmp_menu, file);
+            } else
+                WARNING << "failed to find menu name at line " <<
+                    linenr << endl;
+            continue;
+        }
+        else if (! strcasecmp(s, "restart")) {
+            if ((s = strwithin(line, '(', ')')))
+                m = new WaMenuItem(s);
+            else m = new WaMenuItem("");
+            m->type = MenuItemType;
+            m->func_mask = MenuRFuncMask;
+            m->rfunc = &WaScreen::Restart;
+            menu->AddItem(m);
+            continue;
+        }
+        else if (! strcasecmp(s, "exit")) {
+            if ((s = strwithin(line, '(', ')')))
+                m = new WaMenuItem(s);
+            else m = new WaMenuItem("");
+            m->type = MenuItemType;
+            m->func_mask = MenuRFuncMask;
+            m->rfunc = &WaScreen::Exit;
+            menu->AddItem(m);
+            continue;
+        }
+        else if (! strcasecmp(s, "exec")) {
+            if ((s = strwithin(line, '(', ')')))
+                m = new WaMenuItem(s);
+            else m = new WaMenuItem("");
+            m->type = MenuItemType;
+            if ((s = strwithin(line, '{', '}'))) {
+                if (*s != '\0') {
+                    m->exec = s;
+                    m->func_mask |= MenuExecMask;
+                }
+            }
+            menu->AddItem(m);
+            continue;
+        }
+        else if (! strcasecmp(s, "end")) {
             if (menu->item_list->empty()) {
-                WARNING << "no elements in menu \"" << name << "\"" << endl;
+                WARNING << "no elements in menu \"" << menu->name << "\"" << endl;
                 free(s);
                 delete menu;
                 return;
             }
-            break;
+            waimea->wamenu_list->push_back(menu);
+            return;
         }
-        else if (! strcmp(s, "title"))
+        else if (! strcasecmp(s, "title"))
             type = MenuTitleType;
-        else if (! strcmp(s, "item"))
+        else if (! strcasecmp(s, "item"))
             type = MenuItemType;
-        else if (! strcmp(s, "sub"))
+        else if (! strcasecmp(s, "sub"))
             type = MenuSubType;
         else {
-            WARNING << "[" << s << "]" << "is not a valid statement" << endl;
+            WARNING << "at line " << linenr << ": [" << s << "]" <<
+                " is not a valid statement" << endl;
             free(s);
             continue;
         }
         free(s);
-        if (! (s = strwithin(line, '(', ')'))) {
-            WARNING << "failed to parse menu item title from line \"\n" << 
-		    line << "\"" << endl;
-            continue;
-        }
-        m = new WaMenuItem(s);
+        if ((s = strwithin(line, '(', ')')))
+            m = new WaMenuItem(s);
+        else m = new WaMenuItem("");
         m->type = type;
-        m->func_mask = 0;
-        m->wfunc = NULL;
-        m->rfunc = NULL;
-        m->mfunc = NULL;
         if ((s = strwithin(line, '{', '}'))) {
-            m->exec = s;
-            m->func_mask |= MenuExecMask;
+            if (*s != '\0') {
+                m->exec = s;
+                m->func_mask |= MenuExecMask;
+            }
         }
         if ((s = strwithin(line, '<', '>'))) {
             m->sub = s;
@@ -1146,7 +1214,8 @@ void ResourceHandler::ParseMenu(char *name, FILE *file) {
                 }
             }
             if (! (m->wfunc || m->rfunc || m->mfunc)) {
-                WARNING << "function \"" << s << "\" not available" << endl;
+                WARNING << "at line " << linenr << ": function \"" << s <<
+                    "\" not available" << endl;
                 free(s);
                 continue;
             }
@@ -1154,7 +1223,7 @@ void ResourceHandler::ParseMenu(char *name, FILE *file) {
         }
         menu->AddItem(m);
     }
-    waimea->wamenu_list->push_back(menu);
+    WARNING << "at line " << linenr << ": missing [end] statement" << endl;
 }
 
 /**

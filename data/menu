@@ -1,49 +1,52 @@
-[begin]     (rootmenu)
-  [title]   (Root Menu)
-  [item]    (Xterm)             {xterm}
-  [sub]     (Networking)        <network>
-  [begin]   (network)
-    [title] (Networking)
-    [item]  (Netscape)          {netscape}
-    [item]  (Mozilla)           {mozilla}
-    [item]  (Licq)              {licq}
-    [item]  (Ncftp)             {xterm -e ncftp}
-    [item]  (Telnet)            {xterm -e telnet}
+!
+! Root Menu
+!
+[start] (rootmenu)
+  [title] (Root Menu)
+  [item] (Xterm)        {xterm}
+
+  [submenu] (Editors)
+    [item] (Emacs)     {emacs}
+    [item] (Vi)        {xterm -e vi}
   [end]
-  [sub]     (Editors)           <edit>
-  [begin]   (edit)
-    [title] (Editors)
-    [item]  (Emacs)             {emacs}
-    [item]  (Vi)                {xterm -e vi}
+
+  [submenu] (Graphics)
+    [item]  (The Gimp) {gimp}
+    [item]  (Xpaint)   {xpaint}
+    [item]  (Xv)       {xv}
   [end]
-  [sub]     (Graphics)          <graphics>
-  [begin]   (graphics)
-    [title] (Graphics)
-    [item]  (The Gimp)          {gimp}
-    [item]  (Xpaint)            {xpaint}
-    [item]  (Xv)                {xv}
+
+  [submenu] (Multimedia)
+    [item] (Mplayer)    {gmplayer}
+    [item] (RealPlayer) {realplay}
+    [item] (XMMS)       {xmms}
   [end]
-  [sub]     (Multimedia)        <multimedia>
-  [begin]   (multimedia)
-    [title] (Multimedia)
-    [item]  (Mplayer)           {gmplayer} 
-    [item]  (XMMS)              {xmms}
+
+  [submenu] (Networking)
+    [item] (Netscape)  {netscape}
+    [item] (Mozilla)   {mozilla}
+    [item] (Licq)      {licq}
+    [item] (Ncftp)     {xterm -e ncftp} 
+    [item] (Telnet)    {xterm -e telnet}
   [end]
-  [sub]     (Exit)              <exit>
-  [begin]   (exit)
-    [title] (Exit)
-    [item]  (Restart)           "restart"
-    [item]  (Logout %($USER$%)) "exit"
-  [end]
+  
+  [restart] (Restart)
+  ! Same as [item] (Restart) "restart"
+  
+  [exit]    (Exit)
+  ! Same as [item] (Exit) "exit"
 [end]
 
-[begin]     (window)
-  [title]   (Window Ops)
-  [item]    (Raise)             "raise"
-  [item]    (Lower)             "lower"
-  [item]    (Un-/ Maximize)     "togglemaximize"
-  [item]    (Un-/ Shade)        "toggleshade"
-  [item]    (Un-/ Sticky)       "togglesticky"
-  [item]    (Close)             "close"
-  [item]    (Kill)              "kill"
+!
+! Window Menu
+!
+[start] (window)
+  [title] (Window Ops)
+  [item]  (Raise)         "raise"
+  [item]  (Lower)         "lower"
+  [item]  (Un-/ Maximize) "togglemaximize"
+  [item]  (Un-/ Shade)    "toggleshade"
+  [item]  (Un-/ Sticky)   "togglesticky"
+  [item]  (Close)         "close"
+  [item]  (Kill)          "kill"
 [end]

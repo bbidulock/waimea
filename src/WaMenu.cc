@@ -532,6 +532,11 @@ void WaMenu::Raise(void) {
 WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     label = s;
     id = (Window) 0;
+    func_mask = height = width = dy = realheight = 0;
+    wfunc = NULL;
+    rfunc = NULL;
+    mfunc = NULL;
+    sub = NULL;
 #ifdef XFT
     xftdraw = (Drawable) 0;
 #endif // XFT    

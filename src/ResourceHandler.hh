@@ -38,13 +38,6 @@ struct _WaAction {
     unsigned int type, detail, mod, nmod;
 };
 
-enum {
-    P_Left,
-    P_Right,
-    P_Up,
-    P_Down
-};
-
 #define LeftJustify   1
 #define RightJustify  2
 #define CenterJustify 3
@@ -82,12 +75,13 @@ private:
     void ReadDatabaseActions(char *, char *, list<StrComp *> *,
                              list<WaAction *> *);
     void ParseAction(const char *, list<StrComp *> *, list<WaAction *> *);
-    void ParseMenu(char *, FILE *);
+    void ParseMenu(WaMenu *, FILE *);
 
     Waimea *waimea;
     Display *display;
     XrmDatabase database;
     char *homedir;
+    int *linenr;
     list<StrComp *> *wacts;
     list<StrComp *> *racts;
     list<StrComp *> *macts;
