@@ -353,15 +353,13 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
         if (validateclient(e->window)) {
             XGetWindowAttributes(e->display, e->window, &attr);
             if (! attr.override_redirect) {
-                if ((wm_hints = XGetWMHints(e->display, e->window)))
-                    if (wm_hints->flags & StateHint)
-                        if (wm_hints->initial_state == WithdrawnState) {
-                            new Dockapp(e->window, waimea->wascreen->dock);
-                            waimea->wascreen->dock->Update();
-                        }
-                        else {
-                            new WaWindow(e->window, waimea->wascreen);
-                        }
+                if ((wm_hints = XGetWMHints(e->display, e->window)) &&
+                    (wm_hints->flags & StateHint) &&
+                    (wm_hints->initial_state == WithdrawnState)) {
+                    new Dockapp(e->window, waimea->wascreen->dock);
+                    waimea->wascreen->dock->Update();
+                }
+                else new WaWindow(e->window, waimea->wascreen);
             }
         }
         XUngrabServer(e->display);

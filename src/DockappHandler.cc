@@ -200,8 +200,8 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
         
         XSetWindowBorderWidth(display, id, 0);
         XReparentWindow(display, id, dh->id, dh->width, dh->height);
+        XMapRaised(display, id);
         XSelectInput(display, id, StructureNotifyMask | SubstructureNotifyMask);
-        XMapWindow(display, id);
     } else {
         XUngrabServer(display);
         delete this;
