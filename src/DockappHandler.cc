@@ -256,9 +256,6 @@ void DockappHandler::Render(void) {
     }
 #endif // XRENDER
     
-    XFlush(display);
-    XFlush(wascreen->pdisplay);
-    XSync(display, false); 
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         background = None;
         background_pixel = texture->getColor()->getPixel();
@@ -271,8 +268,6 @@ void DockappHandler::Render(void) {
                                                map_y +
                                                style->style.border_width,
                                                background);
-            XSync(display, false);
-            XSync(wascreen->pdisplay, false);
             XSetWindowBackgroundPixmap(display, id, background);
         } else
             XSetWindowBackground(display, id, background_pixel);
@@ -293,8 +288,6 @@ void DockappHandler::Render(void) {
 #endif // XRENDER
                                                
                                                );
-        XSync(display, false);
-        XSync(wascreen->pdisplay, false);
         XSetWindowBackgroundPixmap(display, id, background);
     }
     XClearWindow(display, id);

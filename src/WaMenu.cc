@@ -82,7 +82,10 @@ WaMenu::~WaMenu(void) {
         XDestroyWindow(display, frame);
 
 #ifdef XRENDER
-        if (pixmap != None) XFreePixmap(wascreen->pdisplay, pixmap);
+        if (pixmap) {
+            XSync(display, false);
+            XFreePixmap(wascreen->pdisplay, pixmap);
+        }
 #endif // XRENDER
 
     }
@@ -342,10 +345,8 @@ void WaMenu::Build(WaScreen *screen) {
                               &attrib_set);
     } else XResizeWindow(display, frame, width, height);
 
-    if (pbackframe) {
-        XSync(wascreen->pdisplay, false);
+    if (pbackframe)
         XSetWindowBackgroundPixmap(display, frame, pbackframe);
-    }
     else
         XSetWindowBackground(display, frame, backframe_pixel);
 
@@ -388,10 +389,8 @@ void WaMenu::Build(WaScreen *screen) {
         if ((*it)->type == MenuTitleType) {
             (*it)->actionlist = &wascreen->config.mtacts;
             (*it)->texture = &wascreen->mstyle.title;
-            if (ptitle) {
-                XSync(wascreen->pdisplay, false);
+            if (ptitle)
                 XSetWindowBackgroundPixmap(display, (*it)->id, ptitle);
-            }
             else
                 XSetWindowBackground(display, (*it)->id, title_pixel);
         } else {
@@ -424,16 +423,12 @@ void WaMenu::Render(void) {
     if (((x + width) > 0 && x < wascreen->width) && 
         ((y + height) > 0 && y < wascreen->height)) {
         WaTexture *texture = &wascreen->mstyle.back_frame;
-        XFlush(display);
-        XFlush(wascreen->pdisplay);
-        XSync(display, false);
         if (texture->getOpacity()) {
             pixmap = wascreen->ic->xrender(pbackframe, width, height, texture,
                                            wascreen->xrootpmap_id,
                                            x + wascreen->mstyle.border_width,
                                            y +wascreen->mstyle.border_width,
                                            pixmap);
-            XSync(wascreen->pdisplay, false);
             XSetWindowBackgroundPixmap(display, frame, pixmap);
             XClearWindow(display, frame);
         }
@@ -1033,9 +1028,6 @@ void WaMenuItem::Render(void) {
     if (((menu->x + menu->width) > 0 && menu->x < menu->wascreen->width) && 
         ((menu->y + dy + height) > 0 && (menu->y + dy) <
          menu->wascreen->height)) {
-        XFlush(menu->display);
-        XFlush(menu->wascreen->pdisplay);
-        XSync(menu->display, false);
         if (type == MenuTitleType) {
             pixmap = menu->wascreen->ic->xrender(menu->ptitle, menu->width,
                                                  height, texture,
@@ -1043,7 +1035,6 @@ void WaMenuItem::Render(void) {
                                                  menu->x + bw,
                                                  menu->y + dy + bw,
                                                  pixmap);
-            XSync(menu->wascreen->pdisplay, false);
             XSetWindowBackgroundPixmap(menu->display, id, pixmap);
         }
         else if (hilited) {
@@ -1053,7 +1044,6 @@ void WaMenuItem::Render(void) {
                                                  menu->x +bw,
                                                  menu->y + dy + bw,
                                                  pixmap);
-            XSync(menu->wascreen->pdisplay, false);
             XSetWindowBackgroundPixmap(menu->display, id, pixmap);
         }
     }
@@ -1085,10 +1075,8 @@ void WaMenuItem::Hilite(void) {
     else {
 #endif // XRENDER
     
-        if (menu->philite) {
-            XSync(menu->wascreen->pdisplay, false);
+        if (menu->philite)
             XSetWindowBackgroundPixmap(menu->display, id, menu->philite);
-        }
         else
             XSetWindowBackground(menu->display, id, menu->hilite_pixel);
         

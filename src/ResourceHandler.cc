@@ -353,8 +353,8 @@ void ResourceHandler::LoadConfig(Waimea *waimea) {
                            "\" for reading" << endl;
         else
             if (! (database = XrmGetFileDatabase(DEFAULTRCFILE)))
-                WARNING << "can't open system default rcfile \"" << rc_file <<
-                    "\" for reading" << endl;
+                WARNING << "can't open system default rcfile \"" << 
+                    DEFAULTRCFILE << "\" for reading" << endl;
     }
     
     waimea->screenmask = 0;

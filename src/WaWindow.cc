@@ -201,8 +201,6 @@ WaWindow::~WaWindow(void) {
     delete title;
     delete frame;
     
-    XSync(display, false);
-    
     delete [] name;
     if (host) delete [] host;
     if (pid) delete [] pid;
@@ -2909,9 +2907,6 @@ void WaChildWindow::Render(void) {
     }
 #endif // XRENDER
     
-    XFlush(display);
-    XFlush(wascreen->pdisplay);
-    XSync(display, false); 
     switch (type) {
         case ButtonType: {
             bool flag = false;
@@ -2990,16 +2985,12 @@ void WaChildWindow::Render(void) {
     }
     
     if (pixmap) {
-        XFlush(display);
-        XFlush(wascreen->pdisplay);
-        XSync(wascreen->pdisplay, false);
         XSetWindowBackgroundPixmap(display, id, pixmap);
-        XFlush(display);
-        XSync(display, false);
         
 #ifdef PIXMAP
         if ((! texture->getOpacity()) &&
             (texture->getTexture() & WaImage_Pixmap)) {
+            XSync(display, false);
             imlib_context_push(*texture->getContext());
             imlib_free_pixmap_and_mask(pixmap);
             imlib_context_pop();
@@ -3012,8 +3003,10 @@ void WaChildWindow::Render(void) {
         XSetWindowBackground(display, id, texture->getColor()->getPixel());
 
 #ifdef XRENDER
-    if (pixmap && texture->getOpacity())
+    if (pixmap && texture->getOpacity()) {
+        XSync(display, false);
         XFreePixmap(wascreen->pdisplay, pixmap);
+    }
 #endif // XRENDER
 
     Draw();

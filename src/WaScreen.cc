@@ -85,8 +85,6 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     default_font.xft = false;
     default_font.font = "fixed";
 
-    XFlush(display);
-    XSync(display, false);
     if (! (pdisplay = XOpenDisplay(wa->options->display))) {
         ERROR << "can't open display: " << wa->options->display << endl;
         exit(1);
@@ -231,8 +229,6 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
  * Deletes all created colors and fonts.
  */
 WaScreen::~WaScreen(void) {
-    XFlush(display);
-    XFlush(pdisplay);
     XSelectInput(display, id, NoEventMask);
     net->SetClientList(this);
     net->SetClientListStacking(this);

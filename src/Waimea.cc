@@ -189,11 +189,11 @@ bool validateclient(Window id) {
     int ret;
     XWindowAttributes attr;
     
-    XSync(waimea->display, False);
+    XSync(waimea->display, false);
     errors = 0;
     hush = 1;
     XGetWindowAttributes(waimea->display, id, &attr);
-    XSync(waimea->display, False);
+    XSync(waimea->display, false);
     hush = 0;
     ret = ( errors == 0 );
     errors = 0;

@@ -2177,6 +2177,7 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
                                    WaTexture *texture, Pixmap parent,
                                    unsigned int src_x, unsigned int src_y,
                                    Pixmap dest) {
+    Pixmap retp;
     if (texture->getTexture() & WaImage_ParentRelative) return ParentRelative;
     
     Pixmap pixmap = searchCache(width, height, texture->getTexture(),
@@ -2184,27 +2185,33 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
     if (pixmap) {
         
 #ifdef XRENDER
-        return xrender(pixmap, width, height, texture, parent, src_x, src_y,
+        retp = xrender(pixmap, width, height, texture, parent, src_x, src_y,
                        dest);
 #else // !XRENDER
-        return pixmap;
+        retp = pixmap;
 #endif // XRENDER
         
+        XSync(wascreen->display, false);
+        XSync(wascreen->pdisplay, false);
+        return retp;
     }
 
     WaImage image(this, width, height);
     pixmap = image.render(texture);
 
-#ifdef PIXMAP        
+#ifdef PIXMAP
     if (texture->getTexture() & WaImage_Pixmap) {
-                
+        
 #ifdef XRENDER
-        return xrender(pixmap, width, height, texture, parent, src_x, src_y,
+        retp = xrender(pixmap, width, height, texture, parent, src_x, src_y,
                        dest);
 #else // !XRENDER
-        return pixmap;
+        retp = pixmap;
 #endif // XRENDER
-        
+
+        XSync(wascreen->display, false);
+        XSync(wascreen->pdisplay, false);
+        return retp;
     }
 #endif // PIXMAP
 
@@ -2229,13 +2236,18 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
             timeout();
                 
 #ifdef XRENDER
-        return xrender(pixmap, width, height, texture, parent, src_x, src_y,
+        retp = xrender(pixmap, width, height, texture, parent, src_x, src_y,
                        dest);
 #else // !XRENDER
-        return pixmap;
+        retp = pixmap;
 #endif // XRENDER
-        
+
+        XSync(wascreen->display, false);
+        XSync(wascreen->pdisplay, false);
+        return retp;
     }
+    XSync(wascreen->display, false);
+    XSync(wascreen->pdisplay, false);
     return None;
 }
 
@@ -2519,6 +2531,8 @@ Pixmap WaImageControl::xrender(Pixmap p, unsigned int width,
                      width, height);
     if (p != None) XRenderFreePicture(display, src_pict);
     XRenderFreePicture(display, dest_pict);
+    XSync(wascreen->display, false);
+    XSync(wascreen->pdisplay, false);
     return dest;
 }
 
