@@ -1123,7 +1123,7 @@ fi
 
 PACKAGE=Waimea
 
-VERSION=0.1.7
+VERSION=0.1.7-1
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { { echo "$as_me:1129: error: source directory already configured; run \"make distclean\" there first" >&5
