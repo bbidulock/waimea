@@ -664,12 +664,13 @@ void WaScreen::MoveViewport(int direction, bool warp) {
  * @param ac Action causing function call
  */
 void WaScreen::ScrollViewport(int direction, bool warp, WaAction *ac) {
-    int vd, scroll = 30;
+    int vd;
+    unsigned long scroll = 30;
 
-    if (ac->param > 0) {
-        scroll = ac->param;
-        if (scroll > v_xmax) scroll = v_xmax;
-    }
+    if (ac->param) scroll = (unsigned long) atol(ac->param);
+    if (scroll > v_xmax) scroll = v_xmax;
+    if (scroll < 2) scroll = 2;
+    
     switch (direction) {
         case WestDirection:
             if (v_x > 0) {
@@ -798,7 +799,9 @@ void WaScreen::MenuMap(XEvent *, WaAction *ac, bool focus) {
     Window w;
     int i, rx, ry;
     unsigned int ui;
-    WaMenu *menu = (WaMenu *) ac->param;
+    WaMenu *menu = waimea->GetMenuNamed(ac->param);
+
+    if (! menu) return;
 
     if (XQueryPointer(display, id, &w, &w, &rx, &ry, &i, &i, &ui)) {
         if (menu->tasksw) menu->Build(this);
@@ -823,7 +826,9 @@ void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     Window w;
     int i, rx, ry;
     unsigned int ui;
-    WaMenu *menu = (WaMenu *) ac->param;
+    WaMenu *menu = waimea->GetMenuNamed(ac->param);
+
+    if (! menu) return;
     
     if (XQueryPointer(display, id, &w, &w, &rx, &ry, &i, &i, &ui)) {
         if (menu->tasksw) waimea->taskswitch->Build(this);
@@ -845,7 +850,9 @@ void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
  * @param bool True if we should focus root item
  */
 void WaScreen::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
-    WaMenu *menu = (WaMenu *) ac->param;
+    WaMenu *menu = waimea->GetMenuNamed(ac->param);
+
+    if (! menu) return;
     
     menu->Unmap(focus);
     menu->UnmapSubmenus(focus);
@@ -857,9 +864,14 @@ void WaScreen::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
  *
  * Restarts window manager by deleting all objects and executing the program
  * file again.
+ *
+ * @param ac WaAction object
  */
-void WaScreen::Restart(XEvent *, WaAction *) {
-    restart();
+void WaScreen::Restart(XEvent *, WaAction *ac) {
+    if (ac->param)
+        restart(ac->param);
+    else
+        restart(NULL);
 }
 
 /**

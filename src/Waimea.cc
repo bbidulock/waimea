@@ -230,6 +230,29 @@ void Waimea::UpdateCheckboxes(int type) {
 }
 
 /**
+ * @fn    GetMenuNamed(char *menu)
+ * @brief Find a menu
+ *
+ * Searches through menu list after a menu named as 'menu' parameter.
+ *
+ * @param menu menu name to use for search
+ *
+ * @return Pointer to menu object if a menu was found, if no menu was found
+ *         NULL is returned
+ */
+WaMenu *Waimea::GetMenuNamed(char *menu) {
+    if (! menu) return NULL;
+    
+    list<WaMenu *>::iterator menu_it = wamenu_list->begin();
+    for (; menu_it != wamenu_list->end(); ++menu_it)
+        if (! strcmp((*menu_it)->name, menu))
+            return *menu_it;
+    
+    WARNING << "\"" << menu << "\" unknown menu" << endl;
+    return NULL;
+} 
+
+/**
  * @fn    validateclient(Window id)
  * @brief Validates a window
  *
@@ -345,7 +368,6 @@ void signalhandler(int sig) {
         case SIGINT:
         case SIGTERM:
         case SIGHUP:
-            cout << "signal: " << sig << " caught. ";
             quit(EXIT_SUCCESS);
             break;
         case SIGCHLD:
@@ -377,16 +399,21 @@ char *wastrdup(char *s) {
 
 
 /**
- * @fn    restart(void)   
+ * @fn    restart(char *command)   
  * @brief Restarts program
  *
  * Deletes the waimea object and restarts window manager.
+ *
+ * @param command Program name to execute when restarting
  */
-void restart(void) {
-    cout << "restarting." << endl;
+void restart(char *command) {
     delete waimea;
+    if (command) {
+        execlp(command, command, NULL);
+        perror(command);
+    }
     execvp(argv[0], argv);
-    perror("restart");
+    perror(argv[0]);
     exit(EXIT_FAILURE);
 }
 
@@ -399,7 +426,6 @@ void restart(void) {
  * @param status Return status
  */
 void quit(int status) {
-    cout << "shutting down." << endl;
     delete waimea;
     exit(status);
 }

@@ -165,9 +165,9 @@ public:
     int func_mask, func_mask1, func_mask2, height, width, dy, realheight,
                    cb, cb_y, cb_width, cb_width1, cb_width2;
     bool hilited;
-    char *label, *exec, *sub;
-    char *label1, *exec1, *sub1;
-    char *label2, *exec2, *sub2;
+    char *label, *exec, *param, *sub;
+    char *label1, *exec1, *param1, *sub1;
+    char *label2, *exec2, *param2, *sub2;
     char *cbox;
     WwActionFn wfunc, wfunc1, wfunc2;
     MenuActionFn mfunc, mfunc1, mfunc2;

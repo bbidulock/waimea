@@ -35,6 +35,8 @@ typedef struct _DockStyle DockStyle;
     while (! list->empty()) { \
         if (list->back()->exec) \
             delete [] list->back()->exec; \
+        if (list->back()->param) \
+            delete [] list->back()->param; \
         delete list->back(); \
         list->pop_back(); \
     } \
@@ -45,7 +47,7 @@ struct _WaAction {
     RootActionFn rootfunc;
     MenuActionFn menufunc;
     char *exec;
-    unsigned long param;
+    char *param;
     unsigned int type, detail, mod, nmod;
 };
 

@@ -1247,14 +1247,14 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     par = tmp_par;
     
     act_tmp->exec = NULL;
-    act_tmp->param = (unsigned long) 0;
+    act_tmp->param = NULL;
     for (; *par != '(' && *par != '\0'; par++);
     if (*(par++) == '(') {
         for (i = 0; par[i] != ')'; i++)
             if (par[i] == '\0') {
                 WARNING << "missing \")\" in resource line \"" << s << "\"" 
                         << endl;
-                free(act_tmp);
+                delete act_tmp;
                 delete [] line;
                 return;
             }
@@ -1262,31 +1262,14 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             if (! strncasecmp(token, "menu", 4)) {
                 WARNING "\"" << token << "\" action must have a menu as" <<
                     " parameter" << endl;
-                free(act_tmp);
-                delete [] line;
-                return;
-            }
-        }
-        if (! strncasecmp(token, "menu", 4)) {
-            par[i] = '\0';
-            par = strtrim(par);
-            list<WaMenu *>::iterator menu_it = waimea->wamenu_list->begin();
-            for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {
-                if (! strcmp((*menu_it)->name, par)) {
-                    act_tmp->param = (unsigned long) *menu_it;
-                    break;
-                }
-            }
-            if (menu_it == waimea->wamenu_list->end()) {
-                WARNING << "\"" << par << "\" unknown menu" << endl;
                 delete act_tmp;
                 delete [] line;
                 return;
             }
         }
-        else {
-            if (strlen(par))
-                act_tmp->param = (unsigned long) atol(par);
+        if (strlen(par)) {
+            par[i] = '\0';
+            act_tmp->param = wastrdup(par);
         }
         for (i = 0; token[i] != '('; i++);
         token[i] = '\0';
@@ -1294,7 +1277,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     else if (! strncasecmp(token, "menu", 4)) {
         WARNING "\"" << token << "\" action must have a menu as" <<
             " parameter" << endl;
-        free(act_tmp);
+        delete act_tmp;
         delete [] line;
         return;
     }
@@ -1317,7 +1300,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             act_tmp->exec = (char *) s;
         } else {
             WARNING << "\"" << token << "\" unknown action" << endl;
-            free(act_tmp);
+            delete act_tmp;
             delete [] line;
             return;
         }
@@ -1342,7 +1325,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     }
     if (! *it) {
         WARNING << "\"" << token << "\" unknown type" << endl;
-        free(act_tmp);
+        delete act_tmp;
         delete [] line;
         return;
     }
@@ -1361,7 +1344,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             else {
                 if ((keysym = XStringToKeysym(token)) == NoSymbol) {
                     WARNING << "\"" << token << "\" unknown key" << endl;
-                    free(act_tmp);
+                    delete act_tmp;
                     delete [] line;
                     return;
                 } else
@@ -1379,7 +1362,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             }
             if (! *it) {
                 WARNING << "\"" << token << "\" unknown detail" << endl;
-                free(act_tmp);
+                delete act_tmp;
                 delete [] line;
                 return;
             }
@@ -1410,7 +1393,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             }
             if (! *it) {
                 WARNING << "\"" << token << "\" unknown modifier" << endl;
-                free(act_tmp);
+                delete act_tmp;
                 delete [] line;
                 return;
             }
@@ -1433,7 +1416,8 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
  * @param file File descriptor for menu file
  */
 void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
-    char *s, line[8192], *line1 = NULL, *line2 = NULL;
+    char *s, line[8192], *line1 = NULL, *line2 = NULL,
+        *par = NULL, *tmp_par = NULL;
     WaMenuItem *m;
     int i, type, cb;
     WaMenu *tmp_menu;
@@ -1662,6 +1646,25 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             m->func_mask1 |= MenuSubMask;
         }
         if ((s = strwithin(line1, '"', '"'))) {
+            tmp_par = par = wastrdup(s);
+            for (i = 0; *par != '(' && *par != '\0'; par++, i++);
+            if (*(par++) == '(') {
+                s[i] = '\0';
+                for (i = 0; par[i] != ')' && par[i] != '\0'; i++);
+                if (par[i] == '\0') {
+                    WARNING << "missing \")\" at line " << linenr << endl;
+                    delete [] tmp_par;
+                    continue;
+                }
+                if (strlen(par)) {
+                    par[i] = '\0';
+                    m->param1 = m->param = wastrdup(par);
+                    delete [] tmp_par;
+                }
+            }
+            else
+                delete [] tmp_par;
+            
             it = wacts->begin();
             for (; it != wacts->end(); ++it) {
                 if ((*it)->Comp(s)) {
@@ -1715,6 +1718,25 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                 m->func_mask2 |= MenuSubMask;
             }
             if ((s = strwithin(line2, '"', '"'))) {
+                tmp_par = par = wastrdup(s);
+                for (i = 0; *par != '(' && *par != '\0'; par++, i++);
+                if (*(par++) == '(') {
+                    s[i] = '\0';
+                    for (i = 0; par[i] != ')' && par[i] != '\0'; i++);
+                    if (par[i] == '\0') {
+                        WARNING << "missing \")\" at line " << linenr << endl;
+                        delete [] tmp_par;
+                        continue;
+                    }
+                    if (strlen(par)) {
+                        par[i] = '\0';
+                        m->param2 = wastrdup(par);
+                        delete [] tmp_par;
+                    }
+                }
+                else
+                    delete [] tmp_par;
+                
                 it = wacts->begin();
                 for (; it != wacts->end(); ++it) {
                     if ((*it)->Comp(s)) {

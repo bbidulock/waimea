@@ -621,7 +621,8 @@ WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     mfunc = mfunc2 = NULL;
     sub = NULL;
     wf = (Window) 0;
-    exec = sub = exec1 = sub1 = label2 = exec2 = sub2 = cbox = NULL;
+    exec = sub = exec1 = param1 = sub1 = label2 = exec2 = param2 =
+        sub2 = cbox = NULL;
     
 #ifdef XFT
     xftdraw = (Drawable) 0;
@@ -643,6 +644,8 @@ WaMenuItem::~WaMenuItem(void) {
     if (sub2) delete [] sub2;
     if (exec1) delete [] exec1;
     if (exec2) delete [] exec2;
+    if (param1) delete [] param1;
+    if (param2) delete [] param2;
 
     menu->item_list->remove(this);
     
@@ -930,8 +933,14 @@ void WaMenuItem::Exec(XEvent *, WaAction *) {
 void WaMenuItem::Func(XEvent *e, WaAction *ac) {
     hash_map<Window, WindowObject *>::iterator it;
     Window func_win;
+    char *tmp_param;
 
     if (cb) UpdateCBox();
+
+    if (param) {
+        tmp_param = ac->param;
+        ac->param = param;
+    }
     
     if (wf) func_win = wf;
     else func_win = menu->wf;
@@ -948,6 +957,8 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
         ((*(menu->rf)).*(rfunc))(e, ac);
     else if ((func_mask & MenuMFuncMask) && (menu->ftype == MenuMFuncMask))
         ((*(menu->mf)).*(mfunc))(e, ac);
+    
+    if (param) ac->param = tmp_param;
 }
 
 /**
@@ -1316,6 +1327,7 @@ void WaMenuItem::UpdateCBox(void) {
                         mfunc = mfunc2;
                         func_mask = func_mask2;
                         cb_width = cb_width2;
+                        param = param2;
                     }
                     else {
 #ifdef XFT
@@ -1333,6 +1345,7 @@ void WaMenuItem::UpdateCBox(void) {
                         mfunc = mfunc1;
                         func_mask = func_mask1;
                         cb_width = cb_width1;
+                        param = param1;
                     }
                 }
             }

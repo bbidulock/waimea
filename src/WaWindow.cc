@@ -1948,7 +1948,9 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
     Window w;
     int i, rx, ry;
     unsigned int ui;
-    WaMenu *menu = (WaMenu *) ac->param;
+    WaMenu *menu = waimea->GetMenuNamed(ac->param);
+
+    if (! menu) return;
     
     if (XQueryPointer(display, wascreen->id, &w, &w, &rx, &ry, &i, &i, &ui)) {
         if (menu->tasksw) waimea->taskswitch->Build(wascreen);
@@ -1975,7 +1977,9 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     Window w;
     int i, rx, ry;
     unsigned int ui;
-    WaMenu *menu = (WaMenu *) ac->param;
+    WaMenu *menu = waimea->GetMenuNamed(ac->param);
+
+    if (! menu) return;
     
     if (XQueryPointer(display, wascreen->id, &w, &w, &rx, &ry, &i, &i, &ui)) {
         if (menu->tasksw) waimea->taskswitch->Build(wascreen);
@@ -1997,8 +2001,12 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
  * @param bool True if we should focus root item
  */
 void WaWindow::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
-    ((WaMenu *)(ac->param))->Unmap(focus);
-    ((WaMenu *)(ac->param))->UnmapSubmenus(focus);
+    WaMenu *menu = waimea->GetMenuNamed(ac->param);
+    
+    if (! menu) return;
+    
+    menu->Unmap(focus);
+    menu->UnmapSubmenus(focus);
 }
 
 /**

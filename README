@@ -360,7 +360,7 @@ ACTIONS
                 menuunmap(menu_name)
 		menumapfocused(menu_name)
                 menuremapfocused(menu_name)
-                restart
+                restart[(command)]
                 exit
 
         List of event types:

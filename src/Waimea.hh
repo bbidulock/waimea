@@ -103,6 +103,7 @@ public:
     void WaRaiseWindow(Window);
     void WaLowerWindow(Window);
     void UpdateCheckboxes(int);
+    WaMenu *GetMenuNamed(char *);
     
     Display *display;
     WaScreen *wascreen;
@@ -131,7 +132,7 @@ int xerrorhandler(Display *, XErrorEvent *);
 int wmrunningerror(Display *, XErrorEvent *);
 void signalhandler(int);
 char *wastrdup(char *);
-void restart(void);
+void restart(char *);
 void quit(int);
 
 #endif // __Waimea_hh
