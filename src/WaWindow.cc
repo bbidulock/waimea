@@ -181,18 +181,21 @@ void WaWindow::Gravitate(int multiplier) {
         case NorthEastGravity:
             attrib.x -= multiplier * border_w;
         case NorthGravity:
-            attrib.y += multiplier * (border_w * 2 + title_w);
+            attrib.y += multiplier * border_w;
+            if (title_w) attrib.y += multiplier * (title_w + border_w);
             break;
         case SouthWestGravity:
             attrib.x += multiplier * border_w * 2;
         case SouthEastGravity:
             attrib.x -= multiplier * border_w;
         case SouthGravity:
-            attrib.y -= multiplier * (border_w * 2 + handle_w);
+            attrib.y -= multiplier * border_w;
+            if (handle_w) attrib.y -= multiplier * (handle_w + border_w);
             break;
         case CenterGravity:
             attrib.x += multiplier * (border_w / 2);
-            attrib.y += (multiplier * (border_w * 2 + title_w)) / 2;
+            attrib.y += multiplier * (border_w / 2);
+            if (title_w) attrib.y += multiplier * ((title_w + border_w) / 2);
             break;
         case StaticGravity:
             break;
@@ -267,10 +270,12 @@ void WaWindow::UpdateAllAttributes(void) {
     Gravitate(ApplyGravity);
     
     frame->attrib.x = attrib.x - border_w;
-    frame->attrib.y = attrib.y - title_w - border_w * 2;
+    frame->attrib.y = attrib.y - border_w;
+    if (flags.title) frame->attrib.y -= title_w + border_w;
     frame->attrib.width = attrib.width;
-    frame->attrib.height = attrib.height + title_w +
-        handle_w + border_w * 2;
+    frame->attrib.height = attrib.height;
+    if (flags.title) frame->attrib.height += title_w + border_w;
+    if (flags.handle) frame->attrib.height += handle_w + border_w;
 
     XSetWindowBorderWidth(display, frame->id, border_w);
     if (! flags.shaded)
@@ -325,8 +330,7 @@ void WaWindow::UpdateAllAttributes(void) {
     }
     if (flags.handle) {
         handle->attrib.x = 25;
-        handle->attrib.y = attrib.height + title_w +
-            border_w;
+        handle->attrib.y = frame->attrib.height - handle_w - border_w;
         handle->attrib.width = attrib.width - 50 -
             border_w * 2;
         if (handle->attrib.width < 1) handle->attrib.width = 1;
@@ -337,8 +341,7 @@ void WaWindow::UpdateAllAttributes(void) {
                           handle->attrib.height);
                 
         grip_l->attrib.x = - border_w;
-        grip_l->attrib.y = attrib.height + title_w +
-            border_w;
+        grip_l->attrib.y = frame->attrib.height - handle_w - border_w;
         grip_l->attrib.width  = 25;
         grip_l->attrib.height = wascreen->wstyle.handle_width;
         XSetWindowBorderWidth(display, grip_l->id, border_w);
@@ -347,8 +350,7 @@ void WaWindow::UpdateAllAttributes(void) {
                           grip_l->attrib.height);
         
         grip_r->attrib.x = attrib.width - 25 - border_w;
-        grip_r->attrib.y = attrib.height + title_w +
-            border_w;
+        grip_r->attrib.y = frame->attrib.height - handle_w - border_w;
         grip_r->attrib.width  = 25;
         grip_r->attrib.height = wascreen->wstyle.handle_width;
         XSetWindowBorderWidth(display, grip_r->id, border_w);
@@ -359,8 +361,10 @@ void WaWindow::UpdateAllAttributes(void) {
         DrawHandlebar();
     }
     XGrabServer(display);
-    if (validateclient(id))
-        XMoveWindow(display, id, 0, title_w + border_w);
+    if (validateclient(id)) {
+        if (flags.title) XMoveWindow(display, id, 0, title_w + border_w);
+        else XMoveWindow(display, id, 0, title_w);
+    }
     XUngrabServer(display);
     
     int m_x, m_y, m_w, m_h;
@@ -394,12 +398,14 @@ void WaWindow::RedrawWindow(void) {
     
     if (old_attrib.x != attrib.x) {
         frame->attrib.x = attrib.x - border_w;
+        
         old_attrib.x = attrib.x;
 
         move = True;
     }
     if (old_attrib.y != attrib.y) {
-        frame->attrib.y = attrib.y - title_w - border_w * 2;
+        frame->attrib.y = attrib.y - border_w;
+        if (flags.title) frame->attrib.y -= title_w + border_w;
         old_attrib.y = attrib.y;
             
         move = True;
@@ -446,8 +452,9 @@ void WaWindow::RedrawWindow(void) {
         }
     }
     if (old_attrib.height != attrib.height) {
-        frame->attrib.height = attrib.height + title_w + handle_w +
-            border_w * 2;
+        frame->attrib.height = attrib.height;
+        if (flags.title) frame->attrib.height += title_w + border_w;
+        if (flags.handle) frame->attrib.height += handle_w + border_w;
         old_attrib.height = attrib.height;
         
         resize = True;
