@@ -215,8 +215,10 @@ void WaMenu::Build(WaScreen *screen) {
         
         (*it)->width = XTextWidth(font, (*it)->label, strlen((*it)->label)) +
             20;
-        tmp_w = XTextWidth(font, (*it)->label2, strlen((*it)->label2)) + 20;
-        if (tmp_w > (*it)->width) (*it)->width = tmp_w;
+        if ((*it)->type == MenuCBItemType) {
+            tmp_w = XTextWidth(font, (*it)->label2, strlen((*it)->label2)) +
+                20;
+            if (tmp_w > (*it)->width) (*it)->width = tmp_w;
         }
 #endif // XFT
         

@@ -29,9 +29,9 @@ is a fast and highly customizable virtual desktop window manager.
 It uses
 .BR blackbox (1)
 image rendering engine (blackbox styles support) and can use 
-Xrender extension for rendering fonts 
-(anti-aliased font support). It also features a very advanced 
-configuration system with which it's possible to make 
+Xft library for font rendering (anti-aliased font support). 
+It also features a very advanced configuration system with which
+it's possible to make 
 .I waimea
 behave as almost any other window manager.
 
@@ -97,7 +97,7 @@ used. To force
 .I waimea 
 to read a different configuration file use 
 .I --rcfile
-switch. Below are a list of the configuration options 
+switch. Below is a list of configuration options that 
 .I waimea
 understands.
 
@@ -342,7 +342,7 @@ The shading is placed one pixel in from the edge of the image.
 
 Instead of a texture description, also the option
 .I ParentRelative
-is available, which makes the component appear as a part of its parent, e.g.
+is available, which makes the component appear as a part of its parent,
 totally transparant.
 .nf
 
@@ -474,7 +474,7 @@ Font for menu items.
 .TP 
 .B menu.*.xftFontSize:     Float
 Floating point number between 2.0 and 100.0. This option sets the 
-xft font size to used for menu items (font height in pixels, default=11).
+xft font size to used for menu items (font height in pixels, default=12).
 
 .PP
 .TP 
@@ -550,8 +550,8 @@ defining the window that the action should apply to and the position of the
 .I action
 in the windows action list. 
 .PP
-Remember that when waimea creates a action list
-for a window it first tries to find a key with position number 1 when if
+Remember that when waimea creates an action list
+for a window it first tries to find a key with position number 1 then if
 number 1 was find it continues with number 2 and so on 
 until a position number isn't found. This means that you can't have 
 a key with number 3 if you don't have a key with number 2.
@@ -583,7 +583,7 @@ that will be performed when a ButtonPress
 event is received from Button1 and at least mod1 modifier is active
 and the control modifier is not active.
 .PP
-Here is the key list of all windows that you can create actions for:
+Here is the key list for all windows that you can create actions for:
 .TP
 .B window.frame
 This is the parent window for the client window and all decoration
@@ -674,8 +674,8 @@ Here is the list of actions common for all window types:
 .TP
 .B {command line}
 You can specify a command line to execute instead of
-a function. Command line must be between a '{'
-character and a '}' character.
+a function. Command line must be within a '{'
+and a '}' character.
 
 .PP
 .TP
@@ -865,7 +865,7 @@ mapped menu to the new mapping position.
 ending with 'focused' will set input focus to the first
 focusable menu item in the menu when being mapped.
 A menu must be given as parameter to all these 
-.I actions
+.I actions.
 .RE
 
 .PP
@@ -1098,7 +1098,7 @@ mapped menu to the new mapping position.
 ending with 'focused' will set input focus to the first
 focusable menu item in the menu when being mapped.
 A menu must be given as parameter to all these 
-.I actions
+.I actions.
 .RE
 
 .PP
@@ -1122,22 +1122,21 @@ Ends a move or resize process.
 
 .PP
 Here is the list of event types that can be linked to an 
-.I action
-:
+.I action:
 
 .PP
 .TP
 .B buttonpress
 Occurs when a mouse button is pressed.
 Event detail for this event can be one of 
-.I button1, button2, button3, button4, button5, button6, button7 or anybutton
+.I button1, button2, button3, button4, button5, button6, button7 or anybutton.
 
 .PP
 .TP
 .B buttonrelease
 Occurs when a mouse button is released.
 Event detail for this event can be one of 
-.I button1, button2, button3, button4, button5, button6, button7 or anybutton
+.I button1, button2, button3, button4, button5, button6, button7 or anybutton.
 
 .PP
 .TP
@@ -1145,7 +1144,7 @@ Event detail for this event can be one of
 Occurs when a mouse button is pressed two times within time of the 
 double click interval.
 Event detail for this event can be one of 
-.I button1, button2, button3, button4, button5, button6, button7 or anybutton
+.I button1, button2, button3, button4, button5, button6, button7 or anybutton.
 
 .PP
 .TP
@@ -1198,7 +1197,7 @@ Here is the list of event modifiers that can used in the modifier mask:
 .B button[1-5]mask
 
 .PP
-Default action file is /usr/local/shar/Waimea/actions/action.sloppy-focus.
+Default action file is @pkgdatadir@/actions/action.sloppy-focus.
 You can study or edit this action file to grasp how the action system works.
 
 
@@ -1207,7 +1206,7 @@ You can study or edit this action file to grasp how the action system works.
 All menus used in the action file must be defined in the menu file.
 .PP
 A menu definition starts with a [start] (menu_name) statement and ends
-with a [end] statement. Remember that a [start] must be followed by a
+with a [end] statement. Remember that a [start] statement must be followed by a
 menu name. Between the [start] and [end] statements a number of
 [item], [title], [sub] and [checkbox=flag] statements should be put. 
 The only thing separating these three menu item types are their 
@@ -1288,7 +1287,7 @@ is 'True' the checkbox item will be in mode defined by the menu string
 after @TRUE.
 
 .PP
-Here is the list of flags that can be used checkbox items:
+Here is the list of flags that can be used with checkbox items:
 MAXIMIZED
 .br
 SHADED
@@ -1310,7 +1309,7 @@ DECORALL
 .PP
 
 .PP
-Default menu file is /usr/local/shar/Waimea/menu.
+Default menu file is @pkgdatadir@/menu.
 You can study or edit this menu file to grasp how the menu system works.
 
 
