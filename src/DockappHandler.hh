@@ -54,6 +54,7 @@ public:
     XClassHint *c_hint;
     char *title;
     bool deleted;
+    bool added;
 };
 
 #endif // __DockappHandler_hh

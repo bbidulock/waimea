@@ -1627,10 +1627,9 @@ void WaScreen::AddDockapp(Window window) {
 
     list<Regex *>::iterator reg_it;
     list<int>::iterator regt_it;
-    list<DockappHandler *>::iterator dock_it;
-    if (have_hints) {
-        dock_it = docks.begin();
-        for (; dock_it != docks.end(); ++dock_it) {
+    list<DockappHandler *>::iterator dock_it = docks.begin();
+    for (; dock_it != docks.end(); ++dock_it) {
+        if (have_hints) {
             reg_it = (*dock_it)->style->order.begin();
             regt_it = (*dock_it)->style->order_type.begin();
             for (; reg_it != (*dock_it)->style->order.end();
@@ -1648,7 +1647,7 @@ void WaScreen::AddDockapp(Window window) {
             regt_it = (*dock_it)->style->order_type.begin();
             for (; reg_it != (*dock_it)->style->order.end();
                  ++reg_it, ++regt_it) {
-                if ((*regt_it == ClassMatchType) &&
+                if (have_hints && (*regt_it == ClassMatchType) &&
                     ((*reg_it)->Match(c_hint->res_class))) {
                     da = new Dockapp(window, *dock_it);
                     da->c_hint = c_hint;
@@ -1657,6 +1656,8 @@ void WaScreen::AddDockapp(Window window) {
                     return;
                 }
             }
+        }
+        if (title) {
             reg_it = (*dock_it)->style->order.begin();
             regt_it = (*dock_it)->style->order_type.begin();
             for (; reg_it != (*dock_it)->style->order.end();
@@ -1672,11 +1673,11 @@ void WaScreen::AddDockapp(Window window) {
             }
         }
     }
-    dock_it = docks.begin();
-    da = new Dockapp(window, *dock_it);
+    DockappHandler *lastd = docks.back();
+    da = new Dockapp(window, lastd);
     da->c_hint = NULL;
     da->title = NULL;
-    (*dock_it)->Update();
+    lastd->Update();
     if (have_hints) {
         XFree(c_hint->res_name);
         XFree(c_hint->res_class);

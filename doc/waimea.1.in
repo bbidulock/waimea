@@ -260,7 +260,7 @@ screen0.dock0.order:    n/.*meter$/ c/pager/
 This will put dockapp window with name ending with `meter' at 
 the first position in dockappholder and dockapp with classname containing
 `pager' at second position. All dockapp windows that doesn't match any 
-regular expression will be put in dock0 at last position.
+regular expression will be put in last dockapp at last position.
 
 .TP
 .B screen0.dock[num].direction:     Direction

@@ -132,6 +132,11 @@ void DockappHandler::Update(void) {
     width = style->gridspace;
     height = style->gridspace;
 
+
+    list<Dockapp *>::iterator it = dockapp_list->begin();
+    for (; it != dockapp_list->end(); ++it)
+        (*it)->added = false;
+
     list<Dockapp *>::reverse_iterator d_it;
     list<Dockapp *> *tmp_list = new list<Dockapp *>;
     list<Regex *>::reverse_iterator reg_it = style->order.rbegin();
@@ -141,29 +146,42 @@ void DockappHandler::Update(void) {
         if (*regt_it == NameMatchType) {
             for (; d_it != dockapp_list->rend(); ++d_it) {
                 if ((*d_it)->c_hint &&
-                    ((*reg_it)->Match((*d_it)->c_hint->res_name)))
+                    ((*reg_it)->Match((*d_it)->c_hint->res_name))) {
+                    (*d_it)->added = true;
                     tmp_list->push_front(*d_it);
+                }
             }
         } else if (*regt_it == ClassMatchType) {
             for (; d_it != dockapp_list->rend(); ++d_it) {
                 if ((*d_it)->c_hint &&
-                    ((*reg_it)->Match((*d_it)->c_hint->res_class)))
+                    ((*reg_it)->Match((*d_it)->c_hint->res_class))) {
+                    (*d_it)->added = true;
                     tmp_list->push_front(*d_it);
+                }
             }
         } else if (*regt_it == TitleMatchType) {
             for (; d_it != dockapp_list->rend(); ++d_it) {
                 if ((*d_it)->title &&
-                    ((*reg_it)->Match((*d_it)->title)))
+                    ((*reg_it)->Match((*d_it)->title))) {
+                    (*d_it)->added = true;
                     tmp_list->push_front(*d_it);
+                }
             }
         }
     }
+    it = dockapp_list->begin();
+    for (; it != dockapp_list->end(); ++it)
+        if (! (*it)->added) {
+            (*it)->added = true;
+            tmp_list->push_back(*it);
+        }
+    
     while (! dockapp_list->empty())
         dockapp_list->pop_back();
     delete dockapp_list;
     dockapp_list = tmp_list;
     
-    list<Dockapp *>::iterator it = dockapp_list->begin();
+    it = dockapp_list->begin();
     for (; it != dockapp_list->end(); ++it) {
         switch (style->direction) {
             case VerticalDock:
