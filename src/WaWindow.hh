@@ -201,6 +201,7 @@ public:
         Raise(e, ac);
         Focus(True);
     }
+    inline void Nop(XEvent *, WaAction *) {}
 
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
     

@@ -150,6 +150,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaWindow::AlwaysontopToggle));
     wacts->push_back(new StrComp("alwaysatbottomtoggle",
                                  &WaWindow::AlwaysatbottomToggle));
+    wacts->push_back(new StrComp("nop", &WaWindow::Nop));
     
     racts = new list<StrComp *>;
     racts->push_back(new StrComp("focus", &WaScreen::Focus));
@@ -195,6 +196,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     racts->push_back(new StrComp("taskswitcher", &WaScreen::TaskSwitcher));
     racts->push_back(new StrComp("previoustask", &WaScreen::PreviousTask));
     racts->push_back(new StrComp("nexttask", &WaScreen::NextTask));
+    racts->push_back(new StrComp("nop", &WaScreen::Nop));
     
     macts = new list<StrComp *>;
     macts->push_back(new StrComp("unlink", &WaMenuItem::UnLinkMenu));
@@ -215,11 +217,13 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     macts->push_back(new StrComp("lower", &WaMenuItem::Lower));
     macts->push_back(new StrComp("move", &WaMenuItem::Move));
     macts->push_back(new StrComp("moveopaque", &WaMenuItem::MoveOpaque));
-    macts->push_back(new StrComp("viewportleft", &WaMenuItem::MoveViewportLeft));
+    macts->push_back(new StrComp("viewportleft",
+                                 &WaMenuItem::MoveViewportLeft));
     macts->push_back(new StrComp("viewportright",
                                  &WaMenuItem::MoveViewportRight));
     macts->push_back(new StrComp("viewportup", &WaMenuItem::MoveViewportUp));
-    macts->push_back(new StrComp("viewportdown", &WaMenuItem::MoveViewportDown));
+    macts->push_back(new StrComp("viewportdown",
+                                 &WaMenuItem::MoveViewportDown));
     macts->push_back(new StrComp("scrollviewportleft",
                                  &WaMenuItem::ScrollViewportLeft));
     macts->push_back(new StrComp("scrollviewportright",
@@ -250,6 +254,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     macts->push_back(new StrComp("nexttask", &WaMenuItem::NextTask));
     macts->push_back(new StrComp("nextitem", &WaMenuItem::NextItem));
     macts->push_back(new StrComp("previousitem", &WaMenuItem::PreviousItem));
+    macts->push_back(new StrComp("nop", &WaMenuItem::Nop));
     
     types = new list<StrComp *>;
     types->push_back(new StrComp("keypress", KeyPress));
