@@ -14,6 +14,7 @@ menu.hilite:				flat gradient horizontal
   menu.hilite.textColor:		#e0f0ff
 
 menu.bulletlook:			>
+menu.justify:				right
 
 window.title.focus:			flat gradient crossdiagonal
   window.title.focus.color:		#8090c0
