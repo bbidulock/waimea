@@ -23,8 +23,9 @@ window.title.focus:           flat gradient crossdiagonal
   window.title.focus.colorTo: #ffffff
   
 window.title.unfocus:           flat gradient crossdiagonal
-  window.title.unfocus.color:   #202838
-  window.title.unfocus.colorTo: #404858
+  window.title.unfocus.color:   #7080b0
+  window.title.unfocus.colorTo: #ffffff
+  window.title.unfocus.opacity: 50
   
 window.justify: right
 
@@ -32,13 +33,13 @@ window.label.focus:             parentrelative
   window.label.focus.textColor: #000000
   
 window.label.unfocus:             parentrelative
-  window.label.unfocus.textColor: #707488
+  window.label.unfocus.textColor: #222222
 
 window.button.focus:            parentrelative
   window.button.focus.picColor: #000000
   
 window.button.unfocus:            parentrelative
-  window.button.unfocus.picColor: #707488
+  window.button.unfocus.picColor: #222222
   
 window.button.pressed:           sunken gradient vertical
   window.button.pressed.color:   #8090c0
@@ -51,16 +52,22 @@ window.handle.focus:           flat gradient crossdiagonal
   window.handle.focus.colorTo: #506058
   
 window.handle.unfocus:           flat gradient crossdiagonal
-  window.handle.unfocus.color:   #202838
-  window.handle.unfocus.colorTo: #404858
+  window.handle.unfocus.color:   #90b098
+  window.handle.unfocus.colorTo: #506058
+  window.handle.unfocus.opacity: 50
 
 window.grip.focus:           flat gradient crossdiagonal
   window.grip.focus.color:   #fff0a0
   window.grip.focus.colorTo: #c0a040
   
 window.grip.unfocus:           flat gradient crossdiagonal
-  window.grip.unfocus.color:   #202838
-  window.grip.unfocus.colorTo: #404858
+  window.grip.unfocus.color:   #fff0a0
+  window.grip.unfocus.colorTo: #c0a040
+  window.grip.unfocus.opacity: 50
+
+dockapphandler:           flat gradient crossdiagonal
+  dockapphandler.color:   #7080b0
+  dockapphandler.colorTo: #506090
 
 borderColor: #000000
 borderWidth: 2

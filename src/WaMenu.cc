@@ -855,7 +855,7 @@ void WaMenuItem::Hilite(void) {
     texture = &menu->wascreen->mstyle.hilite;
 
 #ifdef XFT
-    if (texture->getOpacity()) {
+    if (! texture->getOpacity()) {
 #endif // XFT
     
         if (menu->philite)
@@ -883,7 +883,7 @@ void WaMenuItem::DeHilite(void) {
     texture = &menu->wascreen->mstyle.back_frame;
 
 #ifdef XFT
-    if (texture->getOpacity())
+    if (! texture->getOpacity())
 #endif // XFT
         
         XSetWindowBackgroundPixmap(menu->display, id, ParentRelative);

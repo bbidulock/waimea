@@ -158,9 +158,11 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     wacts->push_back(new StrComp("acceptconfigrequesttoggle",
                                  &WaWindow::AcceptConfigRequestToggle));
     wacts->push_back(new StrComp("pointerwarp", &WaWindow::PointerWarp));
-    wacts->push_back(new StrComp("MoveResize", &WaWindow::MoveResize));
-    wacts->push_back(new StrComp("MoveResizeVirtual",
+    wacts->push_back(new StrComp("moveresize", &WaWindow::MoveResize));
+    wacts->push_back(new StrComp("moveresizevirtual",
                                  &WaWindow::MoveResizeVirtual));
+    wacts->push_back(new StrComp("movetopointer",
+                                 &WaWindow::MoveWindowToPointer));
     wacts->push_back(new StrComp("nop", &WaWindow::Nop));
     
     racts = new list<StrComp *>;
@@ -793,7 +795,8 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
             mstyle->f_justify = RightJustify;
             mstyle->t_justify = RightJustify;
         }
-        else if (strstr(value.addr, "center") || strstr(value.addr, "Center")) {
+        else if (strstr(value.addr, "center") ||
+                 strstr(value.addr, "Center")) {
             mstyle->f_justify = CenterJustify;
             mstyle->t_justify = CenterJustify;
         }

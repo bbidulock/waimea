@@ -3018,6 +3018,37 @@ void WaWindow::MoveResizeVirtual(XEvent *e, WaAction *ac) {
     RedrawWindow();
 }
 
+/**
+ * @fn    MoveWindowToPointer(XEvent *e, WaAction *ac)
+ * @brief Moves window to pointer position
+ *
+ * Moves window to mouse pointer position and makes sure that it isn't
+ * moved outside screen.
+ *
+ * @param e XEvent causing function call
+ */
+void WaWindow::MoveWindowToPointer(XEvent *e, WaAction *) {
+    int total_h = border_w * 2;
+    if (title_w) total_h += border_w;
+    if (handle_w) total_h += border_w;
+    total_h += attrib.height;
+
+    attrib.x = e->xbutton.x_root - attrib.width / 2;
+    attrib.y = e->xbutton.y_root - attrib.height / 2;
+    
+    if (attrib.x + border_w * 2 + attrib.width > wascreen->width)
+        attrib.x = wascreen->width - attrib.width - border_w;
+    else if (attrib.x < 0) attrib.x = border_w;
+    
+    if (attrib.y + total_h > wascreen->height)
+        attrib.y = wascreen->height - handle_w - border_w - attrib.height -
+            ((handle_w)? border_w: 0);
+    else if (attrib.y < 0)
+        attrib.y = title_w + border_w + ((title_w)? border_w: 0);
+
+    RedrawWindow();
+}
+
 
 /**
  * @fn    EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,

@@ -1021,6 +1021,11 @@ position. moveresizevirtual action moves window to a virtual screen position.
 .RE
 
 .PP
+.TP
+.B movetopointer
+Moves center of window to mouse pointer position.
+
+.PP
 Here is the list of additional actions for menu.* windows:
 
 .PP

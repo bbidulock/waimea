@@ -215,6 +215,7 @@ public:
     }
     void MoveResize(XEvent *, WaAction *);
     void MoveResizeVirtual(XEvent *, WaAction *);
+    void MoveWindowToPointer(XEvent *, WaAction *);
     inline void Nop(XEvent *, WaAction *) {}
 
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
