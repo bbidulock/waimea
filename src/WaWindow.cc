@@ -103,6 +103,8 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     
     waimea->window_table->insert(make_pair(id, this));
     waimea->wawindow_list->push_back(this);
+    waimea->wawindow_list_map_order->push_back(this);
+    waimea->wawindow_list_stacking->push_back(this);
 }
 
 /**
@@ -114,7 +116,6 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
  */
 WaWindow::~WaWindow(void) {
     waimea->window_table->erase(id);
-    waimea->wawindow_list->remove(this);
     
 #ifdef XFT
     XftDrawDestroy(xftdraw);
@@ -133,7 +134,7 @@ WaWindow::~WaWindow(void) {
     XSync(display, False);
     XUngrabServer(display);
     
-    XDestroyWindow(display, frame->id);
+    XDestroyWindow(display, frame->id);    
     delete frame;
     delete title;
     delete label;
@@ -152,6 +153,14 @@ WaWindow::~WaWindow(void) {
     XDestroyWindow(display, o_north);
     XDestroyWindow(display, o_south);
     XFree(name);
+
+    waimea->wawindow_list->remove(this);
+    waimea->wawindow_list_map_order->remove(this);
+    waimea->wawindow_list_stacking->remove(this);
+    if (flags.alwaysontop)
+        waimea->wawindow_list_stacking_aot->remove(this);
+    if (flags.alwaysatbottom)
+        waimea->wawindow_list_stacking_aab->remove(this);
 }
 
 /**
@@ -168,15 +177,22 @@ WaWindow::~WaWindow(void) {
 void WaWindow::Gravitate(int multiplier) {
     switch (size.win_gravity) {
         case NorthWestGravity:
-            attrib.x = attrib.x + (multiplier * border_w) * 2;
+            attrib.x += multiplier * border_w * 2;
         case NorthEastGravity:
-            attrib.x = attrib.x - multiplier * border_w;
+            attrib.x -= multiplier * border_w;
         case NorthGravity:
-            attrib.y = attrib.y + multiplier * (title_w + border_w * 2);
+            attrib.y += multiplier * (border_w * 2 + title_w);
+            break;
+        case SouthWestGravity:
+            attrib.x += multiplier * border_w * 2;
+        case SouthEastGravity:
+            attrib.x -= multiplier * border_w;
+        case SouthGravity:
+            attrib.y -= multiplier * (border_w * 2 + handle_w);
             break;
         case CenterGravity:
-            attrib.x = attrib.x + multiplier * (border_w / 2);
-            attrib.y = attrib.y + multiplier * (title_w / 2 + border_w);
+            attrib.x += multiplier * (border_w / 2);
+            attrib.y += (multiplier * (border_w * 2 + title_w)) / 2;
             break;
         case StaticGravity:
             break;
@@ -245,17 +261,17 @@ void WaWindow::MapWindow(void) {
  */
 void WaWindow::UpdateAllAttributes(void) {
     Gravitate(RemoveGravity);
-    
     border_w = (flags.border * wascreen->wstyle.border_width);
     title_w  = (flags.title  * wascreen->wstyle.title_height);
     handle_w = (flags.handle * wascreen->wstyle.handle_width);
+    Gravitate(ApplyGravity);
     
     frame->attrib.x = attrib.x - border_w;
     frame->attrib.y = attrib.y - title_w - border_w * 2;
     frame->attrib.width = attrib.width;
     frame->attrib.height = attrib.height + title_w +
         handle_w + border_w * 2;
-    
+
     XSetWindowBorderWidth(display, frame->id, border_w);
     if (! flags.shaded)
         XResizeWindow(display, frame->id, frame->attrib.width,
@@ -342,7 +358,6 @@ void WaWindow::UpdateAllAttributes(void) {
         RenderHandle();
         DrawHandlebar();
     }
-    Gravitate(ApplyGravity);
     XGrabServer(display);
     if (validateclient(id))
         XMoveWindow(display, id, 0, title_w + border_w);
@@ -1263,12 +1278,9 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
 void WaWindow::Raise(XEvent *, WaAction *) {
     if (! flags.alwaysontop && ! flags.alwaysatbottom) {
         waimea->WaRaiseWindow(frame->id);
-        if (flags.title) {
-            DrawLabel();
-            DrawCloseButton();
-            DrawMaxButton();
-            DrawIconifyButton();							
-        }
+        waimea->wawindow_list_stacking->remove(this);
+        waimea->wawindow_list_stacking->push_front(this);
+        net->SetClientListStacking(wascreen);
     }
 }
 
@@ -1279,8 +1291,12 @@ void WaWindow::Raise(XEvent *, WaAction *) {
  * Lowers the window to the bottom of the display stack
  */
 void WaWindow::Lower(XEvent *, WaAction *) {
-    if (! flags.alwaysontop && ! flags.alwaysatbottom)
+    if (! flags.alwaysontop && ! flags.alwaysatbottom) {
         waimea->WaLowerWindow(frame->id);
+        waimea->wawindow_list_stacking->remove(this);
+        waimea->wawindow_list_stacking->push_back(this);
+        net->SetClientListStacking(wascreen);
+    }
 }
 
 /**
@@ -1444,7 +1460,7 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
     list<XEvent *> *maprequest_list;
     Window w;
     unsigned int ui;
-    
+
     XQueryPointer(display, wascreen->id, &w, &w, &px, &py, &i, &i, &ui);
     
     if (e->type != ButtonPress) {
@@ -2309,6 +2325,10 @@ void WaWindow::AlwaysontopOn(XEvent *, WaAction *) {
     net->SetWmState(this);
     waimea->UpdateCheckboxes(AOTCBoxType);
     waimea->UpdateCheckboxes(AABCBoxType);
+    waimea->wawindow_list_stacking->remove(this);
+    waimea->wawindow_list_stacking_aab->remove(this);
+    waimea->wawindow_list_stacking_aot->push_back(this);
+    net->SetClientListStacking(wascreen);
 }
 
 /**
@@ -2327,6 +2347,10 @@ void WaWindow::AlwaysatbottomOn(XEvent *, WaAction *) {
     net->SetWmState(this);
     waimea->UpdateCheckboxes(AOTCBoxType);
     waimea->UpdateCheckboxes(AABCBoxType);
+    waimea->wawindow_list_stacking->remove(this);
+    waimea->wawindow_list_stacking_aot->remove(this);
+    waimea->wawindow_list_stacking_aab->push_back(this);
+    net->SetClientListStacking(wascreen);
 }
 
 /**
@@ -2341,6 +2365,9 @@ void WaWindow::AlwaysontopOff(XEvent *, WaAction *) {
     waimea->WaRaiseWindow(0);
     net->SetWmState(this);
     waimea->UpdateCheckboxes(AOTCBoxType);
+    waimea->wawindow_list_stacking_aot->remove(this);
+    waimea->wawindow_list_stacking->push_front(this);
+    net->SetClientListStacking(wascreen);
 }
 
 /**
@@ -2355,6 +2382,9 @@ void WaWindow::AlwaysatbottomOff(XEvent *, WaAction *) {
     waimea->WaLowerWindow(0);
     net->SetWmState(this);
     waimea->UpdateCheckboxes(AABCBoxType);
+    waimea->wawindow_list_stacking_aab->remove(this);
+    waimea->wawindow_list_stacking->push_back(this);
+    net->SetClientListStacking(wascreen);
 }
 
 /**

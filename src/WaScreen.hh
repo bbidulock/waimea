@@ -208,6 +208,7 @@ public:
     char displaystring[1024];
     ScreenEdge *west, *east, *north, *south;
     Workarea *workarea;
+    Window wm_check;
     
     list<WMstrut *> *strut_list;
     list<DockappHandler *> *docks;

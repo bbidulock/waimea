@@ -58,8 +58,8 @@ char *errfunc;
  * @param options Parsed command line options
  */
 Waimea::Waimea(char **av, struct waoptions *options) {
-    struct sigaction act;
-    
+    struct sigaction act;    
+
     argv = av;
     XSetErrorHandler((XErrorHandler) xerrorhandler);
     if (! (display = XOpenDisplay(options->display))) {
@@ -77,6 +77,10 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     always_on_top_list = new list<Window>;
     always_at_bottom_list = new list<Window>;
     wawindow_list = new list<WaWindow *>;
+    wawindow_list_map_order = new list<WaWindow *>;
+    wawindow_list_stacking = new list<WaWindow *>;
+    wawindow_list_stacking_aot = new list<WaWindow *>;
+    wawindow_list_stacking_aab = new list<WaWindow *>;
     wamenu_list = new list<WaMenu *>;
     
     session_cursor = XCreateFontCursor(display, XC_left_ptr);
@@ -106,9 +110,15 @@ Waimea::Waimea(char **av, struct waoptions *options) {
  * connection to the display.
  */
 Waimea::~Waimea(void) {
+    net->SetClientList(wascreen);
+    net->SetClientListStacking(wascreen);
     delete eh;
     LISTCLEAR(wamenu_list);
     LISTCLEAR2(wawindow_list);
+    delete wawindow_list_map_order;
+    delete wawindow_list_stacking;
+    delete wawindow_list_stacking_aot;
+    delete wawindow_list_stacking_aab;
     delete wascreen;
     delete net;
     delete rh;

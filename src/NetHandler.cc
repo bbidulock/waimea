@@ -34,6 +34,16 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_MOTIF_WM_HINTS", False);
     wm_state =
         XInternAtom(display, "WM_STATE", False);
+    net_supported =
+        XInternAtom(display, "_NET_SUPPORTED", False);
+    net_supported_wm_check =
+        XInternAtom(display, "_NET_SUPPORTING_WM_CHECK", False);
+    net_client_list =
+        XInternAtom(display, "_NET_CLIENT_LIST", False);
+    net_client_list_stacking =
+        XInternAtom(display, "_NET_CLIENT_LIST_STACKING", False);
+    net_active_window =
+        XInternAtom(display, "_NET_ACTIVE_WINDOW", False);
     net_state =
         XInternAtom(display, "_NET_WM_STATE", False);
     net_state_sticky =
@@ -69,7 +79,9 @@ NetHandler::NetHandler(Waimea *wa) {
     net_wm_strut =
         XInternAtom(display, "_NET_WM_STRUT", False);
     net_workarea =
-        XInternAtom(display, "_NET_WORKAREA", False);    
+        XInternAtom(display, "_NET_WORKAREA", False);
+    net_wm_name =
+        XInternAtom(display, "_NET_WM_NAME", False);
     
     xa_xdndaware = XInternAtom(display, "XdndAware", False);
     xa_xdndenter = XInternAtom(display, "XdndEnter", False);
@@ -372,6 +384,160 @@ void NetHandler::SetWmState(WaWindow *ww) {
 }
 
 /**
+ * @fn    SetSupported(WaScreen *ws)
+ * @brief Writes _NET_SUPPORTED hint
+ *
+ * Sets _NET_SUPPORTED hint to the atoms Waimea supports.
+ *
+ * @param ws WaScreen object
+ */
+void NetHandler::SetSupported(WaScreen *ws) {
+    CARD32 data[20];
+
+    data[0]  = net_state;
+    data[1]  = net_state_sticky;
+    data[2]  = net_state_shaded;
+    data[3]  = net_maximized_vert;
+    data[4]  = net_maximized_horz;
+    data[5]  = net_desktop_geometry;
+    data[6]  = net_desktop_viewport;
+    data[7]  = net_wm_strut;
+    data[8]  = net_workarea;
+    data[9]  = net_client_list;
+    data[10] = net_client_list_stacking;
+    data[11] = net_active_window;
+
+    data[12] = net_state_decor;
+    data[13] = net_state_decortitle;
+    data[14] = net_state_decorhandle;
+    data[15] = net_state_decorborder;
+    data[16] = net_state_aot;
+    data[17] = net_state_aab;
+    data[18] = net_maximized_restore;
+    data[19] = net_virtual_pos;
+    XChangeProperty(display, ws->id, net_supported, XA_ATOM, 32,
+                    PropModeReplace, (unsigned char *) &data, 20);
+}
+
+/**
+ * @fn    SetSupportedCheck(WaScreen *ws, Window child)
+ * @brief Writes _NET_SUPPORTED_WM_CHECK hint
+ *
+ * Sets _NET_SUPPORTED_WM_CHECK to child window and sets child windows
+ * _NET_WM_NAME hint to the window manager name.
+ *
+ * @param ws WaScreen object
+ & @param child Window to use as child window
+ */
+void NetHandler::SetSupportedWMCheck(WaScreen *ws, Window child) {
+    XChangeProperty(display, ws->id, net_supported_wm_check, XA_WINDOW, 32,
+                    PropModeReplace, (unsigned char *) &child, 1);
+
+    XChangeProperty(display, child, net_wm_name, XA_STRING, 8,
+                    PropModeReplace, (unsigned char *) PACKAGE,
+                    strlen(PACKAGE));
+}
+
+/**
+ * @fn    SetClientList(WaScreen *ws)
+ * @brief Writes _NET_CLIENT_LIST hint
+ *
+ * Updates _NET_CLIENT_LIST hint to the current window list.
+ *
+ * @param ws WaScreen object
+ */
+void NetHandler::SetClientList(WaScreen *ws) {
+    CARD32 data[1024];
+    int i = 0;
+
+    list<WaWindow *>::iterator it =
+        waimea->wawindow_list_map_order->begin();
+    for (; it != waimea->wawindow_list_map_order->end(); ++it) {
+        data[i++] = (*it)->id;
+    }
+    
+    XChangeProperty(display, ws->id, net_client_list, XA_WINDOW, 32,
+                    PropModeReplace, (unsigned char *) &data, i);
+}
+
+/**
+ * @fn    SetClientListStacking(WaScreen *ws)
+ * @brief Writes _NET_CLIENT_LIST_STCKING hint
+ *
+ * Updates _NET_CLIENT_LIST_STACKING hint to the current stacking order.
+ *
+ * @param ws WaScreen object
+ */
+void NetHandler::SetClientListStacking(WaScreen *ws) {
+    CARD32 data[1024];
+    list<WaWindow *>::reverse_iterator rit;
+    list<WaWindow *>::iterator it;    
+    int i = 0;
+    
+    it = waimea->wawindow_list_stacking_aab->begin();
+    for (; it != waimea->wawindow_list_stacking_aab->end(); ++it)
+      data[i++] = (*it)->id;
+    rit = waimea->wawindow_list_stacking->rbegin();
+    for (; rit != ws->waimea->wawindow_list_stacking->rend(); ++rit)
+      data[i++] = (*rit)->id;
+    rit = waimea->wawindow_list_stacking_aot->rbegin();
+    for (; rit != waimea->wawindow_list_stacking_aot->rend(); ++rit)
+      data[i++] = (*rit)->id;
+    
+    XChangeProperty(display, ws->id, net_client_list_stacking, XA_WINDOW, 32,
+                    PropModeReplace, (unsigned char *) &data, i);
+}
+
+/**
+ * @fn    GetClientList(WaScreen *ws)
+ * @brief Reads _NET_CLIENT_LIST_STACKING hint
+ *
+ * Updates window stacking order to order in _NET_CLIENT_LIST_STACKING hint.
+ *
+ * @param ws WaScreen object
+ */
+void NetHandler::GetClientListStacking(WaScreen *ws) {
+    CARD32 *data;    
+    hash_map<Window, WindowObject *>::iterator it;
+    WaWindow *ww;
+    int i;
+    
+    if (XGetWindowProperty(display, ws->id, net_client_list_stacking,
+                           0L, waimea->wawindow_list->size(),
+                           False, XA_WINDOW, &real_type,
+                           &real_format, &items_read, &items_left, 
+                           (unsigned char **) &data) == Success && 
+        items_read) {
+        for (i = 0; i < items_read; i++) {
+            if (((it = waimea->window_table->find(data[i])) !=
+                 waimea->window_table->end()) &&
+                (((*it).second)->type == WindowType)) {
+                ww = ((WaWindow *) (*it).second);
+                if (! ww->flags.alwaysontop && ! ww->flags.alwaysatbottom) {
+                    waimea->WaRaiseWindow(ww->frame->id);
+                    waimea->wawindow_list_stacking->remove(ww);
+                    waimea->wawindow_list_stacking->push_front(ww);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * @fn    SetActiveWindow(WaScreen *ws, Window win)
+ * @brief Writes _NET_ACTIVE_CLIENT hint
+ *
+ * Updates _NET_ACTIVE_CLIENT hint to the currently active window.
+ *
+ * @param win Window to set as active
+ * @param ws WaScreen object
+ */
+void NetHandler::SetActiveWindow(WaScreen *ws, Window win) {
+    XChangeProperty(display, ws->id, net_active_window, XA_WINDOW, 32,
+                    PropModeReplace, (unsigned char *) &win, 1);
+}
+
+/**
  * @fn    GetVirtualPos(WaWindow *ww)
  * @brief Reads virtual position hint
  *
@@ -380,12 +546,12 @@ void NetHandler::SetWmState(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::GetVirtualPos(WaWindow *ww) {
-    CARD32 *data;
+    int *data;
     
     XGrabServer(display);
     if (validateclient(ww->id))
         if (XGetWindowProperty(display, ww->id, net_virtual_pos, 0L, 2L, 
-                               False, XA_CARDINAL, &real_type, &real_format, 
+                               False, XA_INTEGER, &real_type, &real_format, 
                                &items_read, &items_left, 
                                (unsigned char **) &data) == Success && 
             items_read >= 2) {
@@ -411,7 +577,7 @@ void NetHandler::GetVirtualPos(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::SetVirtualPos(WaWindow *ww) {
-    CARD32 data[2];
+    int data[2];
     
     ww->Gravitate(RemoveGravity);
     data[0] = ww->wascreen->v_x + ww->attrib.x;
@@ -420,7 +586,7 @@ void NetHandler::SetVirtualPos(WaWindow *ww) {
 
     XGrabServer(display);
     if (validateclient(ww->id))
-        XChangeProperty(display, ww->id, net_virtual_pos, XA_CARDINAL, 32,
+        XChangeProperty(display, ww->id, net_virtual_pos, XA_INTEGER, 32,
                         PropModeReplace, (unsigned char *) &data, 2);
     XUngrabServer(display);
 }

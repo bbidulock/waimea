@@ -39,6 +39,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     int eventmask, i;
     unsigned int nchild;
     XWindowAttributes attr;
+    XSetWindowAttributes attrib_set;
     
     display = d;
     screen_number = scrn_number;
@@ -63,6 +64,13 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     XSetErrorHandler((XErrorHandler) xerrorhandler);
     
     waimea->window_table->insert(make_pair(id, this));
+    
+    attrib_set.override_redirect = True;
+    wm_check = XCreateWindow(display, id, 0, 0, 1, 1, 0,
+                       CopyFromParent, InputOnly, CopyFromParent,
+                       CWOverrideRedirect, &attrib_set);
+    net->SetSupported(this);
+    net->SetSupportedWMCheck(this, wm_check);
    
     sprintf(displaystring, "DISPLAY=%s", DisplayString(display));
     sprintf(displaystring + strlen(displaystring) - 1, "%d", screen_number);
@@ -139,6 +147,9 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     }
     XFree(wm_hints);
     XFree(children);
+    net->GetClientListStacking(this);
+    net->SetClientList(this);
+    net->SetClientListStacking(this);
 }
 
 /**
@@ -179,6 +190,7 @@ WaScreen::~WaScreen(void) {
     XFreeGC(display, mstyle.cfh_text_gc);
     XFreeGC(display, mstyle.cf_text_gc);
 #endif // XFT
+    XDestroyWindow(display, wm_check);
     waimea->window_table->erase(id);
 }
 

@@ -54,6 +54,12 @@ public:
     void GetVirtualPos(WaWindow *);
     void SetVirtualPos(WaWindow *);
 
+    void SetSupported(WaScreen *);
+    void SetSupportedWMCheck(WaScreen *, Window);
+    void SetClientList(WaScreen *);
+    void SetClientListStacking(WaScreen *);
+    void GetClientListStacking(WaScreen *);
+    void SetActiveWindow(WaScreen *, Window);
     void GetDesktopViewPort(WaScreen *);
     void SetDesktopViewPort(WaScreen *);
     void SetDesktopGeometry(WaScreen *);
@@ -69,13 +75,15 @@ public:
     XSizeHints *size_hints;
     MwmHints *mwm_hints;
 
-    Atom mwm_hints_atom, wm_state, net_state, net_state_sticky,
-        net_state_shaded, net_maximized_vert, net_maximized_horz,
-        net_state_decor, net_state_decortitle, net_state_decorhandle,
-        net_state_decorborder, net_state_aot, net_state_aab,
-        net_maximized_restore, net_virtual_pos, net_desktop_viewport,
-        net_desktop_geometry, net_wm_strut, net_workarea, xa_xdndaware,
-        xa_xdndenter, xa_xdndleave;
+    Atom mwm_hints_atom, wm_state, net_supported, net_supported_wm_check,
+        net_client_list, net_client_list_stacking, net_active_window,
+        net_state, net_state_sticky, net_state_shaded, net_maximized_vert,
+        net_maximized_horz, net_state_decor, net_state_decortitle,
+        net_state_decorhandle, net_state_decorborder, net_state_aot,
+        net_state_aab, net_maximized_restore, net_virtual_pos,
+        net_desktop_viewport, net_desktop_geometry, net_wm_strut,
+        net_workarea, xa_xdndaware, xa_xdndenter, xa_xdndleave,
+        net_wm_name;
 
 private:
     XEvent event;

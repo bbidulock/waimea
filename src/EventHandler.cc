@@ -258,10 +258,13 @@ void EventHandler::EvFocus(XFocusChangeEvent *e) {
                 if (((*it).second)->type == WindowType) {
                     ((WaWindow *) (*it).second)->UnFocusWin();
                     ((WaWindow *) (*it).second)->UpdateGrabs();
+                    waimea->net->SetActiveWindow(waimea->wascreen, None);
                 }
             if (ww) {
                 ww->FocusWin();
                 ww->UpdateGrabs();
+                ww->net->SetActiveWindow(ww->wascreen, ww->id);
+                
             }
             focused = e->window;
         }

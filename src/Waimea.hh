@@ -104,6 +104,10 @@ public:
     list<Window> *always_on_top_list;
     list<Window> *always_at_bottom_list;
     list<WaWindow *> *wawindow_list;
+    list<WaWindow *> *wawindow_list_map_order;
+    list<WaWindow *> *wawindow_list_stacking;
+    list<WaWindow *> *wawindow_list_stacking_aot;
+    list<WaWindow *> *wawindow_list_stacking_aab;
     list<WaMenu *> *wamenu_list;
 };
 
