@@ -20,7 +20,7 @@ menu.checkbox.false.look:               [ ]
 
 window.title.focus:			flat gradient crossdiagonal
   window.title.focus.color:		#8090c0
-  window.title.focus.colorTo:		#101828
+  window.title.focus.colorTo:		#ffffff
   
 window.title.unfocus:			sunken gradient crossdiagonal
   window.title.unfocus.color:		#303848
@@ -29,7 +29,7 @@ window.title.unfocus:			sunken gradient crossdiagonal
 window.justify:                   	right
 
 window.label.focus:			parentrelative
-  window.label.focus.textColor:		#ffffff
+  window.label.focus.textColor:		#8090c0
   
 window.label.unfocus:			parentrelative
   window.label.unfocus.textColor:	#505468
