@@ -1,5 +1,4 @@
 /**
- *
  * @file   WaWindow.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   02-May-2001 21:43:03
@@ -545,9 +544,22 @@ void WaWindow::RedrawWindow(void) {
             net->SetWmState(this);
         }
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
+
+#ifdef XFT
+        DrawTitleFg();
+        DrawLabelFg(true);
+        DrawIconifyButtonFg();
+        DrawCloseButtonFg();
+        DrawMaxButtonFg();
+        DrawHandleFg();
+        DrawLeftGripFg();
+        DrawRightGripFg();
+#endif // XFT
+
     }
     if (resize) {
-        if (flags.max && (old_attrib.width != attrib.width || ! flags.shaded)) {
+        if (flags.max && (old_attrib.width != attrib.width ||
+                          ! flags.shaded)) {
             flags.max = false;
             net->SetWmState(this);
             DrawMaxButtonFg();
@@ -843,7 +855,7 @@ void WaWindow::FocusWin(void) {
     b_mpic_gc  = &wascreen->wstyle.b_pic_focus_gc;
     
 #ifdef XFT
-    xftcolor = &wascreen->wstyle.xftfcolor;
+    xftcolor = wascreen->wstyle.xftfcolor;
 #else // ! XFT
     l_text_gc = &wascreen->wstyle.l_text_focus_gc;
 #endif // XFT
@@ -881,7 +893,7 @@ void WaWindow::UnFocusWin(void) {
     b_mpic_gc  = &wascreen->wstyle.b_pic_unfocus_gc;
     
 #ifdef XFT
-    xftcolor = &wascreen->wstyle.xftucolor;
+    xftcolor = wascreen->wstyle.xftucolor;
 #else // ! XFT
     l_text_gc = &wascreen->wstyle.l_text_unfocus_gc;
 #endif // XFT
@@ -969,13 +981,40 @@ void WaWindow::RenderHandle(void) {
  * Draws title graphics in title window
  */
 void WaWindow::DrawTitle(void) {
-    if (*ptitle)
-        XSetWindowBackgroundPixmap(display, title->id, *ptitle);
-    else
-        XSetWindowBackground(display, title->id, *title_pixel);
     
-    XClearWindow(display, title->id);
+#ifdef XFT    
+    if (! ((has_focus) ? wascreen->wstyle.t_focus.getOpacity() :
+           wascreen->wstyle.t_unfocus.getOpacity())) {
+#endif // ! XFT
+
+        if (*ptitle)
+            XSetWindowBackgroundPixmap(display, title->id, *ptitle);
+        else
+            XSetWindowBackground(display, title->id, *title_pixel);
+        
+        XClearWindow(display, title->id);
+                
+#ifdef XFT    
+    }
+    DrawTitleFg();
+#endif // XFT
+
 }
+
+#ifdef XFT
+/**
+ * @fn    DrawTitleFg(void)
+ * @brief Draw title foreground graphics
+ *
+ * Draws title foreground graphics in title window
+ */
+void WaWindow::DrawTitleFg(void) {
+    ic->XRenderRedraw(title->id, *ptitle, title->attrib.width,
+                      title->attrib.height,
+                      (has_focus) ? &(wascreen->wstyle.t_focus) :
+                      &(wascreen->wstyle.t_unfocus));
+}
+#endif // XFT
 
 /**
  * @fn    DrawLabel(void)
@@ -984,11 +1023,21 @@ void WaWindow::DrawTitle(void) {
  * Draws label graphics in label window
  */
 void WaWindow::DrawLabel(void) {
-    if (*plabel)
-        XSetWindowBackgroundPixmap(display, label->id, *plabel);
-    else
-        XSetWindowBackground(display, label->id, *label_pixel);
     
+#ifdef XFT    
+    if (! ((has_focus) ? wascreen->wstyle.l_focus.getOpacity() :
+           wascreen->wstyle.l_unfocus.getOpacity())) {
+#endif // ! XFT
+
+        if (*plabel)
+            XSetWindowBackgroundPixmap(display, label->id, *plabel);
+        else
+            XSetWindowBackground(display, label->id, *label_pixel);
+            
+#ifdef XFT    
+    }
+#endif // ! XFT    
+
     DrawLabelFg();
 }
 
@@ -997,11 +1046,12 @@ void WaWindow::DrawLabel(void) {
  * @brief Draw label foreground graphics
  *
  * Draws window title in label window.
+ *
+ * @param light True if we should only do a light redraw
  */
-void WaWindow::DrawLabelFg(void) {
-    int x = 0, length, text_w;
-    
-    XClearWindow(display, label->id);
+void WaWindow::DrawLabelFg(bool light) {
+    int x = 0, length, text_w;    
+
     length = strlen(name);
     
 #ifdef XFT
@@ -1028,9 +1078,24 @@ void WaWindow::DrawLabelFg(void) {
     }
     
 #ifdef XFT
-    XftDrawString8(xftdraw, xftcolor, wascreen->wstyle.xftfont, x,
-                   wascreen->wstyle.y_pos, (unsigned char *) name, length);
+    WaTexture *texture = (has_focus) ? &(wascreen->wstyle.l_focus) :
+        &(wascreen->wstyle.l_unfocus);
+    if (*plabel == ParentRelative) {
+        texture = (has_focus) ? &(wascreen->wstyle.t_focus) :
+            &(wascreen->wstyle.t_unfocus);
+        ic->XRenderRedraw(label->id, *ptitle, label->attrib.width,
+                          label->attrib.height, texture, title_w, 2);
+    }
+    else
+        ic->XRenderRedraw(label->id, *plabel, label->attrib.width,
+                          label->attrib.height, texture);
+    if ((! light) || texture->getOpacity()) {
+        if (! texture->getOpacity()) XClearWindow(display, label->id);
+        XftDrawString8(xftdraw, xftcolor, wascreen->wstyle.xftfont, x,
+                       wascreen->wstyle.y_pos, (unsigned char *) name, length);
+    }
 #else // ! XFT
+    XClearWindow(display, label->id);
     XDrawString(display, (Drawable) label->id, *l_text_gc, x,
                 wascreen->wstyle.y_pos, name, length);
 #endif // XFT
@@ -1044,13 +1109,40 @@ void WaWindow::DrawLabelFg(void) {
  * Draws handle graphics in handle window.
  */
 void WaWindow::DrawHandle(void) {
-    if (*phandle)
-        XSetWindowBackgroundPixmap(display, handle->id, *phandle);
-    else
-        XSetWindowBackground(display, handle->id, *handle_pixel);
     
-    XClearWindow(display, handle->id);
+#ifdef XFT    
+    if (! ((has_focus) ? wascreen->wstyle.h_focus.getOpacity() :
+           wascreen->wstyle.h_unfocus.getOpacity())) {
+#endif // ! XFT
+
+        if (*phandle)
+            XSetWindowBackgroundPixmap(display, handle->id, *phandle);
+        else
+            XSetWindowBackground(display, handle->id, *handle_pixel);
+    
+        XClearWindow(display, handle->id);
+        
+#ifdef XFT    
+    }
+    DrawHandleFg();
+#endif // XFT
+
 }
+
+#ifdef XFT
+/**
+ * @fn    DrawHandleFg(void)
+ * @brief Draw handle foreground graphics
+ *
+ * Draws handle foreground graphics in handle window
+ */
+void WaWindow::DrawHandleFg(void) {
+    ic->XRenderRedraw(handle->id, *phandle, handle->attrib.width,
+                      handle->attrib.height,
+                      (has_focus) ? &(wascreen->wstyle.h_focus) :
+                      &(wascreen->wstyle.h_unfocus));
+}
+#endif // XFT
 
 /**
  * @fn    DrawIconifyButton(void)
@@ -1059,10 +1151,20 @@ void WaWindow::DrawHandle(void) {
  * Draws iconify button graphics in iconify button window.
  */
 void WaWindow::DrawIconifyButton(void) {
-    if (*pbutton)
-        XSetWindowBackgroundPixmap(display, button_min->id, *pbutton);
-    else
-        XSetWindowBackground(display, button_min->id, *button_pixel);
+    
+#ifdef XFT    
+    if (! ((has_focus) ? wascreen->wstyle.b_focus.getOpacity() :
+           wascreen->wstyle.b_unfocus.getOpacity())) {
+#endif // ! XFT
+
+        if (*pbutton)
+            XSetWindowBackgroundPixmap(display, button_min->id, *pbutton);
+        else
+            XSetWindowBackground(display, button_min->id, *button_pixel);
+        
+#ifdef XFT    
+    }
+#endif // ! XFT    
     
     DrawIconifyButtonFg();
 }
@@ -1074,7 +1176,28 @@ void WaWindow::DrawIconifyButton(void) {
  * Draws iconify button foreground graphics in iconify button window.
  */
 void WaWindow::DrawIconifyButtonFg(void) {
-    XClearWindow(display, button_min->id);
+
+#ifdef XFT    
+    if (! ((has_focus) ? wascreen->wstyle.b_focus.getOpacity() :
+           wascreen->wstyle.b_unfocus.getOpacity()))
+#endif // ! XFT
+
+        XClearWindow(display, button_min->id);
+    
+#ifdef XFT
+    if (*pbutton == ParentRelative)
+        ic->XRenderRedraw(button_min->id, *ptitle, button_min->attrib.width,
+                          button_min->attrib.height,
+                          (has_focus) ? &(wascreen->wstyle.t_focus) :
+                          &(wascreen->wstyle.t_unfocus), 2, 2);
+    else
+        ic->XRenderRedraw(button_min->id, *pbutton, button_min->attrib.width,
+                          button_min->attrib.height,
+                          (has_focus) ? &(wascreen->wstyle.b_focus) :
+                          &(wascreen->wstyle.b_unfocus));
+
+#endif // ! XFT
+
     XDrawRectangle(display, button_min->id, *b_ipic_gc,
                    2, title_w - 9, title_w - 9, 2);
 }
@@ -1086,10 +1209,20 @@ void WaWindow::DrawIconifyButtonFg(void) {
  * Draws maximize button graphics in maximize button window.
  */
 void WaWindow::DrawMaxButton(void) {
-    if (*pbutton)
-        XSetWindowBackgroundPixmap(display, button_max->id, *pbutton);
-    else
-        XSetWindowBackground(display, button_max->id, *button_pixel);
+
+#ifdef XFT    
+    if (! ((has_focus) ? wascreen->wstyle.b_focus.getOpacity() :
+           wascreen->wstyle.b_unfocus.getOpacity())) {
+#endif // ! XFT
+
+        if (*pbutton)
+            XSetWindowBackgroundPixmap(display, button_max->id, *pbutton);
+        else
+            XSetWindowBackground(display, button_max->id, *button_pixel);
+        
+#ifdef XFT    
+    }
+#endif // ! XFT   
     
     DrawMaxButtonFg();
 }
@@ -1102,7 +1235,28 @@ void WaWindow::DrawMaxButton(void) {
  * we draw normal maximize foreground graphics in maximize button window.
  */
 void WaWindow::DrawMaxButtonFg(void) {
-    XClearWindow(display, button_max->id);
+
+#ifdef XFT    
+    if (! ((has_focus) ? wascreen->wstyle.b_focus.getOpacity() :
+           wascreen->wstyle.b_unfocus.getOpacity()))
+#endif // ! XFT
+
+        XClearWindow(display, button_max->id);
+
+#ifdef XFT
+    if (*pbutton == ParentRelative)
+        ic->XRenderRedraw(button_max->id, *ptitle, button_max->attrib.width,
+                          button_max->attrib.height,
+                          (has_focus) ? &(wascreen->wstyle.t_focus) :
+                          &(wascreen->wstyle.t_unfocus),
+                          attrib.width - (title_w - 2) * 2, 2);
+    else
+        ic->XRenderRedraw(button_max->id, *pbutton, button_max->attrib.width,
+                          button_max->attrib.height,
+                          (has_focus) ? &(wascreen->wstyle.b_focus) :
+                          &(wascreen->wstyle.b_unfocus));
+#endif // ! XFT
+
     if (flags.max) {
         int w = (2*(title_w - 8))/3;
         int h = (2*(title_w - 8))/3 - 1;
@@ -1130,11 +1284,21 @@ void WaWindow::DrawMaxButtonFg(void) {
  * Draws close button graphics in close button window.
  */
 void WaWindow::DrawCloseButton(void) {
-    if (*pbutton)
-        XSetWindowBackgroundPixmap(display, button_c->id, *pbutton);
-    else
-        XSetWindowBackground(display, button_c->id, *button_pixel);
-    
+
+#ifdef XFT    
+    if (! ((has_focus) ? wascreen->wstyle.b_focus.getOpacity() :
+           wascreen->wstyle.b_unfocus.getOpacity())) {
+#endif // ! XFT
+
+        if (*pbutton)
+            XSetWindowBackgroundPixmap(display, button_c->id, *pbutton);
+        else
+            XSetWindowBackground(display, button_c->id, *button_pixel);
+            
+#ifdef XFT    
+    }
+#endif // ! XFT    
+
     DrawCloseButtonFg();
 }
 
@@ -1145,7 +1309,28 @@ void WaWindow::DrawCloseButton(void) {
  * Draws close button foreground graphics in close button window.
  */
 void WaWindow::DrawCloseButtonFg(void) {
-    XClearWindow(display, button_c->id);   
+
+#ifdef XFT    
+    if (! ((has_focus) ? wascreen->wstyle.b_focus.getOpacity() :
+           wascreen->wstyle.b_unfocus.getOpacity()))
+#endif // ! XFT
+
+        XClearWindow(display, button_c->id);
+
+#ifdef XFT
+    if (*pbutton == ParentRelative)
+        ic->XRenderRedraw(button_c->id, *ptitle, button_c->attrib.width,
+                          button_c->attrib.height,
+                          (has_focus) ? &(wascreen->wstyle.t_focus) :
+                          &(wascreen->wstyle.t_unfocus),
+                          attrib.width - (title_w - 2), 2);
+    else
+        ic->XRenderRedraw(button_c->id, *pbutton, button_c->attrib.width,
+                          button_c->attrib.height,
+                          (has_focus) ? &(wascreen->wstyle.b_focus) :
+                          &(wascreen->wstyle.b_unfocus));
+#endif // ! XFT
+
     XDrawLine(display, button_c->id, *b_cpic_gc, 2, 2, title_w - 7,
               title_w - 7);
     XDrawLine(display, button_c->id, *b_cpic_gc, 2, title_w - 7, title_w - 7,
@@ -1159,13 +1344,39 @@ void WaWindow::DrawCloseButtonFg(void) {
  * Draws grip graphics in left grip window.
  */
 void WaWindow::DrawLeftGrip(void) {
-    if (*pgrip)
-        XSetWindowBackgroundPixmap(display, grip_l->id, *pgrip);
-    else
-        XSetWindowBackground(display, grip_l->id, *grip_pixel);
+#ifdef XFT    
+    if (! ((has_focus) ? wascreen->wstyle.g_focus.getOpacity() :
+           wascreen->wstyle.g_unfocus.getOpacity())) {
+#endif // ! XFT
+
+        if (*pgrip)
+            XSetWindowBackgroundPixmap(display, grip_l->id, *pgrip);
+        else
+            XSetWindowBackground(display, grip_l->id, *grip_pixel);
     
-    XClearWindow(display, grip_l->id);
+        XClearWindow(display, grip_l->id);
+            
+#ifdef XFT    
+    }
+    DrawLeftGripFg();
+#endif // XFT
+
 }
+
+#ifdef XFT
+/**
+ * @fn    DrawLeftGripFg(void)
+ * @brief Draw left grip foreground graphics
+ *
+ * Draws left grip foreground graphics in left grip window
+ */
+void WaWindow::DrawLeftGripFg(void) {
+    ic->XRenderRedraw(grip_l->id, *pgrip, grip_l->attrib.width,
+                      grip_l->attrib.height,
+                      (has_focus) ? &(wascreen->wstyle.g_focus) :
+                      &(wascreen->wstyle.g_unfocus));
+}
+#endif // XFT
 
 /**
  * @fn    DrawRightGrip(void)
@@ -1174,13 +1385,40 @@ void WaWindow::DrawLeftGrip(void) {
  * Draws grip graphics in right grip window.
  */
 void WaWindow::DrawRightGrip(void) {
-    if (*pgrip)
-        XSetWindowBackgroundPixmap(display, grip_r->id, *pgrip);
-    else
-        XSetWindowBackground(display, grip_r->id, *grip_pixel);
+
+#ifdef XFT    
+    if (! ((has_focus) ? wascreen->wstyle.g_focus.getOpacity() :
+           wascreen->wstyle.g_unfocus.getOpacity())) {
+#endif // ! XFT
+
+        if (*pgrip)
+            XSetWindowBackgroundPixmap(display, grip_r->id, *pgrip);
+        else
+            XSetWindowBackground(display, grip_r->id, *grip_pixel);
     
-    XClearWindow(display, grip_r->id);
+        XClearWindow(display, grip_r->id);
+            
+#ifdef XFT    
+    }
+    DrawRightGripFg();
+#endif // XFT
+
 }
+
+#ifdef XFT
+/**
+ * @fn    DrawRightGripFg(void)
+ * @brief Draw left grip foreground graphics
+ *
+ * Draws right grip foreground graphics in right grip window
+ */
+void WaWindow::DrawRightGripFg(void) {
+    ic->XRenderRedraw(grip_r->id, *pgrip, grip_r->attrib.width,
+                      grip_r->attrib.height,
+                      (has_focus) ? &(wascreen->wstyle.g_focus) :
+                      &(wascreen->wstyle.g_unfocus));
+}
+#endif // XFT
 
 /**
  * @fn    ButtonHilite(void)
@@ -2925,11 +3163,29 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
         case LGripType:
             create_mask |= CWCursor;
             attrib_set.cursor = wa->waimea->resizeleft_cursor;
+            
+#ifdef XFT
+            attrib_set.event_mask |= ExposureMask;
+#endif // XFT
+
             break;
         case RGripType:
             create_mask |= CWCursor;
             attrib_set.cursor = wa->waimea->resizeright_cursor;
+
+#ifdef XFT
+            attrib_set.event_mask |= ExposureMask;
+#endif // XFT
+
             break;
+            
+#ifdef XFT
+        case TitleType:
+        case HandleType:
+            attrib_set.event_mask |= ExposureMask;
+            break;
+#endif // XFT
+
     }
     id = XCreateWindow(wa->display, parent, attrib.x, attrib.y,
                        attrib.width, attrib.height, 0, CopyFromParent,

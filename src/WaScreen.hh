@@ -1,5 +1,4 @@
 /**
- *
  * @file   WaScreen.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   25-Jul-2001 23:25:51
@@ -61,8 +60,8 @@ typedef void (WaScreen::*RootActionFn)(XEvent *, WaAction *);
 #define SouthDirection 4
 
 typedef struct {
-    WaColor f_focus, f_unfocus, l_text_focus, l_text_unfocus, b_pic_focus,
-        b_pic_unfocus, b_pic_hilite, border_color, outline_color;
+    WaColor l_text_focus, l_text_unfocus, b_pic_focus, b_pic_unfocus,
+        b_pic_hilite, border_color, outline_color;
     WaTexture t_focus, t_unfocus, l_focus, l_unfocus, h_focus, h_unfocus,
         b_focus, b_unfocus, b_pressed, g_focus, g_unfocus;
     GC b_pic_focus_gc, b_pic_unfocus_gc, b_pic_hilite_gc;
@@ -71,7 +70,7 @@ typedef struct {
 #ifdef XFT
     char *xftfontname;
     XftFont *xftfont;
-    XftColor xftfcolor, xftucolor;
+    XftColor *xftfcolor, *xftucolor;
     double xftsize;
 #else // ! XFT
     GC l_text_focus_gc, l_text_unfocus_gc;
@@ -83,7 +82,7 @@ typedef struct {
 
 typedef struct {
     WaColor f_text, f_hilite_text, t_text, border_color;
-    WaTexture back_frame, frame, title, hilite;
+    WaTexture back_frame, title, hilite;
 
     char *f_fontname, *t_fontname, *b_fontname, *ct_fontname,
         *cf_fontname, *bullet, *checkbox_true, *checkbox_false;
@@ -91,7 +90,7 @@ typedef struct {
     char *f_xftfontname, *t_xftfontname, *b_xftfontname, *ct_xftfontname,
         *cf_xftfontname;
     XftFont *f_xftfont, *t_xftfont, *b_xftfont, *ct_xftfont, *cf_xftfont;
-    XftColor f_xftcolor, fh_xftcolor, t_xftcolor;
+    XftColor *f_xftcolor, *fh_xftcolor, *t_xftcolor;
     double f_xftsize, t_xftsize, b_xftsize, ct_xftsize, cf_xftsize;
 #else // ! XFT
     GC f_text_gc, fh_text_gc, t_text_gc, b_text_gc, bh_text_gc,
@@ -214,6 +213,7 @@ public:
     Workarea *workarea;
     Window wm_check;
     bool focus;
+    WaTexture dock_texture;
     
     list<WMstrut *> *strut_list;
     list<DockappHandler *> *docks;

@@ -1,5 +1,4 @@
 /**
- *
  * @file   WaImage.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   18-Jul-2001 01:45:32
@@ -21,49 +20,85 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#ifdef XFT
+#include <X11/Xft/Xft.h>
+#endif // XFT
+
 class WaImage;
 class WaImageControl;
 
 class WaColor {
 private:
-  int allocated;
-  unsigned char red, green, blue;
-  unsigned long pixel;
+    int allocated;
+    unsigned char red, green, blue;
+    unsigned long pixel;
+    XftColor xftc;
 
 public:
-  WaColor(char r = 0, char g = 0, char b = 0)
-    { red = r; green = g; blue = b; pixel = 0; allocated = 0; }
+    WaColor(char r = 0, char g = 0, char b = 0)
+        { red = r; green = g; blue = b; pixel = 0; allocated = 0; }
 
-  inline const int &isAllocated(void) const { return allocated; }
+    inline const int &isAllocated(void) const { return allocated; }
 
-  inline const unsigned char &getRed(void) const { return red; }
-  inline const unsigned char &getGreen(void) const { return green; }
-  inline const unsigned char &getBlue(void) const { return blue; }
-  inline const unsigned long &getPixel(void) const { return pixel; }
+    inline const unsigned char &getRed(void) const { return red; }
+    inline const unsigned char &getGreen(void) const { return green; }
+    inline const unsigned char &getBlue(void) const { return blue; }
+    inline const unsigned long &getPixel(void) const { return pixel; }
 
-  inline void setAllocated(int a) { allocated = a; }
-  inline void setRGB(char r, char g, char b) { red = r; green = g; blue = b; }
-  inline void setPixel(unsigned long p) { pixel = p; }
+    inline void setAllocated(int a) { allocated = a; }
+    inline void setRGB(char r, char g, char b) { red = r; green = g; blue = b;
+    }
+    inline void setPixel(unsigned long p) { pixel = p; }
+
+#ifdef XFT
+    void createXftColor(Display *, Window, Colormap);
+    inline XftColor *getXftColor(void) { return &xftc; }
+#endif // XFT
+
 };
 
 
 class WaTexture {
 private:
-  WaColor color, colorTo, hiColor, loColor;
-  unsigned long texture;
+    WaColor color, colorTo, hiColor, loColor;
+    unsigned long texture;
+    
+#ifdef XFT
+    Picture alphaPicture;
+    Picture solidPicture;
+    int opacity;
+#endif // XFT
 
 public:
-  WaTexture(void) { texture = 0; }
+    WaTexture(void) {
+        texture = 0;
+        
+#ifdef XFT
+        opacity = 0;
+        alphaPicture = (Picture) 0;
+        solidPicture = (Picture) 0;
+#endif // XFT
+        
+    }
+    inline WaColor *getColor(void) { return &color; }
+    inline WaColor *getColorTo(void) { return &colorTo; }
+    inline WaColor *getHiColor(void) { return &hiColor; }
+    inline WaColor *getLoColor(void) { return &loColor; }
 
-  inline WaColor *getColor(void) { return &color; }
-  inline WaColor *getColorTo(void) { return &colorTo; }
-  inline WaColor *getHiColor(void) { return &hiColor; }
-  inline WaColor *getLoColor(void) { return &loColor; }
+    inline const unsigned long &getTexture(void) const { return texture; }
 
-  inline const unsigned long &getTexture(void) const { return texture; }
+    inline void setTexture(unsigned long t) { texture = t; }
+    inline void addTexture(unsigned long t) { texture |= t; }
+    
+#ifdef XFT
+    inline int getOpacity(void) { return opacity; }
+    inline void setOpacity(int o) { opacity = o; }
+    inline void setAlphaPicture(Picture p) { alphaPicture = p; }
+    inline void setSolidPicture(Picture p) { solidPicture = p; }
+    inline Picture getAlphaPicture(void) { return alphaPicture; }
+    inline Picture getSolidPicture(void) { return solidPicture; }
+#endif // XFT
 
-  inline void setTexture(unsigned long t) { texture = t; }
-  inline void addTexture(unsigned long t) { texture |= t; }
 };
 
 // bevel options
@@ -105,45 +140,45 @@ template <typename Z> inline Z wamax(Z a, Z b) { return ((a > b) ? a : b); }
 
 class WaImage {
 private:
-  WaImageControl *control;
+    WaImageControl *control;
 
 #ifdef    INTERLACE
-  bool interlaced;
+    bool interlaced;
 #endif // INTERLACE
 
-  XColor *colors;
+    XColor *colors;
 
-  WaColor *from, *to;
-  int red_offset, green_offset, blue_offset, red_bits, green_bits, blue_bits,
-    ncolors, cpc, cpccpc;
-  unsigned char *red, *green, *blue, *red_table, *green_table, *blue_table;
-  unsigned int width, height, *xtable, *ytable;
+    WaColor *from, *to;
+    int red_offset, green_offset, blue_offset, red_bits, green_bits, blue_bits,
+        ncolors, cpc, cpccpc;
+    unsigned char *red, *green, *blue, *red_table, *green_table, *blue_table;
+    unsigned int width, height, *xtable, *ytable;
 
 
 protected:
-  Pixmap renderPixmap(void);
+    Pixmap renderPixmap(void);
 
-  XImage *renderXImage(void);
+    XImage *renderXImage(void);
 
-  void invert(void);
-  void bevel1(void);
-  void bevel2(void);
-  void dgradient(void);
-  void egradient(void);
-  void hgradient(void);
-  void pgradient(void);
-  void rgradient(void);
-  void vgradient(void);
-  void cdgradient(void);
-  void pcgradient(void);
+    void invert(void);
+    void bevel1(void);
+    void bevel2(void);
+    void dgradient(void);
+    void egradient(void);
+    void hgradient(void);
+    void pgradient(void);
+    void rgradient(void);
+    void vgradient(void);
+    void cdgradient(void);
+    void pcgradient(void);
 
 public:
-  WaImage(WaImageControl *, unsigned int, unsigned int);
-  ~WaImage(void);
+    WaImage(WaImageControl *, unsigned int, unsigned int);
+    ~WaImage(void);
 
-  Pixmap render(WaTexture *);
-  Pixmap render_solid(WaTexture *);
-  Pixmap render_gradient(WaTexture *);
+    Pixmap render(WaTexture *);
+    Pixmap render_solid(WaTexture *);
+    Pixmap render_gradient(WaTexture *);
 };
 
 #include <list.h>
@@ -156,8 +191,8 @@ private:
     Visual *visual;
     Colormap colormap;
     
-    Window window;
     XColor *colors;
+    Window window;
     int colors_per_channel, ncolors, screen_number, screen_depth,
         bits_per_pixel, red_offset, green_offset, blue_offset,
         red_bits, green_bits, blue_bits;
@@ -169,7 +204,7 @@ private:
     
     typedef struct Cache {
         Pixmap pixmap;
-        
+
         unsigned int count, width, height;
         unsigned long pixel1, pixel2, texture;
     } Cache;
@@ -212,6 +247,12 @@ public:
     void parseColor(WaColor *, char * = 0);
     
     virtual void timeout(void);
+    
+#ifdef XFT
+    void XRenderRedraw(Window, Pixmap, int, int, WaTexture *, int = 0,
+                       int = 0);
+#endif // XFT
+    
 };
 
 #endif // __WaImage_hh

@@ -1,5 +1,4 @@
 /**
- *
  * @file   EventHandler.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   11-May-2001 11:48:03

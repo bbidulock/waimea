@@ -1,5 +1,4 @@
 /**
- *
  * @file   EventHandler.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   11-May-2001 11:48:03
@@ -290,6 +289,23 @@ void EventHandler::EvExpose(XExposeEvent *e) {
             case MButtonType:
                 (((WaChildWindow *) (*it).second)->wa)->DrawMaxButtonFg();
                 break;
+                
+#ifdef XFT
+            case TitleType:
+                (((WaChildWindow *) (*it).second)->wa)->DrawTitleFg(); break;
+            case HandleType:
+                (((WaChildWindow *) (*it).second)->wa)->DrawHandleFg(); break;
+            case LGripType:
+                (((WaChildWindow *) (*it).second)->wa)->DrawLeftGripFg();
+                break;
+            case RGripType:
+                (((WaChildWindow *) (*it).second)->wa)->DrawRightGripFg();
+                break;
+            case DockHandlerType:
+                ((DockappHandler *) (*it).second)->DrawFg();
+                break;
+#endif // XFT
+                
             case MenuTitleType:
             case MenuItemType:
             case MenuSubType:

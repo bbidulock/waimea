@@ -1,5 +1,4 @@
 /**
- *
  * @file   NetHandler.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   11-Oct-2001 22:36:12

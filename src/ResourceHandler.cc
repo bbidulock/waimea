@@ -1,5 +1,4 @@
 /**
- *
  * @file   ResourceHandler.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   18-Jul-2001 00:31:22
@@ -609,6 +608,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     WindowStyle *wstyle = &scrn->wstyle;
     MenuStyle   *mstyle = &scrn->mstyle;
     WaImageControl *ic = scrn->ic;
+    wascreen = scrn;
     
     database = (XrmDatabase) 0;
     
@@ -716,43 +716,33 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
 
 #endif // XFT
     ReadDatabaseTexture("window.title.focus", "Window.Title.Focus",
-                        &wstyle->t_focus, WhitePixel(display, screen), ic,
-                        scrn);
+                        &wstyle->t_focus, WhitePixel(display, screen), ic);
     ReadDatabaseTexture("window.title.unfocus", "Window.Title.Unfocus",
-                        &wstyle->t_unfocus, BlackPixel(display, screen), ic,
-                        scrn);
+                        &wstyle->t_unfocus, BlackPixel(display, screen), ic);
     ReadDatabaseTexture("window.label.focus", "Window.Label.Focus",
-                        &wstyle->l_focus, WhitePixel(display, screen), ic,
-                        scrn);
+                        &wstyle->l_focus, WhitePixel(display, screen), ic);
     ReadDatabaseTexture("window.label.unfocus", "Window.Label.Unfocus",
-                        &wstyle->l_unfocus, BlackPixel(display, screen), ic,
-                        scrn);
+                        &wstyle->l_unfocus, BlackPixel(display, screen), ic);
     ReadDatabaseTexture("window.handle.focus", "Window.Handle.Focus",
-                        &wstyle->h_focus, WhitePixel(display, screen), ic,
-                        scrn);
+                        &wstyle->h_focus, WhitePixel(display, screen), ic);
     ReadDatabaseTexture("window.handle.unfocus", "Window.Handle.Unfocus",
-                        &wstyle->h_unfocus, BlackPixel(display, screen), ic,
-                        scrn);
+                        &wstyle->h_unfocus, BlackPixel(display, screen), ic);
     ReadDatabaseTexture("window.grip.focus", "Window.Grip.Focus",
-                        &wstyle->g_focus, WhitePixel(display, screen), ic,
-                        scrn);
+                        &wstyle->g_focus, WhitePixel(display, screen), ic);
     ReadDatabaseTexture("window.grip.unfocus", "Window.Grip.Unfocus",
-                        &wstyle->g_unfocus, BlackPixel(display, screen), ic,
-                        scrn);
+                        &wstyle->g_unfocus, BlackPixel(display, screen), ic);
     ReadDatabaseTexture("window.button.focus", "Window.Button.Focus",
-                        &wstyle->b_focus, WhitePixel(display, screen), ic,
-                        scrn);
+                        &wstyle->b_focus, WhitePixel(display, screen), ic);
     ReadDatabaseTexture("window.button.unfocus", "Window.Button.Unfocus",
-                        &wstyle->b_unfocus, BlackPixel(display, screen), ic,
-                        scrn);
+                        &wstyle->b_unfocus, BlackPixel(display, screen), ic);
     ReadDatabaseTexture("window.button.pressed", "Window.Button.Pressed",
-                        &wstyle->b_pressed, BlackPixel(display, screen), ic,
-                        scrn);
-    ReadDatabaseColor("window.frame.focusColor", "Window.Frame.FocusColor",
-                      &wstyle->f_focus, WhitePixel(display, screen), ic);
-    ReadDatabaseColor("window.frame.unfocusColor",
-                      "Window.Frame.UnfocusColor",
-                      &wstyle->f_unfocus, BlackPixel(display, screen), ic);
+                        &wstyle->b_pressed, BlackPixel(display, screen), ic);
+    scrn->dock_texture = wstyle->t_focus;
+    if (XrmGetResource(database, "dockapphandler", "Dockapphandler",
+                       &value_type, &value))
+        ReadDatabaseTexture("dockapphandler", "Dockapphandler",
+                            &scrn->dock_texture, WhitePixel(display, screen),
+                            ic);
     ReadDatabaseColor("window.label.focus.textColor",
                       "Window.Label.Focus.TextColor",
                       &wstyle->l_text_focus, BlackPixel(display, screen), ic);
@@ -783,16 +773,12 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     } else
         wstyle->justify = LeftJustify;
 
-    ic->parseTexture(&mstyle->frame, "parentrelative");
-    
     ReadDatabaseTexture("menu.frame", "Menu.Frame",
-                        &mstyle->back_frame, BlackPixel(display, screen), ic,
-                        scrn);
+                        &mstyle->back_frame, BlackPixel(display, screen), ic);
     ReadDatabaseTexture("menu.hilite", "Menu.Hilite",
-                        &mstyle->hilite, WhitePixel(display, screen), ic,
-                        scrn);
+                        &mstyle->hilite, WhitePixel(display, screen), ic);
     ReadDatabaseTexture("menu.title", "Menu.Title",
-                        &mstyle->title, WhitePixel(display, screen), ic, scrn);
+                        &mstyle->title, WhitePixel(display, screen), ic);
 
     ReadDatabaseColor("menu.frame.textColor", "Menu.Frame.TextColor",
                       &mstyle->f_text, WhitePixel(display, screen), ic);
@@ -1296,6 +1282,11 @@ void ResourceHandler::ReadDatabaseColor(char *rname, char *rclass,
         ic->parseColor(color);
         color->setPixel(default_pixel);
     }
+    
+#ifdef XFT
+    color->createXftColor(display, wascreen->id, wascreen->colormap);
+#endif // XFT
+    
 }
 
 /**
@@ -1311,17 +1302,16 @@ void ResourceHandler::ReadDatabaseColor(char *rname, char *rclass,
  * @param rclass Resource class name to use
  * @param default_pixel Pixel value to use if resource doesn't exist
  * @param ic WaImageControl to use for parsing color
- * @param scrn WaScreen that should display the texture
  */
 void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
                                           WaTexture *texture,
                                           unsigned long default_pixel,
-                                          WaImageControl *ic, WaScreen *scrn) {
+                                          WaImageControl *ic) {
     
     XrmValue value;
     char *value_type;
 
-    Colormap colormap = scrn->colormap;
+    Colormap colormap = wascreen->colormap;
 
     if (XrmGetResource(database, rname, rclass, &value_type,
                        &value))
@@ -1329,10 +1319,10 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
     else
         texture->setTexture(WaImage_Solid | WaImage_Flat);
 
+    int clen = strlen(rclass) + 32, nlen = strlen(rname) + 32;
+    char *colorclass = new char[clen], *colorname = new char[nlen];
+
     if (texture->getTexture() & WaImage_Solid) {
-        int clen = strlen(rclass) + 32, nlen = strlen(rname) + 32;
-        
-        char *colorclass = new char[clen], *colorname = new char[nlen];
         
         sprintf(colorclass, "%s.Color", rclass);
         sprintf(colorname,  "%s.color", rname);
@@ -1340,59 +1330,54 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
         ReadDatabaseColor(colorname, colorclass, texture->getColor(),
                           default_pixel, ic);
 
-#ifdef    INTERLACE
+#ifdef INTERLACE
         sprintf(colorclass, "%s.ColorTo", rclass);
         sprintf(colorname,  "%s.colorTo", rname);
 
         ReadDatabaseColor(colorname, colorclass, texture->getColorTo(),
                           default_pixel, ic);
-#endif // INTERLACE
+#endif // INTERLACE        
         
-        delete [] colorclass;
-        delete [] colorname;
+        if (texture->getColor()->isAllocated() &&
+            (!(texture->getTexture() & WaImage_Flat))) {
+            XColor xcol;
         
-        if ((! texture->getColor()->isAllocated()) ||
-            (texture->getTexture() & WaImage_Flat))
-            return;
-        
-        XColor xcol;
-        
-        xcol.red = (unsigned int) (texture->getColor()->getRed() +
-                                   (texture->getColor()->getRed() >> 1));
-        if (xcol.red >= 0xff) xcol.red = 0xffff;
-        else xcol.red *= 0xff;
-        xcol.green = (unsigned int) (texture->getColor()->getGreen() +
-                                     (texture->getColor()->getGreen() >> 1));
-        if (xcol.green >= 0xff) xcol.green = 0xffff;
-        else xcol.green *= 0xff;
-        xcol.blue = (unsigned int) (texture->getColor()->getBlue() +
-                                    (texture->getColor()->getBlue() >> 1));
-        if (xcol.blue >= 0xff) xcol.blue = 0xffff;
-        else xcol.blue *= 0xff;
+            xcol.red = (unsigned int) (texture->getColor()->getRed() +
+                                       (texture->getColor()->getRed() >> 1));
+            if (xcol.red >= 0xff) xcol.red = 0xffff;
+            else xcol.red *= 0xff;
+            xcol.green = (unsigned int) (texture->getColor()->getGreen() +
+                                         (texture->getColor()->getGreen() >> 1));
+            if (xcol.green >= 0xff) xcol.green = 0xffff;
+            else xcol.green *= 0xff;
+            xcol.blue = (unsigned int) (texture->getColor()->getBlue() +
+                                        (texture->getColor()->getBlue() >> 1));
+            if (xcol.blue >= 0xff) xcol.blue = 0xffff;
+            else xcol.blue *= 0xff;
 
-        if (! XAllocColor(display, colormap, &xcol))
-            xcol.pixel = 0;
+            if (! XAllocColor(display, colormap, &xcol))
+                xcol.pixel = 0;
         
-        texture->getHiColor()->setPixel(xcol.pixel);
+            texture->getHiColor()->setPixel(xcol.pixel);
         
-        xcol.red =
-            (unsigned int) ((texture->getColor()->getRed() >> 2) +
-                            (texture->getColor()->getRed() >> 1)) * 0xff;
-        xcol.green =
-            (unsigned int) ((texture->getColor()->getGreen() >> 2) +
-                            (texture->getColor()->getGreen() >> 1)) * 0xff;
-        xcol.blue =
-            (unsigned int) ((texture->getColor()->getBlue() >> 2) +
-                            (texture->getColor()->getBlue() >> 1)) * 0xff;
+            xcol.red =
+                (unsigned int) ((texture->getColor()->getRed() >> 2) +
+                                (texture->getColor()->getRed() >> 1)) * 0xff;
+            xcol.green =
+                (unsigned int) ((texture->getColor()->getGreen() >> 2) +
+                                (texture->getColor()->getGreen() >> 1)) * 0xff;
+            xcol.blue =
+                (unsigned int) ((texture->getColor()->getBlue() >> 2) +
+                                (texture->getColor()->getBlue() >> 1)) * 0xff;
         
-        if (! XAllocColor(display, colormap, &xcol))
-            xcol.pixel = 0;
+            if (! XAllocColor(display, colormap, &xcol))
+                xcol.pixel = 0;
         
-        texture->getLoColor()->setPixel(xcol.pixel);
+            texture->getLoColor()->setPixel(xcol.pixel);
+        }
     } else if (texture->getTexture() & WaImage_Gradient) {
         int clen = strlen(rclass) + 10, nlen = strlen(rname) + 10;
-        char *colorclass = new char[clen], *colorname = new char[nlen],
-            *colortoclass = new char[clen], *colortoname = new char[nlen];
+        char *colortoclass = new char[clen], *colortoname = new char[nlen];
         
         sprintf(colorclass, "%s.Color", rclass);
         sprintf(colorname,  "%s.color", rname);
@@ -1405,11 +1390,70 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
         ReadDatabaseColor(colortoname, colortoclass, texture->getColorTo(),
                           default_pixel, ic);
 
-        delete [] colorclass;
-        delete [] colorname;
         delete [] colortoclass;
         delete [] colortoname;
     }
+
+#ifdef XFT
+    int opacity;
+    XRenderPictFormat *xformat;
+    XRenderPictFormat Rpf;
+    XRenderPictureAttributes Rpa;
+    XRenderColor clr;
+    Pixmap alphaPixmap, solidPixmap;
+    Picture alphaPicture, solidPicture;
+
+    sprintf(colorclass, "%s.Opacity", rclass);
+    sprintf(colorname,  "%s.opacity", rname);
+
+    if (XrmGetResource(database, colorname, colorclass, &value_type, 
+                       &value))
+        opacity = atoi(value.addr);
+    else
+        opacity = 0;
+
+    opacity = (opacity * 255) / 100;
+    if (opacity > 255) opacity = 255;
+    else if (opacity < 0) opacity = 0;
+
+    texture->setOpacity(opacity);
+
+    if (opacity > 0 && opacity < 255) {
+        clr.alpha = ((unsigned short) (255 * opacity) << 8);
+        Rpf.type  = PictTypeDirect;
+        Rpf.depth = 8;
+        Rpf.direct.alphaMask = 0xff;
+        Rpa.repeat = True;
+        xformat = XRenderFindFormat(wascreen->display, PictFormatType |
+                                    PictFormatDepth | PictFormatAlphaMask,
+                                    &Rpf, 0);
+        alphaPixmap = XCreatePixmap(wascreen->display, wascreen->id, 1, 1, 8);
+        alphaPicture = XRenderCreatePicture(wascreen->display, alphaPixmap,
+                                            xformat, CPRepeat, &Rpa);
+        XRenderFillRectangle(wascreen->display, PictOpSrc, alphaPicture, &clr,
+                             0, 0, 1, 1);
+        texture->setAlphaPicture(alphaPicture);
+        XFreePixmap(wascreen->display, alphaPixmap);
+        if (texture->getTexture() == (WaImage_Solid | WaImage_Flat)) {
+            Rpf.depth = wascreen->screen_depth;
+            xformat = XRenderFindFormat(wascreen->display, PictFormatType |
+                                        PictFormatDepth,
+                                        &Rpf, 0);
+            solidPixmap = XCreatePixmap(wascreen->display, wascreen->id, 1, 1,
+                                        wascreen->screen_depth);
+            solidPicture = XRenderCreatePicture(wascreen->display, solidPixmap,
+                                                xformat, CPRepeat, &Rpa);
+            XRenderFillRectangle(wascreen->display, PictOpSrc, solidPicture,
+                                 &texture->getColor()->getXftColor()->color,
+                                 0, 0, 1, 1);
+            texture->setSolidPicture(solidPicture);
+            XFreePixmap(wascreen->display, solidPixmap);
+        }
+    }
+#endif // XFT
+        
+    delete [] colorclass;
+    delete [] colorname;
 }
 
 /**

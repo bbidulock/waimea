@@ -1,5 +1,4 @@
 /**
- *
  * @file   WaMenu.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   02-Aug-2001 22:40:01
@@ -69,6 +68,7 @@ public:
     Waimea *waimea;
     Display *display;
     WaScreen *wascreen;
+    WaImageControl *ic;
     
     list<WaMenuItem *> *item_list;    
 
@@ -76,8 +76,8 @@ public:
     int x, y, width, height, bullet_width, cb_width, extra_width;
     bool mapped, built, o_mapped, has_focus, tasksw;
     char *name;
-    Pixmap pbackframe, pframe, ptitle, philite, psub, psubhilite;
-    unsigned long backframe_pixel, frame_pixel, title_pixel, hilite_pixel,
+    Pixmap pbackframe, ptitle, philite, psub, psubhilite;
+    unsigned long backframe_pixel, title_pixel, hilite_pixel,
         sub_pixel, subhilite_pixel;
     WaMenu *root_menu;
     WaMenuItem *root_item;
@@ -88,7 +88,6 @@ public:
     WaMenuItem *mf;
   
 private:
-    WaImageControl *ic;
     int f_height, t_height, s_height;
 };
 
@@ -164,7 +163,6 @@ public:
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);
     void UpdateCBox(void);
     
-    
     int func_mask, func_mask1, func_mask2, height, width, dy, realheight,
                    cb, cb_y, cb_width, cb_width1, cb_width2;
     bool hilited, move_resize;
@@ -178,6 +176,8 @@ public:
     WaMenu *menu;
     WaMenu *submenu, *submenu1, *submenu2;
     Window wf;
+    WaTexture *texture;
+    
 #ifdef XFT        
     XftDraw *xftdraw;
     XftFont *cbox_xft_font;

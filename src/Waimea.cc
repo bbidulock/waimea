@@ -1,5 +1,4 @@
 /**
- *
  * @file   Waimea.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   02-May-2001 00:48:03

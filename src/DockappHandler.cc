@@ -1,5 +1,4 @@
 /**
- *
  * @file   DockappHandler.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   29-Nov-2001 22:13:22
@@ -23,7 +22,8 @@
  * @param scrn WaScreen to create dockapp handler window on.
  * @param ds Style structure to use when creating this dockapphandler
  */
-DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) {
+DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
+    WindowObject(0, DockHandlerType) {
     XSetWindowAttributes attrib_set;
 
     style = ds;
@@ -73,6 +73,7 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) {
     wm_strut->top = 0;
     wm_strut->bottom = 0;
     wascreen->strut_list->push_back(wm_strut);
+    waimea->window_table->insert(make_pair(id, this));
 }
 
 /**
@@ -89,6 +90,7 @@ DockappHandler::~DockappHandler(void) {
     LISTCLEAR2(dockapp_list);
     XDestroyWindow(display, id);
     wascreen->strut_list->remove(wm_strut);
+    waimea->window_table->erase(id);
     delete wm_strut;
 }
 
@@ -189,18 +191,6 @@ void DockappHandler::Update(void) {
         case HorizontalDock: width += style->gridspace; break;
     }
 
-    WaTexture *texture = &wascreen->wstyle.t_focus;
-    if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
-        background = None;
-        background_pixel = texture->getColor()->getPixel();
-        XSetWindowBackground(display, id, background_pixel);
-    } else {
-        background = wascreen->ic->renderImage(width, height, texture);
-        XSetWindowBackgroundPixmap(display, id, background);
-    }
-    XClearWindow(display, id);    
-    XResizeWindow(display, id, width, height);
-
     wm_strut->left = wm_strut->right = wm_strut->top = wm_strut->bottom = 0;
     if (style->geometry & XNegative) {
         map_x = wascreen->width - wascreen->wstyle.border_width * 2 -
@@ -224,15 +214,40 @@ void DockappHandler::Update(void) {
 
     if (style->centered) {
         switch (style->direction) {
-            case VerticalDock: map_y = wascreen->height / 2 - height / 2; break;
-            case HorizontalDock: map_x = wascreen->width / 2 - width / 2; break;
+            case VerticalDock: map_y = wascreen->height / 2 - height / 2;
+                break;
+            case HorizontalDock: map_x = wascreen->width / 2 - width / 2;
+                break;
         }
     }
+    XResizeWindow(display, id, width, height);
     XMoveWindow(display, id, map_x, map_y);
     XMapWindow(display, id);
+    WaTexture *texture = &wascreen->dock_texture;
+    if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
+        background = None;
+        background_pixel = texture->getColor()->getPixel();
+        XSetWindowBackground(display, id, background_pixel);
+    } else {
+        background = wascreen->ic->renderImage(width, height, texture);
+        XSetWindowBackgroundPixmap(display, id, background);
+    }
+    XClearWindow(display, id);
+    DrawFg();
     wascreen->UpdateWorkarea();
 }
 
+/**
+ * @fn    DrawFg(void)
+ * @brief Draws dockapp holder foreground
+ * 
+ * Redraws dockapp holder foreground. 
+ */
+void DockappHandler::DrawFg(void) {
+    wascreen->ic->XRenderRedraw(id, background, width, height,
+                                &wascreen->dock_texture); 
+}
+    
 /**
  * @fn    Dockapp(Window win, DockappHandler *dhand)
  * @brief Constructor for Dockapp class

@@ -1,5 +1,4 @@
 /**
- *
  * @file   ResourceHandler.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   18-Jul-2001 00:31:06
@@ -128,12 +127,13 @@ private:
     void ReadDatabaseColor(char *, char *, WaColor *, unsigned long,
                            WaImageControl *);
     void ReadDatabaseTexture(char *, char *, WaTexture *, unsigned long,
-                             WaImageControl *, WaScreen *);
+                             WaImageControl *);
     void ReadDatabaseFont(char *, char *, char **, char *);
     void ParseAction(const char *, list<StrComp *> *, list<WaAction *> *);
     void ParseMenu(WaMenu *, FILE *);
 
     Waimea *waimea;
+    WaScreen *wascreen;
     Display *display;
     XrmDatabase database;
     char *homedir;

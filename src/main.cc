@@ -1,5 +1,4 @@
 /**
- *
  * @file   main.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   01-May-2001 17:58:24

@@ -1,5 +1,4 @@
 /**
- *
  * @file   WaWindow.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   02-May-2001 21:43:03
@@ -93,7 +92,15 @@ public:
     void DrawIconifyButtonFg(void);
     void DrawCloseButtonFg(void);
     void DrawMaxButtonFg(void);
-    void DrawLabelFg(void);
+    void DrawLabelFg(bool = false);
+    
+#ifdef XFT
+    void DrawTitleFg(void);
+    void DrawHandleFg(void);
+    void DrawLeftGripFg(void);
+    void DrawRightGripFg(void);
+#endif // XFT
+    
     void FocusWin(void);
     void UnFocusWin(void);
     void ButtonHilite(int);

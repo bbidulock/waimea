@@ -1,5 +1,4 @@
 /**
- *
  * @file   Waimea.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   02-May-2001 00:49:45
@@ -98,6 +97,7 @@ enum {
     MenuItemType,
     MenuCBItemType,
     MenuSubType,
+    DockHandlerType,
     DockAppType
 };
 

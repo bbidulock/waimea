@@ -1,5 +1,4 @@
 /**
- *
  * @file   DockappHandler.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   29-Nov-2001 22:13:22
@@ -21,14 +20,14 @@ class Dockapp;
 
 #include "Waimea.hh"
 
-class DockappHandler {
+class DockappHandler : public WindowObject {
 public:
     DockappHandler(WaScreen *, DockStyle *);
     virtual ~DockappHandler(void);
 
     void Update(void);
+    void DrawFg(void);
     
-    Window id;
     Display *display;
     Waimea *waimea;
     WaScreen *wascreen;
@@ -47,7 +46,7 @@ public:
     Dockapp(Window, DockappHandler *);
     virtual ~Dockapp(void);
 
-    Window id, icon_id, client_id;
+    Window icon_id, client_id;
     Display *display;
     DockappHandler *dh;
     int x, y;

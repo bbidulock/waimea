@@ -1,5 +1,4 @@
 /**
- *
  * @file   WaScreen.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   25-Jul-2001 23:26:22
@@ -365,12 +364,13 @@ void WaScreen::CreateColors(void) {
     
     gcv.foreground = wstyle.b_pic_hilite.getPixel();
     wstyle.b_pic_hilite_gc = XCreateGC(display, id, GCForeground, &gcv);
+    
 #ifdef XFT
-    CreateXftColor(&wstyle.l_text_focus, &wstyle.xftfcolor);
-    CreateXftColor(&wstyle.l_text_unfocus, &wstyle.xftucolor);
-    CreateXftColor(&mstyle.f_text, &mstyle.f_xftcolor);
-    CreateXftColor(&mstyle.f_hilite_text, &mstyle.fh_xftcolor);
-    CreateXftColor(&mstyle.t_text, &mstyle.t_xftcolor);
+    wstyle.xftfcolor = wstyle.l_text_focus.getXftColor();
+    wstyle.xftucolor = wstyle.l_text_unfocus.getXftColor();
+    mstyle.f_xftcolor = mstyle.f_text.getXftColor();
+    mstyle.fh_xftcolor = mstyle.f_hilite_text.getXftColor();
+    mstyle.t_xftcolor = mstyle.t_text.getXftColor();
 #else // ! XFT
     gcv.foreground = wstyle.l_text_focus.getPixel();
     gcv.font = wstyle.font->fid;
@@ -418,6 +418,7 @@ void WaScreen::CreateColors(void) {
     gcv.font = mstyle.cf_font->fid;
     mstyle.cfh_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
 #endif // XFT
+    
 }
 
 /**
@@ -465,37 +466,6 @@ void WaScreen::RenderCommonImages(void) {
     } else
         ugrip = ic->renderImage(25, wstyle.handle_width, texture);
 }
-
-#ifdef XFT
-/**
- * @fn    CreateXftColor(WaColor *wac, XftColor *xftc)
- * @brief Creates xft color
- *
- * Stupid process for creating a xft color, only way I got it working.
- * Should probably look in to this when have time.
- *
- * @param wac WaColor to use then creating xft color.
- * @param xftc Pointer used for returning xft color.
- */
-void WaScreen::CreateXftColor(WaColor *wac, XftColor *xftc) {
-    XGCValues gcv;
-    XColor tmp_color;
-    GC tmp_gc;
-    
-    gcv.foreground = wac->getPixel();
-    tmp_gc = XCreateGC(display, id, GCForeground, &gcv);
-    XGetGCValues(display, tmp_gc, GCForeground, &gcv);
-    tmp_color.pixel = gcv.foreground;
-    XQueryColor(display, colormap, &tmp_color);
-    xftc->color.red = tmp_color.red;
-    xftc->color.green = tmp_color.green;
-    xftc->color.blue = tmp_color.blue;
-    xftc->color.alpha = 0xffff;
-    xftc->pixel = gcv.foreground;
-
-    XFreeGC(display, tmp_gc);
-}
-#endif // XFT
 
 /**
  * @fn    UpdateWorkarea(void)

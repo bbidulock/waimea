@@ -1,5 +1,4 @@
 /**
- *
  * @file   WaImage.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   18-Jul-2001 01:45:32
@@ -54,6 +53,26 @@ static unsigned long bsqrt(unsigned long x) {
     }
 }
 
+#ifdef XFT
+void WaColor::createXftColor(Display *display, Window id, Colormap colormap) {
+    XGCValues gcv;
+    XColor tmp_color;
+    GC tmp_gc;
+    
+    gcv.foreground = getPixel();
+    tmp_gc = XCreateGC(display, id, GCForeground, &gcv);
+    XGetGCValues(display, tmp_gc, GCForeground, &gcv);
+    tmp_color.pixel = gcv.foreground;
+    XQueryColor(display, colormap, &tmp_color);
+    xftc.color.red = tmp_color.red;
+    xftc.color.green = tmp_color.green;
+    xftc.color.blue = tmp_color.blue;
+    xftc.color.alpha = 0xffff;
+    xftc.pixel = gcv.foreground;
+
+    XFreeGC(display, tmp_gc);
+}
+#endif // XFT
 
 WaImage::WaImage(WaImageControl *c, unsigned int w, unsigned int h) {
     control = c;
@@ -2031,8 +2050,8 @@ WaImageControl::~WaImageControl(void) {
 
 
 Pixmap WaImageControl::searchCache(unsigned int width, unsigned int height,
-                                  unsigned long texture,
-                                  WaColor *c1, WaColor *c2) {
+                                   unsigned long texture,
+                                   WaColor *c1, WaColor *c2) {
     if (! cache->empty()) {
         list<Cache *>::iterator it = cache->begin();
         for (; it != cache->end(); ++it) {
@@ -2331,3 +2350,33 @@ void WaImageControl::timeout(void) {
         }
     }
 }
+
+#ifdef XFT
+void WaImageControl::XRenderRedraw(Window win, Pixmap p, int width, int height,
+                                   WaTexture *texture, int src_x, int src_y) {
+    Picture src_pict, dest_pict;
+    XRenderPictFormat *format;
+
+    if (! texture->getOpacity()) return;
+    
+    if (texture->getOpacity() < 255 && p != ParentRelative) {
+        format = XRenderFindVisualFormat(display, visual);
+        if (p == None)
+            src_pict = texture->getSolidPicture();
+        else
+            src_pict = XRenderCreatePicture(display, (Drawable) p, format, 0,
+                                            0);
+        dest_pict = XRenderCreatePicture(display, (Drawable) win, format, 0,
+                                         0);
+        XSetWindowBackgroundPixmap(display, win, ParentRelative);
+        XClearWindow(display, win);
+        XRenderComposite(display, PictOpOver, src_pict,
+                         texture->getAlphaPicture(), dest_pict, src_x, src_y,
+                         0, 0, 0, 0, width, height);
+    }
+    else {
+        XSetWindowBackgroundPixmap(display, win, ParentRelative);
+        XClearWindow(display, win);
+    }
+}
+#endif // XFT
