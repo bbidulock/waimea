@@ -394,7 +394,7 @@ void WaMenu::Map(int mx, int my) {
 
 #ifdef XFT
         if ((*it)->texture->getOpacity()) {
-            (*it)->Draw();
+            (*it)->Render();
         }
 #endif // XFT
 
@@ -447,7 +447,7 @@ void WaMenu::ReMap(int mx, int my) {
 
 #ifdef XFT
         if ((*it)->texture->getOpacity()) {
-            (*it)->Draw();
+            (*it)->Render();
         }
 #endif // XFT
 
@@ -488,7 +488,7 @@ void WaMenu::Move(int dx, int dy) {
         
 #ifdef XFT
         if ((*it)->texture->getOpacity()) {
-            (*it)->Draw();
+            (*it)->Render();
             (*it)->DrawFg();
         }
 #endif // XFT
@@ -887,12 +887,12 @@ void WaMenuItem::DrawFg(void) {
 
 #ifdef XFT
 /**
- * @fn    Draw(void)
- * @brief Draw transparent effect
+ * @fn    Render(void)
+ * @brief Render transparent background
  *
- * Draws transperancy background and redraws foreground.
+ * Renders and sets transperancy background.
  */
-void WaMenuItem::Draw(void) {
+void WaMenuItem::Render(void) {
     if (! texture->getOpacity()) return;
     if (type == MenuTitleType) {
         pixmap = menu->wascreen->ic->xrender(menu->ptitle, menu->width, height,
@@ -901,7 +901,7 @@ void WaMenuItem::Draw(void) {
                                              menu->x, menu->y + dy, pixmap);
         XSetWindowBackgroundPixmap(menu->display, id, pixmap);
     }
-    else {
+    else if (hilited) {
         pixmap = menu->wascreen->ic->xrender(menu->philite, menu->width,
                                              height, texture,
                                              menu->wascreen->xrootpmap_id,
@@ -931,7 +931,7 @@ void WaMenuItem::Hilite(void) {
     texture = &menu->wascreen->mstyle.hilite;
 
 #ifdef XFT
-    if (texture->getOpacity()) Draw();
+    if (texture->getOpacity()) Render();
     else {
 #endif // XFT
     

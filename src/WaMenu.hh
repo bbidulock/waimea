@@ -101,7 +101,7 @@ public:
     virtual ~WaMenuItem(void);
 
     void DrawFg(void);
-    void Draw(void);
+    void Render(void);
     
     void Hilite(void);
     void DeHilite(void);
