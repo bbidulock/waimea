@@ -1,14 +1,21 @@
+Sun Jan 20 2002 David Reveman (c99drn@cs.umu.se)
+
+	*** Waimea v0.1.4 release ***
+
+Sat Jan 19 2002 David Reveman (c99drn@cs.umu.se)
+
+	Completed dockapp handler system.	
+
 Sun Dec  2 2001 David Reveman (c99drn@cs.umu.se)
 
-	Made screenedges XDND aware. Now possible to use drag'n'drop
-	over screenedges.
+	Made screenedges XDND aware. 
 
 Fri Nov 30 2001 David Reveman (c99drn@cs.umu.se)
 
 	Added dockapp handler
 
 Wed Nov 28 2001 David Reveman (c99drn@cs.umu.se)
-	Many important bugfixes
+
 	Added TaskSwitcher
 
 	*** Waimea v0.1.2 release ***

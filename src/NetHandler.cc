@@ -277,17 +277,17 @@ void NetHandler::GetWmState(WaWindow *ww) {
     CARD32 *data;
     XEvent *e;
     WaAction *ac;
-    bool vert = False, horz = False;
+    bool vert = False, horz = False, shade = False;
     int i;
     
-    if (XGetWindowProperty(display, ww->id, net_state, 0L, 2L,
+    if (XGetWindowProperty(display, ww->id, net_state, 0L, 4L,
                            False, XA_ATOM, &real_type,
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
         items_read) {
         for (i = 0; i < items_read; i++) {
             if (data[i] == net_state_sticky) ww->flags.sticky = True;
-            else if (data[i] == net_state_shaded) ww->Shade(e, ac);
+            else if (data[i] == net_state_shaded) shade = True;
             else if (data[i] == net_maximized_vert) vert = True;
             else if (data[i] == net_maximized_horz) horz = True;
         }
@@ -307,6 +307,7 @@ void NetHandler::GetWmState(WaWindow *ww) {
                 XFree(data);
             }
         }
+        if (shade) ww->Shade(e, ac);
     }
 }
 

@@ -303,9 +303,11 @@ void WaWindow::RedrawWindow(void) {
     }
     if (resize) {
         if (flags.max) {
-            flags.max = False;
-            net->SetWmState(this);
-            DrawMaxButtonFg();
+            if (old_attrib.width != attrib.width && !restore_shade_2) {
+                flags.max = False;
+                net->SetWmState(this);
+                DrawMaxButtonFg();
+            }
         }
         XGrabServer(display);
         if (validateclient(id)) {    
@@ -1068,6 +1070,7 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
         else if (height >= size.min_height && height <= size.max_height) {
             resize = True;
             flags.shaded = False;
+            net->SetWmState(this);
             if (size.height_inc == 1)
                 *n_h = height;
             else
@@ -1599,7 +1602,7 @@ void WaWindow::_Maximize(bool save_old, int x, int y) {
         }    
         RedrawWindow();
         flags.max = True;
-        DrawMaxButtonFg();
+        if (title_w) DrawMaxButtonFg();
         net->SetWmState(this);
     }
 }
@@ -1611,17 +1614,23 @@ void WaWindow::_Maximize(bool save_old, int x, int y) {
  * Restores size and position of maximized window.
  */
 void WaWindow::UnMaximize(XEvent *, WaAction *) {
-    int n_w, n_h;
+    int n_w, n_h, rest_height;
     
     if (flags.max) {
-        if (IncSizeCheck(restore_max.width, restore_max.height, &n_w, &n_h)) {
+        if (flags.shaded && !restore_shade_2) {
+            rest_height = attrib.height;
+            restore_shade_2 = restore_max.height;
+        }
+        else rest_height = restore_max.height;
+        if (IncSizeCheck(restore_max.width, rest_height, &n_w, &n_h)) {
             attrib.x = restore_max.x + (restore_max.misc0 - wascreen->v_x);
             attrib.y = restore_max.y + (restore_max.misc1 - wascreen->v_y);
             attrib.width = n_w;
             attrib.height = n_h;
             flags.max = False;
             RedrawWindow();
-            DrawMaxButtonFg();
+            if (title_w) DrawMaxButtonFg();
+            restore_shade_1 = restore_shade_2;
             net->SetWmState(this);
         }
     }
@@ -1788,7 +1797,6 @@ void WaWindow::Shade(XEvent *, WaAction *) {
     if (IncSizeCheck(attrib.width, -(handle_w + border_w * 2), &n_w, &n_h)) {
         attrib.width = n_w;
         attrib.height = n_h;
-        flags.max = False;
         RedrawWindow();
     }
     net->SetWmState(this);
@@ -1802,13 +1810,13 @@ void WaWindow::Shade(XEvent *, WaAction *) {
  */
 void WaWindow::UnShade(XEvent *, WaAction *) {
     if (flags.shaded) {
-        flags.shaded = False;
-        if (restore_shade_2) {
+        if (restore_shade_2 && !flags.max) {
             attrib.height = restore_shade_2;
             restore_shade_2 = 0;
         } else
             attrib.height = restore_shade_1;
-        
+
+        flags.shaded = False;
         RedrawWindow();
     }
     net->SetWmState(this);
