@@ -120,6 +120,14 @@ XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
                 event->type = ButtonRelease;
                 EvAct(event, event->xmaprequest.window);
                 break;
+            case ClientMessage:
+                if (event->xclient.format != 32) break;
+                if (event->xclient.message_type ==
+                    waimea->net->net_change_desktop_viewport) {
+                    waimea->wascreen->MoveViewportTo(event->xclient.data.l[0],
+                                                     event->xclient.data.l[1]);
+                }
+                break;
             default:
                 hash_map<int, WindowObject *>::iterator it;
                 if ((it = waimea->window_table->find(event->xany.window)) !=

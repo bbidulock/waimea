@@ -49,11 +49,19 @@ public:
     void GetWMNormalHints(WaWindow *);
     void SetState(WaWindow *, int);
     void GetState(WaWindow *);
-    void SetDesktopViewPort(WaScreen *);
-    void GetDesktopViewPort(WaScreen *);
-    
+    void GetStateSticky(WaWindow *);
+    void SetStateSticky(WaWindow *, int);
+    void GetStateShaded(WaWindow *);
+    void SetStateShaded(WaWindow *, int);
+    void GetStateMaxH(WaWindow *);
+    void SetStateMaxH(WaWindow *, int);
+    void GetStateMaxV(WaWindow *);
+    void SetStateMaxV(WaWindow *, int);
     void SetVirtualPos(WaWindow *);
     void GetVirtualPos(WaWindow *);
+
+    void SetDesktopViewPort(WaScreen *);
+    void GetDesktopViewPort(WaScreen *);
     
     Waimea *waimea;
     Display *display;
@@ -61,7 +69,9 @@ public:
     XSizeHints *size_hints;
     MwmHints *mwm_hints;
 
-    Atom mwm_hints_atom, wm_state, net_desktop_viewport, net_virtual_pos;
+    Atom mwm_hints_atom, wm_state, net_state_sticky, net_state_shaded,
+        net_state_max_v, net_state_max_h, net_virtual_pos,
+        net_desktop_viewport, net_change_desktop_viewport;
 
     int real_format;
     Atom real_type;

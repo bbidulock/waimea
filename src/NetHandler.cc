@@ -30,11 +30,24 @@ NetHandler::NetHandler(Waimea *wa) {
 
     wm_hints = XAllocWMHints();
     size_hints = XAllocSizeHints();
-    mwm_hints_atom = XInternAtom(display, "_MOTIF_WM_HINTS", False);
-    wm_state = XInternAtom(display, "WM_STATE", False);
-    net_desktop_viewport = XInternAtom(display, "_NET_DESKTOP_VIEWPORT",
-                                       False);
-    net_virtual_pos = XInternAtom(display, "_NET_VIRTUAL_POS", False);
+    mwm_hints_atom =
+        XInternAtom(display, "_MOTIF_WM_HINTS", False);
+    wm_state =
+        XInternAtom(display, "WM_STATE", False);
+    net_state_sticky =
+        XInternAtom(display, "_NET_WM_STATE_STICKY", False);
+    net_state_shaded =
+        XInternAtom(display, "_NET_WM_STATE_SHADED", False);
+    net_state_max_v =
+        XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+    net_state_max_h =
+        XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+    net_virtual_pos =
+        XInternAtom(display, "_NET_VIRTUAL_POS", False);
+    net_desktop_viewport =
+        XInternAtom(display, "_NET_DESKTOP_VIEWPORT", False);
+    net_change_desktop_viewport =
+        XInternAtom(display, "_NET_CHANGE_DESKTOP_VIEWPORT", False);
 }
 
 /**
@@ -234,42 +247,295 @@ void NetHandler::SetState(WaWindow *ww, int newstate) {
 }
 
 /**
- * @fn    GetDesktopViewPort(WaScreen *ws)
- * @brief Reads viewport hint
+ * @fn    GetStateSticky(WaWindow *wa)
+ * @brief Reads sticky state
  *
- * Reads WaScreens viewport hint.
+ * Reads WaWindows sticky state
  *
- * @param ws WaScreen object
+ * @param wa WaWindow object
  */
-void NetHandler::GetDesktopViewPort(WaScreen *ws) {
+void NetHandler::GetStateSticky(WaWindow *ww) {
     CARD32 *data;
     
-    if (XGetWindowProperty(display, ws->id, net_desktop_viewport, 0L, 2L, 
+    if (XGetWindowProperty(display, ww->id, net_state_sticky, 0L, 2L, 
                            False, XA_CARDINAL, &real_type,
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
-        items_read >= 2) { 
-        ws->MoveViewportTo(data[0], data[1]);
+        items_read) { 
+        ww->flags.sticky = *data;
         XFree(data);
     }
 }
 
 /**
- * @fn    SetDesktopViewPort(WaScreen *ws)
- * @brief Writes viewport hint
+ * @fn    SetStateSticky(WaWindow *ww, int newstate)
+ * @brief Sets sticky state
  *
- * Writes WaScreens viewport hint.
+ * Sets sticky state for WaWindow.
  *
- * @param ws WaScreen object
+ * @param ww WaWindow object
+ * @param newstate New sticky state
  */
-void NetHandler::SetDesktopViewPort(WaScreen *ws) {
-    CARD32 data[2];
+void NetHandler::SetStateSticky(WaWindow *ww, int newstate) {
+    CARD32 data[1];
 
-    data[0] = ws->v_x;
-    data[1] = ws->v_y;
+    ww->flags.sticky = newstate;
+    data[0] = newstate;
+
+    XGrabServer(display);
+    if (validateclient(ww->id))
+        XChangeProperty(display, ww->id, net_state_sticky, XA_CARDINAL, 32,
+                        PropModeReplace, (unsigned char *) &data, 1);
+    XUngrabServer(display);
+}
+
+/**
+ * @fn    GetStateShaded(WaWindow *wa)
+ * @brief Reads shaded state
+ *
+ * Reads WaWindows shaded state
+ *
+ * @param wa WaWindow object
+ */
+void NetHandler::GetStateShaded(WaWindow *ww) {
+    CARD32 *data;
+    int n_w, n_h;
     
-    XChangeProperty(display, ws->id, net_desktop_viewport, XA_CARDINAL, 32,
-                    PropModeReplace, (unsigned char *) &data, 2);
+    if (XGetWindowProperty(display, ww->id, net_state_shaded, 0L, 2L, 
+                           False, XA_CARDINAL, &real_type,
+                           &real_format, &items_read, &items_left, 
+                           (unsigned char **) &data) == Success && 
+        items_read) {
+        if (*data) {
+            if (ww->IncSizeCheck(ww->attrib.width,
+                                 -(ww->handle_w + ww->border_w * 2),
+                                 &n_w, &n_h)) {
+                ww->attrib.width = n_w;
+                ww->attrib.height = n_h;
+                ww->RedrawWindow();
+            }
+        } else {
+            if (ww->flags.shaded) {
+                ww->flags.shaded = False;
+                ww->attrib.height = ww->restore.height;
+                ww->RedrawWindow();
+            }
+        }
+        XFree(data); 
+    }
+}
+
+/**
+ * @fn    SetStateShaded(WaWindow *ww, int newstate)
+ * @brief Sets shade state
+ *
+ * Sets shade state of WaWindow.
+ *
+ * @param ww WaWindow object
+ * @param newstate New shade state
+ */
+void NetHandler::SetStateShaded(WaWindow *ww, int newstate) {
+    CARD32 data[1];
+    int n_w, n_h;
+
+    if (newstate) {
+        if (ww->IncSizeCheck(ww->attrib.width,
+                             -(ww->handle_w + ww->border_w * 2),
+                             &n_w, &n_h)) {
+            ww->attrib.width = n_w;
+            ww->attrib.height = n_h;
+            ww->RedrawWindow();
+            ww->flags.shaded = True;
+        }
+    } else {
+        if (ww->flags.shaded) {
+            ww->flags.shaded = False;
+            ww->attrib.height = ww->restore.height;
+            ww->RedrawWindow();
+        }
+    }
+    data[0] = ww->flags.shaded;
+
+    XGrabServer(display);
+    if (validateclient(ww->id))
+        XChangeProperty(display, ww->id, net_state_shaded, XA_CARDINAL, 32,
+                        PropModeReplace, (unsigned char *) &data, 1);
+    XUngrabServer(display);
+}
+
+
+/**
+ * @fn    GetStateMaxH(WaWindow *ww)
+ * @brief Reads maximized horizotally state
+ *
+ * Reads WaWindows maximized horizotally state.
+ *
+ * @param ww WaWindow object
+ */
+void NetHandler::GetStateMaxH(WaWindow *ww) {
+    CARD32 *data;
+    int n_w, n_h, width;
+    
+    if (XGetWindowProperty(display, ww->id, net_state_max_h, 0L, 2L, 
+                           False, XA_CARDINAL, &real_type,
+                           &real_format, &items_read, &items_left, 
+                           (unsigned char **) &data) == Success && 
+        items_read) {
+        if (*data) {
+            width = ww->wascreen->width -
+                (ww->flags.border * ww->border_w * 2);
+            
+            if (ww->IncSizeCheck(width, ww->attrib.height, &n_w, &n_h)) {
+                ww->restore.x = ww->attrib.x;
+                ww->restore.width = ww->attrib.width;
+                ww->attrib.x = ww->border_w;
+                ww->attrib.width = n_w;
+                ww->RedrawWindow();
+            }
+            ww->flags.max_h = True;
+        } 
+        XFree(data); 
+    }
+}
+
+/**
+ * @fn    SetStateMaxH(WaWindow *ww, int newstate)
+ * @brief Sets maximized horizotally state
+ *
+ * Sets WaWindows maximized horizotally state.
+ *
+ * @param ww WaWindow object
+ * @param newstate New maximized horizotally state
+ */
+void NetHandler::SetStateMaxH(WaWindow *ww, int newstate) {
+    CARD32 data[1];
+    int n_w, n_h, width;
+
+    switch (newstate) {
+        case 0:
+             if (ww->flags.max_h) {
+                 if (ww->IncSizeCheck(ww->restore.width,
+                                      ww->attrib.height, &n_w, &n_h)) {
+                     ww->attrib.x = ww->restore.x;
+                     ww->attrib.width = n_w;
+                     ww->RedrawWindow();
+                 }
+             }
+             break;
+        case 1:
+            width = ww->wascreen->width -
+                (ww->flags.border * ww->border_w * 2);
+        
+            if (ww->IncSizeCheck(width, ww->attrib.height, &n_w, &n_h)) {
+                ww->restore.x = ww->attrib.x;
+                ww->restore.width = ww->attrib.width;
+                ww->attrib.x = ww->border_w;
+                ww->attrib.width = n_w;
+                ww->RedrawWindow();
+                ww->flags.max_h = True;
+            }
+            break;
+        default:
+            ww->flags.max_h = False;
+    }
+    data[0] = ww->flags.max_h;
+    
+    XGrabServer(display);
+    if (validateclient(ww->id))
+        XChangeProperty(display, ww->id, net_state_max_h, XA_CARDINAL, 32,
+                        PropModeReplace, (unsigned char *) &data, 1);
+    XUngrabServer(display);
+}
+
+/**
+ * @fn    GetStateMaxV(WaWindow *ww)
+ * @brief Reads maximized vertically state
+ *
+ * Reads WaWindows maximized vertically state.
+ *
+ * @param ww WaWindow object
+ */
+void NetHandler::GetStateMaxV(WaWindow *ww) {
+    CARD32 *data;
+    int n_w, n_h, height;
+    
+    if (XGetWindowProperty(display, ww->id, net_state_max_v, 0L, 2L, 
+                           False, XA_CARDINAL, &real_type,
+                           &real_format, &items_read, &items_left, 
+                           (unsigned char **) &data) == Success && 
+        items_read) {
+        if (*data) {
+            height = ww->wascreen->height -
+                (ww->flags.border * ww->border_w * 2) -
+                ww->title_w - ww->handle_w -
+                (ww->border_w * ww->flags.title) -
+                (ww->border_w * ww->flags.handle);
+            
+            if (ww->IncSizeCheck(ww->attrib.width, height, &n_w, &n_h)) {
+                ww->restore.y = ww->attrib.y;
+                ww->restore.height = ww->attrib.height;
+                ww->attrib.y = ww->title_w + ww->border_w +
+                    (ww->border_w * ww->flags.title);
+                ww->attrib.height = n_h;
+                ww->RedrawWindow();
+            }
+            ww->flags.max_v = True;
+        }
+        XFree(data); 
+    }
+}
+
+/**
+ * @fn    SetStateMaxV(WaWindow *ww, int newstate)
+ * @brief Sets maximized vertically state
+ *
+ * Sets WaWindows maximized vertically state.
+ *
+ * @param ww WaWindow object
+ * @param newstate New maximized vertically state
+ */
+void NetHandler::SetStateMaxV(WaWindow *ww, int newstate) {
+    CARD32 data[1];
+    int n_w, n_h, height, shaded;
+
+    switch (newstate) {
+        case 0:
+            if (ww->flags.max_v) {
+                if (ww->IncSizeCheck(ww->attrib.width,
+                                     ww->restore.height, &n_w, &n_h)) {
+                    ww->attrib.height = n_h;
+                    ww->attrib.y = ww->restore.y;
+                    ww->RedrawWindow();
+                }
+            }
+            break;
+        case 1:
+            height = ww->wascreen->height -
+                (ww->flags.border * ww->border_w * 2) -
+                ww->title_w - ww->handle_w -
+                (ww->border_w * ww->flags.title) -
+                (ww->border_w * ww->flags.handle);
+            if (ww->IncSizeCheck(ww->attrib.width, height, &n_w, &n_h)) {
+                ww->restore.y = ww->attrib.y;
+                ww->restore.height = ww->attrib.height;
+                ww->attrib.y = ww->title_w + ww->border_w +
+                    (ww->border_w * ww->flags.title);
+                ww->attrib.height = n_h;
+                ww->RedrawWindow();
+                ww->flags.max_v = True;
+            }
+            break;
+        default:
+            ww->flags.max_v = False;
+    }
+    
+    data[0] = ww->flags.max_v;
+
+    XGrabServer(display);
+    if (validateclient(ww->id))
+        XChangeProperty(display, ww->id, net_state_max_v, XA_CARDINAL, 32,
+                        PropModeReplace, (unsigned char *) &data, 1);
+    XUngrabServer(display);
 }
 
 /**
@@ -318,4 +584,43 @@ void NetHandler::SetVirtualPos(WaWindow *ww) {
         XChangeProperty(display, ww->id, net_virtual_pos, XA_CARDINAL, 32,
                         PropModeReplace, (unsigned char *) &data, 2);
     XUngrabServer(display);
+}
+
+/**
+ * @fn    GetDesktopViewPort(WaScreen *ws)
+ * @brief Reads viewport hint
+ *
+ * Reads WaScreens viewport hint.
+ *
+ * @param ws WaScreen object
+ */
+void NetHandler::GetDesktopViewPort(WaScreen *ws) {
+    CARD32 *data;
+    
+    if (XGetWindowProperty(display, ws->id, net_desktop_viewport, 0L, 2L, 
+                           False, XA_CARDINAL, &real_type,
+                           &real_format, &items_read, &items_left, 
+                           (unsigned char **) &data) == Success && 
+        items_read >= 2) { 
+        ws->MoveViewportTo(data[0], data[1]);
+        XFree(data);
+    }
+}
+
+/**
+ * @fn    SetDesktopViewPort(WaScreen *ws)
+ * @brief Writes viewport hint
+ *
+ * Writes WaScreens viewport hint.
+ *
+ * @param ws WaScreen object
+ */
+void NetHandler::SetDesktopViewPort(WaScreen *ws) {
+    CARD32 data[2];
+
+    data[0] = ws->v_x;
+    data[1] = ws->v_y;
+    
+    XChangeProperty(display, ws->id, net_desktop_viewport, XA_CARDINAL, 32,
+                    PropModeReplace, (unsigned char *) &data, 2);
 }

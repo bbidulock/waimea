@@ -81,6 +81,18 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     wacts->push_back(new StrComp("maximize", &WaWindow::Maximize));
     wacts->push_back(new StrComp("unmaximize", &WaWindow::UnMaximize));
     wacts->push_back(new StrComp("togglemaximize", &WaWindow::ToggleMaximize));
+    wacts->push_back(new StrComp("maximizehorz",
+                                 &WaWindow::MaximizeHorz));
+    wacts->push_back(new StrComp("unmaximizehorz",
+                                 &WaWindow::UnMaximizeHorz));
+    wacts->push_back(new StrComp("togglemaximizehorz",
+                                 &WaWindow::ToggleMaximizeHorz));
+    wacts->push_back(new StrComp("maximizevert",
+                                 &WaWindow::MaximizeVert));
+    wacts->push_back(new StrComp("unmaximizevert",
+                                 &WaWindow::UnMaximizeVert));
+    wacts->push_back(new StrComp("togglemaximizevert",
+                                 &WaWindow::ToggleMaximizeVert));
     wacts->push_back(new StrComp("sticky", &WaWindow::Sticky));
     wacts->push_back(new StrComp("unsticky", &WaWindow::UnSticky));
     wacts->push_back(new StrComp("togglesticky", &WaWindow::ToggleSticky));

@@ -61,6 +61,9 @@ typedef struct {
     bool border;
     bool handle;
     bool sticky;
+    bool shaded;
+    bool max_v;
+    bool max_h;
 } WaWindowFlags;
 
 typedef struct {
@@ -80,6 +83,7 @@ public:
     void Gravitate(int);
     void ButtonPressed(int);
     void RedrawWindow(void);
+    bool IncSizeCheck(int, int, int *, int *);
     void DrawIconifyButtonFg(void);
     void DrawCloseButtonFg(void);
     void DrawMaxButtonFg(void);
@@ -113,6 +117,12 @@ public:
     void Maximize(XEvent *, WaAction *);
     void UnMaximize(XEvent *, WaAction *);
     void ToggleMaximize(XEvent *, WaAction *);
+    void MaximizeHorz(XEvent *, WaAction *);
+    void UnMaximizeHorz(XEvent *, WaAction *);
+    void ToggleMaximizeHorz(XEvent *, WaAction *);
+    void MaximizeVert(XEvent *, WaAction *);
+    void UnMaximizeVert(XEvent *, WaAction *);
+    void ToggleMaximizeVert(XEvent *, WaAction *);
     void Close(XEvent *, WaAction *);
     void Kill(XEvent *, WaAction *);
     void CloseKill(XEvent *, WaAction *);
@@ -128,7 +138,7 @@ public:
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
     
     char *name;
-    Bool has_focus, want_focus, mapped, shaded, maximized, dontsend;
+    Bool has_focus, want_focus, mapped, dontsend;
     Display *display;
     Waimea *waimea;
     WaScreen *wascreen;
@@ -143,7 +153,6 @@ public:
 private:
     void ReparentWin(void);
     void InitPosition(void);
-    bool IncSizeCheck(int, int, int *, int *);
     void CreateOutlineWindows(void);
     void ToggleOutline(void);
     void DrawOutline(int, int, int, int);
