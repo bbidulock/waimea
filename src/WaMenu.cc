@@ -418,7 +418,6 @@ void WaMenu::Unmap(bool focus) {
     }
 
     if (focus) {
-        // Bad!!
         XSync(display, False);
         while (XCheckTypedEvent(display, EnterNotify, &e));
     }
@@ -428,6 +427,7 @@ void WaMenu::Unmap(bool focus) {
         else
             root_item->DeHilite();
     }
+    root_item = NULL;
     mapped = False;
 }
 
@@ -587,7 +587,6 @@ void WaMenu::Raise(void) {
  */
 void WaMenu::FocusFirst(void) {
     XEvent e;
-    // Bad!!!
     while (XCheckTypedEvent(display, EnterNotify, &e));
     
     list<WaMenuItem *>::iterator it = item_list->begin();
