@@ -261,9 +261,17 @@ void EventHandler::EvFocus(XFocusChangeEvent *e) {
  */
 void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
     WaWindow *ww;
+    Dockapp *da;
     XWindowChanges wc;
     int mask;
 
+    wc.x = e->x;
+    wc.y = e->y;
+    wc.width = e->width;
+    wc.height = e->height;
+    wc.sibling = e->above;
+    wc.stack_mode = e->detail;
+    
     hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(e->window)) !=
         waimea->window_table->end()) {
@@ -285,13 +293,18 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
             ww->net->SetVirtualPos(ww);
             return;
         }
+        else if (((*it).second)->type == DockAppType) {
+            da = (Dockapp *) (*it).second;
+            XGrabServer(e->display);
+            if (e->value_mask & CWWidth) da->width = e->width; 
+            if (e->value_mask & CWHeight) da->height = e->height; 
+            if (validateclient(da->id))
+                XConfigureWindow(e->display, da->id, e->value_mask, &wc);
+            XUngrabServer(e->display);
+            waimea->wascreen->dock->Update();
+        }
     }
-    wc.x = e->x;
-    wc.y = e->y;
-    wc.width = e->width;
-    wc.height = e->height;
-    wc.sibling = e->above;
-    wc.stack_mode = e->detail;
+    
     XGrabServer(e->display);
     if (validateclient(e->window))
         XConfigureWindow(e->display, e->window, e->value_mask, &wc);

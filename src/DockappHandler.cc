@@ -92,9 +92,9 @@ DockappHandler::~DockappHandler(void) {
 void DockappHandler::Update(void) {
     int dock_x = gridspace;
     int dock_y = gridspace;
+    
     map_x = x;
     map_y = y;
-    
     width = gridspace;
     height = gridspace;
     
@@ -166,11 +166,11 @@ void DockappHandler::Update(void) {
  */
 Dockapp::Dockapp(Window win, DockappHandler *dhand) :
     WindowObject(win, DockAppType) {
+    XWindowAttributes attrib;
     dh = dhand;
     client_id = win;
     display = dh->display;
     deleted = False;
-    XWindowAttributes attrib;
     
     XWMHints *wmhints = XGetWMHints(display, win);
     if (wmhints) {
@@ -190,16 +190,15 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
     } else {
         icon_id = None;
         id = client_id;
-    }
-    
-    if (XGetWindowAttributes(display, id, &attrib)) {
-        width = attrib.width;
-        height = attrib.height;
-    } else
-        width = height = 64;
-    
+    }    
     XGrabServer(display);
-    if (validateclient(client_id)) {
+    if (validateclient(id)) {
+        if (XGetWindowAttributes(display, id, &attrib)) {
+            width = attrib.width;
+            height = attrib.height;
+        } else
+            width = height = 64;
+        
         XSetWindowBorderWidth(display, id, 0);
         XSelectInput(display, dh->id, NoEventMask);
         XSelectInput(display, id, NoEventMask);
@@ -210,6 +209,7 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
         XMapWindow(display, id);
     } else {
         XUngrabServer(display);
+        delete this;
         return;
     }
     XUngrabServer(display);
