@@ -12,12 +12,29 @@ CXXFLAGS="$CXXFLAGS $X_CFLAGS"
 LIBS="$LIBS $X_LIBS"
 LDFLAGS="$LDFLAGS $LIBS $X_PRE_LIBS"
 
-AC_CHECK_HEADER(hash_map.h,,
-AC_MSG_ERROR([Your libstdc++ installation does not have the extra hash classes]))
-AC_CHECK_HEADER(hash_set.h,,
-AC_MSG_ERROR([Your libstdc++ installation does not have the extra hash classes]))
-AC_CHECK_HEADER(list.h,,
-AC_MSG_ERROR([Your libstdc++ installation does not have the extra list classes]))
+AC_MSG_CHECKING([for hash_map.h])
+AC_TRY_LINK(
+#include <hash_map.h>
+      ,,
+      AC_MSG_RESULT([yes]),      
+      AC_MSG_RESULT([no])
+      AC_MSG_ERROR([Your libstdc++ installation does not have the extra hash classes]))
+
+AC_MSG_CHECKING([for hash_set.h])
+AC_TRY_LINK(
+#include <hash_set.h>
+      ,,
+      AC_MSG_RESULT([yes]),
+      AC_MSG_RESULT([no])
+      AC_MSG_ERROR([Your libstdc++ installation does not have the extra hash classes]))
+
+AC_MSG_CHECKING([for list.h])
+AC_TRY_LINK(
+#include <list.h>
+      ,,
+      AC_MSG_RESULT([yes]),
+      AC_MSG_RESULT([no])
+      AC_MSG_ERROR([Your libstdc++ installation does not have the extra list classes]))
 
 AC_CHECK_PROGS(regex_cmd, sed)
 if test x$regex_cmd = "x"; then
