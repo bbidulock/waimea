@@ -32,7 +32,7 @@ typedef void (WaMenuItem::*MenuActionFn)(XEvent *, WaAction *);
 #define MenuRFuncMask (1L << 3)
 #define MenuMFuncMask (1L << 4)
 
-class WaMenu {
+class WaMenu : public WindowObject {
 public:
     WaMenu(char *);
     virtual ~WaMenu(void);

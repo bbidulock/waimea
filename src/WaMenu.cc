@@ -38,14 +38,14 @@ using std::cout;
 using std::endl;
 
 /**
- * @fn    WaMenu(char *n)
+ * @fn    WaMenu(char *n) : WindowObject((Window) 0, MenuType)
  * @brief Constructor for WaMenu class
  *
  * Creates a new menu with no items
  *
  * @param n Name of menu
  */
-WaMenu::WaMenu(char *n) {
+WaMenu::WaMenu(char *n) : WindowObject((Window) 0, MenuType) {
     char *__m_wastrdup_tmp;
     
     name = __m_wastrdup(n);
@@ -79,6 +79,8 @@ WaMenu::~WaMenu(void) {
             wascreen->wamenu_list_stacking_aot.remove(this);
         else if (wascreen->config.menu_stacking == AlwaysAtBottom)
             wascreen->wamenu_list_stacking_aab.remove(this);
+        else
+            wascreen->wa_list_stacking.remove(this);
         XDestroyWindow(display, frame);
 
 #ifdef XRENDER
@@ -456,12 +458,14 @@ void WaMenu::Map(int mx, int my) {
 
     if (wascreen->config.menu_stacking == AlwaysAtBottom) {
         wascreen->wamenu_list_stacking_aab.push_back(this);
-        wascreen->WaLowerWindow(0);
+        wascreen->WaLowerWindow(frame);
     } else if (wascreen->config.menu_stacking == AlwaysOnTop) {
         wascreen->wamenu_list_stacking_aot.push_front(this);
         wascreen->WaRaiseWindow(0);
-    } else
-        wascreen->WaRaiseWindow(frame);          
+    } else {
+        wascreen->wa_list_stacking.push_front(this);
+        wascreen->WaRaiseWindow(frame);
+    }
     x = mx;
     y = my;
     mapped = true;
@@ -494,12 +498,14 @@ void WaMenu::ReMap(int mx, int my) {
     else {
         if (wascreen->config.menu_stacking == AlwaysAtBottom) {
             wascreen->wamenu_list_stacking_aab.push_back(this);
-            wascreen->WaLowerWindow(0);
+            wascreen->WaLowerWindow(frame);
         } else if (wascreen->config.menu_stacking == AlwaysOnTop) {
             wascreen->wamenu_list_stacking_aot.push_front(this);
             wascreen->WaRaiseWindow(0);
-        } else
+        } else {
+            wascreen->wa_list_stacking.push_front(this);
             wascreen->WaRaiseWindow(frame);
+        }
     }
     x = mx;
     y = my;
@@ -775,6 +781,16 @@ void WaMenu::DrawOutline(int dx, int dy) {
  * stack.
  */
 void WaMenu::Raise(void) {
+    if (wascreen->config.menu_stacking == AlwaysOnTop) {
+        wascreen->wamenu_list_stacking_aot.remove(this);
+        wascreen->wamenu_list_stacking_aot.push_front(this);
+    } else if (wascreen->config.menu_stacking == AlwaysAtBottom) {
+        wascreen->wamenu_list_stacking_aab.remove(this);
+        wascreen->wamenu_list_stacking_aab.push_back(this);
+    } else {
+        wascreen->wa_list_stacking.remove(this);
+        wascreen->wa_list_stacking.push_front(this);
+    }     
     wascreen->WaRaiseWindow(frame);
     list<WaMenuItem *>::iterator it = item_list.begin();
     for (; it != item_list.end(); ++it)
@@ -1315,6 +1331,16 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
  */
 void WaMenuItem::Lower(XEvent *, WaAction *) {
     if (! in_window) return;
+    if (menu->wascreen->config.menu_stacking == AlwaysOnTop) {
+        menu->wascreen->wamenu_list_stacking_aot.remove(menu);
+        menu->wascreen->wamenu_list_stacking_aot.push_back(menu);
+    } else if (menu->wascreen->config.menu_stacking == AlwaysAtBottom) {
+        menu->wascreen->wamenu_list_stacking_aab.remove(menu);
+        menu->wascreen->wamenu_list_stacking_aab.push_front(menu);
+    } else {
+        menu->wascreen->wa_list_stacking.remove(menu);
+        menu->wascreen->wa_list_stacking.push_back(menu);
+    }     
     menu->wascreen->WaLowerWindow(menu->frame);
 }
 

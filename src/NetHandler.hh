@@ -65,7 +65,7 @@ public:
     void GetActiveWindow(WaScreen *);
     void GetDesktopViewPort(WaScreen *);
     void SetDesktopViewPort(WaScreen *);
-    void SetDesktopGeometry(WaScreen *);
+    void SetDesktopHints(WaScreen *);
 
     void wXDNDMakeAwareness(Window);
     void wXDNDClearAwareness(Window);
@@ -76,6 +76,7 @@ public:
     void GetXRootPMapId(WaScreen *);
 #endif // XRENDER
 
+    void GetWmType(WaWindow *);
     
     Waimea *waimea;
     Display *display;
@@ -92,7 +93,11 @@ public:
         net_maximized_restore, net_virtual_pos, net_desktop_viewport,
         net_desktop_geometry, net_wm_strut, net_workarea, xa_xdndaware,
         xa_xdndenter, xa_xdndleave, net_wm_name, net_restart, net_shutdown,
-        net_wm_pid;
+        net_wm_pid, net_wm_window_type, net_wm_window_type_desktop,
+        net_wm_window_type_dock, net_wm_window_type_toolbar,
+        net_wm_window_type_menu, net_wm_window_type_splash,
+        net_wm_window_type_dialog, net_wm_window_type_utility,
+        net_wm_window_type_normal, net_current_desktop, net_number_of_desktops;
     
 #ifdef XRENDER
     Atom xrootpmap_id;

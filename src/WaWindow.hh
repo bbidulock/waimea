@@ -60,6 +60,8 @@ typedef struct {
     bool all;
     bool alwaysontop;
     bool alwaysatbottom;
+    bool forcedatbottom;
+    bool focusable;
 } WaWindowFlags;
 
 typedef struct {

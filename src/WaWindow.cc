@@ -69,7 +69,8 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     has_focus = false;
     flags.sticky = flags.shaded = flags.max = flags.title = flags.handle =
         flags.border = flags.all = flags.alwaysontop =
-        flags.alwaysatbottom = false;
+        flags.alwaysatbottom = flags.forcedatbottom = false;
+    flags.focusable = true;
     frameacts = awinacts = pwinacts = titleacts = labelacts = handleacts =
         lgacts = rgacts = NULL;
     transient_for = (Window) 0;
@@ -127,21 +128,29 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     ReparentWin();
     SetActionLists();
     UpdateGrabs();
-    UpdateAllAttributes();
 
-#ifdef SHAPE    
+#ifdef SHAPE
     Shape();
 #endif // SHAPE
 
     net->GetWmState(this);
+    net->GetWmType(this);
     net->GetWmStrut(this);
+
+    UpdateAllAttributes();
+
+    if (flags.shaded) Shade(NULL, NULL);
     
     waimea->window_table.insert(make_pair(id, this));
     wascreen->wawindow_list.push_back(this);
     wascreen->wawindow_list_map_order.push_back(this);
-    wascreen->wawindow_list_stacking.push_back(this);
+    if ((! flags.alwaysontop) && (! flags.alwaysatbottom) &&
+        (! flags.forcedatbottom))
+        wascreen->wa_list_stacking.push_back(this);
 
     if (deleted) delete this;
+    net->SetClientList(wascreen);
+    net->SetClientListStacking(wascreen);
 }
 
 /**
@@ -199,7 +208,6 @@ WaWindow::~WaWindow(void) {
     delete handle;
     delete label;
     delete title;
-    delete frame;
     
     delete [] name;
     if (host) delete [] host;
@@ -211,16 +219,23 @@ WaWindow::~WaWindow(void) {
 
     wascreen->wawindow_list.remove(this);
     wascreen->wawindow_list_map_order.remove(this);
-    wascreen->wawindow_list_stacking.remove(this);
+    wascreen->wa_list_stacking.remove(this);
     if (flags.alwaysontop)
         wascreen->wawindow_list_stacking_aot.remove(this);
-    if (flags.alwaysatbottom)
+    if (flags.forcedatbottom) {
+        wascreen->always_at_bottom_list.remove(frame->id);
+    } else if (flags.alwaysatbottom)
         wascreen->wawindow_list_stacking_aab.remove(this);
     if (wm_strut) {
         wascreen->strut_list.remove(wm_strut);
         free(wm_strut);
         wascreen->UpdateWorkarea();
     }
+    
+    delete frame;
+
+    net->SetClientList(wascreen);
+    net->SetClientListStacking(wascreen);
 }
 
 /**
@@ -759,7 +774,7 @@ void WaWindow::Shape(void) {
  */
 void WaWindow::SendConfig(void) {
     XConfigureEvent ce;
-    
+
     ce.type              = ConfigureNotify;
     ce.event             = id;
     ce.window            = id;
@@ -1077,10 +1092,11 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
  * foreground.
  */
 void WaWindow::Raise(XEvent *, WaAction *) {
+    if (flags.forcedatbottom) return;
     if (! flags.alwaysontop && ! flags.alwaysatbottom) {
+        wascreen->wa_list_stacking.remove(this);
+        wascreen->wa_list_stacking.push_front(this);
         wascreen->WaRaiseWindow(frame->id);
-        wascreen->wawindow_list_stacking.remove(this);
-        wascreen->wawindow_list_stacking.push_front(this);
         net->SetClientListStacking(wascreen);
     }
     if (! transients.empty()) {
@@ -1104,10 +1120,11 @@ void WaWindow::Raise(XEvent *, WaAction *) {
  * Lowers the window to the bottom of the display stack
  */
 void WaWindow::Lower(XEvent *, WaAction *) {
+    if (flags.forcedatbottom) return;
     if (! flags.alwaysontop && ! flags.alwaysatbottom) {
+        wascreen->wa_list_stacking.remove(this);
+        wascreen->wa_list_stacking.push_back(this);
         wascreen->WaLowerWindow(frame->id);
-        wascreen->wawindow_list_stacking.remove(this);
-        wascreen->wawindow_list_stacking.push_back(this);
         net->SetClientListStacking(wascreen);
     }
 }
@@ -1124,6 +1141,7 @@ void WaWindow::Lower(XEvent *, WaAction *) {
 void WaWindow::Focus(bool vis) {
     int newvx, newvy, x, y;
     XEvent e;
+    if (! flags.focusable) return;
     
     if (mapped) {
         XGrabServer(display);
@@ -2428,9 +2446,10 @@ void WaWindow::DecorBorderToggle(XEvent *e, WaAction *ac) {
  * windows.
  */
 void WaWindow::AlwaysontopOn(XEvent *, WaAction *) {
+    if (flags.forcedatbottom) return;
     flags.alwaysontop = true;
     flags.alwaysatbottom = false;
-    wascreen->wawindow_list_stacking.remove(this);
+    wascreen->wa_list_stacking.remove(this);
     wascreen->wawindow_list_stacking_aab.remove(this);
     wascreen->wawindow_list_stacking_aot.push_back(this);
     wascreen->WaRaiseWindow(0);
@@ -2455,12 +2474,13 @@ void WaWindow::AlwaysontopOn(XEvent *, WaAction *) {
  * windows.
  */
 void WaWindow::AlwaysatbottomOn(XEvent *, WaAction *) {
+    if (flags.forcedatbottom) return;
     flags.alwaysontop = false;
     flags.alwaysatbottom = true;
-    wascreen->wawindow_list_stacking.remove(this);
+    wascreen->wa_list_stacking.remove(this);
     wascreen->wawindow_list_stacking_aot.remove(this);
     wascreen->wawindow_list_stacking_aab.push_back(this);
-    wascreen->WaLowerWindow(0);
+    wascreen->WaLowerWindow(frame->id);
     net->SetWmState(this);
     if (title_w) {
         list<WaChildWindow *>::iterator bit = buttons.begin();
@@ -2481,9 +2501,10 @@ void WaWindow::AlwaysatbottomOn(XEvent *, WaAction *) {
  * Removes window from list of always on top windows.
  */
 void WaWindow::AlwaysontopOff(XEvent *, WaAction *) {
+    if (flags.forcedatbottom) return;
     flags.alwaysontop = false;
     wascreen->wawindow_list_stacking_aot.remove(this);
-    wascreen->wawindow_list_stacking.push_front(this);
+    wascreen->wa_list_stacking.push_front(this);
     wascreen->WaRaiseWindow(0);
     net->SetWmState(this);
     if (title_w) {
@@ -2503,10 +2524,11 @@ void WaWindow::AlwaysontopOff(XEvent *, WaAction *) {
  * Removes window from list of always at bottom windows.
  */
 void WaWindow::AlwaysatbottomOff(XEvent *, WaAction *) {
+    if (flags.forcedatbottom) return;
     flags.alwaysatbottom = false;
     wascreen->wawindow_list_stacking_aab.remove(this);
-    wascreen->wawindow_list_stacking.push_back(this);
-    wascreen->WaLowerWindow(0);
+    wascreen->wa_list_stacking.push_back(this);
+    wascreen->WaLowerWindow(frame->id);
     net->SetWmState(this);
     if (title_w) {
         list<WaChildWindow *>::iterator bit = buttons.begin();

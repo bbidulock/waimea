@@ -127,8 +127,8 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     wm_check = XCreateWindow(display, id, 0, 0, 1, 1, 0,
                              CopyFromParent, InputOnly, CopyFromParent,
                              CWOverrideRedirect, &attrib_set);
-    net->SetSupported(this);
     net->SetSupportedWMCheck(this, wm_check);
+    net->SetSupported(this);
 	
     v_x = v_y = 0;
 
@@ -163,7 +163,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     north->actionlist = &config.neacts;
     south = new ScreenEdge(this, 0, height - 2, width, 2, SEdgeType);
     south->actionlist = &config.seacts;
-    net->SetDesktopGeometry(this);
+    net->SetDesktopHints(this);
     net->GetDesktopViewPort(this);
     net->SetDesktopViewPort(this);
     
@@ -241,7 +241,7 @@ WaScreen::~WaScreen(void) {
     LISTDEL(wamenu_list);
     LISTDELITEMS(wawindow_list);
     LISTCLEAR(wawindow_list_map_order);
-    LISTCLEAR(wawindow_list_stacking);
+    LISTCLEAR(wa_list_stacking);
     LISTCLEAR(wawindow_list_stacking_aot);
     LISTCLEAR(wawindow_list_stacking_aab);
     LISTCLEAR(always_on_top_list);
@@ -438,59 +438,87 @@ void WaScreen::WaRaiseWindow(Window win) {
  * @fn    WaLowerWindow(Window win)
  * @brief Lower window
  *
- * Lower a window in the display stack keeping alwaysatbottom windows, always
- * at the bottom. To update the stacking order so that alwaysatbottom windows
- * are at the bottom of all other windows we call this function with zero as
- * win argument. 
+ * Lowers a window in the display stack keeping alwaysatbottom windows, always
+ * at bottom.
  *
  * @param win Window to Lower, or 0 for alwaysatbottom windows update
  */
 void WaScreen::WaLowerWindow(Window win) {
     int i;
-    bool in_list = false;
+    bool end = false;
+    list<WaMenu *>::iterator mit;
+    list<WaWindow *>::iterator wit;
+    list<WindowObject *>::iterator woit;
     
-    if (always_at_bottom_list.size() || wawindow_list_stacking_aab.size()) {
-        Window *stack = new Window[always_at_bottom_list.size() +
-                                  wawindow_list_stacking_aab.size() +
-                                  ((win)? 1: 0)];
-        i = 0;
-        if (win) stack[i++] = win;
+    Window *stack = new Window[always_on_top_list.size() +
+                              wawindow_list_stacking_aot.size() +
+                              wamenu_list_stacking_aot.size() +
+                              wa_list_stacking.size() +
+                              wawindow_list_stacking_aab.size() +
+                              wamenu_list_stacking_aab.size() +
+                              always_at_bottom_list.size()];
         
-        list<Window>::reverse_iterator it = always_at_bottom_list.rbegin();
-        for (; it != always_at_bottom_list.rend(); ++it) {
-            if (*it == win) in_list = true;
-            stack[i++] = *it;
-        }
-        list<WaMenu *>::reverse_iterator mit =
-            wamenu_list_stacking_aab.rbegin();
-        for (; mit != wamenu_list_stacking_aab.rend(); ++mit) {
-            if ((*mit)->frame == win) in_list = true;
+    list<Window>::iterator it = always_on_top_list.begin();
+    for (i = 0; it != always_on_top_list.end(); ++it) {
+        if (*it == win) { end = true; break; } 
+        stack[i++] = *it;
+    }
+    if (! end) {
+        mit = wamenu_list_stacking_aot.begin();
+        for (; mit != wamenu_list_stacking_aot.end(); ++mit) {
+            if ((*mit)->frame == win) { end = true; break; }
             stack[i++] = (*mit)->frame;
         }
-        list<WaWindow *>::reverse_iterator wit =
-            wawindow_list_stacking_aab.rbegin();
-        for (; wit != wawindow_list_stacking_aab.rend(); ++wit) {
-            if ((*wit)->frame->id == win) in_list = true;
+    }
+    if (! end) {
+        wit = wawindow_list_stacking_aot.begin();
+        for (; wit != wawindow_list_stacking_aot.end(); ++wit) {
+            if ((*wit)->frame->id == win) { end = true; break; }
             stack[i++] = (*wit)->frame->id;
         }
+    }
+    if (! end) {
+        woit = wa_list_stacking.begin();
+        for (; woit != wa_list_stacking.end(); ++woit) {
+            if ((*woit)->type == WindowType) {
+                if (((WaWindow *) (*woit))->frame->id == win) {
+                    end = true; break;
+                }
+                stack[i++] = ((WaWindow *) (*woit))->frame->id;
+            }
+            else if ((*woit)->type == MenuType) {
+                if (((WaMenu *) (*woit))->frame == win) {
+                    end = true; break;
+                }
+                stack[i++] = ((WaMenu *) (*woit))->frame;
+            }
+        }
+    }
+    if (! end) {
+        wit = wawindow_list_stacking_aab.begin();
+        for (; wit != wawindow_list_stacking_aab.end(); ++wit) {
+            if ((*wit)->frame->id == win) { end = true; break; }
+            stack[i++] = (*wit)->frame->id;
+        }
+    }
+    if (! end) {
+        mit = wamenu_list_stacking_aab.begin();
+        for (; mit != wamenu_list_stacking_aab.end(); ++mit) {
+            if ((*mit)->frame == win) { end = true; break; }
+            stack[i++] = (*mit)->frame;
+        }
+    }
+    if (! end) {
+        it = always_at_bottom_list.begin();
+        for (; it != always_at_bottom_list.end(); ++it) {
+            if (*it == win) { end = true; break; }
+            stack[i++] = *it;
+        }
+    }
+    XRaiseWindow(display, stack[0]);
+    XRestackWindows(display, stack, i);
         
-        if (in_list) {
-            XLowerWindow(display, stack[1]);
-            XRestackWindows(display, stack + 1, i - 1);
-        }
-        else {
-            XLowerWindow(display, stack[0]);
-            XRestackWindows(display, stack, i);
-        }
-        
-        delete [] stack;
-    } else
-        if (win) {
-            XGrabServer(display);
-            if (validateclient(win))
-                XLowerWindow(display, win);
-            XUngrabServer(display);
-        }
+    delete [] stack;
 }
 
 /**

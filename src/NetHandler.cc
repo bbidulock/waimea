@@ -91,6 +91,28 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_SHUTDOWN", false);
     net_wm_pid =
         XInternAtom(display, "_NET_WM_PID", false);
+    net_wm_window_type =
+        XInternAtom(display, "_NET_WM_WINDOW_TYPE", false);
+    net_wm_window_type_desktop =
+        XInternAtom(display, "_NET_WM_WINDOW_TYPE_DESKTOP", false);
+    net_wm_window_type_dock =
+        XInternAtom(display, "_NET_WM_WINDOW_TYPE_DOCK", false);
+    net_wm_window_type_toolbar =
+        XInternAtom(display, "_NET_WM_WINDOW_TYPE_TOOLBAR", false);
+    net_wm_window_type_menu =
+        XInternAtom(display, "_NET_WM_WINDOW_TYPE_MENU", false);
+    net_wm_window_type_splash =
+        XInternAtom(display, "_NET_WM_WINDOW_TYPE_SPLASH", false);
+    net_wm_window_type_normal =
+        XInternAtom(display, "_NET_WM_WINDOW_TYPE_NORMAL", false);
+    net_wm_window_type_dialog =
+        XInternAtom(display, "_NET_WM_WINDOW_TYPE_DIALOG", false);
+    net_wm_window_type_utility =
+        XInternAtom(display, "_NET_WM_WINDOW_TYPE_UTILITY", false);
+    net_current_desktop =
+        XInternAtom(display, "_NET_CURRENT_DESKTOP", false);
+    net_number_of_desktops =
+        XInternAtom(display, "_NET_NUMBER_OF_DESKTOPS", false);
 
 #ifdef XRENDER
     xrootpmap_id =
@@ -358,8 +380,6 @@ void NetHandler::SetState(WaWindow *ww, int newstate) {
  */
 void NetHandler::GetWmState(WaWindow *ww) {
     CARD32 *data;
-    XEvent *e = NULL;
-    WaAction *ac = NULL;
     bool vert = false, horz = false, shaded = false, title = false,
         handle = false, border = false, decor = false;
     unsigned int i;
@@ -392,7 +412,7 @@ void NetHandler::GetWmState(WaWindow *ww) {
             else if (data[i] == net_state_aab) {
                 ww->flags.alwaysatbottom = true;
                 ww->wascreen->wawindow_list_stacking_aab.push_back(ww);
-                ww->wascreen->WaLowerWindow(0);
+                ww->wascreen->WaLowerWindow(ww->frame->id);
             }
         }
     if (decor) {
@@ -402,7 +422,6 @@ void NetHandler::GetWmState(WaWindow *ww) {
         if (border) ww->flags.border = true;
         ww->flags.all = ww->flags.title && ww->flags.handle &&
             ww->flags.border;
-        ww->UpdateAllAttributes();
     }
     XFree(data);
     
@@ -425,8 +444,7 @@ void NetHandler::GetWmState(WaWindow *ww) {
             XFree(data);
         }
     }
-    if (shaded)
-        ww->Shade(e, ac);
+    if (shaded) ww->flags.shaded = true;
 }
 
 /**
@@ -481,21 +499,32 @@ void NetHandler::SetWmState(WaWindow *ww) {
  * @param ws WaScreen object
  */
 void NetHandler::SetSupported(WaScreen *ws) {
-    CARD32 data[23];
+    CARD32 data[35];
     int i = 0;
-
+    
+    data[i++] = net_current_desktop;
+    data[i++] = net_number_of_desktops;
+    data[i++] = net_desktop_geometry;
+    data[i++] = net_desktop_viewport;
+    data[i++] = net_active_window;
+    data[i++] = net_workarea;
+    data[i++] = net_client_list;
+    data[i++] = net_client_list_stacking;
+    data[i++] = net_wm_window_type;
+    data[i++] = net_wm_window_type_desktop;
+    data[i++] = net_wm_window_type_dock;
+    data[i++] = net_wm_window_type_toolbar;
+    data[i++] = net_wm_window_type_menu;
+    data[i++] = net_wm_window_type_splash;
+    data[i++] = net_wm_window_type_normal;
+    data[i++] = net_wm_window_type_dialog;
+    data[i++] = net_wm_window_type_utility;
     data[i++] = net_state;
     data[i++] = net_state_sticky;
     data[i++] = net_state_shaded;
     data[i++] = net_maximized_vert;
     data[i++] = net_maximized_horz;
-    data[i++] = net_desktop_geometry;
-    data[i++] = net_desktop_viewport;
     data[i++] = net_wm_strut;
-    data[i++] = net_workarea;
-    data[i++] = net_client_list;
-    data[i++] = net_client_list_stacking;
-    data[i++] = net_active_window;
 
     data[i++] = net_state_decor;
     data[i++] = net_state_decortitle;
@@ -568,15 +597,18 @@ void NetHandler::SetClientList(WaScreen *ws) {
 void NetHandler::SetClientListStacking(WaScreen *ws) {
     CARD32 data[1024];
     list<WaWindow *>::reverse_iterator rit;
+    list<WindowObject *>::reverse_iterator writ;
     list<WaWindow *>::iterator it;    
     int i = 0;
     
     it = ws->wawindow_list_stacking_aab.begin();
     for (; it != ws->wawindow_list_stacking_aab.end(); ++it)
         data[i++] = (*it)->id;
-    rit = ws->wawindow_list_stacking.rbegin();
-    for (; rit != ws->wawindow_list_stacking.rend(); ++rit)
-        data[i++] = (*rit)->id;
+    writ = ws->wa_list_stacking.rbegin();
+    for (; writ != ws->wa_list_stacking.rend(); ++writ) {
+        if ((*writ)->type == WindowType)
+            data[i++] = ((WaWindow *) (*writ))->id;
+    }
     rit = ws->wawindow_list_stacking_aot.rbegin();
     for (; rit != ws->wawindow_list_stacking_aot.rend(); ++rit)
         data[i++] = (*rit)->id;
@@ -613,8 +645,8 @@ void NetHandler::GetClientListStacking(WaScreen *ws) {
                 ww = ((WaWindow *) (*it).second);
                 if (! ww->flags.alwaysontop && ! ww->flags.alwaysatbottom) {
                     ws->WaRaiseWindow(ww->frame->id);
-                    ws->wawindow_list_stacking.remove(ww);
-                    ws->wawindow_list_stacking.push_front(ww);
+                    ws->wa_list_stacking.remove(ww);
+                    ws->wa_list_stacking.push_front(ww);
                 }
             }
         }
@@ -870,21 +902,28 @@ void NetHandler::SetDesktopViewPort(WaScreen *ws) {
 }
 
 /**
- * @fn    GetDesktopGeometry(WaScreen *ws)
- * @brief Reads viewport hint
+ * @fn    SetDesktopHints(WaScreen *ws)
+ * @brief Writes desktop hints
  *
- * Sets desktop geometry hint.
+ * Sets _NET_DESKTOP_GEOMETRY, _NET_NUMBER_OF_DESKTOPS, _NET_CURRENT_DESKTOP.
  *
  * @param ws WaScreen object
  */
-void NetHandler::SetDesktopGeometry(WaScreen *ws) {
+void NetHandler::SetDesktopHints(WaScreen *ws) {
     CARD32 data[2];
 
     data[0] = ws->v_xmax + ws->width;
-    data[1] = ws->v_ymax + ws->height;
-    
+    data[1] = ws->v_ymax + ws->height;    
     XChangeProperty(display, ws->id, net_desktop_geometry, XA_CARDINAL, 32,
                     PropModeReplace, (unsigned char *) &data, 2);
+
+    data[0] = 1;
+    XChangeProperty(display, ws->id, net_number_of_desktops, XA_CARDINAL, 32,
+                    PropModeReplace, (unsigned char *) &data, 1);
+
+    data[0] = 0;
+    XChangeProperty(display, ws->id, net_current_desktop, XA_CARDINAL, 32,
+                    PropModeReplace, (unsigned char *) &data, 1);
 }
 
 /**
@@ -963,7 +1002,8 @@ void NetHandler::DeleteSupported(WaScreen *ws) {
  */
 void NetHandler::GetXRootPMapId(WaScreen *ws) {
     CARD32 *data;
-    
+
+    XSync(ws->display, false);
     if (XGetWindowProperty(ws->pdisplay, ws->id, xrootpmap_id, 0L, 1L, 
                            false, XA_PIXMAP, &real_type,
                            &real_format, &items_read, &items_left, 
@@ -974,5 +1014,73 @@ void NetHandler::GetXRootPMapId(WaScreen *ws) {
     }
     else
         ws->xrootpmap_id = (Pixmap) 0;
+
+    XSync(ws->display, false);
+    XSync(ws->pdisplay, false);
 }
 #endif // XRENDER
+
+/**
+ * @fn    GetType(WaWindow *ww)
+ * @brief Read type hint
+ *
+ * Reads _NET_WM_WINDOW_TYPE hint and sets window properties accordingly.
+ *
+ * @param ww WaWindow object
+ */
+void NetHandler::GetWmType(WaWindow *ww) {
+    CARD32 *data;
+    int status;
+    
+    XGrabServer(display);
+    if (validateclient(ww->id)) {
+        status = XGetWindowProperty(display, ww->id, net_wm_window_type,
+                                    0L, 8L, false, XA_ATOM,
+                                    &real_type, &real_format, &items_read,
+                                    &items_left, (unsigned char **) &data);
+    } else WW_DELETED;
+    XUngrabServer(display);
+    
+    if (status == Success && items_read) {
+        for (int i = 0; i < items_read; ++i) {
+            if (data[i] == net_wm_window_type_desktop) {
+                ww->flags.sticky = true;
+                ww->flags.border = ww->flags.title = ww->flags.handle =
+                    ww->flags.all = false;
+                ww->size.max_width = ww->wascreen->width;
+                  ww->size.min_width = ww->wascreen->width;
+                  ww->size.max_height = ww->wascreen->height;
+                  ww->size.min_height = ww->wascreen->height;
+                  if (ww->flags.alwaysontop)
+                      ww->wascreen->wawindow_list_stacking_aot.remove(ww);
+                  if (ww->flags.alwaysatbottom)
+                      ww->wascreen->wawindow_list_stacking_aab.remove(ww);
+                  ww->flags.alwaysatbottom = ww->flags.alwaysontop = false;
+                  ww->flags.forcedatbottom = true;
+                  ww->flags.focusable = false;
+                  ww->wascreen->always_at_bottom_list.push_back(ww->frame->id);
+                  ww->wascreen->WaLowerWindow(ww->frame->id);
+            }
+            else if (data[i] == net_wm_window_type_toolbar ||
+                     data[i] == net_wm_window_type_dock) {
+                ww->flags.sticky = true;
+                ww->flags.border = ww->flags.title = ww->flags.handle =
+                    ww->flags.all = ww->flags.focusable = false;
+                
+            }
+            else if (data[i] == net_wm_window_type_splash ||
+                     data[i] == net_wm_window_type_menu) {
+                ww->flags.border = ww->flags.title = ww->flags.handle =
+                    ww->flags.all = false;
+                if (ww->flags.alwaysontop)
+                    ww->wascreen->wawindow_list_stacking_aot.remove(ww);
+                if (ww->flags.alwaysatbottom)
+                    ww->wascreen->wawindow_list_stacking_aab.remove(ww);
+                ww->flags.alwaysontop = true;
+                ww->wascreen->wawindow_list_stacking_aot.push_front(ww);
+                ww->wascreen->WaRaiseWindow(0);
+            }
+        }
+        XFree(data);
+    }
+}

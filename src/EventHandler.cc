@@ -37,6 +37,7 @@ EventHandler::EventHandler(Waimea *wa) {
     rh = waimea->rh;
     focused = last_click_win = (Window) 0;
     move_resize = EndMoveResizeType;
+    last_button = 0;
 
     empty_return_mask = new set<int>;
     
@@ -153,7 +154,8 @@ void EventHandler::HandleEvent(XEvent *event) {
             break;
         case ButtonPress:
             ed->type = ButtonPress;
-            if (last_click_win == event->xbutton.window) {
+            if (last_button == event->xbutton.button &&
+                last_click_win == event->xbutton.window) {
                 gettimeofday(&click_time, NULL);
                 if (click_time.tv_sec <= last_click.tv_sec + 1) {
                     if (click_time.tv_sec == last_click.tv_sec &&
@@ -185,6 +187,7 @@ void EventHandler::HandleEvent(XEvent *event) {
                 last_click_win = event->xbutton.window;
                 gettimeofday(&last_click, NULL);
             }
+            last_button = event->xbutton.button;
         case ButtonRelease:
             if (event->type == ButtonRelease) ed->type = ButtonRelease;
             ed->mod = event->xbutton.state;
@@ -408,7 +411,6 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
             mask |= (e->value_mask & CWStackMode)? CWStackMode: 0;
             XConfigureWindow(ww->display, ww->frame->id, mask, &wc);
             if (e->value_mask & CWStackMode) {
-                ww->wascreen->WaRaiseWindow((Window) 0);
                 ww->wascreen->WaLowerWindow((Window) 0);
             }
             ww->net->SetVirtualPos(ww);
