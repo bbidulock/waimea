@@ -452,13 +452,12 @@ void WaMenu::Map(int mx, int my) {
 
     if (waimea->rh->menu_stacking == AlwaysAtBottom) {
         waimea->wamenu_list_stacking_aab->push_back(this);
-        waimea->WaLowerWindow(frame);
-    }
-    else {
-        if (waimea->rh->menu_stacking == AlwaysOnTop)
-            waimea->wamenu_list_stacking_aot->push_front(this);
-        waimea->WaRaiseWindow(frame);
-    }                
+        waimea->WaLowerWindow(0);
+    } else if (waimea->rh->menu_stacking == AlwaysOnTop) {
+        waimea->wamenu_list_stacking_aot->push_front(this);
+        waimea->WaRaiseWindow(0);
+    } else
+        waimea->WaRaiseWindow(frame);          
     x = mx;
     y = my;
     mapped = true;
@@ -491,13 +490,12 @@ void WaMenu::ReMap(int mx, int my) {
     else {
         if (waimea->rh->menu_stacking == AlwaysAtBottom) {
             waimea->wamenu_list_stacking_aab->push_back(this);
-            waimea->WaLowerWindow(frame);
-        }
-        else {
-            if (waimea->rh->menu_stacking == AlwaysOnTop)
-                waimea->wamenu_list_stacking_aot->push_front(this);
+            waimea->WaLowerWindow(0);
+        } else if (waimea->rh->menu_stacking == AlwaysOnTop) {
+            waimea->wamenu_list_stacking_aot->push_front(this);
+            waimea->WaRaiseWindow(0);
+        } else
             waimea->WaRaiseWindow(frame);
-        }    
     }
     x = mx;
     y = my;

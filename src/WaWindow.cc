@@ -1907,14 +1907,14 @@ void WaWindow::CloseKill(XEvent *e, WaAction *ac) {
  */
 void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
     Window w;
-    int i, rx, ry, mx, my, diff, exp;
+    int i, x, y, exp;
     unsigned int ui;
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
     if (! menu) return;
     if (waimea->eh->move_resize != EndMoveResizeType) return;
     
-    if (XQueryPointer(display, wascreen->id, &w, &w, &rx, &ry, &i, &i, &ui)) {
+    if (XQueryPointer(display, wascreen->id, &w, &w, &x, &y, &i, &i, &ui)) {
         if (menu->tasksw) waimea->taskswitch->Build(wascreen);
         menu->wf = id;
         menu->ftype = MenuWFuncMask;
@@ -1922,18 +1922,13 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
         for (exp = 0; it != menu->item_list->end(); ++it)
             exp += (*it)->ExpandAll(this);
         if (exp) menu->Build(wascreen);
-        mx = rx - (menu->width / 2);
-        my = ry - (menu->item_list->front()->height / 2);
-        diff = (my + menu->height + wascreen->mstyle.border_width * 2) -
-            wascreen->height;
-        if (diff > 0) my -= diff;
-        if (my < 0) my = 0;
-        if ((mx + menu->width + wascreen->mstyle.border_width * 2) >
+        if ((y + menu->height + wascreen->mstyle.border_width * 2) > 
+            (unsigned int) wascreen->height)
+            y -= (menu->height + wascreen->mstyle.border_width * 2);
+        if ((x + menu->width + wascreen->mstyle.border_width * 2) > 
             (unsigned int) wascreen->width)
-            mx = wascreen->width - menu->width -
-                wascreen->mstyle.border_width * 2;
-        if (mx < 0) mx = 0;
-        menu->Map(mx, my);
+            x -= (menu->width + wascreen->mstyle.border_width * 2);
+        menu->Map(x, y);
         if (focus) menu->FocusFirst();
     }
 }
@@ -1951,7 +1946,7 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
  */
 void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     Window w;
-    int i, rx, ry, mx, my, diff, exp;
+    int i, x, y, exp;
     unsigned int ui;
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
@@ -1962,7 +1957,7 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     }
     if (waimea->eh->move_resize != EndMoveResizeType) return;
     
-    if (XQueryPointer(display, wascreen->id, &w, &w, &rx, &ry, &i, &i, &ui)) {
+    if (XQueryPointer(display, wascreen->id, &w, &w, &x, &y, &i, &i, &ui)) {
         if (menu->tasksw) waimea->taskswitch->Build(wascreen);
         menu->wf = id;
         menu->ftype = MenuWFuncMask;
@@ -1970,19 +1965,14 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
         for (exp = 0; it != menu->item_list->end(); ++it)
             exp += (*it)->ExpandAll(this);
         if (exp) menu->Build(wascreen);
-        mx = rx - (menu->width / 2);
-        my = ry - (menu->item_list->front()->height / 2);
-        diff = (my + menu->height + wascreen->mstyle.border_width * 2) -
-            wascreen->height;
-        if (diff > 0) my -= diff;
-        if (my < 0) my = 0;
-        if ((mx + menu->width + wascreen->mstyle.border_width * 2) >
+        if ((y + menu->height + wascreen->mstyle.border_width * 2) > 
+            (unsigned int) wascreen->height)
+            y -= (menu->height + wascreen->mstyle.border_width * 2);
+        if ((x + menu->width + wascreen->mstyle.border_width * 2) > 
             (unsigned int) wascreen->width)
-            mx = wascreen->width - menu->width -
-                wascreen->mstyle.border_width * 2;
-        if (mx < 0) mx = 0;
+            x -= (menu->width + wascreen->mstyle.border_width * 2);
         menu->ignore = true;
-        menu->ReMap(mx, my);
+        menu->ReMap(x, y);
         menu->ignore = false;
         if (focus) menu->FocusFirst();
     }

@@ -964,25 +964,21 @@ void WaScreen::Focus(XEvent *, WaAction *) {
  */
 void WaScreen::MenuMap(XEvent *, WaAction *ac, bool focus) {
     Window w;
-    int i, rx, ry, x, y, diff;
+    int i, x, y;
     unsigned int ui;
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
     if (! menu) return;
     if (waimea->eh->move_resize != EndMoveResizeType) return;
 
-    if (XQueryPointer(display, id, &w, &w, &rx, &ry, &i, &i, &ui)) {
+    if (XQueryPointer(display, id, &w, &w, &x, &y, &i, &i, &ui)) {
         if (menu->tasksw) menu->Build(this);
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
-        x = rx - (menu->width / 2);
-        y = ry - (menu->item_list->front()->height / 2);
-        diff = (y + menu->height + mstyle.border_width * 2) - height;
-        if (diff > 0) y -= diff;
-        if (y < 0) y = 0;
+        if ((y + menu->height + mstyle.border_width * 2) > (unsigned int) height)
+           y -= (menu->height + mstyle.border_width * 2);
         if ((x + menu->width + mstyle.border_width * 2) > (unsigned int) width)
-            x = width - menu->width - mstyle.border_width * 2;
-        if (x < 0) x = 0;
+            x -= (menu->width + mstyle.border_width * 2);
         menu->Map(x, y);
         if (focus) menu->FocusFirst();
     }
@@ -999,7 +995,7 @@ void WaScreen::MenuMap(XEvent *, WaAction *ac, bool focus) {
  */
 void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     Window w;
-    int i, rx, ry, x, y, diff;
+    int i, x, y;
     unsigned int ui;
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
@@ -1010,18 +1006,14 @@ void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     }
     if (waimea->eh->move_resize != EndMoveResizeType) return;
     
-    if (XQueryPointer(display, id, &w, &w, &rx, &ry, &i, &i, &ui)) {
+    if (XQueryPointer(display, id, &w, &w, &x, &y, &i, &i, &ui)) {
         if (menu->tasksw) waimea->taskswitch->Build(this);
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
-        x = rx - (menu->width / 2);
-        y = ry - (menu->item_list->front()->height / 2);
-        diff = (y + menu->height + mstyle.border_width * 2) - height;
-        if (diff > 0) y -= diff;
-        if (y < 0) y = 0;
+        if ((y + menu->height + mstyle.border_width * 2) > (unsigned int) height)
+            y -= (menu->height + mstyle.border_width * 2);
         if ((x + menu->width + mstyle.border_width * 2) > (unsigned int) width)
-            x = width - menu->width - mstyle.border_width * 2;
-        if (x < 0) x = 0;
+            x -= (menu->width + mstyle.border_width * 2);                
         menu->ignore = true;
         menu->ReMap(x, y);
         menu->ignore = false;

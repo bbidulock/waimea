@@ -66,11 +66,9 @@ NetHandler::NetHandler(Waimea *wa) {
     net_state_decorborder =
         XInternAtom(display, "_NET_WM_STATE_DECOR_BORDER", false);
     net_state_aot =
-        XInternAtom(display, "_NET_WM_STATE_ALWAYS_ON_TOP", false);
-    net_state_aot =
-        XInternAtom(display, "_NET_WM_STATE_ALWAYS_ON_TOP", false);
+        XInternAtom(display, "_NET_WM_STATE_STAYS_ON_TOP", false);
     net_state_aab =
-        XInternAtom(display, "_NET_WM_STATE_ALWAYS_AT_BOTTOM", false);
+        XInternAtom(display, "_NET_WM_STATE_STAYS_AT_BOTTOM", false);
     net_state_parentrelative_background =
         XInternAtom(display, "_NET_WM_STATE_PARENTRELATIVE_BACKGROUND", false);
     net_maximized_restore =
@@ -362,12 +360,12 @@ void NetHandler::GetWmState(WaWindow *ww) {
             else if (data[i] == net_state_decorborder) border = true;
             else if (data[i] == net_state_aot) {
                 ww->flags.alwaysontop = true;
-                waimea->always_on_top_list->push_back(ww->frame->id);
+                waimea->wawindow_list_stacking_aot->push_back(ww);
                 waimea->WaRaiseWindow(0);
             }
             else if (data[i] == net_state_aab) {
                 ww->flags.alwaysatbottom = true;
-                waimea->always_at_bottom_list->push_back(ww->frame->id);
+                waimea->wawindow_list_stacking_aab->push_back(ww);
                 waimea->WaLowerWindow(0);
             }
         }
