@@ -233,30 +233,21 @@ void EventHandler::EvExpose(XExposeEvent *e) {
  * @param e	The FocusChangeEvent
  */
 void EventHandler::EvFocus(XFocusChangeEvent *e) {
-    WaWindow *ww;
+    WaWindow *ww = NULL;
 
     hash_map<int, WindowObject *>::iterator it;
-    if ((it = waimea->window_table->find(e->window)) !=
-        waimea->window_table->end()) {
-        if (((*it).second)->type == WindowType) {
-            ww = (WaWindow *) ((*it).second);
-            if (e->type == FocusIn) {
-                if ((it = waimea->window_table->find(focused)) !=
-                    waimea->window_table->end()) {
-                    if (((*it).second)->type == WindowType)
-                        ((WaWindow *) (*it).second)->UnFocusWin();
-                }
+    if (e->type == FocusIn) {
+        if ((it = waimea->window_table->find(e->window)) !=
+            waimea->window_table->end()) {
+            if (((*it).second)->type == WindowType)
+                ww = (WaWindow *) ((*it).second);
+            if ((it = waimea->window_table->find(focused)) !=
+                waimea->window_table->end())
+                if (((*it).second)->type == WindowType)
+                    ((WaWindow *) (*it).second)->UnFocusWin();
+            if (ww)
                 ww->FocusWin();
-                focused = ww->id;
-            }  
-        } else if (((*it).second)->type == RootType) {
-            if (e->type == FocusIn) {
-                if ((it = waimea->window_table->find(focused)) !=
-                    waimea->window_table->end()) {
-                    if (((*it).second)->type == WindowType)
-                        ((WaWindow *) (*it).second)->UnFocusWin();
-                }
-            }
+            focused = e->window;
         }
 	}
 }

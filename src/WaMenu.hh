@@ -100,6 +100,7 @@ public:
     void Move(XEvent *, WaAction *);
     void MoveOpaque(XEvent *, WaAction *);
     void Lower(XEvent *, WaAction *);
+    void Focus(XEvent *, WaAction *);
     inline void UnmapSubmenus(XEvent *, WaAction *) { menu->UnmapSubmenus(); }
     inline void UnmapTree(XEvent *, WaAction *) { menu->UnmapTree(); }
     inline void Raise(XEvent *, WaAction *) { menu->Raise(); }

@@ -197,6 +197,7 @@ void WaMenu::Build(WaScreen *screen) {
         }
         lasttype = (*it)->type;
     }
+    if (width > (wascreen->width / 2)) width = wascreen->width / 2;
     WaTexture *texture = &wascreen->mstyle.back_frame;
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         pbackframe = None;
@@ -574,6 +575,7 @@ void WaMenuItem::DrawFg(void) {
         justify = menu->wascreen->mstyle.t_justify;
     else
         justify = menu->wascreen->mstyle.f_justify;
+    if (menu->width <= width) justify = LeftJustify;
     
     switch (justify) {
         case LeftJustify: x = 10; break;
@@ -804,6 +806,16 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
  */
 void WaMenuItem::Lower(XEvent *, WaAction *) {
     XLowerWindow(menu->display, menu->frame);
+}
+
+/**
+ * @fn    Focus(XEvent *, WaAction *)
+ * @brief Focus menu
+ *
+ * Sets input focus to the menu item window.
+ */
+void WaMenuItem::Focus(XEvent *, WaAction *) {
+    XSetInputFocus(menu->display, id, RevertToPointerRoot, CurrentTime);
 }
 
 /**
