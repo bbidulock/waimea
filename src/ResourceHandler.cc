@@ -402,12 +402,12 @@ void ResourceHandler::LoadConfig(void) {
 
     if (XrmGetResource(database, "dock0.stacking", "Dock0.Stacking",
                        &value_type, &value)) {
-        if (! strncasecmp("AlwaysOnTop", value.addr, value.size))
-            dockstyle.stacking = AlwaysOnTop;
-        else
+        if (! strncasecmp("AlwaysAtBottom", value.addr, value.size))
             dockstyle.stacking = AlwaysAtBottom;
+        else
+            dockstyle.stacking = AlwaysOnTop;
     } else
-        dockstyle.stacking = AlwaysAtBottom;
+        dockstyle.stacking = AlwaysOnTop;
     
     XrmDestroyDatabase(database);
 } 

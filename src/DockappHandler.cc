@@ -29,7 +29,7 @@ DockappHandler::DockappHandler(WaScreen *scrn) {
     waimea = wascreen->waimea;
     display = waimea->display;
     x = 0;
-    y = 350;
+    y = 0;
     stacking = waimea->rh->dockstyle.stacking;
     if (waimea->rh->dockstyle.geometry & XValue ||
         waimea->rh->dockstyle.geometry & YValue) {
