@@ -64,19 +64,20 @@ window.handle.7: MoveOpaque : ButtonPress = Button1 & !Mod1Mask
 !
 window.client.5:  ToggleShade                : KeyPress = F1 & Mod1Mask
 window.client.6:  ToggleMaximize             : KeyPress = F2 & Mod1Mask
-window.client.7:  Close                      : KeyPress = F4 & Mod1Mask
-window.client.8:  Kill                       : KeyPress = F10 & Mod1Mask
-window.client.9:  TaskSwitcher               : KeyPress = Tab & Mod1Mask
-
-window.client.10: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
-window.client.11: Raise                      : MapRequest
-window.client.12: Move                       : MapRequest & ControlMask
+window.client.7:  Raise                      : KeyPress = F2 & Mod1Mask
+window.client.8:  Close                      : KeyPress = F4 & Mod1Mask
+window.client.9:  Kill                       : KeyPress = F10 & Mod1Mask
+window.client.10: TaskSwitcher               : KeyPress = Tab & Mod1Mask
+window.client.11: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+window.client.12: Raise                      : MapRequest
+window.client.13: Move                       : MapRequest & ControlMask
 !
 window.closebutton.5: Close : ButtonRelease = AnyButton
 !
 window.iconifybutton.5: ToggleShade : ButtonRelease = AnyButton
 !
 window.maximizebutton.5: ToggleMaximize : ButtonRelease = AnyButton
+window.maximizebutton.6: Raise          : ButtonRelease = AnyButton
 !
 window.leftgrip.5: ResizeLeftOpaque : ButtonPress = AnyButton & !Mod1Mask
 !
