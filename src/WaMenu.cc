@@ -1263,7 +1263,7 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     if (ed->type == ButtonPress || ed->type == ButtonRelease ||
         ed->type == DoubleClick) {
         XQueryPointer(menu->display, id, &w, &w, &i, &i, &xp, &yp, &ui);
-        if (xp < 0 || yp < 0 || xp > width || yp > height)
+        if (xp < 0 || yp < 0 || xp > menu->width || yp > height)
             return;
     }   
     
