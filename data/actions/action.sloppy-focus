@@ -65,15 +65,15 @@ window.client.8:  Kill           : KeyPress = F10 & Mod1Mask
 window.client.9:  Raise          : MapRequest
 window.client.10: Move           : MapRequest & ControlMask
 !
-window.closebutton.9: Close : ButtonRelease = AnyButton
+window.closebutton.5: Close : ButtonRelease = AnyButton
 !
-window.iconifybutton.9: ToggleShade : ButtonRelease = AnyButton
+window.iconifybutton.5: ToggleShade : ButtonRelease = AnyButton
 !
-window.maximizebutton.9: ToggleMaximize : ButtonRelease = AnyButton
+window.maximizebutton.5: ToggleMaximize : ButtonRelease = AnyButton
 !
-window.leftgrip.9: ResizeLeftOpaque : ButtonPress = AnyButton & !Mod1Mask
+window.leftgrip.5: ResizeLeftOpaque : ButtonPress = AnyButton & !Mod1Mask
 !
-window.rightgrip.9: ResizeRightOpaque : ButtonPress = AnyButton & !Mod1Mask
+window.rightgrip.5: ResizeRightOpaque : ButtonPress = AnyButton & !Mod1Mask
 !
 !
 ! == Root Window ==

@@ -6,4 +6,9 @@ Sat Nov 24 2001 David Reveman (c99drn@cs.umu.se)
 
 	Added support for Blackbox menu files
 	Added support of the XShape extension
+		
+	*** Waimea v0.1.1 release ***
+	
+Mon Nov 26 2001 David Reveman (c99drn@cs.umu.se)
 
+	Added KeyEvent support

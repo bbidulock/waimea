@@ -145,7 +145,7 @@ public:
     int border_w, title_w, handle_w, screen_number, state;
     WaChildWindow *frame, *title, *label, *handle, *button_c, *button_max,
         *button_min, *grip_r, *grip_l;
-    WaWindowAttributes attrib, old_attrib, restore;
+    WaWindowAttributes attrib, old_attrib, restore_max, restore_shade;
     WaWindowFlags flags;
     SizeStruct size;
     NetHandler *net;

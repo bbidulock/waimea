@@ -300,6 +300,7 @@ void NetHandler::SetStateSticky(WaWindow *ww, int newstate) {
 void NetHandler::GetStateShaded(WaWindow *ww) {
     CARD32 *data;
     int n_w, n_h;
+    bool mv = False, mh = False;
     
     if (XGetWindowProperty(display, ww->id, net_state_shaded, 0L, 2L, 
                            False, XA_CARDINAL, &real_type,
@@ -312,13 +313,21 @@ void NetHandler::GetStateShaded(WaWindow *ww) {
                                  &n_w, &n_h)) {
                 ww->attrib.width = n_w;
                 ww->attrib.height = n_h;
+                if (ww->flags.max_v) mv = True;
+                if (ww->flags.max_h) mh = True;
                 ww->RedrawWindow();
+                if (mv) ww->flags.max_v = True;
+                if (mh) ww->flags.max_h = True;
             }
         } else {
             if (ww->flags.shaded) {
                 ww->flags.shaded = False;
-                ww->attrib.height = ww->restore.height;
+                ww->attrib.height = ww->restore_shade.height;
+                if (ww->flags.max_v) mv = True;
+                if (ww->flags.max_h) mh = True;
                 ww->RedrawWindow();
+                if (mv) ww->flags.max_v = True;
+                if (mh) ww->flags.max_h = True;
             }
         }
         XFree(data); 
@@ -337,21 +346,29 @@ void NetHandler::GetStateShaded(WaWindow *ww) {
 void NetHandler::SetStateShaded(WaWindow *ww, int newstate) {
     CARD32 data[1];
     int n_w, n_h;
-
+    bool mv = False, mh = False;
+    
     if (newstate) {
         if (ww->IncSizeCheck(ww->attrib.width,
                              -(ww->handle_w + ww->border_w * 2),
                              &n_w, &n_h)) {
             ww->attrib.width = n_w;
             ww->attrib.height = n_h;
+            if (ww->flags.max_v) mv = True;
+            if (ww->flags.max_h) mh = True;
             ww->RedrawWindow();
-            ww->flags.shaded = True;
+            if (mv) ww->flags.max_v = True;
+            if (mh) ww->flags.max_h = True;
         }
     } else {
         if (ww->flags.shaded) {
             ww->flags.shaded = False;
-            ww->attrib.height = ww->restore.height;
+            ww->attrib.height = ww->restore_shade.height;
+            if (ww->flags.max_v) mv = True;
+            if (ww->flags.max_h) mh = True;
             ww->RedrawWindow();
+            if (mv) ww->flags.max_v = True;
+            if (mh) ww->flags.max_h = True;
         }
     }
     data[0] = ww->flags.shaded;
@@ -386,8 +403,8 @@ void NetHandler::GetStateMaxH(WaWindow *ww) {
                 (ww->flags.border * ww->border_w * 2);
             
             if (ww->IncSizeCheck(width, ww->attrib.height, &n_w, &n_h)) {
-                ww->restore.x = ww->attrib.x;
-                ww->restore.width = ww->attrib.width;
+                ww->restore_max.x = ww->attrib.x;
+                ww->restore_max.width = ww->attrib.width;
                 ww->attrib.x = ww->border_w;
                 ww->attrib.width = n_w;
                 ww->RedrawWindow();
@@ -414,9 +431,9 @@ void NetHandler::SetStateMaxH(WaWindow *ww, int newstate) {
     switch (newstate) {
         case 0:
              if (ww->flags.max_h) {
-                 if (ww->IncSizeCheck(ww->restore.width,
+                 if (ww->IncSizeCheck(ww->restore_max.width,
                                       ww->attrib.height, &n_w, &n_h)) {
-                     ww->attrib.x = ww->restore.x;
+                     ww->attrib.x = ww->restore_max.x;
                      ww->attrib.width = n_w;
                      ww->RedrawWindow();
                  }
@@ -427,8 +444,8 @@ void NetHandler::SetStateMaxH(WaWindow *ww, int newstate) {
                 (ww->flags.border * ww->border_w * 2);
         
             if (ww->IncSizeCheck(width, ww->attrib.height, &n_w, &n_h)) {
-                ww->restore.x = ww->attrib.x;
-                ww->restore.width = ww->attrib.width;
+                ww->restore_max.x = ww->attrib.x;
+                ww->restore_max.width = ww->attrib.width;
                 ww->attrib.x = ww->border_w;
                 ww->attrib.width = n_w;
                 ww->RedrawWindow();
@@ -472,8 +489,8 @@ void NetHandler::GetStateMaxV(WaWindow *ww) {
                 (ww->border_w * ww->flags.handle);
             
             if (ww->IncSizeCheck(ww->attrib.width, height, &n_w, &n_h)) {
-                ww->restore.y = ww->attrib.y;
-                ww->restore.height = ww->attrib.height;
+                ww->restore_max.y = ww->attrib.y;
+                ww->restore_max.height = ww->attrib.height;
                 ww->attrib.y = ww->title_w + ww->border_w +
                     (ww->border_w * ww->flags.title);
                 ww->attrib.height = n_h;
@@ -502,9 +519,9 @@ void NetHandler::SetStateMaxV(WaWindow *ww, int newstate) {
         case 0:
             if (ww->flags.max_v) {
                 if (ww->IncSizeCheck(ww->attrib.width,
-                                     ww->restore.height, &n_w, &n_h)) {
+                                     ww->restore_max.height, &n_w, &n_h)) {
                     ww->attrib.height = n_h;
-                    ww->attrib.y = ww->restore.y;
+                    ww->attrib.y = ww->restore_max.y;
                     ww->RedrawWindow();
                 }
             }
@@ -516,8 +533,8 @@ void NetHandler::SetStateMaxV(WaWindow *ww, int newstate) {
                 (ww->border_w * ww->flags.title) -
                 (ww->border_w * ww->flags.handle);
             if (ww->IncSizeCheck(ww->attrib.width, height, &n_w, &n_h)) {
-                ww->restore.y = ww->attrib.y;
-                ww->restore.height = ww->attrib.height;
+                ww->restore_max.y = ww->attrib.y;
+                ww->restore_max.height = ww->attrib.height;
                 ww->attrib.y = ww->title_w + ww->border_w +
                     (ww->border_w * ww->flags.title);
                 ww->attrib.height = n_h;

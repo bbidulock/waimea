@@ -121,7 +121,7 @@ WaWindow::~WaWindow(void) {
     if (validateclient(id)) {
         XRemoveFromSaveSet(display, id);
         Gravitate(RemoveGravity);
-        if (flags.shaded) attrib.height = restore.height;
+        if (flags.shaded) attrib.height = restore_shade.height;
         XReparentWindow(display, id, wascreen->id, attrib.x -
                         (attrib.x / wascreen->width) * wascreen->width,
                         attrib.y -
@@ -193,10 +193,12 @@ void WaWindow::Gravitate(int multiplier) {
 void WaWindow::InitPosition(void) {
     if (size.min_width > attrib.width) attrib.width = size.min_width;
     if (size.min_height > attrib.height) attrib.height = size.min_height;
-    old_attrib.x = restore.x = attrib.x;
-    old_attrib.y = restore.y = attrib.y;
-    old_attrib.width = restore.width = attrib.width;
-    old_attrib.height = restore.height = attrib.height;    
+    old_attrib.x = restore_shade.x = restore_max.x = attrib.x;
+    old_attrib.y = restore_shade.y = restore_max.y = attrib.y;
+    old_attrib.width = restore_shade.width = restore_max.width =
+        attrib.width;
+    old_attrib.height = restore_shade.height = restore_max.height =
+        attrib.height;
 }
 
 /**
@@ -297,7 +299,7 @@ void WaWindow::RedrawWindow(void) {
         XGrabServer(display);
         if (validateclient(id)) {    
             if (flags.shaded) XResizeWindow(display, id, attrib.width,
-                                      restore.height);
+                                      restore_shade.height);
             else XResizeWindow(display, id, attrib.width, attrib.height);
             XResizeWindow(display, frame->id, frame->attrib.width,
                           frame->attrib.height);
@@ -1006,7 +1008,7 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
         if (! flags.shaded) {
             resize = True;
             flags.shaded = True;
-            restore.height = attrib.height;
+            restore_shade.height = attrib.height;
         }
         *n_h = -(handle_w + border_w * 2);
         return resize;
@@ -1018,7 +1020,7 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
             resize = True;
             if (! flags.shaded) {
                 flags.shaded = True;
-                restore.height = attrib.height;
+                restore_shade.height = attrib.height;
             }
             if (size.height_inc == 1)
                 *n_h = height;
@@ -1503,14 +1505,8 @@ void WaWindow::UnMaximize(XEvent *, WaAction *) {
  */
 void WaWindow::ToggleMaximize(XEvent *e, WaAction *ac) {
     if (flags.max_v == flags.max_h) {
-        if (flags.max_v) {
-            net->SetStateMaxH(this, 0);
-            net->SetStateMaxV(this, 0);
-        }
-        else {
-            net->SetStateMaxH(this, 1);
-            net->SetStateMaxV(this, 1);
-        }
+        net->SetStateMaxH(this, ! flags.max_h);
+        net->SetStateMaxV(this, ! flags.max_v);
     }
     else if (flags.max_v)
         net->SetStateMaxV(this, 0);
