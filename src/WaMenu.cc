@@ -233,7 +233,7 @@ void WaMenu::Build(WaScreen *screen) {
         attrib_set.override_redirect = True;
         attrib_set.event_mask =  ButtonPressMask | ButtonReleaseMask |
             EnterWindowMask | LeaveWindowMask | PointerMotionMask | 
-            ExposureMask | KeyPressMask | KeyReleaseMask;
+            ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask;
 
         frame = XCreateWindow(display, wascreen->id, 0, 0, width, height,
                               wascreen->mstyle.border_width,
