@@ -92,6 +92,10 @@ typedef struct {
     int colors_per_channel, menu_stacking;
     long unsigned int cache_max;
     bool image_dither, transient_above, db;
+
+#ifdef XRENDER
+    bool lazy_trans;
+#endif // XRENDER
     
     list<WaAction *> frameacts, awinacts, pwinacts, titleacts, labelacts,
         handleacts, rgacts, lgacts, rootacts, weacts, eeacts, neacts,

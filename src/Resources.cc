@@ -491,6 +491,18 @@ void ResourceHandler::LoadConfig(WaScreen *wascreen) {
     } else
         sc->db = true;
 
+#ifdef XRENDER
+    sprintf(rc_name, "screen%d.lazyTransparency", sn);
+    sprintf(rc_class, "Screen%d.LazyTransparency", sn);
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        if (! strncasecmp("true", value.addr, value.size))
+            sc->lazy_trans = true;
+        else
+            sc->lazy_trans = false;
+    } else
+        sc->lazy_trans = true;
+#endif // XRENDER
+
     sprintf(rc_name, "screen%d.colorsPerChannel", sn);
     sprintf(rc_class, "Screen%d.ColorsPerChannel", sn);
     if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {

@@ -12,6 +12,7 @@ screen0.styleFile:          @pkgdatadir@/styles/Default.style
 screen0.menuFile:           @pkgdatadir@/menu
 screen0.actionFile:         @pkgdatadir@/actions/action
 screen0.doubleBufferedText: True
+screen0.lazyTransparency:   False
 screen0.colorsPerChannel:   4
 screen0.cacheMax:           200
 screen0.imageDither:        True

@@ -1118,7 +1118,13 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                 list<WaMenu *>::iterator it2 = wamenu_list.begin();
                 for (; it2 != wamenu_list.end(); ++it2) {
                     if ((*it2)->mapped && (! (*it2)->root_menu))
-                        (*it2)->Move(x_move, y_move);
+                        (*it2)->Move(x_move, y_move
+
+#ifdef XRENDER
+                                     , !config.lazy_trans
+#endif // XRENDER
+
+                                     );
                 }
                 px = event.xmotion.x_root;
                 py = event.xmotion.y_root;
@@ -1149,9 +1155,31 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                     if ((((*it)->attrib.x + (*it)->attrib.width) > 0 &&
                          (*it)->attrib.x < width) && 
                         (((*it)->attrib.y + (*it)->attrib.height) > 0 &&
-                         (*it)->attrib.y < height))    
+                         (*it)->attrib.y < height)) {
+                        
+#ifdef XRENDER
+                        if (config.lazy_trans) {
+                            (*it)->render_if_opacity = true;
+                            (*it)->DrawTitlebar();
+                            (*it)->DrawHandlebar();
+                            (*it)->render_if_opacity = false;
+                        }
+#endif // XRENDER
+
                         (*it)->SendConfig();
+                    }
                 }
+
+#ifdef XRENDER
+                if (config.lazy_trans) {
+                    list<WaMenu *>::iterator it2 = wamenu_list.begin();
+                    for (; it2 != wamenu_list.end(); ++it2) {
+                        if ((*it2)->mapped && (! (*it2)->root_menu))
+                            (*it2)->Move(0, 0, true);
+                    }
+                }
+#endif // XRENDER
+
                 net->SetDesktopViewPort(this);
                 XUngrabKeyboard(display, CurrentTime);
                 XUngrabPointer(display, CurrentTime);

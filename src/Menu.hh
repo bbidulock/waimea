@@ -39,14 +39,10 @@ public:
 
     void AddItem(WaMenuItem *);
     void Build(WaScreen *);
-    
-#ifdef XRENDER
     void Render(void);
-#endif // XRENDER
-
     void Map(int, int);
     void ReMap(int, int);
-    void Move(int, int);
+    void Move(int, int, bool = true);
     void Unmap(bool);
     void UnmapSubmenus(bool);
     void UnmapTree(void);

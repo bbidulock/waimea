@@ -164,6 +164,16 @@ requires far less text redrawing. Faster in most cases. But be aware,
 then using flat solid textures one double buffered text redraw is more 
 expensive than one single buffered one. Default value is 
 .I True.
+
+.TP
+.B  screen0.lazyTransparency:     Boolean
+Tells 
+.I waimea
+to use lazy redrawing of transparent textures. When enabled 
+.I waimea
+only redraws transparent textures at end of move functions.
+Default value is 
+.I False.
 	
 .TP
 .B screen0.colorsPerChannel:     Integer

@@ -649,10 +649,12 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
         
 #ifdef XRENDER
         if (! resize && ! force_if_viewable) {
-            render_if_opacity = true;
-            DrawTitlebar();
-            DrawHandlebar();
-            render_if_opacity = false;
+            if (! wascreen->config.lazy_trans) {
+                render_if_opacity = true;
+                DrawTitlebar();
+                DrawHandlebar();
+                render_if_opacity = false;
+            }
         }
 #endif // XRENDER
 
@@ -691,6 +693,16 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
         
     }
     if ((move || resize) && (! flags.shaded) && (! dontsend)) {
+        
+#ifdef XRENDER
+        if (wascreen->config.lazy_trans) {
+            render_if_opacity = true;
+            DrawTitlebar();
+            DrawHandlebar();
+            render_if_opacity = false;
+        }
+#endif // XRENDER
+
         net->SetVirtualPos(this);
         SendConfig();
     }
@@ -1464,6 +1476,16 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                 waimea->eh->HandleEvent(&event);
                 if (waimea->eh->move_resize != EndMoveResizeType) break;
                 if (attrib.x != sx || attrib.y != sy) {
+
+#ifdef XRENDER
+                    if (wascreen->config.lazy_trans) {
+                        render_if_opacity = true;
+                        DrawTitlebar();
+                        DrawHandlebar();
+                        render_if_opacity = false;
+                    }
+#endif // XRENDER
+
                     SendConfig();
                     net->SetVirtualPos(this);
                 }

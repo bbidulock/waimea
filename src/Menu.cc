@@ -51,7 +51,7 @@ WaMenu::WaMenu(char *n) : WindowObject((Window) 0, MenuType) {
     height = 0;
     width = 0;
     mapped = has_focus = built = tasksw = dynamic = dynamic_root =
-        ignore = render_if_opacity = db = false;
+        ignore = db = false;
     root_menu = NULL;
     root_item = NULL;
     wf = (Window) 0;
@@ -60,6 +60,7 @@ WaMenu::WaMenu(char *n) : WindowObject((Window) 0, MenuType) {
 
 #ifdef XRENDER
     pixmap = None;
+    render_if_opacity = false;
 #endif // XRENDER
     
 }
@@ -509,22 +510,23 @@ void WaMenu::ReMap(int mx, int my) {
 }
 
 /**
- * @fn    Move(int dx, int dy)
+ * @fn    Move(int dx, int dy, bool render)
  * @brief Moves menu
  *
  * Moves menu and all linked submenus to a specified position.
  *
  * @param dx Move in x coordinate relative to old position
  * @param dy Move in y coordinate relative to old position
+ * @param render True if menu menu should be redrawn
  */
-void WaMenu::Move(int dx, int dy) {
+void WaMenu::Move(int dx, int dy, bool render) {
     list<WaMenuItem *>::iterator it = item_list.begin();
     for (; it != item_list.end(); ++it) {
         if (((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
             (*it)->submenu->root_menu &&
             (*it)->submenu->mapped) {
             if (! (*it)->submenu->ignore)
-                (*it)->submenu->Move(dx, dy);
+                (*it)->submenu->Move(dx, dy, render);
         }
     }
     x += dx;
@@ -532,9 +534,11 @@ void WaMenu::Move(int dx, int dy) {
     XMoveWindow(display, frame, x, y);
 
 #ifdef XRENDER
-    render_if_opacity = true;
-    Render();
-    render_if_opacity = false;
+    if (render) {
+        render_if_opacity = true;
+        Render();
+        render_if_opacity = false;
+    }
 #endif // XRENDER
     
 }
@@ -1002,8 +1006,11 @@ void WaMenuItem::Draw(Drawable drawable, bool frame, int y) {
     int x = 0, justify;
     char *l;
     int org_y = y;
-    
+
+#ifdef XRENDER
     if (menu->render_if_opacity && ! texture->getOpacity()) return;
+#endif // XRENDER
+
     WaFont *wafont = (hilited)? &menu->wascreen->mstyle.wa_fh_font:
         &menu->wascreen->mstyle.wa_f_font;
     if (type == MenuTitleType)
@@ -1522,7 +1529,14 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                 ny += event.xmotion.y_root - py;
                 px = event.xmotion.x_root;
                 py = event.xmotion.y_root;
-                menu->Move(nx - menu->x, ny - menu->y);
+                menu->Move(nx - menu->x, ny - menu->y
+                           
+#ifdef XRENDER
+                           , !menu->wascreen->config.lazy_trans
+#endif // XRENDER
+
+                           );
+
                 break;
             case LeaveNotify:
             case EnterNotify:
@@ -1546,6 +1560,7 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                     event.xkey.window = id;
                 menu->waimea->eh->HandleEvent(&event);
                 if (menu->waimea->eh->move_resize != EndMoveResizeType) break;
+                menu->Move(0, 0, true);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(menu->display, maprequest_list->front());
                     delete maprequest_list->front();
