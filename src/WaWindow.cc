@@ -1118,20 +1118,6 @@ void WaWindow::Lower(XEvent *, WaAction *) {
 void WaWindow::Focus(bool vis) {
     int newvx, newvy, x, y;
     XEvent e;
-
-    if (! transients.empty()) {
-        list<Window>::iterator it = transients.begin();
-        for (;it != transients.end(); ++it) {
-            hash_map<Window, WindowObject *>::iterator hit;
-            if ((hit = waimea->window_table->find(*it)) !=
-                waimea->window_table->end()) {
-                if (((*hit).second)->type == WindowType) {
-                    ((WaWindow *) (*hit).second)->Focus(vis);
-                    return;
-                }
-            }    
-        }
-    }
     
     if (mapped) {
         XGrabServer(display);
