@@ -2525,7 +2525,11 @@ Pixmap WaImageControl::xrender(Pixmap p, unsigned int width,
     XCopyArea(display, parent, dest, gc, src_x, src_y, width,
               height,  0, 0);
 
-    if (texture->getOpacity() == 255) return dest;
+    if (texture->getOpacity() == 255) {
+        XSync(wascreen->display, false);
+        XSync(wascreen->pdisplay, false);
+        return dest;
+    }
 
     format = XRenderFindVisualFormat(display, visual);
     if (p == None)
