@@ -239,8 +239,6 @@ void EventHandler::HandleEvent(XEvent *event) {
  */
 void EventHandler::EvProperty(XPropertyEvent *e) {
     WaWindow *ww;
-    char *tmp_name;
-    char *__m_wastrdup_tmp;
 
     if (e->state == PropertyDelete) {
         if (e->atom == waimea->net->net_wm_strut) {
@@ -495,7 +493,6 @@ void EventHandler::EvUnmapDestroy(XEvent *e) {
                              e->xreparent.window,
                              WindowType | DockAppType))) {
         if (wo->type == WindowType) {
-            WaScreen *ws = ((WaWindow *) wo)->wascreen;
             if (e->type == DestroyNotify)
                 ((WaWindow *) wo)->deleted = true;
             delete ((WaWindow *) wo);

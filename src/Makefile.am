@@ -22,4 +22,5 @@ waimea_SOURCES = main.cc \
 		 WaMenu.cc \
 		 NetHandler.cc \
 		 DockappHandler.cc \
-		 Timer.cc
+		 Timer.cc \
+		 Regex.cc

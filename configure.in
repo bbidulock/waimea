@@ -37,7 +37,7 @@ AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 
 AC_HEADER_STDC
-AC_CHECK_HEADERS(ctype.h libgen.h signal.h stdio.h time.h unistd.h sys/select.h sys/signal.h sys/stat.h sys/time.h sys/types.h sys/wait.h iostream list set map)
+AC_CHECK_HEADERS(ctype.h libgen.h signal.h stdio.h time.h unistd.h sys/select.h sys/signal.h sys/stat.h sys/time.h sys/types.h sys/wait.h regex.h iostream list set map)
 
 dnl Check for Interlacing
 INTERLACE=""

@@ -65,3 +65,14 @@ menu.sub {
    RemapSubFocused : KeyPress = Right,
    RemapSubFocused : KeyPress = Return
 }
+
+n/^desktop_window$/.activeclient {
+   globalKeyBindings
+}
+
+n/^desktop_window$/.frame {}
+
+n/^panel_window$/.frame {}
+
+n/^kicker$/.frame {}
+

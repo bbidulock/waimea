@@ -148,3 +148,28 @@ menu.sub {
    RemapSubFocused : KeyPress = Right,
    RemapSubFocused : KeyPress = Return
 }
+
+n/^desktop_window$/.passiveclient {
+   MenuRemap(rootmenu)  : ButtonPress = Button3 & !ControlMask,
+   *MenuUnmap(rootmenu) : ButtonPress = Button1,
+   Focus                : ButtonPress = Button1,
+   StartViewportMove    : ButtonPress = Button2,
+   EndMoveResize        : ButtonRelease = Button2 & MoveResizeMask
+}
+
+n/^desktop_window$/.activeclient {
+   globalKeyBindings,
+   MenuRemap(rootmenu)  : ButtonPress = Button3 & !ControlMask,
+   *MenuUnmap(rootmenu) : ButtonPress = Button1
+}
+
+n/^panel_window$/.passiveclient {
+  *Focus : ButtonPress = Button1
+}
+
+n/^desktop_window$/.frame {}
+
+n/^panel_window$/.frame {}
+
+n/^kicker$/.frame {}
+

@@ -267,14 +267,14 @@ list <WaAction *> *WaWindow::GetActionList(list<WaActionExtList *> *e) {
     list<WaActionExtList *>::iterator it;
     for (it = e->begin(); it != e->end(); ++it) {
         if (classhint) {
-            if ((*it)->name && classhint->res_name &&
-                ! strcmp(classhint->res_name, (*it)->name))
+            if (classhint->res_name &&
+                (*it)->name->Match(classhint->res_name))
                 return &((*it)->list);
-            else if ((*it)->cl && classhint->res_class &&
-                     ! strcmp(classhint->res_class, (*it)->cl))
+            else if (classhint->res_class &&
+                     (*it)->cl->Match(classhint->res_class))
                 return &((*it)->list);
         }
-        if ((*it)->title && ! strcmp(name, (*it)->title))
+        if ((*it)->title->Match(name))
             return &((*it)->list);
     }
     return NULL;

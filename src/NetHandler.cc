@@ -156,7 +156,7 @@ NetHandler::~NetHandler(void) {
  */
 void NetHandler::GetWMHints(WaWindow *ww) {
     XTextProperty text_prop;
-    char **list, *tmp_name;
+    char **list;
     int num;
     char *__m_wastrdup_tmp;
     
@@ -789,7 +789,7 @@ void NetHandler::GetVirtualPos(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::GetXaName(WaWindow *ww) {
-    char *data;
+    char *data = NULL;
     int status;
     char *__m_wastrdup_tmp;
     
@@ -799,12 +799,12 @@ void NetHandler::GetXaName(WaWindow *ww) {
     } else ww->deleted = true;
     XUngrabServer(display);
 
-    if (status) {
+    if (status && data) {
         delete [] ww->name;
         ww->name = __m_wastrdup(data);
+        XFree(data);
         ww->SetActionLists();
         if (ww->title_w) ww->label->Draw();
-        XFree(data);
     }
         
     XGrabServer(display);

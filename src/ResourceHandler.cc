@@ -66,7 +66,7 @@ using std::endl;
  */
 ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     char *__m_wastrdup_tmp;
-    
+
     waimea = wa;
     display = waimea->display;
     
@@ -513,7 +513,7 @@ void ResourceHandler::LoadConfig(WaScreen *wascreen) {
     unsigned int dummy;
     char *token;
     int dock_num, i;
-    bool d_exists = true, have_u = false;
+    bool d_exists = true;
     DockStyle *dockstyle;
 
     for (dock_num = 0; d_exists && dock_num < 100; ++dock_num) {
@@ -532,7 +532,6 @@ void ResourceHandler::LoadConfig(WaScreen *wascreen) {
                                                  &dockstyle->y, &dummy,
                                                  &dummy);
         
-        dockstyle->order = new list<char *>;
         sprintf(rc_name, "screen%d.dock%d.order", sn, dock_num);
         sprintf(rc_class, "Screen%d.Dock%d.Order", sn, dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
@@ -540,32 +539,31 @@ void ResourceHandler::LoadConfig(WaScreen *wascreen) {
             token = value.addr;
             while (strlen(token) > 6) {
                 token = strtrim(token);
-                if (! strncasecmp("name", token, 4)) {
-                    for (i = 0; token[i] != '\0' && token[i] != ']'; i++);
+                if (token[0] == 'n' && token[1] == '/') {
+                    for (i = 2; token[i] != '\0' &&
+                           ! (token[i] == '/' && token[i - 1] != '\\'); i++);
                     if (token[i] == '\0') break;
                     token[i] = '\0';
-                    token[3] = 'N';
-                    token[4] = '_';
-                    dockstyle->order->push_back(__m_wastrdup(&token[3]));
-                    token = token + strlen(token) + 1;
+                    dockstyle->order.push_back(new Regex(&token[2]));
+                    dockstyle->order_type.push_back(NameMatchType);
                 }
-                else if (! strncasecmp("class", token, 5)) {
-                    for (i = 0; token[i] != '\0' && token[i] != ']'; i++);
+                else if (token[0] == 'c' && token[1] == '/') {
+                    for (i = 2; token[i] != '\0' &&
+                           ! (token[i] == '/' && token[i - 1] != '\\'); i++);
                     if (token[i] == '\0') break;
                     token[i] = '\0';
-                    token[4] = 'N';
-                    token[5] = '_';
-                    dockstyle->order->push_back(__m_wastrdup(&token[4]));
-                    token = token + strlen(token) + 1;
+                    dockstyle->order.push_back(new Regex(&token[2]));
+                    dockstyle->order_type.push_back(ClassMatchType);
                 }
-                else if (! strncasecmp("unknown", token, 7) && !have_u) {
-                    have_u = true;
-                    dockstyle->order->push_back(__m_wastrdup("U"));
-                    token = token + 7;
+                else if (token[0] == 't' && token[1] == '/') {
+                    for (i = 2; token[i] != '\0' &&
+                           ! (token[i] == '/' && token[i - 1] != '\\'); i++);
+                    if (token[i] == '\0') break;
+                    token[i] = '\0';
+                    dockstyle->order.push_back(new Regex(&token[2]));
+                    dockstyle->order_type.push_back(TitleMatchType);
                 }
-                else {
-                    token = token + strlen(token) + 1;
-                }
+                token = token + strlen(token) + 1;
             }
         }
 
@@ -631,14 +629,9 @@ void ResourceHandler::LoadConfig(WaScreen *wascreen) {
         
         if (d_exists || ! dock_num)
             wascreen->wstyle.dockstyles.push_back(dockstyle);
-        else {
-            delete dockstyle->order;
+        else
             delete dockstyle;
-        }
     }
-    if (! have_u)
-        wascreen->wstyle.dockstyles.back()->order->push_back(
-            __m_wastrdup("U"));
     
     XrmDestroyDatabase(database);
 } 
@@ -1193,7 +1186,6 @@ void ResourceHandler::LoadActions(WaScreen *wascreen) {
     char buffer[8192];
     char buffer2[8192];
     char *str;
-    char *__m_wastrdup_tmp;
     WaActionExtList *ext_list;
     list<Define *> *defs = new list<Define *>;
     sc->bacts = new list<WaAction *>*[wascreen->wstyle.b_num];
@@ -1289,50 +1281,47 @@ void ResourceHandler::LoadActions(WaScreen *wascreen) {
                     }
                     else {
                         ext_list = NULL;
-                        if (! strncasecmp(str, "class", 5)) {
-                            for (i3 = 5; str[i3] != ']' && str[i3] != '\0';
+                        if (str[0] == 'c' && str[1] == '/') {
+                            for (i3 = 2; str[i3] != '\0' &&
+                                     ! (str[i3] == '/' && str[i3 - 1] != '\\');
                                  i3++);
                             if (str[i3] == '\0') {
-                                WARNING << "missing ']'" << endl;
+                                WARNING << "missing '/'" << endl;
                                 break;
                             }
                             str[i3] = '\0';
-                            ext_list = new WaActionExtList(NULL,
-                                                           __m_wastrdup(str +
-                                                                        6),
+                            ext_list = new WaActionExtList(NULL, str + 2,
                                                            NULL);
                             str = str + i3 + 1;
                             ReadActions((char *) buffer2, defs, &wacts,
                                         &ext_list->list, wascreen);
                         }
-                        else if (! strncasecmp(str, "name", 4)) {
-                            for (i3 = 4; str[i3] != ']' && str[i3] != '\0';
+                        else if (str[0] == 'n' && str[1] == '/') {
+                            for (i3 = 2; str[i3] != '\0' &&
+                                     ! (str[i3] == '/' && str[i3 - 1] != '\\');
                                  i3++);
                             if (str[i3] == '\0') {
-                                WARNING << "missing ']'" << endl;
+                                WARNING << "missing '/'" << endl;
                                 break;
                             }
                             str[i3] = '\0';
-                            ext_list = new WaActionExtList(__m_wastrdup(str +
-                                                                        5),
-                                                           NULL,
+                            ext_list = new WaActionExtList(str + 2, NULL,
                                                            NULL);
                             str = str + i3 + 1;
                             ReadActions((char *) buffer2, defs, &wacts,
                                         &ext_list->list, wascreen);
                         }
-                        else if (! strncasecmp(str, "title", 5)) {
-                            for (i3 = 5; str[i3] != ']' && str[i3] != '\0';
+                        else if (str[0] == 't' && str[1] == '/') {
+                            for (i3 = 2; str[i3] != '\0' &&
+                                     ! (str[i3] == '/' && str[i3 - 1] != '\\');
                                  i3++);
                             if (str[i3] == '\0') {
-                                WARNING << "missing ']'" << endl;
+                                WARNING << "missing '/'" << endl;
                                 break;
                             }
                             str[i3] = '\0';
-                            ext_list = new WaActionExtList(NULL,
-                                                           NULL,
-                                                           __m_wastrdup(str +
-                                                                        6));
+                            ext_list = new WaActionExtList(NULL, NULL,
+                                                           str + 2);
                             str = str + i3 + 1;
                             ReadActions((char *) buffer2, defs, &wacts,
                                         &ext_list->list, wascreen);
@@ -1341,7 +1330,7 @@ void ResourceHandler::LoadActions(WaScreen *wascreen) {
                             str = str + 6;
                         }
                         else {
-                            WARNING << "unknown window type" << endl;
+                            WARNING << "unknown window: " << str << endl;
                             break;
                         }
                         if (! strcasecmp(str, ".frame")) {
@@ -1409,7 +1398,7 @@ void ResourceHandler::LoadActions(WaScreen *wascreen) {
                             }
                         }
                         else {
-                            WARNING << "unknown window" << endl;
+                            WARNING << "unknown child window: " << str << endl;
                             break;
                         }
                     }

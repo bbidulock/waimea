@@ -34,6 +34,7 @@ typedef struct _ButtonStyle ButtonStyle;
 #include "WaWindow.hh"
 #include "WaMenu.hh"
 #include "Waimea.hh"
+#include "Regex.hh"
 
 #define IS_ENV_CHAR(ch) (isalnum(ch) || ch == '_')
 
@@ -83,7 +84,8 @@ struct _DockStyle {
     int direction;
     int stacking;
     unsigned int gridspace;
-    list<char *> *order;
+    list<Regex *> order;
+    list<int> order_type;
     bool centered;
     bool inworkspace;
     DockholderStyle style;
@@ -114,6 +116,12 @@ enum {
     AlwaysOnTop,
     AlwaysAtBottom,
     NormalStacking
+};
+
+enum {
+    NameMatchType,
+    ClassMatchType,
+    TitleMatchType
 };
 
 class ResourceHandler {
@@ -174,20 +182,20 @@ public:
 class WaActionExtList {
 public:
     inline WaActionExtList(char *n, char *c, char *t) {
-        name = n;
-        cl = c;
-        title = t;
+        name = new Regex(n);
+        cl = new Regex(c);
+        title = new Regex(t);
     }
     inline ~WaActionExtList(void) {
-        if (name) delete [] name;
-        if (cl) delete [] cl;
-        if (title) delete [] title;
+        delete name;
+        delete cl;
+        delete title;
         ACTLISTCLEAR(list);
     }
     
-    char *name;
-    char *cl;
-    char *title;
+    Regex *name;
+    Regex *cl;
+    Regex *title;
     list<WaAction *> list;
 };
 

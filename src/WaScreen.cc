@@ -293,11 +293,11 @@ WaScreen::~WaScreen(void) {
 #endif // PIXMAP
     
     while (! wstyle.dockstyles.empty()) {
-        while (! wstyle.dockstyles.back()->order->empty()) {
-            delete [] wstyle.dockstyles.back()->order->back();
-            wstyle.dockstyles.back()->order->pop_back();
+        while (! wstyle.dockstyles.back()->order.empty()) {
+            delete wstyle.dockstyles.back()->order.back();
+            wstyle.dockstyles.back()->order.pop_back();
+            wstyle.dockstyles.back()->order_type.pop_back();
         }
-        delete wstyle.dockstyles.back()->order;
         delete wstyle.dockstyles.back();
         wstyle.dockstyles.pop_back();
     }
@@ -1618,34 +1618,54 @@ void WaScreen::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
  * @param window Window ID of dockapp window
  */
 void WaScreen::AddDockapp(Window window) {
-    XClassHint *c_hint;
     Dockapp *da;
-    int have_hints;
+    XClassHint *c_hint = XAllocClassHint();
+    int have_hints = XGetClassHint(display, window, c_hint);
+    char *title;
+    if (! XFetchName(display, window, &title))
+        title = NULL;
 
-    c_hint = XAllocClassHint();
-    have_hints = XGetClassHint(display, window, c_hint);
-
-    list<char *>::iterator it;
+    list<Regex *>::iterator reg_it;
+    list<int>::iterator regt_it;
     list<DockappHandler *>::iterator dock_it;
     if (have_hints) {
         dock_it = docks.begin();
         for (; dock_it != docks.end(); ++dock_it) {
-            it = (*dock_it)->style->order->begin();
-            for (; it != (*dock_it)->style->order->end(); ++it) {
-                if ((**it == 'N') &&
-                    (! strcmp(*it + 2, c_hint->res_name))) {
+            reg_it = (*dock_it)->style->order.begin();
+            regt_it = (*dock_it)->style->order_type.begin();
+            for (; reg_it != (*dock_it)->style->order.end();
+                 ++reg_it, ++regt_it) {
+                if ((*regt_it == NameMatchType) &&
+                    ((*reg_it)->Match(c_hint->res_name))) {
                     da = new Dockapp(window, *dock_it);
                     da->c_hint = c_hint;
+                    da->title = title;
                     (*dock_it)->Update();
                     return;
                 }
             }
-            it = (*dock_it)->style->order->begin();
-            for (; it != (*dock_it)->style->order->end(); ++it) {
-                if ((**it == 'C') &&
-                    (! strcmp(*it + 2, c_hint->res_class))) {
+            reg_it = (*dock_it)->style->order.begin();
+            regt_it = (*dock_it)->style->order_type.begin();
+            for (; reg_it != (*dock_it)->style->order.end();
+                 ++reg_it, ++regt_it) {
+                if ((*regt_it == ClassMatchType) &&
+                    ((*reg_it)->Match(c_hint->res_class))) {
                     da = new Dockapp(window, *dock_it);
                     da->c_hint = c_hint;
+                    da->title = title;
+                    (*dock_it)->Update();
+                    return;
+                }
+            }
+            reg_it = (*dock_it)->style->order.begin();
+            regt_it = (*dock_it)->style->order_type.begin();
+            for (; reg_it != (*dock_it)->style->order.end();
+                 ++reg_it, ++regt_it) {
+                if ((*regt_it == TitleMatchType) &&
+                    ((*reg_it)->Match(title))) {
+                    da = new Dockapp(window, *dock_it);
+                    da->c_hint = c_hint;
+                    da->title = title;
                     (*dock_it)->Update();
                     return;
                 }
@@ -1653,22 +1673,15 @@ void WaScreen::AddDockapp(Window window) {
         }
     }
     dock_it = docks.begin();
-    for (; dock_it != docks.end(); ++dock_it) {
-        it = (*dock_it)->style->order->begin();
-        for (; it != (*dock_it)->style->order->end(); ++it) {
-            if (**it == 'U') {
-                da = new Dockapp(window, *dock_it);
-                da->c_hint = NULL;
-                (*dock_it)->Update();
-                if (have_hints) {
-                    XFree(c_hint->res_name);
-                    XFree(c_hint->res_class);
-                }
-                XFree(c_hint);
-                return;
-            }
-        }
+    da = new Dockapp(window, *dock_it);
+    da->c_hint = NULL;
+    da->title = NULL;
+    (*dock_it)->Update();
+    if (have_hints) {
+        XFree(c_hint->res_name);
+        XFree(c_hint->res_class);
     }
+    XFree(c_hint);
 }
 
 

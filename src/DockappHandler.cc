@@ -134,24 +134,26 @@ void DockappHandler::Update(void) {
 
     list<Dockapp *>::reverse_iterator d_it;
     list<Dockapp *> *tmp_list = new list<Dockapp *>;
-    list<char *>::reverse_iterator s_it = style->order->rbegin();
-    for (; s_it != style->order->rend(); ++s_it) {
+    list<Regex *>::reverse_iterator reg_it = style->order.rbegin();
+    list<int>::reverse_iterator regt_it = style->order_type.rbegin();
+    for (; reg_it != style->order.rend(); ++reg_it, ++regt_it) {
         d_it = dockapp_list->rbegin();
-        if (**s_it == 'U') {
-            for (; d_it != dockapp_list->rend(); ++d_it) {
-                if (! (*d_it)->c_hint)
-                    tmp_list->push_front(*d_it);
-            }
-        } else if (**s_it == 'N') {
+        if (*regt_it == NameMatchType) {
             for (; d_it != dockapp_list->rend(); ++d_it) {
                 if ((*d_it)->c_hint &&
-                    (! strcmp(*s_it + 2, (*d_it)->c_hint->res_name)))
+                    ((*reg_it)->Match((*d_it)->c_hint->res_name)))
                     tmp_list->push_front(*d_it);
             }
-        } else if (**s_it == 'C') {
+        } else if (*regt_it == ClassMatchType) {
             for (; d_it != dockapp_list->rend(); ++d_it) {
                 if ((*d_it)->c_hint &&
-                    (! strcmp(*s_it + 2, (*d_it)->c_hint->res_class)))
+                    ((*reg_it)->Match((*d_it)->c_hint->res_class)))
+                    tmp_list->push_front(*d_it);
+            }
+        } else if (*regt_it == TitleMatchType) {
+            for (; d_it != dockapp_list->rend(); ++d_it) {
+                if ((*d_it)->title &&
+                    ((*reg_it)->Match((*d_it)->title)))
                     tmp_list->push_front(*d_it);
             }
         }
@@ -311,6 +313,8 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
     client_id = win;
     display = dh->display;
     deleted = false;
+    c_hint = NULL;
+    title = NULL;
 
     XWMHints *wmhints = XGetWMHints(display, win);
     if (wmhints) {
@@ -371,4 +375,11 @@ Dockapp::~Dockapp(void) {
         }
         XUngrabServer(display);
     }
+    if (c_hint) {
+        XFree(c_hint->res_name);
+        XFree(c_hint->res_class);
+        XFree(c_hint);
+    }
+    if (title) XFree(title);
+
 }

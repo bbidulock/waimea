@@ -4,7 +4,7 @@
 .\" This manual page may be freely distributed and modified.
 .\" Author: David Reveman <c99drn@cs.umu.se>
 .\" 
-.TH WAIMEA 1 "Aug 20 2002" "0.3.4" "User Manual"
+.TH WAIMEA 1 "Oct 5 2002" "0.3.4" "User Manual"
 
 
 .SH NAME
@@ -238,32 +238,29 @@ Define dockappholder position, X offset string of form:
 .BR X(1).
 
 .TP
-.B screen0.dock[num].order:     OrderList
-A whitespace separated list describing how to order the
-dockapps in the dockappholder. Dockapps can be ordered
-by window name and class. For window name use 
-.I "name[NAME]" 
-, NAME is the window name. For window class use 
-.I "class[CLASS]" 
-, CLASS is the window class.
+.B screen0.dock[num].order:     Regular Expression List
+A whitespace separated list of regular expressions describing how 
+to order the dockapps in the dockappholder. Dockapps can be 
+ordered by window name, window class and window title. For window 
+name use 
+.I "n/Regexp/" 
+, `Regexp' being the POSIX regular expression used for window name
+matching. For window class use 
+.I "c/Regexp/"
+, `Regexp' being the POSIX regular expression used for window class
+matching. For window title use 
+.I "t/Regexp/"
+, `Regexp' being the POSIX regular expression used for window title
+matching.
 
 Example:
 
-screen0.dock0.order:    name[cpumeter] class[pager] UNKNOWN
+screen0.dock0.order:    n/.*meter$/ c/pager/
 
-This will put dockapp window named cpumeter at the first
-position in dockappholder and pager dockapp at second
-position. All dockapp windows that doesn't match any 
-.I "name[NAME]"
-or
-.I "class[CLASS]" 
-will be but at the position of the 
-.I UNKNOWN 
-string.
-The 
-.I UNKNOWN 
-string MUST exist in ONE AND ONLY ONE of the
-dockappholder order resources.
+This will put dockapp window with name ending with `meter' at 
+the first position in dockappholder and dockapp with classname containing
+`pager' at second position. All dockapp windows that doesn't match any 
+regular expression will be put in dock0 at last position.
 
 .TP
 .B screen0.dock[num].direction:     Direction
@@ -544,7 +541,9 @@ resource is used to find the interlacing color.
 A image file must be specified for all pixmap textures.
 .IR pixmap 
 resources is used for finding the image file. Must be either a complete
-file path, a Waimea start directory relative file path or an image file
+file path, a file path relative to 
+.I waimea 
+start directory or an image file
 in the same directory as the style file.
 
 .TP
@@ -554,6 +553,14 @@ non translucent opacity level and and 100 makes it a fully transparent texture.
 This requires that the program setting the background image has support for
 setting _XROOTPMAP_ID property on root window. Esetroot does this.
 Opacity works for all types of textures even pixmaps.
+
+.TP
+.B Pixmap stretching borders
+Borders used for pixmap stretching. Format is { LEFT, RIGHT, TOP, BOTTOM }
+LEFT being the width of left border, RIGHT being the width of right border,
+TOP being the height of top border and BOTTOM being the height of bottom
+border. Only graphics not within any of the borders will be scaled when
+stretching pixmap.
 
 .PP
 Here are the keys 
@@ -579,6 +586,8 @@ or
 .B window.*.focus.colorTo:     Color
 .br
 .B window.*.focus.pixmap:     Pixmap
+.br
+.B window.*.focus.border:     Border
 .RS
 Texture type, opacity level, colors and pixmap used for focused window textures.
 .RE
@@ -593,6 +602,8 @@ Texture type, opacity level, colors and pixmap used for focused window textures.
 .B window.*.unfocus.colorTo:     Color
 .br
 .B window.*.unfocus.pixmap:     Pixmap
+.br
+.B window.*.unfocus.border:     Border
 .RS
 Texture type, opacity level and colors used for unfocused window textures.
 .RE
@@ -679,6 +690,8 @@ or
 .B menu.*.colorTo:     Color
 .br
 .B menu.*.pixmap:     Pixmap
+.br
+.B menu.*.border:     Border
 .RS
 Texture type, opacity level and colors used for menu textures.
 .RE
@@ -752,6 +765,8 @@ the rc-file.
 .B dockappholder.dock[ID].frame.colorTo:     Color
 .br
 .B dockappholder.dock[ID].frame.pixmap:     Pixmap
+.br
+.B dockappholder.dock[ID].frame.border:     Border
 .RS
 Texture type, opacity level and colors used for dockappholder 'dock[ID]'s frame 
 texture.
@@ -855,6 +870,8 @@ resource will be ignored if not 'autoplace' resource is set to False.
 .br
 .B window.button[ID].[STATE].focus.pixmap:     Pixmap
 .br
+.B window.button[ID].[STATE].focus.border:     Border
+.br
 .B window.button[ID].[STATE].unfocus:     Texture description
 .br
 .B window.button[ID].[STATE].unfocus.opacity:     Opacity level
@@ -862,6 +879,8 @@ resource will be ignored if not 'autoplace' resource is set to False.
 .B window.button[ID].[STATE].unfocus.color:     Color
 .br
 .B window.button[ID].[STATE].unfocus.colorTo:     Color
+.br
+.B window.button[ID].[STATE].focus.border:     Border
 .br
 .B window.button[ID].[STATE].unfocus.pixmap:     Pixmap
 .br
@@ -874,6 +893,8 @@ resource will be ignored if not 'autoplace' resource is set to False.
 .B window.button[ID].[STATE].pressed.colorTo:     Color
 .br
 .B window.button[ID].[STATE].pressed.pixmap:     Pixmap
+.br
+.B window.button[ID].[STATE].pressed.border:     Border
 .RS
 Texture type, opacity level and colors used for titlebar button[ID]. [STATE]
 can be 'false' or 'true'. If button have more than one state then both 'false'
@@ -974,7 +995,8 @@ ButtonPress events will discard the action.
 .PP
 Here is the list of all windows that you can create actions for
 (to define individual actions for a specific window just replace 'window.*'
-with name[NAME].*, class[CLASS].* or title[TITLE].*):
+with n/Regexp/.*, c/Regexp/.* or t/Regexp/.* where Regexp is the regular
+expression to match window name/class/title):
 .TP
 .B window.frame
 This is the parent window for the client window and all decoration

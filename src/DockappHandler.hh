@@ -52,6 +52,7 @@ public:
     int x, y;
     unsigned int width, height;
     XClassHint *c_hint;
+    char *title;
     bool deleted;
 };
 
