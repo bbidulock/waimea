@@ -2091,10 +2091,10 @@ void WaWindow::ToggleSticky(XEvent *, WaAction *) {
 void WaWindow::TaskSwitcher(XEvent *, WaAction *) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
     waimea->taskswitch->Build(wascreen);
-    waimea->taskswitch->Map(wascreen->width / 2 -
-                            waimea->taskswitch->width / 2,
-                            wascreen->height / 2 -
-                            waimea->taskswitch->height / 2);
+    waimea->taskswitch->ReMap(wascreen->width / 2 -
+                              waimea->taskswitch->width / 2,
+                              wascreen->height / 2 -
+                              waimea->taskswitch->height / 2);
     waimea->taskswitch->FocusFirst();
 }
 
@@ -2919,8 +2919,8 @@ void WaChildWindow::Render(void) {
             else
 #endif // XRENDER
                 pixmap = (wa->has_focus)? wascreen->fgrip: wascreen->ugrip;
-            break;
             
+            break;
     }
     if (! done) {
         if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
@@ -2973,17 +2973,20 @@ void WaChildWindow::Draw(void) {
     
 #ifdef XFT
             XftColor *xftcolor;
-            xftcolor = (wa->has_focus)? wascreen->wstyle.xftfcolor:
-                wascreen->wstyle.xftucolor;
-            XGlyphInfo extents;
-            XftTextExtents8(display, wascreen->wstyle.xftfont,
-                            (unsigned char *) wa->name, length, &extents);
-            text_w = extents.width;
-#else // ! XFT
-            gc = (wa->has_focus)? &wascreen->wstyle.l_text_focus_gc:
-                &wascreen->wstyle.l_text_unfocus_gc;
-            text_w = XTextWidth(wascreen->wstyle.font, wa->name, length);
+            if (wascreen->wstyle.wa_font.xft) {
+                xftcolor = (wa->has_focus)? wascreen->wstyle.xftfcolor:
+                    wascreen->wstyle.xftucolor;
+                XGlyphInfo extents;
+                XftTextExtents8(display, wascreen->wstyle.xftfont,
+                                (unsigned char *) wa->name, length, &extents);
+                text_w = extents.width;
+            }
 #endif // XFT
+            if (! wascreen->wstyle.wa_font.xft) {
+                gc = (wa->has_focus)? &wascreen->wstyle.l_text_focus_gc:
+                    &wascreen->wstyle.l_text_unfocus_gc;
+                text_w = XTextWidth(wascreen->wstyle.font, wa->name, length);
+            }
     
             if (text_w > (attrib.width - 10)) x = 2;
             else {
@@ -2998,13 +3001,14 @@ void WaChildWindow::Draw(void) {
                 }
             }
 #ifdef XFT
-            XftDrawString8(xftdraw, xftcolor, wascreen->wstyle.xftfont, x,
-                           wascreen->wstyle.y_pos, (unsigned char *) wa->name,
-                           length);
-#else // ! XFT
-            XDrawString(display, (Drawable) id, *gc, x,
-                        wascreen->wstyle.y_pos, wa->name, length);
+            if (wascreen->wstyle.wa_font.xft)
+                XftDrawString8(xftdraw, xftcolor, wascreen->wstyle.xftfont, x,
+                               wascreen->wstyle.y_pos,
+                               (unsigned char *) wa->name, length);
 #endif // XFT
+            if (! wascreen->wstyle.wa_font.xft)
+                XDrawString(display, (Drawable) id, *gc, x,
+                            wascreen->wstyle.y_pos, wa->name, length);
             break;
         case ButtonType:
             if (bstyle->fg) {

@@ -32,8 +32,9 @@ window.justify: right
 window.label.focus:             parentrelative
   window.label.focus.textColor: #000000
   
-window.label.unfocus:             parentrelative
-  window.label.unfocus.textColor: #222222
+window.label.unfocus:                     parentrelative
+  window.label.unfocus.textColor:         #222222
+  window.label.unfocus.textColor.opacity: 50
 
 window.handle.focus:           flat gradient crossdiagonal
   window.handle.focus.color:   #90b098
@@ -102,8 +103,6 @@ handleWidth: 3
 ! menu.title.height: 15
 ! menu.item.height:  15
 
-! *.font:        fixed
-! *.xftfont:     arial
-! *.xftfontsize: 11.0
+! *.font:        arial:pixelsize=12 [xft]
 
 rootCommand: Esetroot -s @pkgdatadir@/backgrounds/waimea.png

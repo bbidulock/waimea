@@ -648,105 +648,27 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     for (; slen >= 1 && style_file[slen] != '/'; slen--);
     style_file[slen] = '\0';
 
-    ReadDatabaseFont("window.font", "Window.Font", &wstyle->fontname, "fixed");
+#ifdef XFT
+    WaFont default_font = { true, "arial:pixelsize=12" };
+#else // !XFT
+    WaFont default_font = { false, "fixed" };
+#endif // XFT
+
+    ReadDatabaseFont("window.font", "Window.Font", &wstyle->wa_font,
+                     &default_font);
     ReadDatabaseFont("menu.frame.font", "Menu.Frame.Font",
-                     &mstyle->f_fontname, wstyle->fontname);
+                     &mstyle->wa_f_font, &wstyle->wa_font);
     ReadDatabaseFont("menu.title.font", "Menu.Title.Font",
-                     &mstyle->t_fontname, mstyle->f_fontname);
+                     &mstyle->wa_t_font, &mstyle->wa_f_font);
     ReadDatabaseFont("menu.bullet.font", "Menu.Bullet.Font",
-                     &mstyle->b_fontname, mstyle->f_fontname);
+                     &mstyle->wa_b_font, &mstyle->wa_f_font);
     ReadDatabaseFont("menu.checkbox.true.font",
                      "Menu.Checkbox.True.Font",
-                     &mstyle->ct_fontname, mstyle->f_fontname);
+                     &mstyle->wa_ct_font, &mstyle->wa_f_font);
     ReadDatabaseFont("menu.checkbox.false.font",
                      "Menu.Checkbox.False.Font",
-                     &mstyle->cf_fontname, mstyle->ct_fontname);
+                     &mstyle->wa_cf_font, &mstyle->wa_ct_font);
     
-#ifdef XFT
-    if (XrmGetResource(database, "window.xftfontsize",
-                       "Window.XftFontSize", &value_type, &value)) {
-        if (! (wstyle->xftsize = strtod(value.addr, 0))) {
-            wstyle->xftsize = 0.0;
-        } else {
-            if (wstyle->xftsize < 2.0) wstyle->xftsize = 2.0;
-            if (wstyle->xftsize > 100.0) wstyle->xftsize = 100.0;
-        }
-    } else
-        wstyle->xftsize = 0.0;
-    
-    if (XrmGetResource(database, "menu.frame.xftfontsize",
-                       "Menu.Frame.XftFontSize", &value_type, &value)) {
-        if (! (mstyle->f_xftsize = strtod(value.addr, 0))) {
-            mstyle->f_xftsize = wstyle->xftsize;
-        } else {
-            if (mstyle->f_xftsize < 2.0) mstyle->f_xftsize = 2.0;
-            if (mstyle->f_xftsize > 100.0) mstyle->f_xftsize = 100.0;
-        }
-    } else
-        mstyle->f_xftsize = wstyle->xftsize;
-
-    if (XrmGetResource(database, "menu.title.xftfontsize",
-                       "Menu.Title.XftFontSize", &value_type, &value)) {
-        if (! (mstyle->t_xftsize = strtod(value.addr, 0))) {
-            mstyle->t_xftsize = mstyle->f_xftsize;
-        } else {
-            if (mstyle->t_xftsize < 2.0) mstyle->t_xftsize = 2.0;
-            if (mstyle->t_xftsize > 100.0) mstyle->t_xftsize = 100.0;
-        }
-    } else
-        mstyle->t_xftsize = mstyle->f_xftsize;
-
-    if (XrmGetResource(database, "menu.bullet.xftfontsize",
-                       "Menu.Bullet.XftFontSize", &value_type, &value)) {
-        if (! (mstyle->b_xftsize = strtod(value.addr, 0))) {
-            mstyle->b_xftsize = mstyle->f_xftsize;
-        } else {
-            if (mstyle->b_xftsize < 2.0) mstyle->b_xftsize = 2.0;
-            if (mstyle->b_xftsize > 100.0) mstyle->b_xftsize = 100.0;
-        }
-    } else
-        mstyle->b_xftsize = mstyle->f_xftsize;
-
-    if (XrmGetResource(database, "menu.checkbox.true.xftfontsize",
-                       "Menu.Checkbox.True.XftFontSize", &value_type,
-                       &value)) {
-        if (! (mstyle->ct_xftsize = strtod(value.addr, 0))) {
-            mstyle->ct_xftsize = mstyle->ct_xftsize;
-        } else {
-            if (mstyle->ct_xftsize < 2.0) mstyle->ct_xftsize = 2.0;
-            if (mstyle->ct_xftsize > 100.0) mstyle->ct_xftsize = 100.0;
-        }
-    } else
-        mstyle->ct_xftsize = mstyle->f_xftsize;
-
-    if (XrmGetResource(database, "menu.checkbox.false.xftfontsize",
-                       "Menu.Checkbox.False.XftFontSize", &value_type,
-                       &value)) {
-        if (! (mstyle->cf_xftsize = strtod(value.addr, 0))) {
-            mstyle->cf_xftsize = mstyle->cf_xftsize;
-        } else {
-            if (mstyle->cf_xftsize < 2.0) mstyle->cf_xftsize = 2.0;
-            if (mstyle->cf_xftsize > 100.0) mstyle->cf_xftsize = 100.0;
-        }
-    } else
-        mstyle->cf_xftsize = mstyle->ct_xftsize;
-    
-    ReadDatabaseFont("window.xftfont", "Window.xftFont",
-                     &wstyle->xftfontname, "arial");
-    ReadDatabaseFont("menu.frame.xftfont", "Menu.Frame.xftFont",
-                     &mstyle->f_xftfontname, wstyle->xftfontname);
-    ReadDatabaseFont("menu.title.xftfont", "Menu.Title.xftFont",
-                     &mstyle->t_xftfontname, mstyle->f_xftfontname);
-    ReadDatabaseFont("menu.bullet.xftfont", "Menu.Bullet.xftFont",
-                     &mstyle->b_xftfontname, mstyle->f_xftfontname);
-    ReadDatabaseFont("menu.checkbox.true.xftfont",
-                     "Menu.Checkbox.True.xftFont",
-                     &mstyle->ct_xftfontname, mstyle->f_xftfontname);
-    ReadDatabaseFont("menu.checkbox.false.xftfont",
-                     "Menu.Checkbox.False.xftFont",
-                     &mstyle->cf_xftfontname, mstyle->f_xftfontname);
-
-#endif // XFT
     ReadDatabaseTexture("window.title.focus", "Window.Title.Focus",
                         &wstyle->t_focus, WhitePixel(display, screen), ic);
     ReadDatabaseTexture("window.title.unfocus", "Window.Title.Unfocus",
@@ -792,8 +714,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     ReadDatabaseColor("menu.frame.textColor", "Menu.Frame.TextColor",
                       &mstyle->f_text, WhitePixel(display, screen), ic);
     ReadDatabaseColor("menu.hilite.textColor", "Menu.Hilite.TextColor",
-                      &mstyle->f_hilite_text, BlackPixel(display, screen),
-                      ic);
+                      &mstyle->f_hilite_text, BlackPixel(display, screen), ic);
     ReadDatabaseColor("menu.title.textColor", "Menu.Title.TextColor",
                       &mstyle->t_text, BlackPixel(display, screen), ic);
 
@@ -1580,6 +1501,7 @@ void ResourceHandler::ReadDatabaseColor(char *rname, char *rclass,
                                         WaImageControl *ic) {
     XrmValue value;
     char *value_type;
+    int opacity;
     
     if (XrmGetResource(database, rname, rclass, &value_type,
                        &value)) {
@@ -1588,13 +1510,22 @@ void ResourceHandler::ReadDatabaseColor(char *rname, char *rclass,
         ic->parseColor(color);
         color->setPixel(default_pixel);
     }
+
+    int clen = strlen(rclass) + 9, nlen = strlen(rname) + 9;
+    char *oclass = new char[clen], *oname = new char[nlen];
     
-#ifdef XRENDER
-    color->XRenderCreateColor(display, wascreen->id, wascreen->colormap);
-#endif // XRENDER
+    sprintf(oclass, "%s.Opacity", rclass);
+    sprintf(oname,  "%s.opacity", rname);
+    if (XrmGetResource(database, oname, oclass, &value_type, &value))
+        opacity = atoi(value.addr);
+    else
+        opacity = 0;
     
+    if (opacity > 100) opacity = 100;
+    else if (opacity < 0) opacity = 0;
+
 #ifdef XFT
-    color->XftCreateColor(display, wascreen->id, wascreen->colormap);
+    color->setXftOpacity(opacity);
 #endif // XFT
     
 }
@@ -1820,25 +1751,45 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
 
 /**
  * @fn    ReadDatabaseFont(char *rname, char *rclass,
- *                         char **fontname, char *defaultfont)
+ *                         WaFont *font, WaFont *defaultfont)
  * @brief Reads a font
  *
  * Reads a font from resource database.
  *
  * @param rname Resource name to use
  * @param rclass Resource class name to use
- * @param fontname For storing font name
+ * @param font Pointer to WaFont structure
  * @param defaultfont Font to use if resource doesn't exist  
  */
 void ResourceHandler::ReadDatabaseFont(char *rname, char *rclass,
-                                       char **fontname, char *defaultfont) {
+                                       WaFont *font, WaFont *defaultfont) {
     XrmValue value;
     char *value_type;
+    char *xft_match;
+    char *f;
     
     if (XrmGetResource(database, rname, rclass, &value_type, &value)) {
-        *fontname = wastrdup(value.addr);
-    } else
-        *fontname = wastrdup(defaultfont);
+        f = value.addr;
+        font->xft = false;
+        
+        if ((xft_match = strchr(f, '['))) {
+            xft_match[0] = '\0';
+            
+#ifdef XFT
+            if (xft_match[1] != '\0' && xft_match[2] != '\0' &&
+                xft_match[3] != '\0')
+                if (strncasecmp(&xft_match[1], "XFT", 3) == 0)
+                    font->xft = true;
+#endif // XFT
+            
+        }
+        font->font = wastrdup(f);
+        strtrim(font->font);
+        if (xft_match) xft_match[0] = '[';
+    } else {
+        font->xft = defaultfont->xft;
+        font->font = wastrdup(defaultfont->font);
+    }
 }
 
 /**

@@ -194,9 +194,9 @@ public:
 #ifdef XFT        
     XftDraw *xftdraw;
     XftFont *cbox_xft_font;
-#else // !XFT
-    GC *cbox_gc;
 #endif // XFT
+    
+    GC *cbox_gc;
 
 #ifdef XRENDER
     Pixmap pixmap;

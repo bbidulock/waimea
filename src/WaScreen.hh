@@ -48,6 +48,11 @@ typedef struct {
     int height;
 } Workarea;
 
+typedef struct {
+    bool xft;
+    char *font;
+} WaFont;
+
 typedef struct _WaAction WaAction;
 typedef void (WaScreen::*RootActionFn)(XEvent *, WaAction *);
 
@@ -67,17 +72,18 @@ typedef struct {
     WaColor l_text_focus, l_text_unfocus, border_color, outline_color;
     WaTexture t_focus, t_unfocus, l_focus, l_unfocus, h_focus, h_unfocus,
         g_focus, g_unfocus;
-
-    char *fontname;
+    WaFont wa_font;
+    
 #ifdef XFT
-    char *xftfontname;
     XftFont *xftfont;
     XftColor *xftfcolor, *xftucolor;
     double xftsize;
-#else // ! XFT
+#endif // XFT
+    
     GC l_text_focus_gc, l_text_unfocus_gc;
     XFontStruct *font;
-#endif // XFT
+    bool font_ok;
+    
     int justify, y_pos;
     unsigned int handle_width, border_width, title_height;
 
@@ -88,20 +94,19 @@ typedef struct {
 typedef struct {
     WaColor f_text, f_hilite_text, t_text, border_color;
     WaTexture back_frame, title, hilite;
-
-    char *f_fontname, *t_fontname, *b_fontname, *ct_fontname,
-        *cf_fontname, *bullet, *checkbox_true, *checkbox_false;
+    WaFont wa_f_font, wa_t_font, wa_b_font, wa_ct_font, wa_cf_font;
+    char *bullet, *checkbox_true, *checkbox_false;
+    
 #ifdef XFT
-    char *f_xftfontname, *t_xftfontname, *b_xftfontname, *ct_xftfontname,
-        *cf_xftfontname;
     XftFont *f_xftfont, *t_xftfont, *b_xftfont, *ct_xftfont, *cf_xftfont;
     XftColor *f_xftcolor, *fh_xftcolor, *t_xftcolor;
-    double f_xftsize, t_xftsize, b_xftsize, ct_xftsize, cf_xftsize;
-#else // ! XFT
+#endif // XFT
+    
     GC f_text_gc, fh_text_gc, t_text_gc, b_text_gc, bh_text_gc,
         ct_text_gc, cth_text_gc, cf_text_gc, cfh_text_gc;
     XFontStruct *f_font, *t_font, *b_font, *ct_font, *cf_font;
-#endif // XFT
+    bool f_font_ok, t_font_ok, b_font_ok, ct_font_ok, cf_font_ok;
+    
     int f_justify, t_justify, f_y_pos, t_y_pos, b_y_pos, ct_y_pos, cf_y_pos;
     unsigned int border_width, title_height, item_height;
 } MenuStyle;
@@ -210,6 +215,8 @@ public:
     WaImageControl *ic;
     WindowStyle wstyle;
     MenuStyle mstyle;
+    WaFont default_font;
+    XFontStruct *def_font;
 
     Pixmap fgrip, ugrip;
     

@@ -157,7 +157,7 @@ private:
                            WaImageControl *);
     void ReadDatabaseTexture(char *, char *, WaTexture *, unsigned long,
                              WaImageControl *);
-    void ReadDatabaseFont(char *, char *, char **, char *);
+    void ReadDatabaseFont(char *, char *, WaFont *, WaFont *);
     void ParseAction(const char *, list<StrComp *> *, list<WaAction *> *);
     void ParseMenu(WaMenu *, FILE *);
 

@@ -53,6 +53,9 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     rh = wa->rh;
     focus = true;
 
+    default_font.xft = false;
+    default_font.font = "fixed";
+
 #ifdef PIXMAP
     imlib_context_set_display(display);
     imlib_context_set_colormap(colormap);
@@ -182,12 +185,12 @@ WaScreen::~WaScreen(void) {
     delete ic;
     delete workarea;
 
-    delete [] wstyle.fontname;
-    delete [] mstyle.f_fontname;
-    delete [] mstyle.t_fontname;
-    delete [] mstyle.b_fontname;
-    delete [] mstyle.ct_fontname;
-    delete [] mstyle.cf_fontname;
+    delete [] wstyle.wa_font.font;
+    delete [] mstyle.wa_f_font.font;
+    delete [] mstyle.wa_t_font.font;
+    delete [] mstyle.wa_b_font.font;
+    delete [] mstyle.wa_ct_font.font;
+    delete [] mstyle.wa_cf_font.font;
     delete [] mstyle.bullet;
     delete [] mstyle.checkbox_true;
     delete [] mstyle.checkbox_false;
@@ -202,35 +205,50 @@ WaScreen::~WaScreen(void) {
     }
     
 #ifdef XFT
-    delete [] wstyle.xftfontname;
-    delete [] mstyle.f_xftfontname;
-    delete [] mstyle.t_xftfontname;
-    delete [] mstyle.b_xftfontname;
-    delete [] mstyle.ct_xftfontname;
-    delete [] mstyle.cf_xftfontname;
-
-    XftFontClose(display, wstyle.xftfont);
-    XftFontClose(display, mstyle.f_xftfont);
-    XftFontClose(display, mstyle.t_xftfont);
-    XftFontClose(display, mstyle.b_xftfont);
-    XftFontClose(display, mstyle.ct_xftfont);
-    XftFontClose(display, mstyle.cf_xftfont);
-#else // ! XFT
-    XFreeFont(display, wstyle.font);
-    XFreeFont(display, mstyle.f_font);
-    XFreeFont(display, mstyle.t_font);
-    XFreeFont(display, mstyle.ct_font);
-    XFreeFont(display, mstyle.cf_font);
-    XFreeGC(display, wstyle.l_text_focus_gc);
-    XFreeGC(display, wstyle.l_text_unfocus_gc);
-    XFreeGC(display, mstyle.f_text_gc);
-    XFreeGC(display, mstyle.fh_text_gc);
-    XFreeGC(display, mstyle.t_text_gc);
-    XFreeGC(display, mstyle.cth_text_gc);
-    XFreeGC(display, mstyle.ct_text_gc);
-    XFreeGC(display, mstyle.cfh_text_gc);
-    XFreeGC(display, mstyle.cf_text_gc);
+    if (wstyle.wa_font.xft) XftFontClose(display, wstyle.xftfont);
+    if (mstyle.wa_f_font.xft) XftFontClose(display, mstyle.f_xftfont);
+    if (mstyle.wa_t_font.xft) XftFontClose(display, mstyle.t_xftfont);
+    if (mstyle.wa_b_font.xft) XftFontClose(display, mstyle.b_xftfont);
+    if (mstyle.wa_ct_font.xft) XftFontClose(display, mstyle.ct_xftfont);
+    if (mstyle.wa_cf_font.xft) XftFontClose(display, mstyle.cf_xftfont);
 #endif // XFT
+    
+    if (! wstyle.wa_font.xft && wstyle.font_ok)
+        XFreeFont(display, wstyle.font);
+    if (! mstyle.wa_f_font.xft && mstyle.f_font_ok)
+        XFreeFont(display, mstyle.f_font);
+    if (! mstyle.wa_t_font.xft && mstyle.t_font_ok)
+        XFreeFont(display, mstyle.t_font);
+    if (! mstyle.wa_b_font.xft && mstyle.b_font_ok)
+        XFreeFont(display, mstyle.b_font);
+    if (! mstyle.wa_ct_font.xft && mstyle.ct_font_ok)
+        XFreeFont(display, mstyle.ct_font);
+    if (! mstyle.wa_cf_font.xft && mstyle.cf_font_ok)
+        XFreeFont(display, mstyle.cf_font);
+
+    XFreeFont(display, def_font);
+
+    if (! wstyle.wa_font.xft) {
+        XFreeGC(display, wstyle.l_text_focus_gc);
+        XFreeGC(display, wstyle.l_text_unfocus_gc);
+    }
+    if (! mstyle.wa_f_font.xft) {
+        XFreeGC(display, mstyle.f_text_gc);
+        XFreeGC(display, mstyle.fh_text_gc);
+    }
+    if (! mstyle.wa_t_font.xft) XFreeGC(display, mstyle.t_text_gc);
+    if (! mstyle.wa_b_font.xft) {
+        XFreeGC(display, mstyle.b_text_gc);
+        XFreeGC(display, mstyle.bh_text_gc);
+    }
+    if (! mstyle.wa_ct_font.xft) {
+        XFreeGC(display, mstyle.cth_text_gc);
+        XFreeGC(display, mstyle.ct_text_gc);
+    }
+    if (! mstyle.wa_cf_font.xft) {
+        XFreeGC(display, mstyle.cfh_text_gc);
+        XFreeGC(display, mstyle.cf_text_gc);
+    }
 
     net->DeleteSupported(this);
     XDestroyWindow(display, wm_check);
@@ -246,118 +264,192 @@ WaScreen::~WaScreen(void) {
  * Opens all fonts and sets frame height.
  */
 void WaScreen::CreateFonts(void) {
+    int w_diff, mf_diff, mt_diff, mb_diff, mct_diff, mcf_diff;
+    bool set_mih;
+    
+    if (! mstyle.item_height) set_mih = true;
+    else set_mih = false;
+
+    if (! (def_font = XLoadQueryFont(display, default_font.font))) {
+        ERROR << "failed loading default font \"" << default_font.font <<
+            "\"" << endl;
+        quit(1);
+    }
+    
 #ifdef XFT
-    double default_font_size = 12.0;
-    
-    if (wstyle.xftsize < 2.0) wstyle.xftsize = default_font_size;
-    if (! (wstyle.xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
-                                        XftTypeString, wstyle.xftfontname,
-                                        XFT_PIXEL_SIZE, XftTypeDouble,
-                                        wstyle.xftsize, 0))) {
-        ERROR << "couldn't load font \"" << wstyle.xftfontname << "\"" << endl;
-        quit(1);
+    if (wstyle.wa_font.xft) {
+        if (! (wstyle.xftfont = XftFontOpenName(display, screen_number,
+                                                wstyle.wa_font.font))) {
+            WARNING << "failed loading font pattern \"" <<
+                wstyle.wa_font.font << "\"" << endl;
+            wstyle.wa_font.xft = default_font.xft;
+            delete [] wstyle.wa_font.font;
+            wstyle.wa_font.font = wastrdup(default_font.font);
+        } else {
+            w_diff = wstyle.xftfont->ascent - wstyle.xftfont->descent;
+            if (! wstyle.title_height)
+                wstyle.title_height = wstyle.xftfont->height + 4;
+        }
     }
-    if (mstyle.f_xftsize < 2.0) mstyle.f_xftsize = default_font_size;
-    if (! (mstyle.f_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
-                                          XftTypeString, mstyle.f_xftfontname,
-                                          XFT_PIXEL_SIZE, XftTypeDouble,
-                                          mstyle.f_xftsize, 0))) {
-        ERROR << "couldn't load font \"" << mstyle.f_xftfontname << "\"" <<
-            endl;
-        quit(1);
+    if (mstyle.wa_f_font.xft) {
+        if (! (mstyle.f_xftfont = XftFontOpenName(display, screen_number,
+                                                  mstyle.wa_f_font.font))) {
+            WARNING << "failed loading font pattern \"" <<
+                mstyle.wa_f_font.font << "\"" << endl;
+            mstyle.wa_f_font.xft = default_font.xft;
+            delete [] mstyle.wa_f_font.font;
+            mstyle.wa_f_font.font = wastrdup(default_font.font);
+        } else {
+            mf_diff = mstyle.f_xftfont->ascent - mstyle.f_xftfont->descent;
+            if (set_mih)
+                mstyle.item_height = mstyle.f_xftfont->height + 2;
+        }
     }
-    if (mstyle.t_xftsize < 2.0) mstyle.t_xftsize = default_font_size;
-    if (! (mstyle.t_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
-                                          XftTypeString, mstyle.t_xftfontname,
-                                          XFT_PIXEL_SIZE, XftTypeDouble,
-                                          mstyle.t_xftsize, 0))) {
-        ERROR << "couldn't load font \"" << mstyle.t_xftfontname << "\"" <<
-            endl;
-        quit(1);
+    if (mstyle.wa_t_font.xft) {
+        if (! (mstyle.t_xftfont = XftFontOpenName(display, screen_number,
+                                                  mstyle.wa_t_font.font))) {
+            WARNING << "failed loading font pattern \"" <<
+                mstyle.wa_t_font.font << "\"" << endl;
+            mstyle.wa_t_font.xft = default_font.xft;
+            delete [] mstyle.wa_t_font.font;
+            mstyle.wa_t_font.font = wastrdup(default_font.font);
+        } else {
+            mt_diff = mstyle.t_xftfont->ascent - mstyle.t_xftfont->descent;
+            if (! mstyle.title_height)
+                mstyle.title_height = mstyle.t_xftfont->height + 2;
+        }
     }
-    if (mstyle.b_xftsize < 2.0) mstyle.b_xftsize = default_font_size;
-    if (! (mstyle.b_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
-                                          XftTypeString, mstyle.b_xftfontname,
-                                          XFT_PIXEL_SIZE, XftTypeDouble,
-                                          mstyle.b_xftsize, 0))) {
-        ERROR << "couldn't load font \"" << mstyle.b_xftfontname << "\"" <<
-            endl;
-        quit(1);
+    if (mstyle.wa_b_font.xft) {
+        if (! (mstyle.b_xftfont = XftFontOpenName(display, screen_number,
+                                                  mstyle.wa_b_font.font))) {
+            WARNING << "failed loading font pattern \"" <<
+                mstyle.wa_b_font.font << "\"" << endl;
+            mstyle.wa_b_font.xft = default_font.xft;
+            delete [] mstyle.wa_b_font.font;
+            mstyle.wa_b_font.font = wastrdup(default_font.font);
+        } else {
+            mb_diff = mstyle.b_xftfont->ascent - mstyle.b_xftfont->descent;
+            if (set_mih && mstyle.item_height <
+                (unsigned int) (mstyle.b_xftfont->height + 2))
+                mstyle.item_height = mstyle.b_xftfont->height + 2;
+        }
     }
-    if (mstyle.ct_xftsize < 2.0) mstyle.ct_xftsize = default_font_size;
-    if (! (mstyle.ct_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
-                                           XftTypeString,
-                                           mstyle.ct_xftfontname,
-                                           XFT_PIXEL_SIZE, XftTypeDouble,
-                                           mstyle.ct_xftsize, 0))) {
-        ERROR << "couldn't load font \"" << mstyle.ct_xftfontname << "\"" <<
-            endl;
-        quit(1);
+    if (mstyle.wa_ct_font.xft) {
+        if (! (mstyle.ct_xftfont = XftFontOpenName(display, screen_number,
+                                                   mstyle.wa_ct_font.font))) {
+            WARNING << "failed loading font pattern \"" <<
+                mstyle.wa_ct_font.font << "\"" << endl;
+            mstyle.wa_ct_font.xft = default_font.xft;
+            delete [] mstyle.wa_ct_font.font;
+            mstyle.wa_ct_font.font = wastrdup(default_font.font);
+        } else {
+            mct_diff = mstyle.ct_xftfont->ascent - mstyle.ct_xftfont->descent;
+            if (set_mih && mstyle.item_height <
+                (unsigned int) (mstyle.ct_xftfont->height + 2))
+                mstyle.item_height = mstyle.ct_xftfont->height + 2;
+        }
     }
-    if (mstyle.cf_xftsize < 2.0) mstyle.cf_xftsize = default_font_size;
-    if (! (mstyle.cf_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
-                                           XftTypeString,
-                                           mstyle.cf_xftfontname,
-                                           XFT_PIXEL_SIZE, XftTypeDouble,
-                                           mstyle.cf_xftsize, 0))) {
-        ERROR << "couldn't load font \"" << mstyle.cf_xftfontname << "\"" <<
-            endl;
-        quit(1);
+    if (mstyle.wa_cf_font.xft) {
+        if (! (mstyle.cf_xftfont = XftFontOpenName(display, screen_number,
+                                                   mstyle.wa_cf_font.font))) {
+            WARNING << "failed loading font pattern \"" <<
+                mstyle.wa_cf_font.font << "\"" << endl;
+            mstyle.wa_cf_font.xft = default_font.xft;
+            delete [] mstyle.wa_cf_font.font;
+            mstyle.wa_cf_font.font = wastrdup(default_font.font);
+        } else {
+            mcf_diff = mstyle.cf_xftfont->ascent - mstyle.cf_xftfont->descent;
+            if (set_mih && mstyle.item_height <
+                (unsigned int) (mstyle.cf_xftfont->height + 2))
+                mstyle.item_height = mstyle.cf_xftfont->height + 2;
+        }
     }
-    int w_diff = wstyle.xftfont->ascent - wstyle.xftfont->descent;
-    int mf_diff = mstyle.f_xftfont->ascent - mstyle.f_xftfont->descent;
-    int mt_diff = mstyle.t_xftfont->ascent - mstyle.t_xftfont->descent;
-    int mb_diff = mstyle.b_xftfont->ascent - mstyle.b_xftfont->descent;
-    int mct_diff = mstyle.ct_xftfont->ascent - mstyle.ct_xftfont->descent;
-    int mcf_diff = mstyle.cf_xftfont->ascent - mstyle.cf_xftfont->descent;
-
-    if (! wstyle.title_height)
-        wstyle.title_height = wstyle.xftfont->height + 4;
-    if (! mstyle.title_height)
-        mstyle.title_height = mstyle.t_xftfont->height + 2;
-    if (! mstyle.item_height)
-        mstyle.item_height = mstyle.f_xftfont->height + 2;
-#else // ! XFT
-    if (! (wstyle.font = XLoadQueryFont(display, wstyle.fontname))) {
-        ERROR << "couldn't load font \"" << wstyle.fontname << "\"" << endl;
-        quit(1);
-    }
-    if (! (mstyle.f_font = XLoadQueryFont(display, mstyle.f_fontname))) {
-        ERROR << "couldn't load font \"" << mstyle.f_fontname << "\"" << endl;
-        quit(1);
-    }
-    if (! (mstyle.t_font = XLoadQueryFont(display, mstyle.t_fontname))) {
-        ERROR << "couldn't load font \"" << mstyle.t_fontname << "\"" << endl;
-        quit(1);
-    }
-    if (! (mstyle.b_font = XLoadQueryFont(display, mstyle.b_fontname))) {
-        ERROR << "couldn't load font \"" << mstyle.b_fontname << "\"" << endl;
-        quit(1);
-    }
-    if (! (mstyle.ct_font = XLoadQueryFont(display, mstyle.ct_fontname))) {
-        ERROR << "couldn't load font \"" << mstyle.ct_fontname << "\"" << endl;
-        quit(1);
-    }
-    if (! (mstyle.cf_font = XLoadQueryFont(display, mstyle.cf_fontname))) {
-        ERROR << "couldn't load font \"" << mstyle.cf_fontname << "\"" << endl;
-        quit(1);
-    }
-    int w_diff = wstyle.font->ascent - wstyle.font->descent;
-    int mf_diff = mstyle.f_font->ascent - mstyle.f_font->descent;
-    int mt_diff = mstyle.t_font->ascent - mstyle.t_font->descent;
-    int mb_diff = mstyle.b_font->ascent - mstyle.b_font->descent;
-    int mct_diff = mstyle.ct_font->ascent - mstyle.ct_font->descent;
-    int mcf_diff = mstyle.cf_font->ascent - mstyle.cf_font->descent;
-
-    
-    if (! wstyle.title_height)
-        wstyle.title_height = wstyle.font->ascent + wstyle.font->descent + 4;
-    if (! mstyle.title_height)
-        mstyle.title_height = mstyle.t_font->ascent +
-            mstyle.t_font->descent + 2;
-    if (! mstyle.item_height) mstyle.item_height = mstyle.t_font->ascent + 
-	    mstyle.t_font->descent + 2;
 #endif // XFT
+    
+    if (! wstyle.wa_font.xft) {
+        if (! (wstyle.font = XLoadQueryFont(display, wstyle.wa_font.font))) {
+            WARNING << "failed loading font \"" << wstyle.wa_font.font <<
+                "\"" << endl;
+            wstyle.font = def_font;
+            wstyle.font_ok = false;
+        } else wstyle.font_ok = true;
+        w_diff = wstyle.font->ascent - wstyle.font->descent;
+        if (! wstyle.title_height)
+            wstyle.title_height = wstyle.font->ascent +
+                wstyle.font->descent + 4;
+    }
+    if (! mstyle.wa_f_font.xft) {
+        if (! (mstyle.f_font = XLoadQueryFont(display,
+                                              mstyle.wa_f_font.font))) {
+            WARNING << "failed loading font \"" << mstyle.wa_f_font.font <<
+                "\"" << endl;
+            mstyle.f_font = def_font;
+            mstyle.f_font_ok = false;
+        } else mstyle.f_font_ok = true;
+        mf_diff = mstyle.f_font->ascent - mstyle.f_font->descent;
+        if (set_mih)
+            mstyle.item_height = mstyle.f_font->ascent +
+                mstyle.f_font->descent + 4;
+    }
+    if (! mstyle.wa_t_font.xft) {
+        if (! (mstyle.t_font = XLoadQueryFont(display,
+                                              mstyle.wa_t_font.font))) {
+            WARNING << "failed loading font \"" << mstyle.wa_t_font.font <<
+                "\"" << endl;
+            mstyle.t_font = def_font;
+            mstyle.t_font_ok = false;
+        } else mstyle.t_font_ok = true;
+        mt_diff = mstyle.t_font->ascent - mstyle.t_font->descent;
+        if (! mstyle.title_height)
+            mstyle.title_height = mstyle.t_font->ascent +
+                mstyle.t_font->descent + 4;
+    }
+    if (! mstyle.wa_b_font.xft) {
+        if (! (mstyle.b_font = XLoadQueryFont(display,
+                                              mstyle.wa_b_font.font))) {
+            WARNING << "failed loading font \"" << mstyle.wa_b_font.font <<
+                "\"" << endl;
+            mstyle.b_font = def_font;
+            mstyle.b_font_ok = false;
+        } else mstyle.b_font_ok = true;
+        mb_diff = mstyle.b_font->ascent - mstyle.b_font->descent;
+        if (set_mih && mstyle.item_height <
+            (unsigned int) (mstyle.b_font->ascent +
+                            mstyle.b_font->descent + 4))
+            mstyle.item_height = mstyle.b_font->ascent +
+                mstyle.b_font->descent + 4;
+    }
+    if (! mstyle.wa_ct_font.xft) {
+        if (! (mstyle.ct_font = XLoadQueryFont(display,
+                                               mstyle.wa_ct_font.font))) {
+            WARNING << "failed loading font \"" << mstyle.wa_ct_font.font <<
+                "\"" << endl;
+            mstyle.ct_font = def_font;
+            mstyle.ct_font_ok = false;
+        } else mstyle.ct_font_ok = true;
+        mct_diff = mstyle.ct_font->ascent - mstyle.ct_font->descent;
+        if (set_mih && mstyle.item_height <
+            (unsigned int) (mstyle.ct_font->ascent +
+                            mstyle.ct_font->descent + 4))
+            mstyle.item_height = mstyle.ct_font->ascent +
+                mstyle.ct_font->descent + 4;
+    }
+    if (! mstyle.wa_cf_font.xft) {
+        if (! (mstyle.cf_font = XLoadQueryFont(display,
+                                               mstyle.wa_cf_font.font))) {
+            WARNING << "failed loading font \"" << mstyle.wa_cf_font.font <<
+                "\"" << endl;
+            mstyle.cf_font = def_font;
+            mstyle.cf_font_ok = false;
+        } else mstyle.cf_font_ok = true;
+        mcf_diff = mstyle.cf_font->ascent - mstyle.cf_font->descent;
+        if (set_mih && mstyle.item_height <
+            (unsigned int) (mstyle.cf_font->ascent +
+                            mstyle.cf_font->descent + 4))
+            mstyle.item_height = mstyle.cf_font->ascent +
+                mstyle.cf_font->descent + 4;
+    }
+    
     if (wstyle.title_height < 10) mstyle.title_height = 10;
     if (mstyle.title_height < 4) mstyle.title_height = 4;
     if (mstyle.item_height < 4) mstyle.item_height = 4;
@@ -403,54 +495,70 @@ void WaScreen::CreateColors(void) {
     mstyle.f_xftcolor = mstyle.f_text.getXftColor();
     mstyle.fh_xftcolor = mstyle.f_hilite_text.getXftColor();
     mstyle.t_xftcolor = mstyle.t_text.getXftColor();
-#else // ! XFT
-    gcv.foreground = wstyle.l_text_focus.getPixel();
-    gcv.font = wstyle.font->fid;
-    wstyle.l_text_focus_gc = XCreateGC(display, id, GCForeground | GCFont,
-                                       &gcv);
-    
-    gcv.foreground = wstyle.l_text_unfocus.getPixel();
-    gcv.font = wstyle.font->fid;
-    wstyle.l_text_unfocus_gc = XCreateGC(display, id, GCForeground | GCFont,
-                                         &gcv);
-
-    gcv.foreground = mstyle.f_text.getPixel();
-    gcv.font = mstyle.f_font->fid;
-    mstyle.f_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
-
-    gcv.foreground = mstyle.f_hilite_text.getPixel();
-    gcv.font = mstyle.f_font->fid;
-    mstyle.fh_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
-
-    gcv.foreground = mstyle.t_text.getPixel();
-    gcv.font = mstyle.t_font->fid;
-    mstyle.t_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
-
-    gcv.foreground = mstyle.f_text.getPixel();
-    gcv.font = mstyle.b_font->fid;
-    mstyle.b_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
-
-    gcv.foreground = mstyle.f_hilite_text.getPixel();
-    gcv.font = mstyle.b_font->fid;
-    mstyle.bh_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
-
-    gcv.foreground = mstyle.f_text.getPixel();
-    gcv.font = mstyle.ct_font->fid;
-    mstyle.ct_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
-    
-    gcv.foreground = mstyle.f_hilite_text.getPixel();
-    gcv.font = mstyle.ct_font->fid;
-    mstyle.cth_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
-
-    gcv.foreground = mstyle.f_text.getPixel();
-    gcv.font = mstyle.cf_font->fid;
-    mstyle.cf_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
-    
-    gcv.foreground = mstyle.f_hilite_text.getPixel();
-    gcv.font = mstyle.cf_font->fid;
-    mstyle.cfh_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
 #endif // XFT
+
+    if (! wstyle.wa_font.xft) {
+        gcv.foreground = wstyle.l_text_focus.getPixel();
+        gcv.font = wstyle.font->fid;
+        wstyle.l_text_focus_gc = XCreateGC(display, id, GCForeground | GCFont,
+                                           &gcv);
+        gcv.foreground = wstyle.l_text_unfocus.getPixel();
+        gcv.font = wstyle.font->fid;
+        wstyle.l_text_unfocus_gc = XCreateGC(display, id, GCForeground |
+                                             GCFont, &gcv);
+    }
+
+    if (! mstyle.wa_f_font.xft) {
+        gcv.foreground = mstyle.f_text.getPixel();
+        gcv.font = mstyle.f_font->fid;
+        mstyle.f_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
+
+        gcv.foreground = mstyle.f_hilite_text.getPixel();
+        gcv.font = mstyle.f_font->fid;
+        mstyle.fh_text_gc = XCreateGC(display, id, GCForeground | GCFont,
+                                      &gcv);
+    }
+
+    if (! mstyle.wa_t_font.xft) {
+        gcv.foreground = mstyle.t_text.getPixel();
+        gcv.font = mstyle.t_font->fid;
+        mstyle.t_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
+    }
+
+    if (! mstyle.wa_b_font.xft) {
+        gcv.foreground = mstyle.f_text.getPixel();
+        gcv.font = mstyle.b_font->fid;
+        mstyle.b_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
+
+        gcv.foreground = mstyle.f_hilite_text.getPixel();
+        gcv.font = mstyle.b_font->fid;
+        mstyle.bh_text_gc = XCreateGC(display, id, GCForeground | GCFont,
+                                      &gcv);
+    }
+
+    if (! mstyle.wa_ct_font.xft) {
+        gcv.foreground = mstyle.f_text.getPixel();
+        gcv.font = mstyle.ct_font->fid;
+        mstyle.ct_text_gc = XCreateGC(display, id, GCForeground | GCFont,
+                                      &gcv);
     
+        gcv.foreground = mstyle.f_hilite_text.getPixel();
+        gcv.font = mstyle.ct_font->fid;
+        mstyle.cth_text_gc = XCreateGC(display, id, GCForeground | GCFont,
+                                       &gcv);
+    }
+
+    if (! mstyle.wa_cf_font.xft) {
+        gcv.foreground = mstyle.f_text.getPixel();
+        gcv.font = mstyle.cf_font->fid;
+        mstyle.cf_text_gc = XCreateGC(display, id, GCForeground | GCFont,
+                                      &gcv);
+        
+        gcv.foreground = mstyle.f_hilite_text.getPixel();
+        gcv.font = mstyle.cf_font->fid;
+        mstyle.cfh_text_gc = XCreateGC(display, id, GCForeground | GCFont,
+                                       &gcv);
+    }
 }
 
 /**
@@ -963,8 +1071,8 @@ void WaScreen::Exit(XEvent *, WaAction *) {
 void WaScreen::TaskSwitcher(XEvent *, WaAction *) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
     waimea->taskswitch->Build(this);
-    waimea->taskswitch->Map(width / 2 - waimea->taskswitch->width / 2,
-                            height / 2 - waimea->taskswitch->height / 2);
+    waimea->taskswitch->ReMap(width / 2 - waimea->taskswitch->width / 2,
+                              height / 2 - waimea->taskswitch->height / 2);
     waimea->taskswitch->FocusFirst();
 }
 

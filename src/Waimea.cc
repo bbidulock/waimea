@@ -53,6 +53,7 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     hush = false;
     errors = 0;
     eh = NULL;
+    wascreen = NULL;
 
     action.sa_handler = signalhandler;
     action.sa_mask = sigset_t();
@@ -114,13 +115,13 @@ Waimea::~Waimea(void) {
     LISTDEL(wawindow_list_stacking_aot);
     LISTDEL(wawindow_list_stacking_aab);
     XSetErrorHandler(NULL);
-    delete wascreen;
+    if (wascreen) delete wascreen;
     delete net;
     delete rh;
     LISTDEL(always_on_top_list);
     LISTDEL(always_at_bottom_list);
     HASHDEL(window_table);
-    delete eh;
+    if (eh) delete eh;
 
     XSync(display, false);
     XCloseDisplay(display);

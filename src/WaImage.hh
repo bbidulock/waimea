@@ -38,7 +38,7 @@ class WaImageControl;
 class WaColor {
 private:
     int allocated;
-    unsigned char red, green, blue;
+    unsigned char red, green, blue, opacity;
     unsigned long pixel;
     
 #ifdef XRENDER
@@ -61,17 +61,15 @@ public:
     inline const unsigned long &getPixel(void) const { return pixel; }
 
     inline void setAllocated(int a) { allocated = a; }
-    inline void setRGB(char r, char g, char b) { red = r; green = g; blue = b;
-    }
     inline void setPixel(unsigned long p) { pixel = p; }
+    void setRGB(unsigned short, unsigned short, unsigned short);
 
 #ifdef XRENDER
-    void XRenderCreateColor(Display *, Window, Colormap);
     inline XRenderColor *getXRenderColor(void) { return &xrenderc; }
 #endif // XRENDER
     
 #ifdef XFT
-    void XftCreateColor(Display *, Window, Colormap);
+    void setXftOpacity(unsigned char);
     inline XftColor *getXftColor(void) { return &xftc; }
 #endif // XFT
 
@@ -275,8 +273,8 @@ public:
     inline const int &getColorsPerChannel(void) const
         { return colors_per_channel; }
     unsigned long getColor(const char *);
-    unsigned long getColor(const char *, unsigned char *, unsigned char *,
-                           unsigned char *);
+    unsigned long getColor(const char *, unsigned short *, unsigned short *,
+                           unsigned short *);
     unsigned long getSqrt(unsigned int);
     Pixmap renderImage(unsigned int, unsigned int, WaTexture *,
                        Pixmap = None, unsigned int = 0, unsigned int = 0,

@@ -54,7 +54,6 @@ static unsigned long bsqrt(unsigned long x) {
 }
 
 #ifdef XRENDER
-
 bool have_root_pmap = true;
 
 int WaTexture::getOpacity(void) {
@@ -63,34 +62,32 @@ int WaTexture::getOpacity(void) {
     
     return 0;
 }
-
-void WaColor::XRenderCreateColor(Display *display, Window id,
-                                 Colormap colormap) {
-    XGCValues gcv;
-    XColor tmp_color;
-    GC tmp_gc;
-    
-    gcv.foreground = getPixel();
-    tmp_gc = XCreateGC(display, id, GCForeground, &gcv);
-    XGetGCValues(display, tmp_gc, GCForeground, &gcv);
-    tmp_color.pixel = gcv.foreground;
-    XQueryColor(display, colormap, &tmp_color);
-    xrenderc.red = tmp_color.red;
-    xrenderc.green = tmp_color.green;
-    xrenderc.blue = tmp_color.blue;
-    xrenderc.alpha = 0xffff;
-
-    XFreeGC(display, tmp_gc);
-}
 #endif // XRENDER
 
+void WaColor::setRGB(unsigned short r, unsigned short g, unsigned short b) {
+    
+#ifdef XRENDER
+    xrenderc.red = r;
+    xrenderc.green = g;
+    xrenderc.blue = b;
+    xrenderc.alpha = 0xFFFF;
+#endif // XRENDER
+    
+    if (r == 65535) red = 0xff;
+    else red = (r / 0xff);
+    if (g == 65535) green = 0xff;
+    else green = (g / 0xff);
+    if (b == 65535) blue = 0xff;
+    else blue = (b / 0xff);        
+}
+
 #ifdef XFT
-void WaColor::XftCreateColor(Display *display, Window id, Colormap colormap) {
-    xftc.color.red = xrenderc.red;
-    xftc.color.green = xrenderc.green;
-    xftc.color.blue = xrenderc.blue;
-    xftc.color.alpha = xrenderc.alpha;
-    xftc.pixel = getPixel();
+void WaColor::setXftOpacity(unsigned char o) {
+    xftc.color.red = xrenderc.red * (100 - o) / 100;
+    xftc.color.green = xrenderc.green * (100 - o) / 100;
+    xftc.color.blue = xrenderc.blue * (100 - o) / 100;
+    xftc.color.alpha = 0xFFFF * (100 - o) / 100;
+    xftc.pixel = getPixel();        
 }
 #endif // XFT
 
@@ -2205,22 +2202,19 @@ void WaImageControl::removeImage(Pixmap pixmap) {
 }
 
 unsigned long WaImageControl::getColor(const char *colorname,
-                                      unsigned char *r, unsigned char *g,
-                                      unsigned char *b) {
+                                       unsigned short *r, unsigned short *g,
+                                       unsigned short *b) {
     XColor color;
     color.pixel = 0;
-
+    
     if (! XParseColor(display, colormap, colorname, &color))
         WARNING << "color parse error: \"" << colorname << "\"" << endl;
     else if (! XAllocColor(display, colormap, &color))
         WARNING << "color alloc error: \"" << colorname << "\"" << endl;
-
-    if (color.red == 65535) *r = 0xff;
-    else *r = (unsigned char) (color.red / 0xff);
-    if (color.green == 65535) *g = 0xff;
-    else *g = (unsigned char) (color.green / 0xff);
-    if (color.blue == 65535) *b = 0xff;
-    else *b = (unsigned char) (color.blue / 0xff);
+    
+    *r = color.red;
+    *g = color.green;
+    *b = color.blue;
     
     return color.pixel;
 }
@@ -2419,7 +2413,7 @@ void WaImageControl::parseColor(WaColor *color, char *c) {
         color->setAllocated(false);
     }
     if (c) {
-        unsigned char r, g, b;
+        unsigned short r, g, b;    
        
         color->setPixel(getColor(c, &r, &g, &b));
         color->setRGB(r, g, b);
