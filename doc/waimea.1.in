@@ -235,7 +235,7 @@ or not.
 .B screen0.dock[num].geometry:     OffsetString
 Define dockappholder position, X offset string of form:
 [{+-}<xoffset>{+-}<yoffset>]. See 
-.BR X(1).
+.BR X(7).
 
 .TP
 .B screen0.dock[num].order:     Regular Expression List
@@ -295,7 +295,7 @@ is False.
 enables you to use 
 .I blackbox 
 specialized style files that contain 
-.BR X(1)
+.BR X(7)
 resources to specify colors, textures and fonts, and thus the 
 overall look of your window decorations and menus. 
 However there are a few keys in 
@@ -308,7 +308,7 @@ styles.
 .PP
 To understand how the style mechanism works, you should have a little 
 knowledge of how X resources work. See 
-.BR X(1) 
+.BR X(7) 
 for this.
 .PP
 .I Waimea 
@@ -319,14 +319,14 @@ Here are the different types of values:
 .TP
 .B Color
 Is a color name. See
-.BR X(1)
+.BR X(7)
 for how to write valid color names. 
 e.g.: 'green'.
 .TP
 .B Font
 XLFD (X core font) or Xft font name. Xft font names must be followed by [xft] 
 suffix. See
-.BR X(1)
+.BR X(7)
 for how to write valid XLFD font names.
 .br
 e.g.:
@@ -1158,7 +1158,7 @@ in the opposite direction.
 Moves viewport relative to its current position. MUST have an X offset 
 string as parameter:
 [{+-}<xoffset>{+-}<yoffset>] See
-.BR X(1).
+.BR X(7).
 The xoffset and yoffset values defines the number of pixels to move the
 viewport. A 'W' character in the OffsetString is replaced with 
 screenwidth. A 'H' character in the OffsetString is replace with 
@@ -1170,7 +1170,7 @@ screenheight.
 Moves viewport to a fixed position. MUST have an X offset 
 string as parameter:
 [{+-}<xoffset>{+-}<yoffset>] See 
-.BR X(1).
+.BR X(7).
 The xoffset and yoffset values defines the new viewport position.
 {+-} signs defines viewport gravity. A 'W' character in the OffsetString
 is replaced with screenwidth. A 'H' character in the OffsetString is 
@@ -1207,7 +1207,7 @@ window.
 Warps pointer relative to its current position. MUST have an X offset
 string as parameter:
 [{+-}<xoffset>{+-}<yoffset>] See
-.BR X(1).
+.BR X(7).
 The xoffset and yoffset values defines the number of pixels to warp the
 pointer.
 
@@ -1217,7 +1217,7 @@ pointer.
 Warp pointer to a fixed position. MUST have an X offset
 string as parameter:
 [{+-}<xoffset>{+-}<yoffset>] See  
-.BR X(1).
+.BR X(7).
 The xoffset and yoffset values defines the new pointer position.
 {+-} signs defines pointer gravity.
 
@@ -1463,7 +1463,7 @@ events.
 .RS
 MUST have an X11 geometry string as parameter:
 [<width>{xX}<height>][{+-}<xoffset>{+-}<yoffset>] See
-.BR X(1).
+.BR X(7).
 Sets window geometry. moveresize action moves window to a actual screen 
 position. moveresizevirtual action moves window to a virtual screen
 position. A 'W' character in the OffsetString is replaced with
@@ -1946,4 +1946,4 @@ The Waimea website:
 .ny
 .SH "SEE ALSO"
 .BR blackbox (1), 
-.BR X (1)
+.BR X (7)

@@ -175,7 +175,7 @@ public:
 #ifdef SHAPE
     int shape, shape_event;
 #endif // SHAPE
-
+    
 };
 
 bool validateclient(Window);

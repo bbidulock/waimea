@@ -221,6 +221,10 @@ public:
     list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
         *handleacts, *lgacts, *rgacts;
     list<WaAction *> **bacts;
+
+#ifdef XRENDER
+    bool render_if_opacity;
+#endif // XRENDER
     
 private:
     void ReparentWin(void);

@@ -72,6 +72,11 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
 #ifdef SHAPE
     shaped = false;
 #endif //SHAPE
+
+#ifdef XRENDER
+    render_if_opacity = false;
+#endif // XRENDER
+
     
     border_w = title_w = handle_w = 0;
     has_focus = false;
@@ -627,8 +632,10 @@ void WaWindow::RedrawWindow(void) {
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
         
 #ifdef XRENDER
+        render_if_opacity = true;
         DrawTitlebar();
         DrawHandlebar();
+        render_if_opacity = false;
 #endif // XRENDER
 
     }
@@ -2921,7 +2928,8 @@ void WaChildWindow::Render(void) {
         xpixmap = XCreatePixmap(wascreen->pdisplay, wascreen->id,
                                 attrib.width, attrib.height,
                                 wascreen->screen_depth);
-    }
+    } else if (wa->render_if_opacity) return;
+
 #endif // XRENDER
     
     switch (type) {

@@ -3,41 +3,49 @@ use POSIX;
 
 my $title = "styles";
 my $stylesdir = "@pkgdatadir@/styles";
-
-print "[title] ($title)\n";
+my $homestylesdir = "$ENV{HOME}/.waimea/styles";
+@Styles = ();
 
 if (! $ARGV[0]) {
     print_directory($stylesdir);
+    print_directory($homestylesdir);
 }
 else {
     print_directory($ARGV[0]);
 }
 
-sub print_directory {
-    my $mode;
-    my $temp;
-    my @dir_list;
-
-    opendir(DIR, $_[0]) || die "can't opendir $_[0]: $!";
-    @dir_list = grep { /^[^\.].*/ || /^\.\..*/} readdir(DIR);
-    closedir DIR;
-    
-    while ($temp = shift @dir_list) {
-	$mode = (stat("$_[0]\/$temp"))[2];
-	if (!($temp eq '..' || $temp eq '.')) {
-	    if (S_ISDIR($mode)) {
-		print_directory("$_[0]\/$temp");
-	    }
-	    else {
-		if (S_ISREG($mode)) {
-		    $_ = $temp;
-		    if (/(.+)\.style$/) {
-			print "[item] ($1) \"restart(waimea --stylefile=";
-			print "$_[0]\/$temp)\"\n";
-		    }
-		}
-	    }
-	}
+if (@Styles) {
+    print "[title] ($title)\n";
+    foreach $Style (@Styles) {
+       print $Style;
     }
-    return 0;
+}                                                                     
+
+sub print_directory {
+	my $mode;
+	my $temp;
+	my @dir_list;
+
+	opendir(DIR, $_[0]) || die "can't opendir $_[0]: $!";
+	@dir_list = grep { /^[^\.].*/ || /^\.\..*/} readdir(DIR);
+	closedir DIR;
+
+	while ($temp = shift @dir_list) {
+		$mode = (stat("$_[0]\/$temp"))[2];
+		if (!($temp eq '..' || $temp eq '.')) {
+			if (S_ISDIR($mode)) {
+				print_directory("$_[0]\/$temp");
+			} else {
+				if (S_ISREG($mode)) {
+					$_ = $temp;
+					if (/(.+)\.style$/) {
+						$Item = "[item] ($1) \"restart(waimea --stylefile=" .
+							"$_[0]\/$temp)\"\n";
+						push(@Styles, $Item);
+					}
+				}
+			}
+		}
+	}
+	return 0;
 }
