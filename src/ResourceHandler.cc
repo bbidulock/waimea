@@ -1732,6 +1732,8 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     
     act_tmp = new WaAction;
     act_tmp->replay = false;
+    act_tmp->delay.tv_sec = act_tmp->delay.tv_usec = 0;
+    act_tmp->delay_breaks = NULL;
     
     line = wastrdup((char *) s);
     
@@ -1816,8 +1818,9 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     else {
         if (mod) token = strtok(NULL, "&");
         else {
-            for (; *token != ' ' && *token != ':'; token++);
-            for (; *token == '\0'; token++);
+            token = strtok(NULL, "[");
+            //for (; *token != ' ' && *token != ':'; token++);
+            //for (; *token == '\0'; token++);
         }
     }
     token = strtrim(token);
@@ -1840,8 +1843,9 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     if (detail) {
         if (mod) token = strtok(NULL, "&");
         else {
-            token += strlen(token) + 1;
-            for (; *token == '\0'; token++);
+            token = strtok(NULL, "[");
+            //token += strlen(token) + 1;
+            //for (; *token == '\0'; token++);
         }
         token = strtrim(token);
         if (act_tmp->type == KeyPress || act_tmp->type == KeyRelease) {
@@ -1878,8 +1882,9 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     bool negative;
     act_tmp->mod = act_tmp->nmod = 0;
     if (mod) {
-        token += strlen(token) + 1;
-        for (; *token == '\0'; token++);
+        //token += strlen(token) + 1;
+        token = strtok(NULL, "[");
+        //for (; *token == '\0'; token++);
         for (token = strtok(token, "&"); token; token = strtok(NULL, "&")) {
             token = strtrim(token);
             negative = false;
@@ -1903,7 +1908,32 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                 return;
             }
         }
-    }    
+    }
+    if (token = strtok(NULL, "]")) {
+        int msdelay = 0;
+        act_tmp->delay_breaks = new list<int>;
+        if (token = strtok(token, ":")) {
+            token = strtrim(token);
+            msdelay = atoi(token);
+            act_tmp->delay.tv_usec = (msdelay % 1000) * 1000;
+            act_tmp->delay.tv_sec = msdelay / 1000;
+            act_tmp->delay_breaks = new list<int>;
+            while (token = strtok(NULL, "|")) {
+                token = strtrim(token);
+                it = types->begin();
+                for (; it != types->end(); ++it) {
+                    if ((*it)->Comp(token)) {
+                        act_tmp->delay_breaks->push_back((*it)->value);
+                        break;
+                    }
+                }
+                if (! *it) {
+                    WARNING << "\"" << token <<
+                        "\" unknown break event type" << endl;
+                }
+            }
+        }
+    }
     delete [] line;
     insert->push_back(act_tmp);
 }
@@ -1972,7 +2002,8 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         if ((strcasecmp(s, "start") && strcasecmp(s, "begin"))) {
             if (menu == NULL) {
                 WARNING << "(" << basename(menu_file) << ":" << linenr << 
-                    "): bad tag, expected [start], [begin] or [include]" << endl;
+                    "): bad tag, expected [start], [begin] or [include]" <<
+                    endl;
                 continue;
             }
         }

@@ -930,6 +930,24 @@ create a startresize
 that will be performed when a ButtonPress
 event is received from Button1 and at least mod1 modifier is active
 and the control modifier is not active.
+
+.PP 
+.I Waimea
+also supports delayed actions. A delay is defined within brackets at the
+end of the action line. A delay definition consists of a delay time in 
+milliseconds followed by an optional delay break event list. The delay 
+break list is a list of events that if occuring during the delay time will
+discard the action. The delay time and the delay break list are seperated 
+with a colon and the events in the delay break list are seperated with
+pipe signs. e.g.:
+.nf
+
+Raise : EnterNotify [2000 : LeaveNotify | ButtonPress]
+
+.fi
+Adds a 2000 milliseconds delay to the Raise action, LeaveNotify and 
+ButtonPress events will discard the action.
+
 .PP
 Here is the list of all windows that you can create actions for
 (to define individual actions for a specific window just replace 'window.*'

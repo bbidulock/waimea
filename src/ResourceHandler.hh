@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include <sys/time.h>
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
 
@@ -72,6 +73,8 @@ struct _WaAction {
     char *param;
     unsigned int type, detail, mod, nmod;
     bool replay;
+    struct timeval delay;
+    list<int> *delay_breaks;
 };
 
 typedef struct {

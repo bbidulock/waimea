@@ -19,4 +19,5 @@ waimea_SOURCES = main.cc \
 		 WaImage.cc \
 		 WaMenu.cc \
 		 NetHandler.cc \
-		 DockappHandler.cc
+		 DockappHandler.cc \
+                 Timer.cc

@@ -11,14 +11,15 @@
  *
  */
 
-#include "Waimea.hh"
-
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include "Waimea.hh"
+
 
 Waimea *waimea;
 char **argv;
@@ -53,6 +54,7 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     hush = false;
     errors = 0;
     eh = NULL;
+    timer = NULL;
     wascreen = NULL;
 
     action.sa_handler = signalhandler;
@@ -94,6 +96,7 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     
     WaRaiseWindow((Window) 0);
     eh = new EventHandler(this);
+    timer = new Timer(this);
 }
 
 /**
@@ -122,6 +125,7 @@ Waimea::~Waimea(void) {
     LISTDEL(always_at_bottom_list);
     HASHDEL(window_table);
     if (eh) delete eh;
+    if (timer) delete timer;
 
     XSync(display, false);
     XCloseDisplay(display);

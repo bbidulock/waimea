@@ -22,6 +22,8 @@
  *
  * Sets waimea and rh pointers. Creates menu move return mask, window
  * move/resize return mask and empty return mask hash_sets.
+ *
+ * @param wa Pointer to waimea object
  */
 EventHandler::EventHandler(Waimea *wa) {
     waimea = wa;
@@ -71,12 +73,10 @@ EventHandler::~EventHandler(void) {
  * @fn    EventLoop(hash_set<int> *return_mask, XEvent *event)
  * @brief Eventloop
  *
- * Infinite loop waiting for an event to occur. Executes a matching function
- * for an event then it occurs. If what to do when an event occurs is
- * controlled by a action list we set etype, edetail and emod variables and
- * jump into EvAct() function. This function can be called from move and resize
- * functions the return_mask hash_set is then used for deciding if an event
- * should be processed as normal or returned to the function caller.
+ * Infinite loop waiting for an event to occur. This function can be called
+ * from move and resize functions the return_mask hash_set is then used for
+ * deciding if an event should be processed as normal or returned to the
+ * function caller.
  *
  * @param return_mask hash_set to use as return_mask
  * @param event Pointer to allocated event structure
@@ -91,6 +91,16 @@ void EventHandler::EventLoop(hash_set<int> *return_mask, XEvent *event) {
     }
 }
 
+/**
+ * @fn    HandleEvent(XEvent *event);
+ * @brief Eventloop
+ *
+ * Executes a matching function for an event. If what to do for an
+ * event is controlled by an action list we set etype, edetail and emod
+ * variables and call the EvAct() function.
+ *
+ * @param event Pointer to allocated event structure
+ */
 void EventHandler::HandleEvent(XEvent *event) {
     Window w;
     int i, rx, ry;
@@ -574,6 +584,9 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
     if ((it = waimea->window_table->find(win)) !=
         waimea->window_table->end()) {
         wo = (*it).second;
+
+        waimea->timer->ValidateInterrupts(e);
+        
         switch (wo->type) {
             case FrameType:
                 wa = ((WaChildWindow *) wo)->wa;

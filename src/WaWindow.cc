@@ -2703,10 +2703,16 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
             match = true;
             XAutoRepeatOn(display);
             if ((*it)->replay && ! wait_release) replay = true;
-            if ((*it)->exec)
-                waexec((*it)->exec, wascreen->displaystring);
-            else
-                ((*this).*((*it)->winfunc))(e, *it);
+            if ((*it)->delay.tv_sec || (*it)->delay.tv_usec) {
+                Interrupt *i = new Interrupt(*it, e);
+                i->win = id;
+                waimea->timer->AddInterrupt(i);
+            } else {
+                if ((*it)->exec)
+                    waexec((*it)->exec, wascreen->displaystring);
+                else
+                    ((*this).*((*it)->winfunc))(e, *it);
+            }
         }
     }
     if (waimea->eh->move_resize != EndMoveResizeType) return;

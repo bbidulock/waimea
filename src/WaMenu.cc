@@ -1493,10 +1493,16 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     list<WaAction *>::iterator it = acts->begin();
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
-            if ((*it)->exec)
-                waexec((*it)->exec, menu->wascreen->displaystring);
-            else 
-                ((*this).*((*it)->menufunc))(e, *it);
+            if ((*it)->delay.tv_sec || (*it)->delay.tv_usec) {
+                Interrupt *i = new Interrupt(*it, e);
+                i->wm = this;
+                menu->waimea->timer->AddInterrupt(i);
+            } else {
+                if ((*it)->exec)
+                    waexec((*it)->exec, menu->wascreen->displaystring);
+                else 
+                    ((*this).*((*it)->menufunc))(e, *it);
+            }
         }
     }
     if (ed->type == EnterNotify) {

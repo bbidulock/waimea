@@ -757,7 +757,7 @@ void WaScreen::MoveViewport(int direction) {
             if (v_x > 0) {
                 if ((v_x - width) < 0) vd = v_x;
                 else vd = width;
-                XWarpPointer(display, None, None, 0, 0, 0, 0, vd - 4, 0);
+                XWarpPointer(display, None, None, 0, 0, 0, 0, vd - 6, 0);
                 MoveViewportTo(v_x - vd, v_y);
             }
             break;
@@ -765,7 +765,7 @@ void WaScreen::MoveViewport(int direction) {
             if (v_x < v_xmax) {
                 if ((v_x + width) > v_xmax) vd = v_xmax - v_x;
                 else vd = width;
-                XWarpPointer(display, None, None, 0, 0, 0, 0, 4 - vd, 0);
+                XWarpPointer(display, None, None, 0, 0, 0, 0, 6 - vd, 0);
                 MoveViewportTo(v_x + vd, v_y);
             }
             break;
@@ -773,7 +773,7 @@ void WaScreen::MoveViewport(int direction) {
             if (v_y > 0) {
                 if ((v_y - height) < 0) vd = v_y;
                 else vd = height;
-                XWarpPointer(display, None, None, 0, 0, 0, 0, 0, vd - 4);
+                XWarpPointer(display, None, None, 0, 0, 0, 0, 0, vd - 6);
                 MoveViewportTo(v_x, v_y - vd);
             }
             break;
@@ -781,7 +781,7 @@ void WaScreen::MoveViewport(int direction) {
             if (v_y < v_ymax) {
                 if ((v_y + height) > v_ymax) vd = v_ymax - v_y;
                 else vd = height;
-                XWarpPointer(display, None, None, 0, 0, 0, 0, 0, 4 - vd);
+                XWarpPointer(display, None, None, 0, 0, 0, 0, 0, 6 - vd);
                 MoveViewportTo(v_x, v_y + vd);
             }
     }
@@ -1141,10 +1141,17 @@ void WaScreen::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     list<WaAction *>::iterator it = acts->begin();
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
-            if ((*it)->exec)
-                waexec((*it)->exec, displaystring);
-            else
-                ((*this).*((*it)->rootfunc))(e, *it);
+            if ((*it)->delay.tv_sec || (*it)->delay.tv_usec) {
+                Interrupt *i = new Interrupt(*it, e);
+                i->ws = this;
+                waimea->timer->AddInterrupt(i);
+            }
+            else {
+                if ((*it)->exec)
+                    waexec((*it)->exec, displaystring);
+                else
+                    ((*this).*((*it)->rootfunc))(e, *it);
+            }
         }
     }
 }

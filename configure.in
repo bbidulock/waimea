@@ -228,7 +228,7 @@ if test x$enableval = "xyes"; then
 #include <Imlib2.h>
       ,,
       AC_MSG_RESULT([yes])
-      PIXMAP="-DPIXMAP"; Imlib2_lib=" -lImlib2",
+      PIXMAP="-DPIXMAP"; Imlib2_lib="-lImlib2",
       AC_MSG_RESULT([no])
       AC_MSG_RESULT([** WARNING: Imlib2.h is missing])
       AC_MSG_RESULT([** WARNING: Disabled pixmap support])

@@ -48,6 +48,7 @@ public:
 #include "ResourceHandler.hh"
 #include "WaWindow.hh"
 #include "WaScreen.hh"
+#include "Timer.hh"
 
 #define WARNING cerr << "Warning: " << __FUNCTION__ << ": "
 #define ERROR cerr << "Error: " << __FUNCTION__ << ": "
@@ -141,6 +142,7 @@ public:
     EventHandler *eh;
     NetHandler *net;
     TaskSwitcher *taskswitch;
+    Timer *timer;
     Cursor session_cursor, move_cursor, resizeleft_cursor, resizeright_cursor;
     
     hash_map<long unsigned int, WindowObject *> *window_table;
