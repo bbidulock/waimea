@@ -245,8 +245,6 @@ WaScreen::~WaScreen(void) {
     XDestroyWindow(display, wm_check);
 
     LISTDEL(docks);
-    LISTDEL(strut_list);
-    LISTDEL(wamenu_list);
 
     WaWindow **delstack = new WaWindow*[wawindow_list.size()];
     int stackp = 0;
@@ -279,6 +277,8 @@ WaScreen::~WaScreen(void) {
     LISTCLEAR(always_on_top_list);
     LISTCLEAR(always_at_bottom_list);
 
+    LISTDEL(strut_list);
+    
     list<ButtonStyle *>::iterator bit = wstyle.buttonstyles.begin();
     for (; bit != wstyle.buttonstyles.end(); ++bit) {
         if ((*bit)->fg) {            
@@ -1474,7 +1474,6 @@ void WaScreen::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
  * @param ac WaAction object
  */
 void WaScreen::Restart(XEvent *, WaAction *ac) {
-    WARNING << "restart" << endl;
     if (ac->param)
         restart(ac->param);
     else

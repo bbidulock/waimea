@@ -40,6 +40,7 @@
 WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     WindowObject(win_id, WindowType) {
     XWindowAttributes init_attrib;
+    char *__m_wastrdup_tmp;
 
     id = win_id;
     wascreen = scrn;
@@ -51,7 +52,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     wm_strut = NULL;
     move_resize = false;
     classhint = NULL;
-    name = NULL;
+    name = __m_wastrdup("");
 
     XGrabServer(display);
     if (validateclient(id))
@@ -139,7 +140,8 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     net->GetWmStrut(this);
     
     ReparentWin();
-    SetActionLists();
+    if (! net->GetNetName(this)) net->GetXaName(this);
+    if (*name == '\0') SetActionLists();
     UpdateGrabs();
 
 #ifdef SHAPE

@@ -85,6 +85,8 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_WORKAREA", false);
     net_wm_name =
         XInternAtom(display, "_NET_WM_NAME", false);
+    net_wm_visible_name =
+        XInternAtom(display, "_NET_WM_VISIBLE_NAME", false);
     net_restart =
         XInternAtom(display, "_NET_RESTART", false);
     net_shutdown =
@@ -161,11 +163,6 @@ void NetHandler::GetWMHints(WaWindow *ww) {
     ww->state = NormalState;
     XGrabServer(display);
     if (validateclient(ww->id)) {
-        if (XFetchName(ww->display, ww->id, &tmp_name)) {
-            ww->name = __m_wastrdup(tmp_name);
-            XFree(tmp_name);
-        } else
-            ww->name = __m_wastrdup("");
         if ((wm_hints = XGetWMHints(display, ww->id)))
             if (wm_hints->flags & StateHint)
                 ww->state = wm_hints->initial_state;
@@ -501,7 +498,7 @@ void NetHandler::SetWmState(WaWindow *ww) {
  * @param ws WaScreen object
  */
 void NetHandler::SetSupported(WaScreen *ws) {
-    CARD32 data[35];
+    CARD32 data[37];
     int i = 0;
     
     data[i++] = net_current_desktop;
@@ -527,6 +524,8 @@ void NetHandler::SetSupported(WaScreen *ws) {
     data[i++] = net_maximized_vert;
     data[i++] = net_maximized_horz;
     data[i++] = net_wm_strut;
+    data[i++] = net_wm_name;
+    data[i++] = net_wm_visible_name;
 
     data[i++] = net_state_decor;
     data[i++] = net_state_decortitle;
@@ -773,6 +772,88 @@ void NetHandler::GetVirtualPos(WaWindow *ww) {
         }
     } else ww->deleted = true;
     XUngrabServer(display);
+}
+
+/**
+ * @fn    GetXaName(WaWindow *ww)
+ * @brief Reads window title
+ *
+ * Reads WM_NAME hint and if hint exists the window title is set to this
+ * and _NET_WM_VISIBLE_HINT is updated.
+ *
+ * @param ww WaWindow object
+ */
+void NetHandler::GetXaName(WaWindow *ww) {
+    char *data;
+    int status;
+    char *__m_wastrdup_tmp;
+    
+    XGrabServer(display);
+    if (validateclient(ww->id)) {
+        status = XFetchName(display, ww->id, &data);
+    } else ww->deleted = true;
+    XUngrabServer(display);
+
+    if (status) {
+        delete [] ww->name;
+        ww->name = __m_wastrdup(data);
+        ww->SetActionLists();
+        if (ww->title_w) ww->label->Draw();
+        XFree(data);
+    }
+        
+    XGrabServer(display);
+    if (validateclient(ww->id)) {
+        XChangeProperty(display, ww->id, net_wm_visible_name,
+                            XA_STRING, 8, PropModeReplace,
+                            (unsigned char *) ww->name, strlen(ww->name));
+    } else ww->deleted = true;
+    XUngrabServer(display);
+}
+
+/**
+ * @fn    GetNetName(WaWindow *ww)
+ * @brief Reads window title
+ *
+ * Reads _NET_WM_NAME hint and if hint exists the window title is set to this
+ * and _NET_WM_VISIBLE_HINT is updated.
+ *
+ * @param ww WaWindow object
+ *
+ * @return True if _NET_WM_NAME hint did exist otherwise false
+ */
+bool NetHandler::GetNetName(WaWindow *ww) {
+    char *data;
+    int status;
+    char *__m_wastrdup_tmp;
+    
+    XGrabServer(display);
+    if (validateclient(ww->id)) {
+        status = XGetWindowProperty(display, ww->id, net_wm_name, 0L, 8192L, 
+                                    false, XA_STRING, &real_type,
+                                    &real_format, &items_read, &items_left, 
+                                    (unsigned char **) &data);
+    } else ww->deleted = true;
+    XUngrabServer(display);
+    
+    if (status == Success && items_read) {
+        delete [] ww->name;
+        ww->name = __m_wastrdup(data);
+        ww->SetActionLists();
+        if (ww->title_w) ww->label->Draw();
+        XFree(data);
+
+        XGrabServer(display);
+        if (validateclient(ww->id)) {
+            XChangeProperty(display, ww->id, net_wm_visible_name,
+                            XA_STRING, 8, PropModeReplace,
+                            (unsigned char *) ww->name, strlen(ww->name));
+        } else ww->deleted = true;
+        XUngrabServer(display);
+
+        return true;
+    }
+    return false;
 }
 
 /**

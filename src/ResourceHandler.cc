@@ -1566,7 +1566,7 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
 
 #ifdef PIXMAP
     if (texture->getTexture() & WaImage_Pixmap) {
-        int clen = strlen(rclass) + 10, nlen = strlen(rname) + 10;
+        int clen = strlen(rclass) + 20, nlen = strlen(rname) + 20;
         char *pixmapclass = new char[clen], *pixmapname = new char[nlen];
         char pixmap_path[1024];
 
@@ -1598,11 +1598,34 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
         if (image) {
             texture->setPixmap(image);
             if (texture->getTexture() & WaImage_Stretch) {
+                sprintf(pixmapclass, "%s.Border", rclass);
+                sprintf(pixmapname,  "%s.border", rname);
+                
                 imlib_context_set_image(image);
-                bd.left = imlib_image_get_width() / 2;
-                bd.right = imlib_image_get_width() - bd.left - 1;
-                bd.top = imlib_image_get_height() / 2;
-                bd.bottom = imlib_image_get_height() - bd.top - 1;
+                if (XrmGetResource(database, pixmapname, pixmapclass,
+                                   &value_type, &value)) {
+                    sscanf(value.addr, "{ %u, %u, %u, %u }",
+                           &bd.left, &bd.right, &bd.top, &bd.bottom);
+                    if (bd.left > imlib_image_get_width())
+                        bd.left = imlib_image_get_width();
+                    if (bd.right > imlib_image_get_width())
+                        bd.right = imlib_image_get_width();
+                    if ((bd.left + bd.right) > imlib_image_get_width())
+                        bd.right = imlib_image_get_width() - bd.left - 1;
+
+                    if (bd.top > imlib_image_get_height())
+                        bd.top = imlib_image_get_height();
+                    if (bd.bottom > imlib_image_get_height())
+                        bd.bottom = imlib_image_get_height();
+                    if ((bd.top + bd.bottom) > imlib_image_get_height())
+                        bd.bottom = imlib_image_get_width() - bd.top - 1;
+                }
+                else {
+                    bd.left = imlib_image_get_width() / 2;
+                    bd.right = imlib_image_get_width() - bd.left - 1;
+                    bd.top = imlib_image_get_height() / 2;
+                    bd.bottom = imlib_image_get_height() - bd.top - 1;
+                }
                 imlib_image_set_border(&bd);
             }
         }

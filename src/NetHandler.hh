@@ -59,6 +59,8 @@ public:
     void SetVirtualPos(WaWindow *);
     void GetWmStrut(WaWindow *);
     void GetWmPid(WaWindow *);
+    void GetXaName(WaWindow *);
+    bool GetNetName(WaWindow *);
 
     void SetSupported(WaScreen *);
     void SetSupportedWMCheck(WaScreen *, Window);
@@ -102,7 +104,7 @@ public:
         net_wm_window_type_menu, net_wm_window_type_splash,
         net_wm_window_type_dialog, net_wm_window_type_utility,
         net_wm_window_type_normal, net_current_desktop,
-        net_number_of_desktops, net_close_window;
+        net_number_of_desktops, net_close_window, net_wm_visible_name;
     
 #ifdef XRENDER
     Atom xrootpmap_id;

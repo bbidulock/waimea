@@ -261,17 +261,7 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
             waimea->net->GetWmStrut(ww);
     } else if (e->atom == XA_WM_NAME) {
         if ((ww = (WaWindow *) waimea->FindWin(e->window, WindowType))) {
-            XGrabServer(e->display);
-            if (validateclient(ww->id)) {
-                if (XFetchName(ww->display, ww->id, &tmp_name)) {
-                    delete [] ww->name;
-                    ww->name = __m_wastrdup(tmp_name);
-                    ww->SetActionLists();
-                    if (ww->title_w) ww->label->Draw();
-                    XFree(tmp_name);
-                }
-            }
-            XUngrabServer(e->display);
+            waimea->net->GetXaName(ww);
         }
     }
 #ifdef XRENDER
@@ -540,6 +530,11 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
             ww->Focus(true);
             ww->Raise(NULL, NULL);
         }
+    }
+    else if (e->xclient.message_type == waimea->net->net_wm_name) {
+        if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
+                                               WindowType)))
+            waimea->net->GetNetName(ww);
     }
     else if (e->xclient.message_type == waimea->net->net_state) {
         if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
