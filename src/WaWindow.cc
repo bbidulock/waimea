@@ -573,21 +573,13 @@ void WaWindow::UpdateGrabs(void) {
     if (validateclient(id)) {
         XUngrabButton(display, AnyButton, AnyModifier, id);
         XUngrabKey(display, AnyKey, AnyModifier, id);
-        if (has_focus) tmp_list = waimea->rh->awinacts;
-        else tmp_list = waimea->rh->pwinacts;
-        it = tmp_list->begin();
-        for (; it != tmp_list->end(); ++it) {
-            if ((*it)->type == ButtonPress || (*it)->type == ButtonRelease ||
-                (*it)->type == DoubleClick) {
-                XGrabButton(display, (*it)->detail ? (*it)->detail: AnyButton,
-                            (*it)->mod, id, True, ButtonPressMask |
-                            ButtonReleaseMask | ButtonMotionMask,
-                            GrabModeSync, GrabModeSync, None, None);                
-            } else if ((*it)->type == KeyPress || (*it)->type == KeyRelease) {
-                XGrabKey(display, (*it)->detail ? (*it)->detail: AnyKey,
-                         (*it)->mod, id, True, GrabModeSync, GrabModeSync); 
-            }
-        }
+        
+        XGrabButton(display, AnyButton, AnyModifier, id, True,
+                    ButtonPressMask | ButtonReleaseMask | ButtonMotionMask,
+                    GrabModeSync, GrabModeSync, None, None);
+        
+        XGrabKey(display, AnyKey, AnyModifier, id, True, GrabModeSync,
+                 GrabModeSync);
     }
     XUngrabServer(display);
 }
@@ -2483,7 +2475,7 @@ void WaWindow::AlwaysatbottomToggle(XEvent *e, WaAction *ac) {
  * @param etype Type of window event occurred on
  */
 void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
-                int etype) {
+                     int etype) {
     XEvent fev;
     bool replay = False, match = False;
     int type = ed->type;
@@ -2512,12 +2504,16 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
             }
             if (type == ButtonPress || type == ButtonRelease ||
                 type == DoubleClick) {
-                if (replay) XAllowEvents(display, ReplayPointer, e->xbutton.time);
-                else XAllowEvents(display, AsyncPointer, e->xbutton.time);
+                if (replay || ! match)
+                    XAllowEvents(display, ReplayPointer, e->xbutton.time);
+                else
+                    XAllowEvents(display, AsyncPointer, e->xbutton.time);
             }
             if (type == KeyPress || type == KeyRelease) {
-                if (replay) XAllowEvents(display, ReplayKeyboard, e->xbutton.time);
-                else XAllowEvents(display, AsyncKeyboard, e->xbutton.time);
+                if (replay || ! match)
+                    XAllowEvents(display, ReplayKeyboard, e->xbutton.time);
+                else
+                    XAllowEvents(display, AsyncKeyboard, e->xbutton.time);
             }
             break;
         case CButtonType:

@@ -610,8 +610,6 @@ This is the window that holds the titlebar text.
 .B window.client.passive
 .RS
 This is the actual window created by the client.
-The modifier mask for this window is exact and not a minimum as for other 
-windows.
 .I window.client.active
 is the action list for active (focused) windows and
 .I window.client.passive
