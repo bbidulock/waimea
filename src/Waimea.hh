@@ -177,7 +177,9 @@ public:
 #endif // SHAPE
 
 #ifdef XINERAMA
-    int xinerama, xinerama_event;
+    int xinerama;
+    XineramaScreenInfo *xinerama_info;
+    int xinerama_info_num;
 #endif // XINERAMA
 
 #ifdef RANDR

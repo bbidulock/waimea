@@ -1225,16 +1225,18 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus, bool only) {
             skip += (*it)->realheight;
         else break;
     }
+
+    int workx, worky, workw, workh;
+    menu->wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
+    
     x = menu->x + menu->width + menu->wascreen->mstyle.border_width;
     y = menu->y + dy - skip;
     diff = (y + submenu->height + menu->wascreen->mstyle.border_width * 2) -
-        (menu->wascreen->current_desktop->workarea.height +
-         menu->wascreen->current_desktop->workarea.y);
+        (workh + worky);
     if (diff > 0) y -= diff;
     if (y < 0) y = 0;
     if ((x + submenu->width + menu->wascreen->mstyle.border_width * 2) >
-        (unsigned int) (menu->wascreen->current_desktop->workarea.width +
-                        menu->wascreen->current_desktop->workarea.x))
+        (unsigned int) (workw + workx))
         x = menu->x - submenu->width - menu->wascreen->mstyle.border_width;
 
     submenu->Map(x, y);
@@ -1284,16 +1286,18 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
             skip += (*it)->height + menu->wascreen->mstyle.border_width;
         else break;
     }
+
+    int workx, worky, workw, workh;
+    menu->wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
+    
     x = menu->x + menu->width + menu->wascreen->mstyle.border_width;
     y = menu->y + dy - skip;
     diff = (y + submenu->height + menu->wascreen->mstyle.border_width * 2) -
-        (menu->wascreen->current_desktop->workarea.height +
-         menu->wascreen->current_desktop->workarea.y);
+        (workh + worky);
     if (diff > 0) y -= diff;
     if (y < 0) y = 0;
     if ((x + submenu->width + menu->wascreen->mstyle.border_width * 2) >
-        (unsigned int) (menu->wascreen->current_desktop->workarea.width +
-                        menu->wascreen->current_desktop->workarea.x))
+        (unsigned int) (workw + workx))
         x = menu->x - submenu->width - menu->wascreen->mstyle.border_width;
     menu->ignore = true;
     submenu->ReMap(x, y);
@@ -1641,12 +1645,18 @@ void WaMenuItem::EndMoveResize(XEvent *, WaAction *) {
  */
 void WaMenuItem::TaskSwitcher(XEvent *, WaAction *) {
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
+
+    int workx, worky, workw, workh;
+    menu->wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
+
     menu->wascreen->window_menu->Build(menu->wascreen);
-    menu->wascreen->window_menu->ReMap(menu->wascreen->width / 2 -
-                                       menu->wascreen->window_menu->width / 2,
-                                       menu->wascreen->height / 2 -
-                                       menu->wascreen->window_menu->height /
-                                       2);
+    menu->wascreen->window_menu->ReMap(workx +
+                                       (workw / 2 -
+                                        menu->wascreen->window_menu->width /
+                                        2), worky +
+                                       (workh / 2 -
+                                        menu->wascreen->window_menu->height /
+                                        2));
     menu->wascreen->window_menu->FocusFirst();
 }
 

@@ -144,6 +144,7 @@ public:
     void MenuRemap(XEvent *, WaAction *, bool);
     void MenuUnmap(XEvent *, WaAction *, bool);
     void UpdateWorkarea(void);
+    void GetWorkareaSize(int *, int *, int *, int *);
     void AddDockapp(Window window);
     void GoToDesktop(unsigned int);
     
@@ -223,11 +224,6 @@ public:
 #ifdef PIXMAP
     Imlib_Context imlib_context;
 #endif // PIXMAP
-
-#ifdef XINERAMA
-    XineramaScreenInfo *xinerama_info;
-    int xinerama_info_num;
-#endif // XINERAMA
 
     unsigned long fbutton_pixel, ubutton_pixel, pbutton_pixel, fgrip_pixel,
         ugrip_pixel;

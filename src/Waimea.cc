@@ -111,26 +111,15 @@ Waimea::Waimea(char **av, struct waoptions *_options) {
 #endif // SHAPE
 
 #ifdef XINERAMA
-    xinerama = XineramaQueryExtension(display, &xinerama_event, &dummy);
+    xinerama = XineramaQueryExtension(display, &dummy, &dummy);
     if (xinerama)
         xinerama = XineramaIsActive(display);
     else
         xinerama = false;
 
-//    if (xinerama) {
-//          int num;
-//          XineramaScreenInfo *info = XineramaQueryScreens(display, &num);
-//          if (num > 0 && info) {
-//              for (int i = 0; i < num; ++i) {
-//                  cout << i << ":" << endl;
-//                  cout << "\tx: " << info[i].x_org << endl;
-//                  cout << "\ty: " << info[i].y_org << endl;
-//                  cout << "\tw: " << info[i].width << endl;
-//                  cout << "\th: " << info[i].height << endl;
-//              }
-//              XFree(info);
-//          }
-//      }
+    if (xinerama) {
+        xinerama_info = XineramaQueryScreens(display, &xinerama_info_num);
+    }
 #endif // XINERAMA
 
 #ifdef RANDR

@@ -1940,11 +1940,12 @@ void WaWindow::_Maximize(int x, int y) {
     int n_w, n_h, new_width, new_height;
 
     if (flags.max) return;
+
+    int workx, worky, workw, workh;
+    wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
     
-    new_width = wascreen->current_desktop->workarea.width -
-        (flags.border * border_w * 2);
-    new_height = wascreen->current_desktop->workarea.height -
-        (flags.border * border_w * 2) -
+    new_width = workw - (flags.border * border_w * 2);
+    new_height = workh - (flags.border * border_w * 2) -
         title_w - handle_w - (border_w * flags.title) -
         (border_w * flags.handle);
 
@@ -1959,8 +1960,8 @@ void WaWindow::_Maximize(int x, int y) {
         new_height = attrib.height;
     }
     if (IncSizeCheck(new_width, new_height, &n_w, &n_h)) {
-        attrib.x = wascreen->current_desktop->workarea.x + border_w;
-        attrib.y = wascreen->current_desktop->workarea.y + title_w + border_w +
+        attrib.x = workx + border_w;
+        attrib.y = worky + title_w + border_w +
             (border_w * flags.title);
         attrib.width = n_w;
         attrib.height = n_h;
@@ -2118,6 +2119,9 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
 
     if (! menu) return;
     if (waimea->eh->move_resize != EndMoveResizeType) return;
+
+    int workx, worky, workw, workh;
+    wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
     
     if (XQueryPointer(display, wascreen->id, &w, &w, &x, &y, &i, &i, &ui)) {
         if (menu->tasksw) menu->Build(wascreen);
@@ -2128,12 +2132,10 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
             exp += (*it)->ExpandAll(this);
         if (exp) menu->Build(wascreen);
         if ((y + menu->height + wascreen->mstyle.border_width * 2) > 
-            (unsigned int) (wascreen->current_desktop->workarea.height +
-                            wascreen->current_desktop->workarea.y))
+            (unsigned int) (workh + worky))
             y -= (menu->height + wascreen->mstyle.border_width * 2);
         if ((x + menu->width + wascreen->mstyle.border_width * 2) > 
-            (unsigned int) (wascreen->current_desktop->workarea.width +
-                            wascreen->current_desktop->workarea.x))
+            (unsigned int) (workw + workx))
             x -= (menu->width + wascreen->mstyle.border_width * 2);
         menu->Map(x, y);
         if (focus) menu->FocusFirst();
@@ -2163,6 +2165,9 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
         if (! (menu = wascreen->CreateDynamicMenu(ac->param))) return;
     }
     if (waimea->eh->move_resize != EndMoveResizeType) return;
+
+    int workx, worky, workw, workh;
+    wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
     
     if (XQueryPointer(display, wascreen->id, &w, &w, &x, &y, &i, &i, &ui)) {
         if (menu->tasksw) menu->Build(wascreen);
@@ -2173,12 +2178,10 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
             exp += (*it)->ExpandAll(this);
         if (exp) menu->Build(wascreen);
         if ((y + menu->height + wascreen->mstyle.border_width * 2) > 
-            (unsigned int) (wascreen->current_desktop->workarea.height +
-                            wascreen->current_desktop->workarea.y))
+            (unsigned int) (workh + worky))
             y -= (menu->height + wascreen->mstyle.border_width * 2);
         if ((x + menu->width + wascreen->mstyle.border_width * 2) > 
-            (unsigned int) (wascreen->current_desktop->workarea.width +
-                            wascreen->current_desktop->workarea.x))
+            (unsigned int) (workw + workx))
             x -= (menu->width + wascreen->mstyle.border_width * 2);
         menu->ignore = true;
         menu->ReMap(x, y);
@@ -2325,11 +2328,15 @@ void WaWindow::ToggleSticky(XEvent *, WaAction *) {
  */
 void WaWindow::TaskSwitcher(XEvent *, WaAction *) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
+
+    int workx, worky, workw, workh;
+    wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
+
     wascreen->window_menu->Build(wascreen);
-    wascreen->window_menu->ReMap(wascreen->width / 2 -
-                                 wascreen->window_menu->width / 2,
-                                 wascreen->height / 2 -
-                                 wascreen->window_menu->height / 2);
+    wascreen->window_menu->ReMap(workx + (workw / 2 -
+                                          wascreen->window_menu->width / 2),
+                                 worky + (workh / 2 -
+                                          wascreen->window_menu->height / 2));
     wascreen->window_menu->FocusFirst();
 }
 
@@ -2876,8 +2883,10 @@ void WaWindow::MoveWindowToPointer(XEvent *e, WaAction *) {
 void WaWindow::MoveWindowToSmartPlace(XEvent *, WaAction *) {
     int temp_h, temp_w;
     Gravitate(RemoveGravity);
-    int test_x = attrib.x - wascreen->current_desktop->workarea.x;
-    int test_y = attrib.y - wascreen->current_desktop->workarea.y - 1;
+    int workx, worky, workw, workh;
+    wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
+    int test_x = attrib.x - workx;
+    int test_y = attrib.y - worky - 1;
     int loc_ok = False, tw, tx, ty, th;
     int bw = flags.border * border_w;
     int titleh = title_w + flags.title * bw;
@@ -2885,11 +2894,9 @@ void WaWindow::MoveWindowToSmartPlace(XEvent *, WaAction *) {
     temp_h = attrib.height + bw * 2 + titleh + handleh;
     temp_w = attrib.width + bw * 2;
 
-    while (((test_y + temp_h) <
-            (wascreen->current_desktop->workarea.height)) && (!loc_ok)) {
+    while (((test_y + temp_h) < workh) && !loc_ok) {
         test_x = 0;
-        while (((test_x + temp_w) <
-                (wascreen->current_desktop->workarea.width)) && (!loc_ok)) {
+        while (((test_x + temp_w) < workw) && !loc_ok) {
             loc_ok = True;
             list<WaWindow *>::iterator it = wascreen->wawindow_list.begin();
             for (; it != wascreen->wawindow_list.end() &&
@@ -2898,9 +2905,9 @@ void WaWindow::MoveWindowToSmartPlace(XEvent *, WaAction *) {
                     ((*it)->desktop_mask &
                      (1L << wascreen->current_desktop->number)) &&
                     ((((*it)->attrib.x + (*it)->attrib.width) > 0 &&
-                      (*it)->attrib.x < wascreen->width) && 
+                      (*it)->attrib.x < workw) && 
                      (((*it)->attrib.y + (*it)->attrib.height) > 0 &&
-                      (*it)->attrib.y < wascreen->height))) {
+                      (*it)->attrib.y < workh))) {
                     bw = (*it)->flags.border * (*it)->border_w;
                     titleh = (*it)->title_w + (*it)->flags.title * bw;
                     handleh = (*it)->handle_w + (*it)->flags.handle * bw;
@@ -2909,10 +2916,8 @@ void WaWindow::MoveWindowToSmartPlace(XEvent *, WaAction *) {
                     tw = (*it)->attrib.width + bw * 2;
 
                     (*it)->Gravitate(RemoveGravity);
-                    tx = (*it)->attrib.x -
-                        wascreen->current_desktop->workarea.x - 1;
-                    ty = (*it)->attrib.y - 
-                        wascreen->current_desktop->workarea.y - 1;
+                    tx = (*it)->attrib.x - workx - 1;
+                    ty = (*it)->attrib.y - worky - 1;
                     (*it)->Gravitate(ApplyGravity);
 
                     if ((tx < (test_x + temp_w)) &&
@@ -2929,8 +2934,8 @@ void WaWindow::MoveWindowToSmartPlace(XEvent *, WaAction *) {
         test_y += 1;
     }
     if (loc_ok != False) {
-        attrib.x = test_x + wascreen->current_desktop->workarea.x - 1;
-        attrib.y = test_y + wascreen->current_desktop->workarea.y;
+        attrib.x = test_x + workx - 1;
+        attrib.y = test_y + worky;
         Gravitate(ApplyGravity);
         RedrawWindow();
     }

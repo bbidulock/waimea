@@ -928,31 +928,61 @@ void WaScreen::UpdateWorkarea(void) {
     }
 }
 
-//  int WaScreen::WSwidth(int x) {
+/**
+ * @fn    GetWorkareaSize(int *x, int *y, int *w, int *h)
+ * @brief Calculates real workarea size
+ *
+ * Returns the real workarea size. Calculated from the xinerama area where the
+ * pointer is currently located and the current desktops workarea. If xinerama
+ * isn't used then the real workarea is the current desktops workarea.
+ *
+ * @param x Returns the real workarea X value
+ * @param y Returns the workarea Y value
+ * @param w Returns the workarea width value
+ * @param h Returns the workarea height value
+ */
+void WaScreen::GetWorkareaSize(int *x, int *y, int *w, int *h) {
+    *x = current_desktop->workarea.x;
+    *y = current_desktop->workarea.y;
+    *w = current_desktop->workarea.width;
+    *h = current_desktop->workarea.height;
     
-//  #ifdef XINERAMA
-//      for (int i = 0; i < xinerama_info_num; ++i) {
-//          xinerama_info[i].x_org
-//              xinerama_info[i].y_org,
-//              xinerama_info[i].width
-//              xinerama_info[i].height));
-        
-//  #endif // XINERAMA
+#ifdef XINERAMA
+    Window win;
+    int px, py, i;
+    unsigned int ui;
+
+    if (waimea->xinerama && waimea->xinerama_info) {
+        XQueryPointer(display, id, &win, &win, &px, &py, &i, &i, &ui);
+        for (i = 0; i < waimea->xinerama_info_num; ++i) {
+            if (px > waimea->xinerama_info[i].x_org &&
+                px < (waimea->xinerama_info[i].x_org +
+                      waimea->xinerama_info[i].width) &&
+                py > waimea->xinerama_info[i].y_org &&
+                py < (waimea->xinerama_info[i].y_org +
+                      waimea->xinerama_info[i].height)) {
+                int diff = waimea->xinerama_info[i].x_org - *x;
+                int xt = waimea->xinerama_info[i].width;
+                if (diff > 0) {
+                    *w -= diff;
+                    *x = waimea->xinerama_info[i].x_org;
+                } else xt += diff;
+                if (*w > xt) *w = xt;
+
+                diff = waimea->xinerama_info[i].y_org - *y;
+                xt = waimea->xinerama_info[i].height;
+                if (diff > 0) {
+                    *h -= diff;
+                    *y = waimea->xinerama_info[i].y_org;
+                } else xt += diff;
+                if (*h > xt) *h = xt;
+                break;
+            }
+        }
+    }
+#endif // XINERAMA
     
-//      return current_desktop->workarea.width;
-//  }
-
-//  int WaScreen::WSx(int x) {
-//      current_desktop->workarea.x;
-//  }
-
-//  int WaScreen::WSheight(int y) {
-//      current_desktop->workarea.height;
-//  }
-
-//  int WaScreen::WSy(int y) {
-//      current_desktop->workarea.y;
-//  }
+}
 
 /**
  * @fn    MoveViewportTo(int x, int y)
@@ -1284,17 +1314,18 @@ void WaScreen::MenuMap(XEvent *, WaAction *ac, bool focus) {
     if (! menu) return;
     if (waimea->eh->move_resize != EndMoveResizeType) return;
 
+    int workx, worky, workw, workh;
+    GetWorkareaSize(&workx, &worky, &workw, &workh);
+
     if (XQueryPointer(display, id, &w, &w, &x, &y, &i, &i, &ui)) {
         if (menu->tasksw) menu->Build(this);
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
         if ((y + menu->height + mstyle.border_width * 2) >
-            (unsigned int) (current_desktop->workarea.height +
-                            current_desktop->workarea.y))
+            (unsigned int) (workh + worky))
            y -= (menu->height + mstyle.border_width * 2);
         if ((x + menu->width + mstyle.border_width * 2) >
-            (unsigned int) (current_desktop->workarea.width +
-                            current_desktop->workarea.x))
+            (unsigned int) (workw + workx))
             x -= (menu->width + mstyle.border_width * 2);
         menu->Map(x, y);
         if (focus) menu->FocusFirst();
@@ -1322,18 +1353,19 @@ void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
         if (! (menu = CreateDynamicMenu(ac->param))) return;
     }
     if (waimea->eh->move_resize != EndMoveResizeType) return;
+
+    int workx, worky, workw, workh;
+    GetWorkareaSize(&workx, &worky, &workw, &workh);
     
     if (XQueryPointer(display, id, &w, &w, &x, &y, &i, &i, &ui)) {
         if (menu->tasksw) menu->Build(this);
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
         if ((y + menu->height + mstyle.border_width * 2) >
-            (unsigned int) (current_desktop->workarea.height +
-                            current_desktop->workarea.y))
+            (unsigned int) (workh + worky))
            y -= (menu->height + mstyle.border_width * 2);
         if ((x + menu->width + mstyle.border_width * 2) >
-            (unsigned int) (current_desktop->workarea.width +
-                            current_desktop->workarea.x))
+            (unsigned int) (workw + workx))
             x -= (menu->width + mstyle.border_width * 2);
         menu->ignore = true;
         menu->ReMap(x, y);
@@ -1396,9 +1428,13 @@ void WaScreen::Exit(XEvent *, WaAction *) {
  */
 void WaScreen::TaskSwitcher(XEvent *, WaAction *) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
+
+    int workx, worky, workw, workh;
+    GetWorkareaSize(&workx, &worky, &workw, &workh);
+    
     window_menu->Build(this);
-    window_menu->ReMap(width / 2 - window_menu->width / 2,
-                       height / 2 - window_menu->height / 2);
+    window_menu->ReMap(workx + (workw / 2 - window_menu->width / 2),
+                       worky + (workh / 2 - window_menu->height / 2));
     window_menu->FocusFirst();
 }
 
