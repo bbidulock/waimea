@@ -2116,6 +2116,7 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
 
 
 WaImageControl::~WaImageControl(void) {
+    XSync(wascreen->display, false);
     if (sqrt_table) {
         delete [] sqrt_table;
     }
@@ -2146,6 +2147,8 @@ WaImageControl::~WaImageControl(void) {
         }
     }
     delete cache;
+    XSync(wascreen->display, false);
+    XSync(wascreen->pdisplay, false);
 }
 
 
