@@ -488,6 +488,16 @@ void ResourceHandler::LoadConfig(void) {
     } else
         menu_stacking = NormalStacking;    
 
+    if (XrmGetResource(database, "transientAbove", "TransientAbove",
+                       &value_type, &value)) {
+        if (! strncasecmp("true", value.addr, value.size))
+            trans = true;
+        else
+            trans = false;
+    } else
+        trans = true;
+
+    
     unsigned int dummy;
     char *token;
     int dock_num, i;

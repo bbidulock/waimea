@@ -53,6 +53,7 @@ public:
     hash_set<int> *menu_viewport_move_return_mask;
 
     int move_resize;
+    Window focused;
 
 private:
     void EvProperty(XPropertyEvent *);
@@ -62,7 +63,7 @@ private:
     
     Waimea *waimea;
     ResourceHandler *rh;
-    Window focused, last_click_win;
+    Window last_click_win;
     struct timeb last_click;
 };
 

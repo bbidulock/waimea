@@ -199,7 +199,7 @@ public:
 #endif // XFT
 
 #ifdef XRENDER
-        Pixmap pixmap;
+    Pixmap pixmap;
 #endif // XRENDER
 
 };

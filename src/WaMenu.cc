@@ -308,7 +308,7 @@ void WaMenu::Build(WaScreen *screen) {
 
     attrib_set.event_mask = ButtonPressMask | ButtonReleaseMask |
         EnterWindowMask | LeaveWindowMask | KeyPressMask |
-        KeyReleaseMask | ExposureMask ;
+        KeyReleaseMask | ExposureMask | FocusChangeMask;
 
     int y, x, bw;
     it = item_list->begin();
@@ -1382,13 +1382,11 @@ void WaMenuItem::NextItem(XEvent *e, WaAction *ac) {
                 it = menu->item_list->begin();
                 for (; *it != this && (*it)->type == MenuTitleType; ++it);
                 if (*it != this) {
-                    (*it)->Hilite();
-                    (*it)->Focus(e, ac);
+                    (*it)->Focus();
                     return;
                 }
             } else {
-                (*it)->Hilite();
-                (*it)->Focus(e, ac);
+                (*it)->Focus();
                 return;
             }
         }
@@ -1414,13 +1412,11 @@ void WaMenuItem::PreviousItem(XEvent *e, WaAction *ac) {
                 it = menu->item_list->rbegin();
                 for (; *it != this && (*it)->type == MenuTitleType; ++it);
                 if (*it != this) {
-                    (*it)->Hilite();
-                    (*it)->Focus(e, ac);
+                    (*it)->Focus();
                     return;
                 }
             } else {
-                (*it)->Hilite();
-                (*it)->Focus(e, ac);
+                (*it)->Focus();
                 return;
             }
         }

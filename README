@@ -19,7 +19,10 @@ INFO
       Standard X core fonts
       Xft fonts (anti-aliased fonts)
       Dockapp handler system
-      Task switcher	     
+      Task switcher
+      Pixmap styles
+      Configurable titlebar buttons
+
 
 INSTALLATION
 

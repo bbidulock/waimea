@@ -137,7 +137,8 @@ public:
     unsigned int virtual_y;
     int colors_per_channel, menu_stacking;
     long unsigned int cache_max, double_click;
-    bool image_dither, rc_forced, style_forced, action_forced, menu_forced;
+    bool image_dither, rc_forced, style_forced, action_forced, menu_forced,
+                         trans;
     
     list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
         *handleacts, *rgacts, *lgacts, *rootacts, *weacts, *eeacts, *neacts,

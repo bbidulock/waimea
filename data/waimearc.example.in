@@ -12,6 +12,7 @@ cacheMax:          200
 imageDither:       True
 virtualSize:       3x3
 menuStacking:      Normal
+transientAbove:    True
 dock0.geometry:    -0+0
 dock0.order:       UNKNOWN
 dock0.direction:   Vertical

@@ -584,11 +584,13 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
             case WindowType:
                 wa = (WaWindow *) wo;
                 if (wa->has_focus) {
-                    if (wa->awinacts) wa->EvAct(e, ed, wa->awinacts, wo->type);
+                    if (wa->awinacts) wa->EvAct(e, ed, wa->awinacts,
+                                                wo->type);
                     else wa->EvAct(e, ed, rh->awinacts, wo->type);
                 }
                 else {
-                    if (wa->pwinacts) wa->EvAct(e, ed, wa->pwinacts, wo->type);
+                    if (wa->pwinacts) wa->EvAct(e, ed, wa->pwinacts,
+                                                wo->type);
                     else wa->EvAct(e, ed, rh->pwinacts, wo->type);
                 } 
                 break;
@@ -604,7 +606,8 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
                 break;
             case HandleType:
                 wa = ((WaChildWindow *) wo)->wa;
-                if (wa->handleacts) wa->EvAct(e, ed, wa->handleacts, wo->type);
+                if (wa->handleacts) wa->EvAct(e, ed, wa->handleacts,
+                                              wo->type);
                 else wa->EvAct(e, ed, rh->handleacts, wo->type);
                 break;
             case LGripType:

@@ -70,6 +70,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
         flags.alwaysatbottom = false;
     frameacts = awinacts = pwinacts = titleacts = labelacts = handleacts =
         lgacts = rgacts = NULL;
+    transient_for = (Window) 0;
     
     int i;
     bacts = new list<WaAction *>*[wascreen->wstyle.b_num];
@@ -148,7 +149,24 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
  * all windows used for decorations.
  */
 WaWindow::~WaWindow(void) {
-    waimea->window_table->erase(id);    
+    waimea->window_table->erase(id);
+
+    if (transient_for) {
+        if (transient_for == wascreen->id) {
+            list<WaWindow *>::iterator it =
+                waimea->wawindow_list->begin();
+            for (;it != waimea->wawindow_list->end(); ++it)
+                (*it)->transients.remove(id);
+        }
+        else {
+            hash_map<Window, WindowObject *>::iterator hit;
+            if ((hit = waimea->window_table->find(transient_for)) !=
+                waimea->window_table->end()) {
+                if (((*hit).second)->type == WindowType)
+                    ((WaWindow *) (*hit).second)->transients.remove(id);
+            }
+        }
+    }
     
     XGrabServer(display);
     if ((! deleted) && validateclient_mapped(id)) {
@@ -1059,6 +1077,18 @@ void WaWindow::Raise(XEvent *, WaAction *) {
         waimea->wawindow_list_stacking->push_front(this);
         net->SetClientListStacking(wascreen);
     }
+    if (! transients.empty()) {
+        list<Window>::iterator it = transients.begin();
+        for (;it != transients.end(); ++it) {
+            hash_map<Window, WindowObject *>::iterator hit;
+            if ((hit = waimea->window_table->find(*it)) !=
+                waimea->window_table->end()) {
+                if (((*hit).second)->type == WindowType) {
+                    ((WaWindow *) (*hit).second)->Raise(NULL, NULL);
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -1088,6 +1118,20 @@ void WaWindow::Lower(XEvent *, WaAction *) {
 void WaWindow::Focus(bool vis) {
     int newvx, newvy, x, y;
     XEvent e;
+
+    if (! transients.empty()) {
+        list<Window>::iterator it = transients.begin();
+        for (;it != transients.end(); ++it) {
+            hash_map<Window, WindowObject *>::iterator hit;
+            if ((hit = waimea->window_table->find(*it)) !=
+                waimea->window_table->end()) {
+                if (((*hit).second)->type == WindowType) {
+                    ((WaWindow *) (*hit).second)->Focus(vis);
+                    return;
+                }
+            }    
+        }
+    }
     
     if (mapped) {
         XGrabServer(display);
@@ -1108,6 +1152,17 @@ void WaWindow::Focus(bool vis) {
             }
             XInstallColormap(display, attrib.colormap);
             XSetInputFocus(display, id, RevertToPointerRoot, CurrentTime);
+            if (transient_for) {
+                hash_map<Window, WindowObject *>::iterator hit;
+                if ((hit = waimea->window_table->find(transient_for)) !=
+                    waimea->window_table->end()) {
+                    if (((*hit).second)->type == WindowType) {
+                        ((WaWindow *) (*hit).second)->transients.remove(id);
+                        ((WaWindow *)
+                         (*hit).second)->transients.push_front(id);
+                    }
+                }
+            }
         }
         XUngrabServer(display);
     } else

@@ -143,10 +143,12 @@ void NetHandler::GetWMHints(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::GetMWMHints(WaWindow *ww) {
+    Window trans;
+    bool all = false;
     ww->flags.title = ww->flags.border = ww->flags.handle = true;
     
     XGrabServer(display);
-    if (validateclient(ww->id))
+    if (validateclient(ww->id)) {
         if (XGetWindowProperty(display, ww->id, mwm_hints_atom, 0L, 20L,
                                false, mwm_hints_atom, &real_type,
                                &real_format, &items_read, &items_left,
@@ -162,6 +164,31 @@ void NetHandler::GetMWMHints(WaWindow *ww) {
                     (mwm_hints->decorations & MwmDecorHandle) ? true: false;
             }
         }
+        if (waimea->rh->trans &&
+            XGetTransientForHint(display, ww->id, &trans)) {
+            if (trans && (trans != ww->id)) {
+                if (trans == waimea->wascreen->id) {
+                    list<WaWindow *>::iterator it =
+                        waimea->wawindow_list->begin();
+                    for (;it != waimea->wawindow_list->end(); ++it)
+                        (*it)->transients.push_back(ww->id);
+                    ww->want_focus = true;
+                } else {
+                    hash_map<Window, WindowObject *>::iterator it;
+                    if ((it = waimea->window_table->find(trans)) !=
+                        waimea->window_table->end()) {
+                        if (((*it).second)->type == WindowType) {
+                            ww->transient_for = trans;
+                            ((WaWindow *)
+                             (*it).second)->transients.push_back(ww->id);
+                            if (trans == waimea->eh->focused)
+                                ww->want_focus = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
     XUngrabServer(display);
     ww->flags.all = ww->flags.title && ww->flags.handle && ww->flags.border;
 }

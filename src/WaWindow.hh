@@ -221,6 +221,9 @@ public:
     SizeStruct size;
     NetHandler *net;
     WMstrut *wm_strut;
+    Window transient_for;
+    list<Window> transients;
+    
     list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
         *handleacts, *lgacts, *rgacts;
 
