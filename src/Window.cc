@@ -1948,10 +1948,10 @@ void WaWindow::_Maximize(int x, int y) {
         title_w - handle_w - (border_w * flags.title) -
         (border_w * flags.handle);
 
-    restore_max.x = attrib.x;
-    restore_max.y = attrib.y;
     restore_max.width = attrib.width;
     restore_max.height = attrib.height;
+    int rest_x = attrib.x;
+    int rest_y = attrib.y;
     
     if (flags.shaded) {
         restore_max.height = restore_shade;
@@ -1959,20 +1959,23 @@ void WaWindow::_Maximize(int x, int y) {
         new_height = attrib.height;
     }
     if (IncSizeCheck(new_width, new_height, &n_w, &n_h)) {
-        attrib.x = workx + border_w;
-        attrib.y = worky + title_w + border_w +
-            (border_w * flags.title);
-        attrib.width = n_w;
-        attrib.height = n_h;
+        attrib.x = workx;
+        attrib.y = worky;
+        restore_max.x = rest_x - attrib.x;
+        restore_max.y = rest_y - attrib.y;
         if (x >= 0 && y >= 0) {
-            attrib.x += (x - wascreen->v_x);
-            attrib.y += (y - wascreen->v_y);
+            attrib.x = (x - wascreen->v_x);
+            attrib.y = (y - wascreen->v_y);
             restore_max.misc0 = x;
             restore_max.misc1 = y;
         } else {
-            restore_max.misc0 = wascreen->v_x;
-            restore_max.misc1 = wascreen->v_y;
-        }    
+            restore_max.misc0 = wascreen->v_x + attrib.x;
+            restore_max.misc1 = wascreen->v_y + attrib.y;
+        }
+        attrib.x += border_w;
+        attrib.y += title_w + border_w + (border_w * flags.title);
+        attrib.width = n_w;
+        attrib.height = n_h;
         RedrawWindow();
         flags.max = true;
         
