@@ -21,13 +21,15 @@
  * @fn    EventHandler(Waimea *wa)
  * @brief Constructor for EventHandler class
  *
- * Sets waimea and rh pointers. Creates menu move return mask and window
- * move/resize return mask hash_sets.
+ * Sets waimea and rh pointers. Creates menu move return mask, window
+ * move/resize return mask and empty return mask hash_sets.
  */
 EventHandler::EventHandler(Waimea *wa) {
     waimea = wa;
     rh = waimea->rh;
     focused = last_click_win = (Window) 0;
+
+    empty_return_mask = new hash_set<int>;
     
     moveresize_return_mask = new hash_set<int>;
     moveresize_return_mask->insert(MotionNotify);
@@ -53,15 +55,16 @@ EventHandler::EventHandler(Waimea *wa) {
  * @fn    ~EventHandler(void)
  * @brief Destructor for EventHandler class
  *
- * Clears return mask lists
+ * Deletes return mask lists
  */
 EventHandler::~EventHandler(void) {
-    moveresize_return_mask->clear();
-    menu_viewport_move_return_mask->clear();
+    delete empty_return_mask;
+    delete moveresize_return_mask;
+    delete menu_viewport_move_return_mask;
 }
 
 /**
- * @fn    EventHandler::EventLoop(void)
+ * @fn    EventLoop(hash_set<int> *return_mask, XEvent *event)
  * @brief Eventloop
  *
  * Infinite loop waiting for an event to occur. Executes a matching function
@@ -70,19 +73,20 @@ EventHandler::~EventHandler(void) {
  * jump into EvAct() function. This function can be called from move and resize
  * functions the return_mask hash_set is then used for deciding if an event
  * should be processed as normal or returned to the function caller.
+ *
+ * @param return_mask hash_set to use as return_mask
+ * @param event Pointer to allocated event structure
  */
-XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
+void EventHandler::EventLoop(hash_set<int> *return_mask, XEvent *event) {
     Window w;
     int i, rx, ry;
     struct timeb click_time;
-
-    XEvent *event = new XEvent;
     
     for (;;) {
         XNextEvent(waimea->display, event);
         
-        if (return_mask->find(event->type) != return_mask->end()) return event;
-
+        if (return_mask->find(event->type) != return_mask->end()) return;
+        
         switch (event->type) {
             case Expose:
                 EvExpose(&event->xexpose); break;
@@ -115,13 +119,15 @@ XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
                     ftime(&click_time);
                     if (click_time.time <= last_click.time + 1) {
                         if (click_time.time == last_click.time &&
+                            (unsigned int)
                             (click_time.millitm - last_click.millitm) <
                             waimea->rh->double_click) {
                             ed.type = DoubleClick;
                             last_click_win = (Window) 0;
                         }
                         else if ((1000 - last_click.millitm) +
-                                 click_time.millitm < waimea->rh->double_click) {
+                                 (unsigned int) click_time.millitm <
+                                 waimea->rh->double_click) {
                             ed.type = DoubleClick;
                             last_click_win = (Window) 0;
                         }

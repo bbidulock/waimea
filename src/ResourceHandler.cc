@@ -318,25 +318,39 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
  * Deletes all action lists and all WaActions in them.
  */
 ResourceHandler::~ResourceHandler(void) {
-    LISTCLEAR(frameacts);
-    LISTCLEAR(awinacts);
-    LISTCLEAR(pwinacts);
-    LISTCLEAR(titleacts);
-    LISTCLEAR(labelacts);
-    LISTCLEAR(handleacts);
-    LISTCLEAR(cbacts);
-    LISTCLEAR(mbacts);
-    LISTCLEAR(ibacts);
-    LISTCLEAR(rgacts);
-    LISTCLEAR(lgacts);
-    LISTCLEAR(rootacts);
-    LISTCLEAR(weacts);
-    LISTCLEAR(eeacts);
-    LISTCLEAR(neacts);
-    LISTCLEAR(seacts);
-    LISTCLEAR(mtacts);
-    LISTCLEAR(miacts);
-    LISTCLEAR(msacts);
+    delete [] rc_file;
+    
+    while (! dockstyles->empty()) {
+        while (! dockstyles->back()->order->empty()) {
+            delete [] dockstyles->back()->order->back();
+            dockstyles->back()->order->pop_back();
+        }
+        delete dockstyles->back()->order;
+        free(dockstyles->back());
+        dockstyles->pop_back();
+    }
+    delete dockstyles;
+    
+    ACTLISTCLEAR(frameacts);
+    ACTLISTCLEAR(awinacts);
+    ACTLISTCLEAR(pwinacts);
+    ACTLISTCLEAR(titleacts);
+    ACTLISTCLEAR(labelacts);
+    ACTLISTCLEAR(handleacts);
+    ACTLISTCLEAR(cbacts);
+    ACTLISTCLEAR(mbacts);
+    ACTLISTCLEAR(ibacts);
+    ACTLISTCLEAR(rgacts);
+    ACTLISTCLEAR(lgacts);
+    ACTLISTCLEAR(rootacts);
+    ACTLISTCLEAR(weacts);
+    ACTLISTCLEAR(eeacts);
+    ACTLISTCLEAR(neacts);
+    ACTLISTCLEAR(seacts);
+    ACTLISTCLEAR(mtacts);
+    ACTLISTCLEAR(miacts);
+    ACTLISTCLEAR(msacts);
+    ACTLISTCLEAR(mcbacts);
 }
 
 /**
@@ -436,6 +450,7 @@ void ResourceHandler::LoadConfig(void) {
             d_exists = True;
         }
 
+        char *tmp;
         dockstyle->order = new list<char *>;
         sprintf(rc_name, "dock%d.order", dock_num);
         sprintf(rc_class, "Dock%d.Order", dock_num);
@@ -443,16 +458,24 @@ void ResourceHandler::LoadConfig(void) {
             d_exists = True;
             token = strtok(value.addr, " ");
             if (strlen(token) >= 3 && (token[0] == 'C' || token[0] == 'N') &&
-                token[1] == '_')
-                dockstyle->order->push_back(strdup(token));
-            while (token = strtok(NULL, " ")) {
+                token[1] == '_') {
+                tmp = new char[strlen(token) + 1];
+                sprintf(tmp, token);
+                dockstyle->order->push_back(tmp);
+            }
+            while ((token = strtok(NULL, " "))) {
                 if (strlen(token) >= 3 &&
                     (token[0] == 'C' || token[0] == 'N') &&
-                    token[1] == '_')
-                    dockstyle->order->push_back(strdup(token));
+                    token[1] == '_') {
+                    tmp = new char[strlen(token) + 1];
+                    sprintf(tmp, token);
+                    dockstyle->order->push_back(tmp);
+                }
                 else if (! strcasecmp("unknown", token) && !have_u) {
                     have_u = True;
-                    dockstyle->order->push_back(strdup("U"));
+                    tmp = new char[2];
+                    sprintf(tmp, "U");
+                    dockstyle->order->push_back(tmp);
                 }
             }
         }
@@ -483,7 +506,7 @@ void ResourceHandler::LoadConfig(void) {
         sprintf(rc_class, "Dock%d.GridSpace", dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
             d_exists = True;
-            if (sscanf(value.addr, "%lu", &dockstyle->gridspace) != 1)
+            if (sscanf(value.addr, "%u", &dockstyle->gridspace) != 1)
                 dockstyle->gridspace = 2;
         } else
             dockstyle->gridspace = 2;
@@ -755,48 +778,58 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
             mstyle->t_justify = LeftJustify;
     }
 
-    char look_tmp[2];
-    int ch = (int) '>';
+    char *look_tmp;
+    unsigned int ch;
     if (XrmGetResource(database, "menu.bullet.look", "Menu.Bullet.Look",
                        &value_type, &value)) {
         if (sscanf(value.addr, "'%u'", &ch) != 1) {
-            mstyle->bullet = strdup(value.addr);
+            look_tmp = new char[strlen(value.addr) + 1];
+            sprintf(look_tmp, value.addr);
+            mstyle->bullet = look_tmp;
         } else {
-            look_tmp[0] = (char) ch;
-            look_tmp[1] = '\0';
-            mstyle->bullet = strdup(look_tmp);
+            look_tmp = new char[2];
+            sprintf(look_tmp, "%c", ch);
+            mstyle->bullet = look_tmp;
         }
     } else {
-        look_tmp[0] = (char) ch;
-        look_tmp[1] = '\0';
-        mstyle->bullet = strdup(look_tmp);
+        look_tmp = new char[2];
+        sprintf(look_tmp, ">");
+        mstyle->bullet = look_tmp;
     }
 
-    ch = 'X';
     if (XrmGetResource(database, "menu.checkbox.true.look",
                        "Menu.Checkbox.True.Look", &value_type, &value)) {
         if (sscanf(value.addr, "'%u'", &ch) != 1) {
-            mstyle->checkbox_true = strdup(value.addr);
+            look_tmp = new char[strlen(value.addr) + 1];
+            sprintf(look_tmp, value.addr);
+            mstyle->checkbox_true = look_tmp;
         } else {
-            look_tmp[0] = (char) ch;
-            look_tmp[1] = '\0';
-            mstyle->checkbox_true = strdup(look_tmp);
+            look_tmp = new char[2];
+            sprintf(look_tmp, "%c", ch);
+            mstyle->checkbox_true = look_tmp;
         }
-    } else
-        mstyle->checkbox_true = strdup("[x]");
+    } else {
+        look_tmp = new char[4];
+        sprintf(look_tmp, "[x]");
+        mstyle->checkbox_true = look_tmp;
+    }
 
-    ch = '_';
     if (XrmGetResource(database, "menu.checkbox.false.look",
                        "Menu.Checkbox.False.Look", &value_type, &value)) {
         if (sscanf(value.addr, "'%u'", &ch) != 1) {
-            mstyle->checkbox_false = strdup(value.addr);
+            look_tmp = new char[strlen(value.addr) + 1];
+            sprintf(look_tmp, value.addr);
+            mstyle->checkbox_false = look_tmp;
         } else {
-            look_tmp[0] = (char) ch;
-            look_tmp[1] = '\0';
-            mstyle->checkbox_false = strdup(look_tmp);
+            look_tmp = new char[2];
+            sprintf(look_tmp, "%c", ch);
+            mstyle->checkbox_false = look_tmp;
         }
-    } else 
-        mstyle->checkbox_false = strdup("[ ]");
+    } else {
+        look_tmp = new char[4];
+        sprintf(look_tmp, "[ ]");
+        mstyle->checkbox_false = look_tmp;
+    }
 
     ReadDatabaseColor("borderColor", "BorderColor",
                       &wstyle->border_color, BlackPixel(display, screen), ic);
@@ -889,7 +922,7 @@ void ResourceHandler::LoadMenus(void) {
         
         if ((s = strwithin(line, '[', ']'))) {
             if (! strcasecmp("start", s)) {
-                free(s);
+                delete [] s;
                 if ((s = strwithin(line, '(', ')')))
                     ParseMenu(new WaMenu(s), file);
                 else
@@ -897,7 +930,7 @@ void ResourceHandler::LoadMenus(void) {
                         linenr << endl;
             }
             else if (! strcasecmp("begin", s)) {
-                free(s);
+                delete [] s;
                 if ((s = strwithin(line, '(', ')'))) {
                     menu = new WaMenu(s);
                     m = new WaMenuItem(s);
@@ -905,18 +938,18 @@ void ResourceHandler::LoadMenus(void) {
                     menu->AddItem(m);
                     ParseMenu(menu, file);
                 } else {
-                    free(s);
+                    delete [] s;
                     WARNING << "failed to find menu name at line " <<
                         linenr << endl;
                 }
             } else {
-                free(s);
+                delete [] s;
                 WARNING << "missing [start] or [begin] statement at line " <<
                     linenr << endl;
             }
         }
         else {
-            free(s);
+            delete [] s;
             WARNING << "missing [start] or [begin] statement at line " <<
                 linenr << endl;
         }
@@ -1208,7 +1241,7 @@ void ResourceHandler::ReadDatabaseFont(char *rname, char *rclass,
  */
 void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                                   list<WaAction *> *insert) {
-    char *line, *token, *par;
+    char *line, *token, *par, *tmp_par;
     int i, detail, mod;
     WaAction *act_tmp;
     KeySym keysym;
@@ -1219,21 +1252,20 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         ERROR << "malloc returned NULL pointer (insufficient memory)" << endl;
         exit(1);
     }
-    if (! (line = strdup(s))) {
-        ERROR << "strdup returned NULL pointer (insufficient memory)" << endl;
-        exit(1);
-    }
+    
+    line = new char[strlen(s) + 1];
+    sprintf(line, s);
     
     detail = strchr(line, '=') ? 1: 0;
     mod    = strchr(line, '&') ? 1: 0;
     token  = strtok(line, ":");
     token  = strtrim(token);
     
-    if (! (par = strdup(token))) {
-        ERROR << "strdup returned NULL pointer (insufficient memory)" <<
-            endl; exit(1);
-    }
-    act_tmp->exec = (char *) 0;
+    tmp_par = new char[strlen(token) + 1];
+    sprintf(tmp_par, token);
+    par = tmp_par;
+    
+    act_tmp->exec = NULL;
     act_tmp->param = (unsigned long) 0;
     for (; *par != '(' && *par != '\0'; par++);
     if (*(par++) == '(') {
@@ -1242,7 +1274,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                 WARNING << "missing \")\" in resource line \"" << s << "\"" 
                         << endl;
                 free(act_tmp);
-                free(line);
+                delete [] line;
                 return;
             }
         if (*par == '\0' || *par == ')') {
@@ -1250,7 +1282,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                 WARNING "\"" << token << "\" action must have a menu as" <<
                     " parameter" << endl;
                 free(act_tmp);
-                free(line);
+                delete [] line;
                 return;
             }
         }
@@ -1267,7 +1299,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             if (menu_it == waimea->wamenu_list->end()) {
                 WARNING << "\"" << par << "\" unknown menu" << endl;
                 delete act_tmp;
-                free(line);
+                delete [] line;
                 return;
             }
         }
@@ -1282,9 +1314,10 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         WARNING "\"" << token << "\" action must have a menu as" <<
             " parameter" << endl;
         free(act_tmp);
-        free(line);
+        delete [] line;
         return;
     }
+    delete [] tmp_par;
     
     it = comp->begin();
     for (; it != comp->end(); ++it) {
@@ -1299,12 +1332,12 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         }
     }
     if (! *it) {
-        if (s = strwithin(token, '{', '}')) {
+        if ((s = strwithin(token, '{', '}'))) {
             act_tmp->exec = (char *) s;
         } else {
             WARNING << "\"" << token << "\" unknown action" << endl;
             free(act_tmp);
-            free(line);
+            delete [] line;
             return;
         }
     }
@@ -1317,7 +1350,6 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             for (; *token == '\0'; token++);
         }
     }
-    
     token = strtrim(token);
     
     it = types->begin();
@@ -1330,7 +1362,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     if (! *it) {
         WARNING << "\"" << token << "\" unknown type" << endl;
         free(act_tmp);
-        free(line);
+        delete [] line;
         return;
     }
     
@@ -1349,7 +1381,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                 if ((keysym = XStringToKeysym(token)) == NoSymbol) {
                     WARNING << "\"" << token << "\" unknown key" << endl;
                     free(act_tmp);
-                    free(line);
+                    delete [] line;
                     return;
                 } else
                     act_tmp->detail = XKeysymToKeycode(display, keysym);
@@ -1367,7 +1399,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             if (! *it) {
                 WARNING << "\"" << token << "\" unknown detail" << endl;
                 free(act_tmp);
-                free(line);
+                delete [] line;
                 return;
             }
         }        
@@ -1376,8 +1408,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     bool negative;
     act_tmp->mod = act_tmp->nmod = 0;
     if (mod) {
-        token += strlen(token) + 1;
-        
+        token += strlen(token) + 1;        
         it = mods->begin();
         for (; *token == '\0'; token++);
         for (token = strtok(token, "&"); token; token = strtok(NULL, "&")) {
@@ -1399,12 +1430,12 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             if (! *it) {
                 WARNING << "\"" << token << "\" unknown modifier" << endl;
                 free(act_tmp);
-                free(line);
+                delete [] line;
                 return;
             }
         }
-    }
-    free(line);
+    }    
+    delete [] line;
     insert->push_back(act_tmp);
 }
 
@@ -1421,7 +1452,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
  * @param file File descriptor for menu file
  */
 void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
-    char *s, line[8192], *line1, *line2;
+    char *s, line[8192], *line1 = NULL, *line2 = NULL;
     WaMenuItem *m;
     int i, type, cb;
     WaMenu *tmp_menu;
@@ -1442,8 +1473,8 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         if (! strcasecmp(s, "start")) {
-            free(s);
-            if (s = strwithin(line, '(', ')')) {
+            delete [] s;
+            if ((s = strwithin(line, '(', ')'))) {
                 menu = new WaMenu(s);
                 ParseMenu(menu, file);
             } else
@@ -1452,15 +1483,19 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         else if ((! strcasecmp(s, "submenu")) || (! strcasecmp(s, "begin"))) {
-            free(s);
-            if (s = strwithin(line, '(', ')')) {
+            delete [] s;
+            if ((s = strwithin(line, '(', ')'))) {
                 m = new WaMenuItem(s);
                 m->type = MenuSubType;
-                m->func_mask = MenuSubMask;
-                m->sub = s;
+                m->func_mask |= MenuSubMask;
+                m->func_mask1 |= MenuSubMask;
+                m->sub = m->sub1 = new char[strlen(s) + 1];
+                sprintf(m->sub1, s);
                 menu->AddItem(m);
-                tmp_menu = new WaMenu(s);
-                m = new WaMenuItem(s);
+                tmp_menu = new WaMenu(new char[strlen(s) + 1]);
+                sprintf(tmp_menu->name, s);
+                m = new WaMenuItem(new char[strlen(s) + 1]);
+                sprintf(m->label1, s);
                 m->type = MenuTitleType;
                 tmp_menu->AddItem(m);
                 ParseMenu(tmp_menu, file);
@@ -1470,10 +1505,13 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         else if (! strcasecmp(s, "restart")) {
-            free(s);
-            if (s = strwithin(line, '(', ')'))
+            delete [] s;
+            if ((s = strwithin(line, '(', ')')))
                 m = new WaMenuItem(s);
-            else m = new WaMenuItem("");
+            else {
+                m = new WaMenuItem(new char[1]);
+                *m->label = '\0';
+            }
             m->type = MenuItemType;
             m->func_mask = MenuRFuncMask;
             m->rfunc = &WaScreen::Restart;
@@ -1481,10 +1519,13 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         else if (! strcasecmp(s, "exit")) {
-            free(s);
-            if (s = strwithin(line, '(', ')'))
+            delete [] s;
+            if ((s = strwithin(line, '(', ')')))
                 m = new WaMenuItem(s);
-            else m = new WaMenuItem("");
+            else {
+                m = new WaMenuItem(new char[1]);
+                *m->label1 = '\0';
+            }
             m->type = MenuItemType;
             m->func_mask = MenuRFuncMask;
             m->rfunc = &WaScreen::Exit;
@@ -1492,34 +1533,44 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         else if (! strcasecmp(s, "exec")) {
-            free(s);
-            if (s = strwithin(line, '(', ')'))
+            delete [] s;
+            if ((s = strwithin(line, '(', ')')))
                 m = new WaMenuItem(s);
-            else m = new WaMenuItem("");
+            else {
+                m = new WaMenuItem(new char[1]);
+                *m->label1 = '\0';
+            }
             m->type = MenuItemType;
-            if (s = strwithin(line, '{', '}')) {
+            if ((s = strwithin(line, '{', '}'))) {
                 if (*s != '\0') {
                     m->exec = s;
+                    m->exec1 = s;
                     m->func_mask |= MenuExecMask;
+                    m->func_mask1 |= MenuExecMask;
                 }
+                else
+                    delete [] s;
             }
             menu->AddItem(m);
             continue;
         }
         else if (! strcasecmp(s, "nop")) {
-            free(s);
-            if (s = strwithin(line, '(', ')'))
+            delete [] s;
+            if ((s = strwithin(line, '(', ')')))
                 m = new WaMenuItem(s);
-            else m = new WaMenuItem("");
+            else {
+                m = new WaMenuItem(new char[1]);
+                *m->label1 = '\0';
+            }
             m->type = MenuItemType;
             menu->AddItem(m);
             continue;
         }
         else if (! strcasecmp(s, "end")) {
+            delete [] s;
             if (menu->item_list->empty()) {
                 WARNING << "no elements in menu \"" << menu->name <<
                     "\"" << endl;
-                free(s);
                 delete menu;
                 return;
             }
@@ -1528,45 +1579,54 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         else if (! strncasecmp(s, "checkbox", 8)) {
             if (! strcasecmp(s + 9, "MAXIMIZED")) {
+                delete [] s;
                 type = MenuCBItemType;
                 cb = MaxCBoxType;
             }
             else if (! strcasecmp(s + 9, "SHADED")) {
+                delete [] s;
                 type = MenuCBItemType;
                 cb = ShadeCBoxType;
             }
             else if (! strcasecmp(s + 9, "STICKY")) {
+                delete [] s;
                 type = MenuCBItemType;
                 cb = StickCBoxType;
             }
             else if (! strcasecmp(s + 9, "DECORTITLE")) {
+                delete [] s;
                 type = MenuCBItemType;
                 cb = TitleCBoxType;
             }
             else if (! strcasecmp(s + 9, "DECORHANDLE")) {
+                delete [] s;
                 type = MenuCBItemType;
                 cb = HandleCBoxType;
             }
             else if (! strcasecmp(s + 9, "DECORBORDER")) {
+                delete [] s;
                 type = MenuCBItemType;
                 cb = BorderCBoxType;
             }
             else if (! strcasecmp(s + 9, "DECORALL")) {
+                delete [] s;
                 type = MenuCBItemType;
                 cb = AllCBoxType;
             }
             else if (! strcasecmp(s + 9, "ALWAYSONTOP")) {
+                delete [] s;
                 type = MenuCBItemType;
                 cb = AOTCBoxType;
             }
             else if (! strcasecmp(s + 9, "ALWAYSATBOTTOM")) {
+                delete [] s;
                 type = MenuCBItemType;
                 cb = AABCBoxType;
             }
             else {
                 WARNING << "at line " << linenr << ": '"<< s + 9 << "'" <<
                     " unknown checkbox" << endl;
-                free(s);
+                delete [] s;
                 continue;
             }
             for (i = 0; strncasecmp(&line[i], "@TRUE", 5) &&
@@ -1574,7 +1634,6 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             if (line[i + 5] == '\0') {
                 WARNING << "at line " << linenr << ": No '@TRUE' linepart" <<
                     " for checkbox item" << endl;
-                free(s);
                 continue;
             }
             line2 = &line[i + 5];
@@ -1583,7 +1642,6 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             if (line[i + 6] == '\0') {
                 WARNING << "at line " << linenr << ": No '@FALSE' linepart" <<
                     " for checkbox item" << endl;
-                free(s);
                 continue;
             }
             line1 = &line[i + 6];
@@ -1594,40 +1652,48 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                      line2[i + 6] != '\0'; i++);
             if (line2[i + 6] != '\0') line2[i] = '\0';
         }
-        else if (! strcasecmp(s, "title"))
+        else if (! strcasecmp(s, "title")) {
+            delete [] s;
             type = MenuTitleType;
-        else if (! strcasecmp(s, "item"))
+        }
+        else if (! strcasecmp(s, "item")) {
+            delete [] s;
             type = MenuItemType;
-        else if (! strcasecmp(s, "sub"))
+        }
+        else if (! strcasecmp(s, "sub")) {
+            delete [] s;
             type = MenuSubType;
+        }
         else {
+            delete [] s;
             WARNING << "at line " << linenr << ": [" << s << "]" <<
                 " invalid statement" << endl;
-            free(s);
             continue;
         }
-        free(s);
         if (! cb) line1 = line;
-        if (s = strwithin(line1, '(', ')'))
-            m = new WaMenuItem(s);
-        else m = new WaMenuItem("");
+        if (! (s = strwithin(line1, '(', ')'))) {
+            s = new char[1];
+            *s = '\0';
+        }
+        m = new WaMenuItem(s);
         m->label1 = m->label;
         m->type = type;
         m->cb = cb;
-        if (s = strwithin(line1, '{', '}')) {
+        if ((s = strwithin(line1, '{', '}'))) {
             if (*s != '\0') {
-                m->exec = m->exec1 = s;
+                m->exec = s;
+                m->exec1 = s;
                 m->func_mask |= MenuExecMask;
                 m->func_mask1 |= MenuExecMask;
             }
         }
-        if (s = strwithin(line1, '<', '>')) {
+        if ((s = strwithin(line1, '<', '>'))) {
             m->sub = s;
             m->sub1 = s;
             m->func_mask |= MenuSubMask;
             m->func_mask1 |= MenuSubMask;
         }
-        if (s = strwithin(line1, '"', '"')) {
+        if ((s = strwithin(line1, '"', '"'))) {
             it = wacts->begin();
             for (; it != wacts->end(); ++it) {
                 if ((*it)->Comp(s)) {
@@ -1658,33 +1724,35 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                     break;
                 }
             }
+            delete [] s;
             if (! (m->wfunc || m->rfunc || m->mfunc)) {
                 WARNING << "at line " << linenr << ": function \"" << s <<
                     "\" not available" << endl;
-                free(s);
                 continue;
             }
         }
-        free(s);
-
+        
         if (cb) {
-            if (s = strwithin(line2, '(', ')'))
-                m->label2 = s;
-            else m->label2 = "";
-            if (s = strwithin(line2, '{', '}')) {
+            if (! (s = strwithin(line2, '(', ')'))) {
+                s = new char[1];
+                *s = '\0';
+            }
+            m->label2 = s;
+            if ((s = strwithin(line2, '{', '}'))) {
                 if (*s != '\0') {
                     m->exec2 = s;
                     m->func_mask2 |= MenuExecMask;
                 }
             }
-            if (s = strwithin(line2, '<', '>')) {
+            if ((s = strwithin(line2, '<', '>'))) {
                 m->sub2 = s;
                 m->func_mask2 |= MenuSubMask;
             }
-            if (s = strwithin(line2, '"', '"')) {
+            if ((s = strwithin(line2, '"', '"'))) {
                 it = wacts->begin();
                 for (; it != wacts->end(); ++it) {
                     if ((*it)->Comp(s)) {
+                        delete [] s;
                         m->wfunc2 = (*it)->winfunc;
                         m->func_mask2 |= MenuWFuncMask;
                         break;
@@ -1693,6 +1761,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                 it = racts->begin();
                 for (; it != racts->end(); ++it) {
                     if ((*it)->Comp(s)) {
+                        delete [] s;
                         m->rfunc2 = (*it)->rootfunc;
                         m->func_mask2 |= MenuRFuncMask;
                         break;
@@ -1701,6 +1770,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                 it = macts->begin();
                 for (; it != macts->end(); ++it) {
                     if ((*it)->Comp(s)) {
+                        delete [] s;
                         m->mfunc2 = (*it)->menufunc;
                         m->func_mask2 |= MenuMFuncMask;
                         break;
@@ -1709,11 +1779,10 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                 if (! (m->wfunc2 || m->rfunc2 || m->mfunc2)) {
                     WARNING << "at line " << linenr << ": function \"" << s <<
                         "\" not available" << endl;
-                    free(s);
+                    delete [] s;
                     continue;
                 }
             }
-            free(s);
         }
         menu->AddItem(m);
     }
@@ -1805,12 +1874,11 @@ char *strwithin(char *s, char c1, char c2) {
     }
     if (s[n] == '\0') return NULL; 
     s[n] = '\0';
-    if (! (str = strdup(s + i + 1))) {
-        ERROR << "strdup returned NULL pointer (insufficient memory)" <<
-            endl; quit(1);
-    }
-    s[n] = c2;
+
+    str = new char[strlen(s + i + 1) + 1];
+    sprintf(str, s + i + 1);
     
+    s[n] = c2;
     for (i = 0; str[i] != '\0'; i++) {
         if (str[i] == '%') {
 	    for (n = 1; str[i + n] != '\0'; n++)
@@ -1818,6 +1886,10 @@ char *strwithin(char *s, char c1, char c2) {
 	    str[i + n - 1] = '\0';
         }
     }
+    tmp = new char[strlen(str) + 1];
+    sprintf(tmp, str);
+    delete [] str;
+    str = tmp;
     for (i = 0;;) {
         for (; str[i] != '$' && str[i] != '\0'; i++);
         if (str[i] == '\0')
@@ -1828,7 +1900,7 @@ char *strwithin(char *s, char c1, char c2) {
             for (; str[i] != '$' && str[i] != '\0'; i++);
             if (str[i] == '\0') {
                 WARNING << "ending \"$\" not found" << endl;
-                free(str);
+                delete [] str;
                 return NULL;
             }
             else {
@@ -1842,7 +1914,7 @@ char *strwithin(char *s, char c1, char c2) {
                               strlen(&str[i + 1]) + 1];
                 sprintf(tmp, "%s%s%s", str, env, &str[i + 1]);
                 i = strlen(str) + 1;
-                free(str);
+                delete [] str;
                 str = tmp;
             }
         }

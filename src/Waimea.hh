@@ -60,6 +60,7 @@ public:
     } \
     delete list;
 
+
 enum {
     FrameType,
     WindowType,

@@ -36,6 +36,7 @@ int main(int argc, char **argv) {
     struct waoptions options;
     sprintf(program_name, "%s", argv[0]);
     int i;
+    XEvent e;
 
     options.menufile = options.actionfile = options.stylefile =
         options.rcfile = options.display = NULL;
@@ -85,7 +86,7 @@ int main(int argc, char **argv) {
     }
     
     Waimea *waimea = new Waimea(argv, &options);
-    waimea->eh->EventLoop(new hash_set<int>);
+    waimea->eh->EventLoop(waimea->eh->empty_return_mask, &e);
     
     return 1;
 }

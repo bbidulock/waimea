@@ -58,8 +58,6 @@ char *errfunc;
  * @param options Parsed command line options
  */
 Waimea::Waimea(char **av, struct waoptions *options) {
-    struct sigaction act;    
-
     argv = av;
     XSetErrorHandler((XErrorHandler) xerrorhandler);
     if (! (display = XOpenDisplay(options->display))) {
@@ -112,7 +110,6 @@ Waimea::Waimea(char **av, struct waoptions *options) {
 Waimea::~Waimea(void) {
     net->SetClientList(wascreen);
     net->SetClientListStacking(wascreen);
-    delete eh;
     LISTCLEAR(wamenu_list);
     LISTCLEAR2(wawindow_list);
     delete wawindow_list_map_order;
@@ -122,7 +119,10 @@ Waimea::~Waimea(void) {
     delete wascreen;
     delete net;
     delete rh;
+    delete always_on_top_list;
+    delete always_at_bottom_list;
     delete window_table;
+    delete eh;
 
     XSync(display, False);
     XCloseDisplay(display);

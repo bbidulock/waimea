@@ -66,7 +66,7 @@ WaMenu::~WaMenu(void) {
         XDestroyWindow(display, o_north);
         XDestroyWindow(display, o_south);
     }
-    free(name);
+    delete [] name;
 }
 
 /**
@@ -159,7 +159,7 @@ void WaMenu::Build(WaScreen *screen) {
             }
         }
     }
-    int b, cb, lasttype = 0;
+    int lasttype = 0;
     it = item_list->begin();
     for (i = 1; it != item_list->end(); ++it, ++i) {
 #ifdef XFT
@@ -626,7 +626,7 @@ void WaMenu::FocusFirst(void) {
  * @param s Menu item label
  */
 WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
-    label = s;
+    label = label1 = s;
     id = (Window) 0;
     func_mask = func_mask1 = func_mask2 = height = width = dy =
         realheight = cb = 0;
@@ -635,9 +635,12 @@ WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     mfunc = mfunc2 = NULL;
     sub = NULL;
     wf = (Window) 0;
+    exec = sub = exec1 = sub1 = label2 = exec2 = sub2 = cbox = NULL;
+    
 #ifdef XFT
     xftdraw = (Drawable) 0;
 #endif // XFT
+    
 }
 
 /**
@@ -648,6 +651,13 @@ WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
  * window.
  */
 WaMenuItem::~WaMenuItem(void) {
+    delete [] label1;
+    if (label2) delete [] label2;
+    if (sub1) delete [] sub1;
+    if (sub2) delete [] sub2;
+    if (exec1) delete [] exec1;
+    if (exec2) delete [] exec2;
+    
     if (menu->built) {
         
 #ifdef XFT
@@ -983,7 +993,7 @@ void WaMenuItem::Focus(void) {
  * @param e Event causing function call
  */
 void WaMenuItem::Move(XEvent *e, WaAction *) {
-    XEvent *event;
+    XEvent event;
     int px, py, i;
     list<XEvent *> *maprequest_list;
     bool started = False;
@@ -1008,37 +1018,37 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
                  LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
                  menu->waimea->move_cursor, CurrentTime);
     for (;;) {
-        event = menu->waimea->eh->EventLoop(
-            menu->waimea->eh->menu_viewport_move_return_mask);
-        switch (event->type) {
+        menu->waimea->eh->EventLoop(
+            menu->waimea->eh->menu_viewport_move_return_mask, &event);
+        switch (event.type) {
             case MotionNotify:
                 if (! started) {
                     menu->ToggleOutline();
                     started = True;
                 }
-                nx += event->xmotion.x_root - px;
-                ny += event->xmotion.y_root - py;
-                px  = event->xmotion.x_root;
-                py  = event->xmotion.y_root;
+                nx += event.xmotion.x_root - px;
+                ny += event.xmotion.y_root - py;
+                px  = event.xmotion.x_root;
+                py  = event.xmotion.y_root;
                 menu->DrawOutline(nx - menu->x, ny - menu->y);
                 break;
             case LeaveNotify:
             case EnterNotify:
-                if (menu->wascreen->west->id == event->xcrossing.window ||
-                    menu->wascreen->east->id == event->xcrossing.window ||
-                    menu->wascreen->north->id == event->xcrossing.window ||
-                    menu->wascreen->south->id == event->xcrossing.window) {
-                    menu->waimea->eh->ed.type = event->type;
-                    menu->waimea->eh->ed.mod = event->xcrossing.state;
+                if (menu->wascreen->west->id == event.xcrossing.window ||
+                    menu->wascreen->east->id == event.xcrossing.window ||
+                    menu->wascreen->north->id == event.xcrossing.window ||
+                    menu->wascreen->south->id == event.xcrossing.window) {
+                    menu->waimea->eh->ed.type = event.type;
+                    menu->waimea->eh->ed.mod = event.xcrossing.state;
                     menu->waimea->eh->ed.detail = 0;
-                    menu->waimea->eh->EvAct(event, event->xcrossing.window);
+                    menu->waimea->eh->EvAct(&event, event.xcrossing.window);
                 }
                 break;
             case MapRequest:
-                maprequest_list->push_front(event); break;
+                maprequest_list->push_front(&event); break;
             case ButtonPress:
             case ButtonRelease:
-                if (e->type == event->type) break;
+                if (e->type == event.type) break;
                 if (started) menu->ToggleOutline();
                 menu->Move(nx - menu->x, ny - menu->y);
                 XUngrabPointer(menu->display, CurrentTime);
@@ -1061,7 +1071,7 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
  * @param e Event causing function call
  */
 void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
-    XEvent *event;
+    XEvent event;
     int px, py, i;
     list<XEvent *> *maprequest_list;
     int nx = menu->x;
@@ -1083,33 +1093,33 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                  LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
                  menu->waimea->move_cursor, CurrentTime);
     for (;;) {
-        event = menu->waimea->eh->EventLoop(
-            menu->waimea->eh->menu_viewport_move_return_mask);
-        switch (event->type) {
+        menu->waimea->eh->EventLoop(
+            menu->waimea->eh->menu_viewport_move_return_mask, &event);
+        switch (event.type) {
             case MotionNotify:
-                nx += event->xmotion.x_root - px;
-                ny += event->xmotion.y_root - py;
-                px = event->xmotion.x_root;
-                py = event->xmotion.y_root;
+                nx += event.xmotion.x_root - px;
+                ny += event.xmotion.y_root - py;
+                px = event.xmotion.x_root;
+                py = event.xmotion.y_root;
                 menu->Move(nx - menu->x, ny - menu->y);
                 break;
             case LeaveNotify:
             case EnterNotify:
-                if (menu->wascreen->west->id == event->xcrossing.window ||
-                    menu->wascreen->east->id == event->xcrossing.window ||
-                    menu->wascreen->north->id == event->xcrossing.window ||
-                    menu->wascreen->south->id == event->xcrossing.window) {
-                    menu->waimea->eh->ed.type = event->type;
-                    menu->waimea->eh->ed.mod = event->xcrossing.state;
+                if (menu->wascreen->west->id == event.xcrossing.window ||
+                    menu->wascreen->east->id == event.xcrossing.window ||
+                    menu->wascreen->north->id == event.xcrossing.window ||
+                    menu->wascreen->south->id == event.xcrossing.window) {
+                    menu->waimea->eh->ed.type = event.type;
+                    menu->waimea->eh->ed.mod = event.xcrossing.state;
                     menu->waimea->eh->ed.detail = 0;
-                    menu->waimea->eh->EvAct(event, event->xcrossing.window);
+                    menu->waimea->eh->EvAct(&event, event.xcrossing.window);
                 }
                 break;
             case MapRequest:
-                maprequest_list->push_front(event); break;
+                maprequest_list->push_front(&event); break;
             case ButtonPress:
             case ButtonRelease:
-                if (e->type == event->type) break;
+                if (e->type == event.type) break;
                 XUngrabPointer(menu->display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(menu->display, maprequest_list->front());
@@ -1344,14 +1354,16 @@ void WaMenuItem::UpdateCBox(void) {
 
 
 /** 
- * @fn    TaskSwitcher(void) : WaMenu(strdup("__taskswitcher__")
+ * @fn    TaskSwitcher(void) : WaMenu(new char[strlen("__taskswitcher__")])
  * @brief Constructor for TaskSwitcher class
  *
  * Creates a TaskSwitcher object, used for fast switching between windows.
  * This is a WaMenu with some extra functionality.
  * 
  */
-TaskSwitcher::TaskSwitcher(void) : WaMenu(strdup("__taskswitcher__")) {
+TaskSwitcher::TaskSwitcher(void) :
+    WaMenu(new char[strlen("__taskswitcher__") + 1]) {
+    sprintf(name, "__taskswitcher__");
     tasksw = True;
 }
 
@@ -1375,14 +1387,16 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
     }
     built = False;
    
-    m = new WaMenuItem("Window List");
+    m = new WaMenuItem(new char[strlen("Window List") + 1]);
+    sprintf(m->label1, "Window List");
     m->type = MenuTitleType;
     AddItem(m);
 
     list<WaWindow *>::iterator it = wawindow_list->begin();
     for (++it; it != wawindow_list->end(); ++it) {
         ww = (WaWindow *) *it;
-        m = new WaMenuItem(ww->name);
+        m = new WaMenuItem(new char[strlen(ww->name) + 1]);
+        sprintf(m->label1, ww->name);
         m->type = MenuItemType;
         m->wfunc = &WaWindow::RaiseFocus;
         m->func_mask |= MenuWFuncMask;
@@ -1391,7 +1405,8 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
     }
     if (! wawindow_list->empty()) {
         ww = (WaWindow *) wawindow_list->front();
-        m = new WaMenuItem(ww->name);
+        m = new WaMenuItem(new char[strlen(ww->name) + 1]);
+        sprintf(m->label1, ww->name);
         m->type = MenuItemType;
         m->wfunc = &WaWindow::RaiseFocus;
         m->func_mask |= MenuWFuncMask;

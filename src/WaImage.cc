@@ -19,8 +19,6 @@
  *
  */
 
-#include "WaImage.hh"
-
 #include <sys/types.h>
 
 #ifndef u_int32_t
@@ -39,6 +37,8 @@ typedef unsigned int u_int32_t;
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+
+#include "WaImage.hh"
 
 static unsigned long bsqrt(unsigned long x) {
     if (x <= 0) return 0;

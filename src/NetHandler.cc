@@ -281,11 +281,11 @@ void NetHandler::SetState(WaWindow *ww, int newstate) {
  */
 void NetHandler::GetWmState(WaWindow *ww) {
     CARD32 *data;
-    XEvent *e;
-    WaAction *ac;
+    XEvent *e = NULL;
+    WaAction *ac = NULL;
     bool vert = False, horz = False, shaded = False, title = False,
         handle = False, border = False, decor = False;
-    int i;
+    unsigned int i;
     
     if (XGetWindowProperty(display, ww->id, net_state, 0L, 10L,
                            False, XA_ATOM, &real_type,
@@ -501,7 +501,7 @@ void NetHandler::GetClientListStacking(WaScreen *ws) {
     CARD32 *data;    
     hash_map<Window, WindowObject *>::iterator it;
     WaWindow *ww;
-    int i;
+    unsigned int i;
     
     if (XGetWindowProperty(display, ws->id, net_client_list_stacking,
                            0L, waimea->wawindow_list->size(),
@@ -739,6 +739,5 @@ void NetHandler::wXDNDMakeAwareness(Window window) {
  * @param window Window to remove DND awareness from
  */
 void NetHandler::wXDNDClearAwareness(Window window) {
-    long int xdnd_version = 3;
     XDeleteProperty (waimea->display, window, xa_xdndaware);
 }

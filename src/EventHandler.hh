@@ -37,13 +37,15 @@ public:
     EventHandler(Waimea *);
     virtual ~EventHandler(void);
 
-    XEvent *EventLoop(hash_set<int> *);
+    void EventLoop(hash_set<int> *, XEvent *);
     void EvExpose(XExposeEvent *);
     void EvUnmapDestroy(XEvent *);
     void EvConfigureRequest(XConfigureRequestEvent *);
     void EvAct(XEvent *, Window);
 
     EventDetail ed;
+    XEvent *event;
+    hash_set<int> *empty_return_mask;
     hash_set<int> *moveresize_return_mask;
     hash_set<int> *menu_viewport_move_return_mask;
 

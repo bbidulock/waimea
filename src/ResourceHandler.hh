@@ -31,6 +31,15 @@ typedef struct _DockStyle DockStyle;
 #include "WaImage.hh"
 #include "WaMenu.hh"
 
+#define ACTLISTCLEAR(list) \
+    while (! list->empty()) { \
+        if (list->back()->exec) \
+            delete [] list->back()->exec; \
+        free(list->back()); \
+        list->pop_back(); \
+    } \
+    delete list;
+
 struct _WaAction {
     WwActionFn winfunc;
     RootActionFn rootfunc;

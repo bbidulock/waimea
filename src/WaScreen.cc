@@ -161,11 +161,18 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
  */
 WaScreen::~WaScreen(void) {
     LISTCLEAR(docks);
+    
+    delete strut_list;
     delete west;
     delete east;
     delete north;
     delete south;
     delete ic;
+
+    delete [] mstyle.bullet;
+    delete [] mstyle.checkbox_false;
+    delete [] mstyle.checkbox_true;
+    
     XFreeGC(display, wstyle.b_pic_focus_gc);
     XFreeGC(display, wstyle.b_pic_unfocus_gc);
     XFreeGC(display, wstyle.b_pic_hilite_gc);
@@ -500,8 +507,6 @@ void WaScreen::UpdateWorkarea(void) {
     workarea->width = workarea->width - workarea->x;
     workarea->height = workarea->height - workarea->y;
 
-    XEvent *e;
-    WaAction *ac;
     int res_x, res_y, res_w, res_h;
     if (old_x != workarea->x || old_y != workarea->y ||
         old_width != workarea->width || old_height != workarea->height) {
@@ -692,8 +697,8 @@ void WaScreen::ScrollViewport(int direction, bool warp, WaAction *ac) {
  * @param e XEvent causing function call
  */
 void WaScreen::ViewportMove(XEvent *e, WaAction *) {
-    XEvent *event;
-    int px, py, nx, ny, i;
+    XEvent event;
+    int px, py, i;
     list<XEvent *> *maprequest_list;
     Window w;
     unsigned int ui;
@@ -707,31 +712,31 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                  LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
                  waimea->move_cursor, CurrentTime);
     for (;;) {
-        event =
-            waimea->eh->EventLoop(waimea->eh->menu_viewport_move_return_mask);
-        switch (event->type) {
+        waimea->eh->EventLoop(waimea->eh->menu_viewport_move_return_mask,
+                              &event);
+        switch (event.type) {
             case MotionNotify:
                 it = waimea->wawindow_list->begin();
                 for (; it != waimea->wawindow_list->end(); ++it) {
                     (*it)->dontsend = True;
                 }    
-                MoveViewportTo(v_x - (event->xmotion.x_root - px),
-                               v_y - (event->xmotion.y_root - py));
-                px = event->xmotion.x_root;
-                py = event->xmotion.y_root;
+                MoveViewportTo(v_x - (event.xmotion.x_root - px),
+                               v_y - (event.xmotion.y_root - py));
+                px = event.xmotion.x_root;
+                py = event.xmotion.y_root;
                 break;
             case LeaveNotify:
             case EnterNotify:
                 break;
             case DestroyNotify:
             case UnmapNotify:
-                waimea->eh->EvUnmapDestroy(event);
+                waimea->eh->EvUnmapDestroy(&event);
                 break;
             case MapRequest:
-                maprequest_list->push_front(event); break;
+                maprequest_list->push_front(&event); break;
             case ButtonPress:
             case ButtonRelease:
-                if (e->type == event->type) break;
+                if (e->type == event.type) break;
                 XUngrabPointer(display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());

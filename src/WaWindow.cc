@@ -402,8 +402,6 @@ void WaWindow::UpdateAllAttributes(void) {
  */
 void WaWindow::RedrawWindow(void) {
     Bool move = False, resize = False;
-    XEvent *e;
-    WaAction *ac;
     
     if (old_attrib.x != attrib.x) {
         frame->attrib.x = attrib.x - border_w;
@@ -536,8 +534,8 @@ void WaWindow::ReparentWin(void) {
                      StructureNotifyMask | SubstructureNotifyMask);
 
 #ifdef SHAPE
+        XRectangle *dummy = NULL;
         int n, order;
-        XRectangle *dummy;
         if (wascreen->shape) {
             XShapeSelectInput(display, id, ShapeNotifyMask);
             dummy = XShapeGetRectangles(display, id, ShapeBounding, &n,
@@ -1365,7 +1363,7 @@ void WaWindow::Focus(XEvent *, WaAction *, bool vis) {
  * @param e XEvent causing start of move
  */
 void WaWindow::Move(XEvent *e, WaAction *) {
-    XEvent *event;
+    XEvent event;
     int px, py, nx, ny, i;
     list<XEvent *> *maprequest_list;
     bool started = False;
@@ -1399,13 +1397,13 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                      waimea->move_cursor, CurrentTime);
     XUngrabServer(display);
     for (;;) {
-        event = waimea->eh->EventLoop(waimea->eh->moveresize_return_mask);
-        switch (event->type) {
+        waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
+        switch (event.type) {
             case MotionNotify:
-                nx += event->xmotion.x_root - px;
-                ny += event->xmotion.y_root - py;
-                px  = event->xmotion.x_root;
-                py  = event->xmotion.y_root;
+                nx += event.xmotion.x_root - px;
+                ny += event.xmotion.y_root - py;
+                px  = event.xmotion.x_root;
+                py  = event.xmotion.y_root;
                 if (! started) {
                     ToggleOutline();
                     started = True;
@@ -1414,40 +1412,40 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                 break;
             case LeaveNotify:
             case EnterNotify:
-                if (wascreen->west->id == event->xcrossing.window ||
-                    wascreen->east->id == event->xcrossing.window ||
-                    wascreen->north->id == event->xcrossing.window ||
-                    wascreen->south->id == event->xcrossing.window) {
-                    waimea->eh->ed.type = event->type;
-                    waimea->eh->ed.mod = event->xcrossing.state;
+                if (wascreen->west->id == event.xcrossing.window ||
+                    wascreen->east->id == event.xcrossing.window ||
+                    wascreen->north->id == event.xcrossing.window ||
+                    wascreen->south->id == event.xcrossing.window) {
+                    waimea->eh->ed.type = event.type;
+                    waimea->eh->ed.mod = event.xcrossing.state;
                     waimea->eh->ed.detail = 0;
-                    waimea->eh->EvAct(event, event->xcrossing.window);
+                    waimea->eh->EvAct(&event, event.xcrossing.window);
                 }
                 break;
             case DestroyNotify:
             case UnmapNotify:
-                if ((((event->type == UnmapNotify)? event->xunmap.window:
-                      event->xdestroywindow.window) == id)) {
+                if ((((event.type == UnmapNotify)? event.xunmap.window:
+                      event.xdestroywindow.window) == id)) {
                     while (! maprequest_list->empty()) {
                         XPutBackEvent(display, maprequest_list->front());
                         maprequest_list->pop_front();
                     }
                     delete maprequest_list;
-                    XPutBackEvent(display, event);
+                    XPutBackEvent(display, &event);
                     if (started) ToggleOutline();
                     return;
                 }
-                waimea->eh->EvUnmapDestroy(event);
+                waimea->eh->EvUnmapDestroy(&event);
                 break;
             case ConfigureRequest:
-                if (event->xconfigurerequest.window != id)
-                    waimea->eh->EvConfigureRequest(&event->xconfigurerequest);
+                if (event.xconfigurerequest.window != id)
+                    waimea->eh->EvConfigureRequest(&event.xconfigurerequest);
                 break;
             case MapRequest:
-                maprequest_list->push_front(event); break;
+                maprequest_list->push_front(&event); break;
             case ButtonPress:
             case ButtonRelease:
-                if (e->type == event->type) break;
+                if (e->type == event.type) break;
                 XUngrabPointer(display, CurrentTime);
                 if (started) ToggleOutline();
                 attrib.x = nx;
@@ -1473,7 +1471,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
  * @param e XEvent causing start of move
  */
 void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
-    XEvent *event;
+    XEvent event;
     int px, py, nx = attrib.x, ny = attrib.y, i;
     list<XEvent *> *maprequest_list;
     Window w;
@@ -1499,52 +1497,52 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                      waimea->move_cursor, CurrentTime);
     XUngrabServer(display);
     for (;;) {
-        event = waimea->eh->EventLoop(waimea->eh->moveresize_return_mask);
-        switch (event->type) {
+        waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
+        switch (event.type) {
             case MotionNotify:
-                nx += event->xmotion.x_root - px;
-                ny += event->xmotion.y_root - py;
-                px = event->xmotion.x_root;
-                py = event->xmotion.y_root;
+                nx += event.xmotion.x_root - px;
+                ny += event.xmotion.y_root - py;
+                px = event.xmotion.x_root;
+                py = event.xmotion.y_root;
                 attrib.x = nx;
                 attrib.y = ny;
                 RedrawWindow();
                 break;
             case LeaveNotify:
             case EnterNotify:
-                if (wascreen->west->id == event->xcrossing.window ||
-                    wascreen->east->id == event->xcrossing.window ||
-                    wascreen->north->id == event->xcrossing.window ||
-                    wascreen->south->id == event->xcrossing.window) {
-                    waimea->eh->ed.type = event->type;
-                    waimea->eh->ed.mod = event->xcrossing.state;
+                if (wascreen->west->id == event.xcrossing.window ||
+                    wascreen->east->id == event.xcrossing.window ||
+                    wascreen->north->id == event.xcrossing.window ||
+                    wascreen->south->id == event.xcrossing.window) {
+                    waimea->eh->ed.type = event.type;
+                    waimea->eh->ed.mod = event.xcrossing.state;
                     waimea->eh->ed.detail = 0;
-                    waimea->eh->EvAct(event, event->xcrossing.window);
+                    waimea->eh->EvAct(&event, event.xcrossing.window);
                 }
                 break;
             case DestroyNotify:
             case UnmapNotify:
-                if ((((event->type == UnmapNotify)? event->xunmap.window:
-                      event->xdestroywindow.window) == id)) {
+                if ((((event.type == UnmapNotify)? event.xunmap.window:
+                      event.xdestroywindow.window) == id)) {
                     while (! maprequest_list->empty()) {
                         XPutBackEvent(display, maprequest_list->front());
                         maprequest_list->pop_front();
                     }
                     delete maprequest_list;
-                    XPutBackEvent(display, event);
+                    XPutBackEvent(display, &event);
                     return;
                 }
-                waimea->eh->EvUnmapDestroy(event);
+                waimea->eh->EvUnmapDestroy(&event);
                 break;
             case ConfigureRequest:
-                if (event->xconfigurerequest.window != id)
-                    waimea->eh->EvConfigureRequest(&event->xconfigurerequest);
+                if (event.xconfigurerequest.window != id)
+                    waimea->eh->EvConfigureRequest(&event.xconfigurerequest);
                 break;
             case MapRequest:
-                maprequest_list->push_front(event); break;
+                maprequest_list->push_front(&event); break;
             case ButtonPress:
             case ButtonRelease:
-                if (e->type == event->type) break;
+                if (e->type == event.type) break;
                 XUngrabPointer(display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
@@ -1571,7 +1569,7 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
  * @param e XEvent causing start of resize
  */
 void WaWindow::Resize(XEvent *e, int how) {
-    XEvent *event;
+    XEvent event;
     int px, py, width, height, n_w, n_h, o_w, o_h, n_x, o_x, i;
     list<XEvent *> *maprequest_list;
     bool started = False;
@@ -1593,13 +1591,13 @@ void WaWindow::Resize(XEvent *e, int how) {
                      waimea->resizeleft_cursor, CurrentTime);
     XUngrabServer(display);
     for (;;) {
-        event = waimea->eh->EventLoop(waimea->eh->moveresize_return_mask);
-        switch (event->type) {
+        waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
+        switch (event.type) {
             case MotionNotify:
-                width  += (event->xmotion.x_root - px) * how;
-                height += event->xmotion.y_root - py;
-                px = event->xmotion.x_root;
-                py = event->xmotion.y_root;
+                width  += (event.xmotion.x_root - px) * how;
+                height += event.xmotion.y_root - py;
+                px = event.xmotion.x_root;
+                py = event.xmotion.y_root;
                 if (IncSizeCheck(width, height, &n_w, &n_h)) {
                     if (how == WestType) n_x -= n_w - o_w;
                     if (! started) {
@@ -1614,14 +1612,14 @@ void WaWindow::Resize(XEvent *e, int how) {
                 break;
             case LeaveNotify:
             case EnterNotify:
-                if (wascreen->west->id == event->xcrossing.window ||
-                    wascreen->east->id == event->xcrossing.window ||
-                    wascreen->north->id == event->xcrossing.window ||
-                    wascreen->south->id == event->xcrossing.window) {
-                    waimea->eh->ed.type = event->type;
-                    waimea->eh->ed.mod = event->xcrossing.state;
+                if (wascreen->west->id == event.xcrossing.window ||
+                    wascreen->east->id == event.xcrossing.window ||
+                    wascreen->north->id == event.xcrossing.window ||
+                    wascreen->south->id == event.xcrossing.window) {
+                    waimea->eh->ed.type = event.type;
+                    waimea->eh->ed.mod = event.xcrossing.state;
                     waimea->eh->ed.detail = 0;
-                    waimea->eh->EvAct(event, event->xcrossing.window);
+                    waimea->eh->EvAct(&event, event.xcrossing.window);
                     XQueryPointer(display, wascreen->id, &w, &w, &px, &py,
                                   &i, &i, &ui);
                     n_x = attrib.x;
@@ -1631,28 +1629,28 @@ void WaWindow::Resize(XEvent *e, int how) {
                 break;
             case DestroyNotify:
             case UnmapNotify:
-                if ((((event->type == UnmapNotify)? event->xunmap.window:
-                      event->xdestroywindow.window) == id)) {
+                if ((((event.type == UnmapNotify)? event.xunmap.window:
+                      event.xdestroywindow.window) == id)) {
                     while (! maprequest_list->empty()) {
                         XPutBackEvent(display, maprequest_list->front());
                         maprequest_list->pop_front();
                     }
                     delete maprequest_list;
-                    XPutBackEvent(display, event);
+                    XPutBackEvent(display, &event);
                     if (started) ToggleOutline();
                     return;
                 }
-                waimea->eh->EvUnmapDestroy(event);
+                waimea->eh->EvUnmapDestroy(&event);
                 break;
             case ConfigureRequest:
-                if (event->xconfigurerequest.window != id)
-                    waimea->eh->EvConfigureRequest(&event->xconfigurerequest);
+                if (event.xconfigurerequest.window != id)
+                    waimea->eh->EvConfigureRequest(&event.xconfigurerequest);
                 break;
             case MapRequest:
-                maprequest_list->push_front(event); break;
+                maprequest_list->push_front(&event); break;
             case ButtonRelease:
             case ButtonPress:
-                if (e->type == event->type) break;
+                if (e->type == event.type) break;
                 if (started) ToggleOutline();
                 attrib.x      = n_x;
                 attrib.width  = n_w;
@@ -1682,7 +1680,7 @@ void WaWindow::Resize(XEvent *e, int how) {
  * @param e XEvent causing start of resize
  */
 void WaWindow::ResizeOpaque(XEvent *e, int how) {
-    XEvent *event;
+    XEvent event;
     int px, py, width, height, n_w, n_h, i;
     list<XEvent *> *maprequest_list;
     Window w;
@@ -1703,13 +1701,13 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                      waimea->resizeleft_cursor, CurrentTime);
     XUngrabServer(display);
     for (;;) {
-        event = waimea->eh->EventLoop(waimea->eh->moveresize_return_mask);
-        switch (event->type) {
+        waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
+        switch (event.type) {
             case MotionNotify:
-                width  += (event->xmotion.x_root - px) * how;
-                height += event->xmotion.y_root - py;
-                px  = event->xmotion.x_root;
-                py  = event->xmotion.y_root;
+                width  += (event.xmotion.x_root - px) * how;
+                height += event.xmotion.y_root - py;
+                px  = event.xmotion.x_root;
+                py  = event.xmotion.y_root;
                 if (IncSizeCheck(width, height, &n_w, &n_h)) {
                     if (how == WestType) attrib.x -= n_w - attrib.width;
                     attrib.width  = n_w;
@@ -1719,41 +1717,41 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                 break;
             case LeaveNotify:
             case EnterNotify:
-                if (wascreen->west->id == event->xcrossing.window ||
-                    wascreen->east->id == event->xcrossing.window ||
-                    wascreen->north->id == event->xcrossing.window ||
-                    wascreen->south->id == event->xcrossing.window) {
-                    waimea->eh->ed.type = event->type;
-                    waimea->eh->ed.mod = event->xcrossing.state;
+                if (wascreen->west->id == event.xcrossing.window ||
+                    wascreen->east->id == event.xcrossing.window ||
+                    wascreen->north->id == event.xcrossing.window ||
+                    wascreen->south->id == event.xcrossing.window) {
+                    waimea->eh->ed.type = event.type;
+                    waimea->eh->ed.mod = event.xcrossing.state;
                     waimea->eh->ed.detail = 0;
-                    waimea->eh->EvAct(event, event->xcrossing.window);
+                    waimea->eh->EvAct(&event, event.xcrossing.window);
                     XQueryPointer(display, wascreen->id, &w, &w, &px, &py,
                                   &i, &i, &ui);
                 }
                 break;
             case DestroyNotify:
             case UnmapNotify:
-                if ((((event->type == UnmapNotify)? event->xunmap.window:
-                      event->xdestroywindow.window) == id)) {
+                if ((((event.type == UnmapNotify)? event.xunmap.window:
+                      event.xdestroywindow.window) == id)) {
                     while (! maprequest_list->empty()) {
                         XPutBackEvent(display, maprequest_list->front());
                         maprequest_list->pop_front();
                     }
                     delete maprequest_list;
-                    XPutBackEvent(display, event);
+                    XPutBackEvent(display, &event);
                     return;
                 }
-                waimea->eh->EvUnmapDestroy(event);
+                waimea->eh->EvUnmapDestroy(&event);
                 break;
             case ConfigureRequest:
-                if (event->xconfigurerequest.window != id)
-                    waimea->eh->EvConfigureRequest(&event->xconfigurerequest);
+                if (event.xconfigurerequest.window != id)
+                    waimea->eh->EvConfigureRequest(&event.xconfigurerequest);
                 break;
             case MapRequest:
-                maprequest_list->push_front(event); break;
+                maprequest_list->push_front(&event); break;
             case ButtonPress:
             case ButtonRelease:
-                if (e->type == event->type) break;
+                if (e->type == event.type) break;
                 XUngrabPointer(display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
@@ -1828,7 +1826,7 @@ void WaWindow::_Maximize(int x, int y) {
  * Restores size and position of maximized window.
  */
 void WaWindow::UnMaximize(XEvent *, WaAction *) {
-    int n_w, n_h, rest_height, tmp_shade_height;
+    int n_w, n_h, rest_height, tmp_shade_height = 0;
     
     if (flags.max) {
         if (flags.shaded) {
@@ -2007,7 +2005,6 @@ void WaWindow::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
  */
 void WaWindow::Shade(XEvent *, WaAction *) {
     int n_w, n_h;
-    bool mv = False, mh = False;
     
     if (IncSizeCheck(attrib.width, -(handle_w + border_w * 2), &n_w, &n_h)) {
         attrib.width = n_w;
