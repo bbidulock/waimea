@@ -77,7 +77,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     flags.sticky = flags.shaded = flags.max = flags.title = flags.handle =
         flags.border = flags.all = flags.alwaysontop =
         flags.alwaysatbottom = flags.forcedatbottom = false;
-    flags.focusable = true;
+    flags.focusable = flags.tasklist = true;
     frameacts = awinacts = pwinacts = titleacts = labelacts = handleacts =
         lgacts = rgacts = NULL;
     transient_for = (Window) 0;
@@ -238,10 +238,17 @@ WaWindow::~WaWindow(void) {
     if (wm_strut) {
         wascreen->strut_list.remove(wm_strut);
         free(wm_strut);
-        wascreen->UpdateWorkarea();
+        if (! wascreen->shutdown) wascreen->UpdateWorkarea();
     }
     
     delete frame;
+
+    if (! wascreen->shutdown) {
+        wascreen->net->SetClientList(wascreen);
+        wascreen->net->SetClientListStacking(wascreen);
+        if (! wascreen->wawindow_list.empty())
+            wascreen->wawindow_list.front()->Focus(false);
+    }
 }
 
 /**

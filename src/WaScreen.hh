@@ -224,7 +224,7 @@ public:
     ScreenEdge *west, *east, *north, *south;
     Workarea *workarea;
     Window wm_check;
-    bool focus;
+    bool focus, shutdown;
 
     list<Window> always_on_top_list;
     list<Window> always_at_bottom_list;

@@ -2175,8 +2175,11 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file,
             if ((s = strwithin(line, '{', '}')))
                 m->param1 = m->param = __m_wastrdup(s);
             m->type = MenuItemType;            
-            m->func_mask = MenuRFuncMask;
+            m->func_mask = MenuRFuncMask | MenuWFuncMask | MenuMFuncMask;
             m->rfunc = &WaScreen::Restart;
+            m->wfunc = &WaWindow::Restart;
+            m->mfunc = &WaMenuItem::Restart;
+            
             menu->AddItem(m);
             continue;
         }
@@ -2187,8 +2190,11 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file,
             else
                 m = new WaMenuItem("");
             m->type = MenuItemType;
-            m->func_mask = MenuRFuncMask;
+            m->func_mask = MenuRFuncMask | MenuWFuncMask | MenuMFuncMask;
             m->rfunc = &WaScreen::Exit;
+            m->wfunc = &WaWindow::Exit;
+            m->mfunc = &WaMenuItem::Exit;
+            
             menu->AddItem(m);
             continue;
         }
@@ -2355,7 +2361,7 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file,
             }
             else
                 delete [] tmp_par;
-            
+
             it = wacts.begin();
             for (; it != wacts.end(); ++it) {
                 if ((*it)->Comp(s)) {

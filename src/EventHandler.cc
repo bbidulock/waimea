@@ -509,10 +509,6 @@ void EventHandler::EvUnmapDestroy(XEvent *e) {
             if (e->type == DestroyNotify)
                 ((WaWindow *) wo)->deleted = true;
             delete ((WaWindow *) wo);
-            ws->net->SetClientList(ws);
-            ws->net->SetClientListStacking(ws);
-            if (! ws->wawindow_list.empty())
-                ws->wawindow_list.front()->Focus(false);
         }
         else if (wo->type == DockAppType) {
             if (e->type == DestroyNotify)

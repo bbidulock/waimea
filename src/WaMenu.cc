@@ -1313,6 +1313,7 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
         tmp_param = ac->param;
         ac->param = param;
     }
+    
     if (wf) func_win = wf;
     else func_win = menu->wf;
     if ((func_mask & MenuWFuncMask) &&
@@ -1884,33 +1885,40 @@ void WindowMenu::Build(WaScreen *wascreen) {
     
     LISTCLEAR(item_list);
 
-    if (wawindow_list->empty()) return;
+    list<WaWindow *>::iterator it = wawindow_list->begin();
+    for (; it != wawindow_list->end() &&
+             ((WaWindow *) *it)->flags.tasklist != true; ++it);
+    
+    if (it == wawindow_list->end()) return;
 
     m = new WaMenuItem("Window List");
     m->type = MenuTitleType;
     AddItem(m);
-
-    list<WaWindow *>::iterator it = wawindow_list->begin();
+    
     for (++it; it != wawindow_list->end(); ++it) {
         ww = (WaWindow *) *it;
-        m = new WaMenuItem(ww->name);
-        m->type = MenuItemType;
-        m->wfunc = &WaWindow::RaiseFocus;
-        m->func_mask |= MenuWFuncMask;
-        m->func_mask1 |= MenuWFuncMask;
-        m->wf = ww->id;
-        AddItem(m);
+        if (ww->flags.tasklist) {
+            m = new WaMenuItem(ww->name);
+            m->type = MenuItemType;
+            m->wfunc = &WaWindow::RaiseFocus;
+            m->func_mask |= MenuWFuncMask;
+            m->func_mask1 |= MenuWFuncMask;
+            m->wf = ww->id;
+            AddItem(m);
+        }
     }
-    if (! wawindow_list->empty()) {
-        ww = (WaWindow *) wawindow_list->front();
-        m = new WaMenuItem(ww->name);
-        m->type = MenuItemType;
-        m->wfunc = &WaWindow::RaiseFocus;
-        m->func_mask |= MenuWFuncMask;
-        m->func_mask1 |= MenuWFuncMask;
-        m->wf = ww->id;
-        AddItem(m);
-    }
+    it = wawindow_list->begin();
+    for (; it != wawindow_list->end() &&
+             ((WaWindow *) *it)->flags.tasklist != true; ++it);
+    
+    ww = (WaWindow *) *it;
+    m = new WaMenuItem(ww->name);
+    m->type = MenuItemType;
+    m->wfunc = &WaWindow::RaiseFocus;
+    m->func_mask |= MenuWFuncMask;
+    m->func_mask1 |= MenuWFuncMask;
+    m->wf = ww->id;
+    AddItem(m);
     
     WaMenu::Build(wascreen);
 }

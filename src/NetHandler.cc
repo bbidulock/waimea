@@ -652,8 +652,15 @@ void NetHandler::GetClientListStacking(WaScreen *ws) {
         for (i = 0; i < items_read; i++) {
             ww = (WaWindow *) waimea->FindWin(data[i], WindowType);
             if (ww) {
-                if (! ww->flags.alwaysontop && ! ww->flags.alwaysatbottom &&
-                    ! ww->flags.forcedatbottom) {
+                if (ww->flags.alwaysontop) {
+                    ws->wawindow_list_stacking_aot.remove(ww);
+                    ws->wawindow_list_stacking_aot.push_front(ww);
+                }
+                else if (ww->flags.alwaysatbottom) {
+                    ws->wawindow_list_stacking_aab.remove(ww);
+                    ws->wawindow_list_stacking_aab.push_back(ww);
+                }
+                else if (! ww->flags.forcedatbottom) {
                     ws->wa_list_stacking.remove(ww);
                     ws->wa_list_stacking.push_front(ww);
                 }
@@ -1053,6 +1060,7 @@ void NetHandler::GetWmType(WaWindow *ww) {
     if (status == Success && items_read) {
         for (unsigned int i = 0; i < items_read; ++i) {
             if (data[i] == net_wm_window_type_desktop) {
+                ww->flags.tasklist = false;
                 ww->flags.sticky = true;
                 ww->flags.border = ww->flags.title = ww->flags.handle =
                     ww->flags.all = false;
@@ -1074,6 +1082,7 @@ void NetHandler::GetWmType(WaWindow *ww) {
             }
             else if (data[i] == net_wm_window_type_toolbar ||
                      data[i] == net_wm_window_type_dock) {
+                ww->flags.tasklist = false;
                 ww->flags.sticky = true;
                 ww->flags.border = ww->flags.title = ww->flags.handle =
                     ww->flags.all = ww->flags.focusable = false;
@@ -1087,6 +1096,7 @@ void NetHandler::GetWmType(WaWindow *ww) {
             }
             else if (data[i] == net_wm_window_type_splash ||
                      data[i] == net_wm_window_type_menu) {
+                ww->flags.tasklist = false;
                 ww->flags.border = ww->flags.title = ww->flags.handle =
                     ww->flags.all = false;
                 if (ww->flags.alwaysontop)
@@ -1097,7 +1107,7 @@ void NetHandler::GetWmType(WaWindow *ww) {
                 ww->wascreen->wawindow_list_stacking_aot.push_front(ww);
                 ww->wascreen->WaRaiseWindow(0);
             }
-            else if (data[i] == net_wm_window_type_normal) {
+            else {
                 if (ww->attrib.x == 0) {
                     if (ww->wascreen->workarea->x > ww->attrib.x)
                 ww->attrib.x = ww->wascreen->workarea->x;

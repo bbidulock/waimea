@@ -2356,7 +2356,7 @@ void WaImageControl::getGradientBuffers(unsigned int w,
 }
 
 void WaImageControl::installRootColormap(void) {
-    XGrabServer(display);
+    XSync(wascreen->display, false);
     
     bool install = true;
     int i = 0, ncmap = 0;
@@ -2373,7 +2373,8 @@ void WaImageControl::installRootColormap(void) {
         
         XFree(cmaps);
     }   
-    XUngrabServer(display);
+    XSync(wascreen->display, false);
+    XSync(wascreen->pdisplay, false);
 }
 
 void WaImageControl::setColorsPerChannel(int cpc) {

@@ -80,6 +80,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     net = waimea->net;
     rh = wa->rh;
     focus = true;
+    shutdown = false;
 
     default_font.xft = false;
     default_font.font = "fixed";
@@ -238,6 +239,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
  * Deletes all created colors and fonts.
  */
 WaScreen::~WaScreen(void) {
+    shutdown = true;
     XSelectInput(display, id, NoEventMask);
     net->DeleteSupported(this);
     XDestroyWindow(display, wm_check);
@@ -245,11 +247,35 @@ WaScreen::~WaScreen(void) {
     LISTDEL(docks);
     LISTDEL(strut_list);
     LISTDEL(wamenu_list);
-    LISTDELITEMS(wawindow_list);
-    LISTCLEAR(wawindow_list_map_order);
+
+    WaWindow **delstack = new WaWindow*[wawindow_list.size()];
+    int stackp = 0;
+
+    list<WaWindow *>::reverse_iterator rwit = wawindow_list.rbegin();
+    for (; rwit != wawindow_list.rend(); rwit++)
+        if ((*rwit)->flags.forcedatbottom)
+            delstack[stackp++] = ((WaWindow *) *rwit);
+    list<WaWindow *>::iterator wit = wawindow_list_stacking_aab.begin();
+    for (; wit != wawindow_list_stacking_aab.end(); wit++)
+        delstack[stackp++] = *wit;
+    list<WindowObject *>::reverse_iterator rwoit = wa_list_stacking.rbegin();
+    for (; rwoit != wa_list_stacking.rend(); rwoit++)
+        if ((*rwoit)->type == WindowType)
+            delstack[stackp++] = ((WaWindow *) *rwoit);
+    rwit = wawindow_list_stacking_aot.rbegin();
+    for (; rwit != wawindow_list_stacking_aot.rend(); rwit++)
+        delstack[stackp++] = ((WaWindow *) *rwit);
+
+    for (int i = 0; i < stackp; i++)
+        delete delstack[i];
+
+    delete [] delstack;
+    
+    LISTCLEAR(wawindow_list);
     LISTCLEAR(wa_list_stacking);
-    LISTCLEAR(wawindow_list_stacking_aot);
     LISTCLEAR(wawindow_list_stacking_aab);
+    LISTCLEAR(wawindow_list_stacking_aot);
+    LISTCLEAR(wawindow_list_map_order);
     LISTCLEAR(always_on_top_list);
     LISTCLEAR(always_at_bottom_list);
 
@@ -1448,6 +1474,7 @@ void WaScreen::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
  * @param ac WaAction object
  */
 void WaScreen::Restart(XEvent *, WaAction *ac) {
+    WARNING << "restart" << endl;
     if (ac->param)
         restart(ac->param);
     else
