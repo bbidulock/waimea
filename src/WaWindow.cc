@@ -237,7 +237,7 @@ WaWindow::~WaWindow(void) {
         wascreen->wawindow_list_stacking_aab.remove(this);
     if (wm_strut) {
         wascreen->strut_list.remove(wm_strut);
-        free(wm_strut);
+        delete wm_strut;
         if (! wascreen->shutdown) wascreen->UpdateWorkarea();
     }
     
