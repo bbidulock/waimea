@@ -303,16 +303,9 @@ void EventHandler::EvExpose(XExposeEvent *e) {
         waimea->window_table->end()) {
         switch (((*it).second)->type) {
             case LabelType:
-                (((WaChildWindow *) (*it).second)->wa)->label->Draw(); break;
-            case CButtonType:
-                (((WaChildWindow *) (*it).second)->wa)->button_c->Draw();
-                break;
-            case IButtonType:
-                (((WaChildWindow *) (*it).second)->wa)->button_min->Draw();
-                break;
-            case MButtonType:
-                (((WaChildWindow *) (*it).second)->wa)->button_max->Draw();
-                break;                
+                ((WaChildWindow *) (*it).second)->Draw(); break;
+            case ButtonType:
+                ((WaChildWindow *) (*it).second)->Draw(); break;
             case MenuTitleType:
             case MenuItemType:
             case MenuSubType:
@@ -614,21 +607,6 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
                 if (wa->handleacts) wa->EvAct(e, ed, wa->handleacts, wo->type);
                 else wa->EvAct(e, ed, rh->handleacts, wo->type);
                 break;
-            case CButtonType:
-                wa = ((WaChildWindow *) wo)->wa;
-                if (wa->cbacts) wa->EvAct(e, ed, wa->cbacts, wo->type);
-                else wa->EvAct(e, ed, rh->cbacts, wo->type);
-                break;
-            case IButtonType:
-                wa = ((WaChildWindow *) wo)->wa;
-                if (wa->ibacts) wa->EvAct(e, ed, wa->ibacts, wo->type);
-                else wa->EvAct(e, ed, rh->ibacts, wo->type);
-                break;
-            case MButtonType:
-                wa = ((WaChildWindow *) wo)->wa;
-                if (wa->mbacts) wa->EvAct(e, ed, wa->mbacts, wo->type);
-                else wa->EvAct(e, ed, rh->mbacts, wo->type);
-                break;
             case LGripType:
                 wa = ((WaChildWindow *) wo)->wa;
                 if (wa->lgacts) wa->EvAct(e, ed, wa->lgacts, wo->type);
@@ -639,6 +617,14 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
                 if (wa->rgacts) wa->EvAct(e, ed, wa->rgacts, wo->type);
                 else wa->EvAct(e, ed, rh->rgacts, wo->type);
                 break;
+            case ButtonType: {
+                wa = ((WaChildWindow *) wo)->wa;
+                int id = ((WaChildWindow *) wo)->bstyle->id;
+                if (wa->bacts[id]) wa->EvAct(e, ed, wa->bacts[id], wo->type);
+                else wa->EvAct(e, ed, rh->bacts[id], wo->type);
+                if (ed->type == ButtonPress)
+                    wa->ButtonPressed((WaChildWindow *) wo);
+            } break;
             case MenuTitleType:
                 ((WaMenuItem *) wo)->EvAct(e, ed, rh->mtacts); break;
             case MenuItemType:

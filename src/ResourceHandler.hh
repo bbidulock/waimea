@@ -26,6 +26,7 @@ class StrComp;
 
 typedef struct _WaAction WaAction;
 typedef struct _DockStyle DockStyle;
+typedef struct _ButtonStyle ButtonStyle;
 
 #include "Waimea.hh"
 #include "WaWindow.hh"
@@ -52,6 +53,12 @@ typedef struct _DockStyle DockStyle;
             delete [] list.back()->param; \
         delete list.back(); \
         list.pop_back(); \
+    }
+
+#define BSCLEAR(list) \
+    while (! list->empty()) { \
+        delete list->back(); \
+        list-> pop_back(); \
     }
 
 struct _WaAction {
@@ -81,6 +88,19 @@ struct _DockStyle {
     bool centered;
     bool inworkspace;
     DockholderStyle style;
+};
+
+struct _ButtonStyle {
+    int x, id, cb, autoplace;
+    bool fg;
+    WaTexture t_focused, t_unfocused, t_pressed;
+    WaTexture t_focused2, t_unfocused2, t_pressed2;
+    WaColor c_focused, c_unfocused, c_pressed;
+    WaColor c_focused2, c_unfocused2, c_pressed2;
+    Pixmap p_focused, p_unfocused, p_pressed;
+    Pixmap p_focused2, p_unfocused2, p_pressed2;
+    GC g_focused, g_unfocused, g_pressed;
+    GC g_focused2, g_unfocused2, g_pressed2;
 };
 
 enum {
@@ -120,15 +140,16 @@ public:
     bool image_dither, rc_forced, style_forced, action_forced, menu_forced;
     
     list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
-        *handleacts, *cbacts, *ibacts, *mbacts, *rgacts, *lgacts, *rootacts,
-        *weacts, *eeacts, *neacts, *seacts, *mtacts, *miacts, *msacts,
-        *mcbacts;
+        *handleacts, *rgacts, *lgacts, *rootacts, *weacts, *eeacts, *neacts,
+        *seacts, *mtacts, *miacts, *msacts, *mcbacts;
+    list<WaAction *> **bacts;
 
     list<WaActionExtList *> ext_frameacts, ext_awinacts, ext_pwinacts,
-        ext_titleacts, ext_labelacts, ext_handleacts, ext_cbacts,
-        ext_ibacts, ext_mbacts, ext_rgacts, ext_lgacts;    
+        ext_titleacts, ext_labelacts, ext_handleacts, ext_rgacts, ext_lgacts;
+    list<WaActionExtList *> **ext_bacts;
 
     list<DockStyle *> *dockstyles;
+    list<ButtonStyle *> *buttonstyles;
     
 private:
     void ReadDatabaseColor(char *, char *, WaColor *, unsigned long,

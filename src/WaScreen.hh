@@ -64,11 +64,9 @@ typedef void (WaScreen::*RootActionFn)(XEvent *, WaAction *);
 #define SouthDirection 4
 
 typedef struct {
-    WaColor l_text_focus, l_text_unfocus, b_pic_focus, b_pic_unfocus,
-        b_pic_pressed, border_color, outline_color;
+    WaColor l_text_focus, l_text_unfocus, border_color, outline_color;
     WaTexture t_focus, t_unfocus, l_focus, l_unfocus, h_focus, h_unfocus,
-        b_focus, b_unfocus, b_pressed, g_focus, g_unfocus;
-    GC b_pic_focus_gc, b_pic_unfocus_gc, b_pic_pressed_gc;
+        g_focus, g_unfocus;
 
     char *fontname;
 #ifdef XFT
@@ -82,6 +80,9 @@ typedef struct {
 #endif // XFT
     int justify, y_pos;
     unsigned int handle_width, border_width, title_height;
+
+    list<ButtonStyle *> *buttonstyles;
+    int b_num;
 } WindowStyle;
 
 typedef struct {
@@ -210,7 +211,7 @@ public:
     WindowStyle wstyle;
     MenuStyle mstyle;
 
-    Pixmap fbutton, ubutton, pbutton, fgrip, ugrip;
+    Pixmap fgrip, ugrip;
     
 #ifdef XRENDER
     Pixmap xrootpmap_id;

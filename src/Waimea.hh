@@ -27,6 +27,9 @@ struct waoptions {
     char *menufile;
 };
 
+#define EastType  1
+#define WestType -1
+
 class Waimea;
 
 class WindowObject {
@@ -85,9 +88,7 @@ enum {
     WindowType,
     TitleType,
     LabelType,
-    CButtonType,
-    IButtonType,
-    MButtonType,
+    ButtonType,
     HandleType,
     LGripType,
     RGripType,
@@ -111,6 +112,18 @@ enum {
     ResizeOpaqueType,
     EndMoveResizeType
 };
+
+#define MaxCBoxType    1
+#define ShadeCBoxType  2
+#define StickCBoxType  3
+#define TitleCBoxType  4
+#define HandleCBoxType 5
+#define BorderCBoxType 6
+#define AllCBoxType    7
+#define AOTCBoxType    8
+#define AABCBoxType    9
+
+#define CloseCBoxType  10
 
 class Waimea {
 public:

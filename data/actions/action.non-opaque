@@ -38,15 +38,15 @@ window.rightgrip {
    defaultAllWindows,
    StartResizeRight : ButtonPress = Button1 & !Mod1Mask
 }
-window.closebutton { 
-   defaultAllWindows, 
-   Close : ButtonRelease = AnyButton
-}
-window.iconifybutton { 
+window.button0 {      
    defaultAllWindows,
    ToggleShade : ButtonRelease = AnyButton
 }
-window.maximizebutton {
+window.button1 { 
+   defaultAllWindows, 
+   Close : ButtonRelease = AnyButton
+}
+window.button2 {
    defaultAllWindows,
    ToggleMaximize : ButtonRelease = AnyButton,
    Raise          : ButtonRelease = AnyButton

@@ -38,9 +38,6 @@ typedef void (WaWindow::*WwActionFn)(XEvent *, WaAction *);
 #define ApplyGravity   1
 #define RemoveGravity -1
 
-#define EastType  1
-#define WestType -1
-
 typedef struct {
     WaMenuItem *wmi;
     int max_width;
@@ -88,7 +85,7 @@ public:
     void SendConfig(void);
     void Gravitate(int);
     void UpdateGrabs(void);
-    void ButtonPressed(int);
+    void ButtonPressed(WaChildWindow *);
     bool IncSizeCheck(int, int, int *, int *);
     void DrawTitlebar(void);
     void DrawHandlebar(void);
@@ -217,15 +214,18 @@ public:
     Waimea *waimea;
     WaScreen *wascreen;
     int border_w, title_w, handle_w, screen_number, state, restore_shade;
-    WaChildWindow *frame, *title, *label, *handle, *button_c, *button_max,
-                   *button_min, *grip_r, *grip_l;
+    WaChildWindow *frame, *title, *label, *handle, *grip_r, *grip_l,
+                   *button_max;
+    list<WaChildWindow *> buttons;
     WaWindowAttributes attrib, old_attrib, restore_max;
     WaWindowFlags flags;
     SizeStruct size;
     NetHandler *net;
     WMstrut *wm_strut;
     list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
-        *handleacts, *cbacts, *ibacts, *mbacts, *lgacts, *rgacts;
+        *handleacts, *lgacts, *rgacts;
+
+    list<WaAction *> **bacts;
     
 private:
     void ReparentWin(void);
@@ -260,10 +260,8 @@ public:
     WaWindowAttributes attrib;    
     WaTexture *f_texture, *u_texture;
     bool pressed;
-
-#ifdef XRENDER
-    bool pix_alloc_f, pix_alloc_u;
-#endif // XRENDER
+    ButtonStyle *bstyle;
+    int g_x, g_x2;
 
 #ifdef XFT
     XftDraw *xftdraw;

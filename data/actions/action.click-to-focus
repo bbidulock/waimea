@@ -40,17 +40,17 @@ window.rightgrip {
    Focus                  : ButtonPress = AnyButton & !Mod1Mask,
    StartOpaqueResizeRight : ButtonPress = Button1 & !Mod1Mask
 }
-window.closebutton { 
-   defaultAllWindows,
-   Focus : ButtonPress = AnyButton & !Mod1Mask,
-   Close : ButtonRelease = AnyButton
-}
-window.iconifybutton { 
+window.button0 {      
    defaultAllWindows,
    Focus : ButtonPress = AnyButton & !Mod1Mask,
    ToggleShade : ButtonRelease = AnyButton
 }
-window.maximizebutton {
+window.button1 { 
+   defaultAllWindows,
+   Focus : ButtonPress = AnyButton & !Mod1Mask,
+   Close : ButtonRelease = AnyButton
+}
+window.button2 {
    defaultAllWindows,
    Focus          : ButtonPress = AnyButton & !Mod1Mask,
    ToggleMaximize : ButtonRelease = AnyButton,

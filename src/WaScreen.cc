@@ -96,6 +96,8 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
 #endif // XRENDER
 
     rh->LoadStyle(this);
+    waimea->wascreen = this;
+    rh->LoadActions();
 
     CreateFonts();
     CreateColors();
@@ -190,8 +192,14 @@ WaScreen::~WaScreen(void) {
     delete [] mstyle.checkbox_true;
     delete [] mstyle.checkbox_false;
 
-    XFreeGC(display, wstyle.b_pic_focus_gc);
-    XFreeGC(display, wstyle.b_pic_unfocus_gc);
+    list<ButtonStyle *>::iterator bit = wstyle.buttonstyles->begin();
+    for (; bit != wstyle.buttonstyles->end(); ++bit) {
+        if ((*bit)->fg) {
+            XFreeGC(display, (*bit)->g_focused);
+            XFreeGC(display, (*bit)->g_unfocused);
+            XFreeGC(display, (*bit)->g_pressed);
+        }
+    }
     
 #ifdef XFT
     delete [] wstyle.xftfontname;
@@ -368,15 +376,24 @@ void WaScreen::CreateFonts(void) {
  */
 void WaScreen::CreateColors(void) {
     XGCValues gcv;    
-    
-    gcv.foreground = wstyle.b_pic_focus.getPixel();
-    wstyle.b_pic_focus_gc = XCreateGC(display, id, GCForeground, &gcv);
-    
-    gcv.foreground = wstyle.b_pic_unfocus.getPixel();
-    wstyle.b_pic_unfocus_gc = XCreateGC(display, id, GCForeground, &gcv);
 
-    gcv.foreground = wstyle.b_pic_pressed.getPixel();
-    wstyle.b_pic_pressed_gc = XCreateGC(display, id, GCForeground, &gcv);
+    list<ButtonStyle *>::iterator bit = wstyle.buttonstyles->begin();
+    for (; bit != wstyle.buttonstyles->end(); ++bit) {
+        if ((*bit)->fg) {
+            gcv.foreground = (*bit)->c_focused.getPixel();
+            (*bit)->g_focused = XCreateGC(display, id, GCForeground, &gcv);
+            gcv.foreground = (*bit)->c_unfocused.getPixel();
+            (*bit)->g_unfocused = XCreateGC(display, id, GCForeground, &gcv);
+            gcv.foreground = (*bit)->c_pressed.getPixel();
+            (*bit)->g_pressed = XCreateGC(display, id, GCForeground, &gcv);
+            gcv.foreground = (*bit)->c_focused2.getPixel();
+            (*bit)->g_focused2 = XCreateGC(display, id, GCForeground, &gcv);
+            gcv.foreground = (*bit)->c_unfocused2.getPixel();
+            (*bit)->g_unfocused2 = XCreateGC(display, id, GCForeground, &gcv);
+            gcv.foreground = (*bit)->c_pressed2.getPixel();
+            (*bit)->g_pressed2 = XCreateGC(display, id, GCForeground, &gcv);
+        }
+    }
     
 #ifdef XFT
     wstyle.xftfcolor = wstyle.l_text_focus.getXftColor();
@@ -441,30 +458,64 @@ void WaScreen::CreateColors(void) {
  * Render images which are common for all windows.
  */
 void WaScreen::RenderCommonImages(void) {
-    WaTexture *texture = &wstyle.b_focus;
-    if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
-        fbutton = None;
-        fbutton_pixel = texture->getColor()->getPixel();
-    } else
-        fbutton = ic->renderImage(wstyle.title_height - 4,
-                                  wstyle.title_height - 4, texture);
+    WaTexture *texture;
+    list<ButtonStyle *>::iterator bit = wstyle.buttonstyles->begin();
+    for (; bit != wstyle.buttonstyles->end(); ++bit) {
+        texture = &(*bit)->t_focused;
+        if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
+            (*bit)->p_focused = None;
+            (*bit)->c_focused = texture->getColor()->getPixel();
+        } else
+            (*bit)->p_focused = ic->renderImage(wstyle.title_height - 4,
+                                                wstyle.title_height - 4,
+                                                texture);
 
-    texture = &wstyle.b_unfocus;
-    if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
-        ubutton = None;
-        ubutton_pixel = texture->getColor()->getPixel();
-    } else
-        ubutton = ic->renderImage(wstyle.title_height - 4,
-                                  wstyle.title_height - 4, texture);
+        texture = &(*bit)->t_unfocused;
+        if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
+            (*bit)->p_unfocused = None;
+            (*bit)->c_unfocused = texture->getColor()->getPixel();
+        } else
+            (*bit)->p_unfocused = ic->renderImage(wstyle.title_height - 4,
+                                                  wstyle.title_height - 4,
+                                                  texture);
+
+        texture = &(*bit)->t_pressed;
+        if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
+            (*bit)->p_pressed = None;
+            (*bit)->c_pressed = texture->getColor()->getPixel();
+        } else
+            (*bit)->p_pressed = ic->renderImage(wstyle.title_height - 4,
+                                                wstyle.title_height - 4,
+                                                texture);
+        
+        texture = &(*bit)->t_focused2;
+        if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
+            (*bit)->p_focused2 = None;
+            (*bit)->c_focused2 = texture->getColor()->getPixel();
+        } else
+            (*bit)->p_focused2 = ic->renderImage(wstyle.title_height - 4,
+                                                 wstyle.title_height - 4,
+                                                 texture);
+
+        texture = &(*bit)->t_unfocused2;
+        if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
+            (*bit)->p_unfocused2 = None;
+            (*bit)->c_unfocused2 = texture->getColor()->getPixel();
+        } else
+            (*bit)->p_unfocused2 = ic->renderImage(wstyle.title_height - 4,
+                                                   wstyle.title_height - 4,
+                                                   texture);
+
+        texture = &(*bit)->t_pressed2;
+        if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
+            (*bit)->p_pressed2 = None;
+            (*bit)->c_pressed2 = texture->getColor()->getPixel();
+        } else
+            (*bit)->p_pressed2 = ic->renderImage(wstyle.title_height - 4,
+                                                 wstyle.title_height - 4,
+                                                 texture);
+    }
     
-    texture = &wstyle.b_pressed;
-    if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
-        pbutton = None;
-        pbutton_pixel = texture->getColor()->getPixel();
-    } else
-        pbutton = ic->renderImage(wstyle.title_height - 4,
-                                  wstyle.title_height - 4, texture);
-
     texture = &wstyle.g_focus;
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         fgrip = None;

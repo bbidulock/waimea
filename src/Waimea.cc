@@ -81,11 +81,10 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     rh = new ResourceHandler(this, options);
     rh->LoadConfig();
     rh->LoadMenus();
-    rh->LoadActions();
 
     net = new NetHandler(this);
     wascreen = new WaScreen(display, DefaultScreen(display), this);
-
+    
     taskswitch = new TaskSwitcher();
     waimea->wamenu_list->push_back(taskswitch);
     list<WaMenu *>::iterator mit = wamenu_list->begin();

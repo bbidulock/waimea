@@ -62,14 +62,19 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
 #ifdef SHAPE
     shaped = false;
 #endif //SHAPE
-
+    
     border_w = title_w = handle_w = 0;
     has_focus = false;
     flags.sticky = flags.shaded = flags.max = flags.title = flags.handle =
         flags.border = flags.all = flags.alwaysontop =
         flags.alwaysatbottom = false;
     frameacts = awinacts = pwinacts = titleacts = labelacts = handleacts =
-        cbacts = ibacts = mbacts = lgacts = rgacts = NULL;
+        lgacts = rgacts = NULL;
+    
+    int i;
+    bacts = new list<WaAction *>*[wascreen->wstyle.b_num];
+    for (i = 0; i < wascreen->wstyle.b_num; i++)
+        bacts[i] = NULL;
 
     SetActionLists();
     
@@ -88,11 +93,38 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     grip_l = new WaChildWindow(this, frame->id, LGripType);
     grip_r = new WaChildWindow(this, frame->id, RGripType);
     title = new WaChildWindow(this, frame->id, TitleType);
+
+    WaChildWindow *button;
+    int left_end = 2;
+    int right_end = -2;
+    int tw = (signed) wascreen->wstyle.title_height;
+    button_max = NULL;
+    list<ButtonStyle *>::iterator bit =
+        wascreen->wstyle.buttonstyles->begin();
+    for (i = 0; bit != wascreen->wstyle.buttonstyles->end(); ++bit, ++i) {
+        button = new WaChildWindow(this, title->id, ButtonType);
+        button->bstyle = *bit;
+        button->f_texture = &(*bit)->t_focused;
+        button->u_texture = &(*bit)->t_unfocused;
+        if (i == 2 && (*bit)->fg) button_max = button;
+        if ((*bit)->autoplace == WestType)
+            button->g_x = left_end;
+        else if ((*bit)->autoplace == EastType)
+            button->g_x = right_end;
+        else button->g_x = (*bit)->x;
+        
+        if (button->g_x > 0 &&
+            (button->g_x + (tw - 2)) > left_end)
+            left_end = button->g_x + (tw - 2);
+        else if ((button->g_x - (tw - 2)) < right_end)
+            right_end = button->g_x - (tw - 2);
+        
+        buttons.push_back(button);
+    }
     label = new WaChildWindow(this, title->id, LabelType);
-    button_min = new WaChildWindow(this, title->id, IButtonType);
-    button_max = new WaChildWindow(this, title->id, MButtonType);
-    button_c = new WaChildWindow(this, title->id, CButtonType);
-    
+    label->g_x = left_end + 2;
+    label->g_x2 = right_end - 2;
+
     ReparentWin();
     UpdateGrabs();
     UpdateAllAttributes();
@@ -140,9 +172,10 @@ WaWindow::~WaWindow(void) {
     XSync(display, false);
     XUngrabServer(display);     
 
-    delete button_min;
-    delete button_max;
-    delete button_c;
+    list<WaChildWindow *>::iterator bit = buttons.begin();
+    for (; bit != buttons.end(); ++bit)
+        delete *bit;
+    
     delete grip_l;
     delete grip_r;
     delete handle;
@@ -215,11 +248,12 @@ void WaWindow::SetActionLists(void) {
     titleacts = GetActionList(&waimea->rh->ext_titleacts);
     labelacts = GetActionList(&waimea->rh->ext_labelacts);
     handleacts = GetActionList(&waimea->rh->ext_handleacts);
-    cbacts = GetActionList(&waimea->rh->ext_cbacts);
-    ibacts = GetActionList(&waimea->rh->ext_ibacts);
-    mbacts = GetActionList(&waimea->rh->ext_mbacts);
     lgacts = GetActionList(&waimea->rh->ext_lgacts);
     rgacts = GetActionList(&waimea->rh->ext_rgacts);
+
+    int i;
+    for (i = 0; i < wascreen->wstyle.b_num; i++)
+        bacts[i] = GetActionList(waimea->rh->ext_bacts[i]);
 }
 
 /**
@@ -304,15 +338,15 @@ void WaWindow::MapWindow(void) {
     if (flags.title) {
         XMapRaised(display, title->id);
         XMapRaised(display, label->id);
-        XMapRaised(display, button_min->id);
-        XMapRaised(display, button_max->id);
-        XMapRaised(display, button_c->id);
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            XMapRaised(display, (*bit)->id);
     } else {
         XUnmapWindow(display, title->id);
         XUnmapWindow(display, label->id);
-        XUnmapWindow(display, button_min->id);
-        XUnmapWindow(display, button_max->id);
-        XUnmapWindow(display, button_c->id);
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            XUnmapWindow(display, (*bit)->id);
     }
     XMapWindow(display, frame->id);
     mapped = true;
@@ -356,38 +390,27 @@ void WaWindow::UpdateAllAttributes(void) {
                           title->attrib.y, title->attrib.width,
                           title->attrib.height);
                 
-        label->attrib.x = title_w;
+        label->attrib.x = label->g_x;
         label->attrib.y = 2;
-        label->attrib.width  = attrib.width - 3 * title_w + 2;
+        label->attrib.width = attrib.width + label->g_x2 - label->g_x;
         if (label->attrib.width < 1) label->attrib.width = 1;
         label->attrib.height = title_w - 4;
         XMoveResizeWindow(display, label->id, label->attrib.x,
                           label->attrib.y, label->attrib.width,
                           label->attrib.height);
-                
-        button_c->attrib.x = attrib.width - (title_w - 2);
-        button_c->attrib.y = 2;
-        button_c->attrib.width = title_w - 4;
-        button_c->attrib.height = title_w - 4;
-        XMoveResizeWindow(display, button_c->id, button_c->attrib.x,
-                          button_c->attrib.y, button_c->attrib.width,
-                          button_c->attrib.height);
 
-        button_min->attrib.x = 2;
-        button_min->attrib.y = 2;
-        button_min->attrib.width =  title_w - 4;
-        button_min->attrib.height = title_w - 4;
-        XMoveResizeWindow(display, button_min->id, button_min->attrib.x,
-                          button_min->attrib.y, button_min->attrib.width,
-                          button_min->attrib.height);
-                
-        button_max->attrib.x = attrib.width - (title_w - 2) * 2;
-        button_max->attrib.y = 2;
-        button_max->attrib.width  = title_w - 4;
-        button_max->attrib.height = title_w - 4;
-        XMoveResizeWindow(display, button_max->id, button_max->attrib.x,
-                          button_max->attrib.y, button_max->attrib.width,
-                          button_max->attrib.height);
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit) {
+            (*bit)->attrib.x = ((*bit)->g_x > 0)? (*bit)->g_x:
+                (attrib.width + (*bit)->g_x - (title_w - 4));
+            (*bit)->attrib.y = 2;
+            (*bit)->attrib.width = title_w - 4;
+            (*bit)->attrib.height = title_w - 4;
+            XMoveResizeWindow(display, (*bit)->id, (*bit)->attrib.x,
+                              (*bit)->attrib.y, (*bit)->attrib.width,
+                              (*bit)->attrib.height);
+        }
+        
         DrawTitlebar();
     }
     if (flags.handle) {
@@ -482,16 +505,17 @@ void WaWindow::RedrawWindow(void) {
 
         if (flags.title) {
             title->attrib.width = attrib.width;
-            label->attrib.width = attrib.width - 3 * title_w + 2;
+            label->attrib.width = attrib.width + label->g_x2 - label->g_x;
             if (label->attrib.width < 1) label->attrib.width = 1;
 
-            button_c->attrib.x = attrib.width - (title_w - 2);
-            button_max->attrib.x = attrib.width - (title_w - 2) * 2;
-
-            XMoveWindow(display, button_c->id, button_c->attrib.x,
-                        button_c->attrib.y);
-            XMoveWindow(display, button_max->id, button_max->attrib.x,
-                        button_max->attrib.y);
+            list<WaChildWindow *>::iterator bit = buttons.begin();
+            for (; bit != buttons.end(); ++bit) {
+                (*bit)->attrib.x = ((*bit)->g_x > 0)? (*bit)->g_x:
+                    (attrib.width + (*bit)->g_x - (title_w - 4));
+                XMoveResizeWindow(display, (*bit)->id, (*bit)->attrib.x,
+                                  (*bit)->attrib.y, (*bit)->attrib.width,
+                                  (*bit)->attrib.height);
+            }
             XResizeWindow(display, title->id, title->attrib.width,
                           title->attrib.height);
             XResizeWindow(display, label->id, label->attrib.width,
@@ -551,7 +575,7 @@ void WaWindow::RedrawWindow(void) {
                           ! flags.shaded)) {
             flags.max = false;
             net->SetWmState(this);
-            button_max->Draw();
+            if (button_max) button_max->Draw();
             waimea->UpdateCheckboxes(MaxCBoxType);
         }
         XGrabServer(display);
@@ -828,14 +852,13 @@ void WaWindow::DrawTitlebar(void) {
          (attrib.y - border_w - title_w) < wascreen->height)) {
         title->Render();
         label->Render();
-        button_min->Render();
-        button_c->Render();
-        button_max->Render();
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit) {
+            (*bit)->Render();
+            (*bit)->Draw();
+        }
         title->Draw();
         label->Draw();
-        button_min->Draw();
-        button_c->Draw();
-        button_max->Draw();
     }
 }
 
@@ -893,23 +916,17 @@ void WaWindow::UnFocusWin(void) {
  *      
  * Performes button press animation on one of the titlebar buttons.
  *      
- * @param type Type of button to press
+ * @param button WaChildWindow pointer to button that should be pressed
  */
-void WaWindow::ButtonPressed(int type) {
+void WaWindow::ButtonPressed(WaChildWindow *button) {
     XEvent e;
     bool in_window = true;
-    WaChildWindow *button;
     
     if (waimea->eh->move_resize != EndMoveResizeType) return;
 
     XUngrabButton(display, AnyButton, AnyModifier, id);
     XUngrabKey(display, AnyKey, AnyModifier, id);
-    
-    switch (type) {                     
-        case CButtonType: button = button_c; break;
-        case IButtonType: button = button_min; break;
-        default: button = button_max; break;
-    }
+
     button->pressed = true;
     button->Render();
     button->Draw();
@@ -2548,11 +2565,6 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
                 net->SetVirtualPos(this);
             }
             break;
-        case CButtonType:
-        case IButtonType:
-        case MButtonType:
-            if (ed->type == ButtonPress)
-                ButtonPressed(etype);
     }
 }
 
@@ -2617,11 +2629,7 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
             f_texture = &wascreen->wstyle.h_focus;
             u_texture = &wascreen->wstyle.h_unfocus;
             break;
-        case CButtonType:
-        case IButtonType:
-        case MButtonType:
-            f_texture = &wascreen->wstyle.b_focus;
-            u_texture = &wascreen->wstyle.b_unfocus;
+        case ButtonType:
             attrib_set.event_mask |= ExposureMask;
             break;
         case LGripType:
@@ -2679,32 +2687,54 @@ void WaChildWindow::Render(void) {
     Pixmap pixmap;
 
 #ifdef XRENDER
+    Pixmap xpixmap;
     int pos_x = wa->attrib.x + attrib.x;
     int pos_y = wa->attrib.y - wa->title_w - wa->border_w + attrib.y;
     if (texture->getOpacity()) {
-        pixmap = XCreatePixmap(display, wascreen->id, attrib.width,
+        xpixmap = XCreatePixmap(display, wascreen->id, attrib.width,
                                attrib.height, wascreen->screen_depth);
     }
 #endif // XRENDER
     
     switch (type) {
-        case CButtonType:
-        case IButtonType:
-        case MButtonType:
+        case ButtonType: {
+            bool flag = false;
             done = true;
+            switch (bstyle->cb) {
+                case MaxCBoxType: flag = wa->flags.max; break;
+                case ShadeCBoxType: flag = wa->flags.shaded; break;
+                case StickCBoxType: flag = wa->flags.sticky; break;
+                case TitleCBoxType: flag = wa->flags.title; break;
+                case HandleCBoxType: flag = wa->flags.handle; break;
+                case BorderCBoxType: flag = wa->flags.border; break;
+                case AllCBoxType: flag = wa->flags.all; break;
+                case AOTCBoxType: flag = wa->flags.alwaysontop; break;
+                case AABCBoxType: flag = wa->flags.alwaysatbottom; break;
+            }
+            if (flag) {
+                pixmap = (pressed) ? bstyle->p_pressed2:
+                    ((wa->has_focus)? bstyle->p_focused2:
+                     bstyle->p_unfocused2);
+                texture = (pressed) ? &bstyle->t_pressed2:
+                    ((wa->has_focus)? &bstyle->t_focused2:
+                     &bstyle->t_unfocused2);
+            } else {
+                pixmap = (pressed) ? bstyle->p_pressed:
+                    ((wa->has_focus)? bstyle->p_focused:
+                     bstyle->p_unfocused);
+                texture = (pressed) ? &bstyle->t_pressed:
+                    ((wa->has_focus)? &bstyle->t_focused:
+                     &bstyle->t_unfocused);
+            }
+
 #ifdef XRENDER
             if (texture->getOpacity())
-                pixmap = ic->xrender((pressed) ? wascreen->pbutton :
-                                      ((wa->has_focus)? wascreen->fbutton:
-                                       wascreen->ubutton),
-                                      attrib.width, attrib.height,
-                                      texture, wascreen->xrootpmap_id, pos_x,
-                                      pos_y, pixmap);
-            else
+                pixmap = ic->xrender(pixmap, attrib.width, attrib.height,
+                                     texture, wascreen->xrootpmap_id, pos_x,
+                                     pos_y, xpixmap);
 #endif // XRENDER
-                pixmap = (pressed)? wascreen->pbutton :
-                    ((wa->has_focus)? wascreen->fbutton: wascreen->ubutton);
-            break;
+                
+        } break;
         case LGripType:
         case RGripType:
             done = true;
@@ -2714,7 +2744,7 @@ void WaChildWindow::Render(void) {
                                       wascreen->ugrip,
                                       attrib.width, attrib.height,
                                       texture, wascreen->xrootpmap_id, pos_x,
-                                      pos_y, pixmap);
+                                      pos_y, xpixmap);
             else
 #endif // XRENDER
                 pixmap = (wa->has_focus)? wascreen->fgrip: wascreen->ugrip;
@@ -2728,7 +2758,7 @@ void WaChildWindow::Render(void) {
             if (texture->getOpacity())
                 pixmap = ic->xrender(None, attrib.width, attrib.height,
                                       texture, wascreen->xrootpmap_id, pos_x,
-                                      pos_y, pixmap);
+                                      pos_y, xpixmap);
 #endif // XRENDER
             
         } else
@@ -2737,7 +2767,7 @@ void WaChildWindow::Render(void) {
                                       
 #ifdef XRENDER
                                       , wascreen->xrootpmap_id, pos_x, pos_y,
-                                      pixmap
+                                      xpixmap
 #endif // XRENDER                                 
                                       
                                       );
@@ -2783,16 +2813,15 @@ void WaChildWindow::Draw(void) {
             text_w = XTextWidth(wascreen->wstyle.font, wa->name, length);
 #endif // XFT
     
-            if (text_w > (attrib.width - 10))
-                x = 5;
+            if (text_w > (attrib.width - 10)) x = 2;
             else {
                 switch (wascreen->wstyle.justify) {
-                    case LeftJustify: x = 5; break;
+                    case LeftJustify: x = 2; break;
                     case CenterJustify:
                         x = (attrib.width / 2) - (text_w / 2);
                         break;
                     case RightJustify:
-                        x = (attrib.width - text_w) - 5;
+                        x = (attrib.width - text_w) - 2;
                         break;
                 }
             }
@@ -2805,42 +2834,69 @@ void WaChildWindow::Draw(void) {
                         wascreen->wstyle.y_pos, wa->name, length);
 #endif // XFT
             break;
-        case CButtonType:
-            gc = (wa->has_focus)? &wascreen->wstyle.b_pic_focus_gc:
-                &wascreen->wstyle.b_pic_unfocus_gc;
-            if (pressed) gc = &wascreen->wstyle.b_pic_pressed_gc;
-            XDrawLine(display, id, *gc, 2, 2, wa->title_w - 7,
-                      wa->title_w - 7);
-            XDrawLine(display, id, *gc, 2, wa->title_w - 7, wa->title_w - 7,
-                      2);
-            break;
-        case IButtonType:
-            gc = (wa->has_focus)? &wascreen->wstyle.b_pic_focus_gc:
-                &wascreen->wstyle.b_pic_unfocus_gc;
-            if (pressed) gc = &wascreen->wstyle.b_pic_pressed_gc;
-            XDrawRectangle(display, id, *gc, 2, wa->title_w - 9,
-                           wa->title_w - 9, 2);
-            break;
-        case MButtonType:
-            gc = (wa->has_focus)? &wascreen->wstyle.b_pic_focus_gc:
-                &wascreen->wstyle.b_pic_unfocus_gc;
-            if (pressed) gc = &wascreen->wstyle.b_pic_pressed_gc;
-            if (wa->flags.max) {
-                int w = (2*(wa->title_w - 8))/3;
-                int h = (2*(wa->title_w - 8))/3 - 1;
-                int y = (wa->title_w - 8) - h + 1;
-                int x = (wa->title_w - 8) - w + 1;
-                XDrawRectangle(display, id, *gc, 2, y, w,h);
-                XDrawLine(display, id, *gc, 2, y + 1, 2 + w, y + 1);
-                XDrawLine(display, id, *gc, x, 2, x + w, 2);
-                XDrawLine(display, id, *gc, x, 3, x + w, 3);
-                XDrawLine(display, id, *gc, x, 2, x, y);
-                XDrawLine(display, id, *gc, x + w, 2, x + w, 2 + h);
-                XDrawLine(display, id, *gc, 2 + w, 2 + h, x + w, 2 + h);
-            } else {
-                XDrawRectangle(display, id, *gc, 2, 2, wa->title_w - 9,
-                               wa->title_w - 9);
-                XDrawLine(display, id, *gc, 2, 3, wa->title_w - 8, 3);
+        case ButtonType:
+            if (bstyle->fg) {
+                bool flag = false;
+                switch (bstyle->cb) {
+                    case MaxCBoxType: flag = wa->flags.max; break;
+                    case ShadeCBoxType: flag = wa->flags.shaded; break;
+                    case StickCBoxType: flag = wa->flags.sticky; break;
+                    case TitleCBoxType: flag = wa->flags.title; break;
+                    case HandleCBoxType: flag = wa->flags.handle; break;
+                    case BorderCBoxType: flag = wa->flags.border; break;
+                    case AllCBoxType: flag = wa->flags.all; break;
+                    case AOTCBoxType: flag = wa->flags.alwaysontop; break;
+                    case AABCBoxType: flag = wa->flags.alwaysatbottom; break;
+                }
+                if (flag) {
+                    gc = (pressed) ? &bstyle->g_pressed2:
+                        ((wa->has_focus)? &bstyle->g_focused2:
+                         &bstyle->g_unfocused2);
+                }
+                else {
+                    gc = (pressed) ? &bstyle->g_pressed:
+                        ((wa->has_focus)? &bstyle->g_focused:
+                         &bstyle->g_unfocused);
+                }                    
+                
+                switch (bstyle->cb) {
+                    case ShadeCBoxType:
+                        XDrawRectangle(display, id, *gc, 2, 3,
+                                       wa->title_w - 9, 2);
+                        break;
+                    case CloseCBoxType:
+                        XDrawLine(display, id, *gc, 2, 2, wa->title_w - 7,
+                                  wa->title_w - 7);
+                        XDrawLine(display, id, *gc, 2, wa->title_w - 7,
+                                  wa->title_w - 7, 2);
+                        break;
+                    case MaxCBoxType:
+                        if (wa->flags.max) {
+                            int w = (2*(wa->title_w - 8))/3;
+                            int h = (2*(wa->title_w - 8))/3 - 1;
+                            int y = (wa->title_w - 8) - h + 1;
+                            int x = (wa->title_w - 8) - w + 1;
+                            XDrawRectangle(display, id, *gc, 2, y, w,h);
+                            XDrawLine(display, id, *gc, 2, y + 1, 2 + w,
+                                      y + 1);
+                            XDrawLine(display, id, *gc, x, 2, x + w, 2);
+                            XDrawLine(display, id, *gc, x, 3, x + w, 3);
+                            XDrawLine(display, id, *gc, x, 2, x, y);
+                            XDrawLine(display, id, *gc, x + w, 2, x + w,
+                                      2 + h);
+                            XDrawLine(display, id, *gc, 2 + w, 2 + h, x + w,
+                                      2 + h);
+                        } else {
+                            XDrawRectangle(display, id, *gc, 2, 2,
+                                           wa->title_w - 9, wa->title_w - 9);
+                            XDrawLine(display, id, *gc, 2, 3, wa->title_w - 8,
+                                      3);
+                        }
+                        break;
+                    default:
+                        XFillRectangle(display, id, *gc, 4, 4,
+                                       wa->title_w - 11, wa->title_w - 11);
+                }
             }
             break;
     }

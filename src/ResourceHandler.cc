@@ -327,9 +327,6 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     titleacts  = new list<WaAction *>;
     labelacts  = new list<WaAction *>;
     handleacts = new list<WaAction *>;
-    cbacts     = new list<WaAction *>;
-    ibacts     = new list<WaAction *>;
-    mbacts     = new list<WaAction *>;
     rgacts     = new list<WaAction *>;
     lgacts     = new list<WaAction *>;
     rootacts   = new list<WaAction *>;
@@ -343,6 +340,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     mcbacts    = new list<WaAction *>;
 
     dockstyles = new list<DockStyle *>;
+    buttonstyles = new list<ButtonStyle *>;
 }
 
 /**
@@ -362,6 +360,7 @@ ResourceHandler::~ResourceHandler(void) {
         dockstyles->pop_back();
     }
     delete dockstyles;
+    delete buttonstyles;
     
     ACTLISTCLEAR(frameacts);
     ACTLISTCLEAR(awinacts);
@@ -369,9 +368,6 @@ ResourceHandler::~ResourceHandler(void) {
     ACTLISTCLEAR(titleacts);
     ACTLISTCLEAR(labelacts);
     ACTLISTCLEAR(handleacts);
-    ACTLISTCLEAR(cbacts);
-    ACTLISTCLEAR(mbacts);
-    ACTLISTCLEAR(ibacts);
     ACTLISTCLEAR(rgacts);
     ACTLISTCLEAR(lgacts);
     ACTLISTCLEAR(rootacts);
@@ -390,9 +386,6 @@ ResourceHandler::~ResourceHandler(void) {
     LISTCLEAR3(ext_titleacts);
     LISTCLEAR3(ext_labelacts);
     LISTCLEAR3(ext_handleacts);
-    LISTCLEAR3(ext_cbacts);
-    LISTCLEAR3(ext_mbacts);
-    LISTCLEAR3(ext_ibacts);
     LISTCLEAR3(ext_rgacts);
     LISTCLEAR3(ext_lgacts);
     
@@ -760,29 +753,12 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
                         &wstyle->g_focus, WhitePixel(display, screen), ic);
     ReadDatabaseTexture("window.grip.unfocus", "Window.Grip.Unfocus",
                         &wstyle->g_unfocus, BlackPixel(display, screen), ic);
-    ReadDatabaseTexture("window.button.focus", "Window.Button.Focus",
-                        &wstyle->b_focus, WhitePixel(display, screen), ic);
-    ReadDatabaseTexture("window.button.unfocus", "Window.Button.Unfocus",
-                        &wstyle->b_unfocus, BlackPixel(display, screen), ic);
-    ReadDatabaseTexture("window.button.pressed", "Window.Button.Pressed",
-                        &wstyle->b_pressed, BlackPixel(display, screen), ic);
     ReadDatabaseColor("window.label.focus.textColor",
                       "Window.Label.Focus.TextColor",
                       &wstyle->l_text_focus, BlackPixel(display, screen), ic);
     ReadDatabaseColor("window.label.unfocus.textColor",
                       "Window.Label.Unfocus.TextColor",
                       &wstyle->l_text_unfocus, WhitePixel(display, screen),
-                      ic);
-    ReadDatabaseColor("window.button.focus.picColor",
-                      "Window.Button.Focus.PicColor",
-                      &wstyle->b_pic_focus, BlackPixel(display, screen), ic);
-    ReadDatabaseColor("window.button.unfocus.picColor",
-                      "Window.Button.Unfocus.PicColor",
-                      &wstyle->b_pic_unfocus, WhitePixel(display, screen),
-                      ic);
-    ReadDatabaseColor("window.button.pressed.picColor",
-                      "Window.Button.Pressed.PicColor",
-                      &wstyle->b_pic_pressed, wstyle->b_pic_focus.getPixel(),
                       ic);
     
     if (XrmGetResource(database, "window.justify", "Window.Justify",
@@ -806,7 +782,8 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     ReadDatabaseColor("menu.frame.textColor", "Menu.Frame.TextColor",
                       &mstyle->f_text, WhitePixel(display, screen), ic);
     ReadDatabaseColor("menu.hilite.textColor", "Menu.Hilite.TextColor",
-                      &mstyle->f_hilite_text, BlackPixel(display, screen), ic);
+                      &mstyle->f_hilite_text, BlackPixel(display, screen),
+                      ic);
     ReadDatabaseColor("menu.title.textColor", "Menu.Title.TextColor",
                       &mstyle->t_text, BlackPixel(display, screen), ic);
 
@@ -897,7 +874,8 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     mstyle->border_color = wstyle->border_color;
 
     ReadDatabaseColor("outlineColor", "OutlineColor",
-                      &wstyle->outline_color, WhitePixel(display, screen), ic);
+                      &wstyle->outline_color, WhitePixel(display, screen),
+                      ic);
     mstyle->border_color = wstyle->border_color;
     
     if (XrmGetResource(database, "handleWidth", "HandleWidth", &value_type,
@@ -952,30 +930,233 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
                        &value_type, &value))
         waexec(value.addr, scrn->displaystring);
 
-    int dock_num = 0;
-    char rc_name[35], rc_class[35];
+    int num = 0;
+    char rc_name[50], rc_class[50];
     list<DockStyle *>::iterator dit = dockstyles->begin();
-    for (; dit != dockstyles->end(); ++dit, ++dock_num) {
+    for (; dit != dockstyles->end(); ++dit, ++num) {
         (*dit)->style.border_color = wstyle->border_color;
         (*dit)->style.texture = wstyle->t_focus;
         (*dit)->style.border_width = wstyle->border_width;
-        sprintf(rc_name, "dockappholder.dock%d.frame", dock_num);
-        sprintf(rc_class, "Dockappholder.Dock%d.frame", dock_num);        
+        sprintf(rc_name, "dockappholder.dock%d.frame", num);
+        sprintf(rc_class, "Dockappholder.Dock%d.frame", num);        
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value))
             ReadDatabaseTexture(rc_name, rc_class, &(*dit)->style.texture,
                                 WhitePixel(display, screen), ic);
-        sprintf(rc_name, "dockappholder.dock%d.borderWidth", dock_num);
-        sprintf(rc_class, "Dockappholder.Dock%d.BorderWidth", dock_num);
-        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        sprintf(rc_name, "dockappholder.dock%d.borderWidth", num);
+        sprintf(rc_class, "Dockappholder.Dock%d.BorderWidth", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
             if (sscanf(value.addr, "%u", &(*dit)->style.border_width) != 1)
                 (*dit)->style.border_width = wstyle->border_width;
         }
-        sprintf(rc_name, "dockappholder.dock%d.borderColor", dock_num);
-        sprintf(rc_class, "Dockappholder.Dock%d.BorderColor", dock_num);
+        sprintf(rc_name, "dockappholder.dock%d.borderColor", num);
+        sprintf(rc_class, "Dockappholder.Dock%d.BorderColor", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value));
             ReadDatabaseColor(rc_name, rc_class, &(*dit)->style.border_color,
                               BlackPixel(display, screen), ic);
     }
+
+    WaTexture tf_tmp, tu_tmp, tp_tmp;
+    WaColor cf_tmp, cu_tmp, cp_tmp;
+
+    ReadDatabaseTexture("window.button.focus", "Window.Button.Focus",
+                        &tf_tmp, WhitePixel(display, screen), ic);
+    ReadDatabaseTexture("window.button.unfocus", "Window.Button.Unfocus",
+                        &tu_tmp, BlackPixel(display, screen), ic);
+    ReadDatabaseTexture("window.button.pressed", "Window.Button.Pressed",
+                        &tp_tmp, BlackPixel(display, screen), ic);
+    
+    ReadDatabaseColor("window.button.focus.picColor",
+                      "Window.Button.Focus.PicColor",
+                      &cf_tmp, BlackPixel(display, screen), ic);
+    ReadDatabaseColor("window.button.unfocus.picColor",
+                      "Window.Button.Unfocus.PicColor",
+                      &cu_tmp, WhitePixel(display, screen), ic);
+    ReadDatabaseColor("window.button.pressed.picColor",
+                      "Window.Button.Pressed.PicColor",
+                      &cp_tmp, cf_tmp.getPixel(), ic);
+
+    ButtonStyle *b = new ButtonStyle;
+    b->id = 0;
+    b->autoplace = WestType;
+    b->cb = ShadeCBoxType;
+    buttonstyles->push_back(b);
+    b = new ButtonStyle;
+    b->id = 1;
+    b->autoplace = EastType;
+    b->cb = CloseCBoxType;
+    buttonstyles->push_back(b);
+    b = new ButtonStyle;
+    b->id = 2;
+    b->autoplace = EastType;
+    b->cb = MaxCBoxType;
+    buttonstyles->push_back(b);
+    
+    list<ButtonStyle *>::iterator bit = buttonstyles->begin();
+    for (; bit != buttonstyles->end(); ++bit) {
+        (*bit)->fg = true;
+        (*bit)->x = 0;
+        (*bit)->t_focused = (*bit)->t_focused2 = tf_tmp;
+        (*bit)->c_focused = (*bit)->c_focused2 = cf_tmp;
+        (*bit)->t_unfocused = (*bit)->t_unfocused2 = tu_tmp;
+        (*bit)->c_unfocused = (*bit)->c_unfocused2 = cu_tmp;
+        (*bit)->t_pressed = (*bit)->t_pressed2 = tp_tmp;
+        (*bit)->c_pressed = (*bit)->c_pressed2 = cp_tmp;
+    }
+
+    bool first = true, found = true;
+    for (num = 0; found; ++num) {
+        found = false;
+        b = new ButtonStyle;
+        b->id = num;
+        b->autoplace = EastType;
+        b->cb = b->x = 0;
+        b->fg = true;
+        b->t_focused = tf_tmp;
+        b->c_focused = cf_tmp;
+        b->t_unfocused = tu_tmp;
+        b->c_unfocused = cu_tmp;
+        b->t_pressed = tp_tmp;
+        b->c_pressed = cp_tmp;
+        sprintf(rc_name, "window.button%d.foreground", num);
+        sprintf(rc_class, "Window.Button%d.Foreground", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (! strncasecmp("true", value.addr, value.size)) b->fg = true;
+            else b->fg = false;
+            found = true;
+        }
+        sprintf(rc_name, "window.button%d.autoplace", num);
+        sprintf(rc_class, "Window.Button%d.Autoplace", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (! strncasecmp("Left", value.addr, value.size))
+                b->autoplace = WestType;
+            else if(! strncasecmp("False", value.addr, value.size))
+                b->autoplace = 0;
+            else b->autoplace = EastType;
+            found = true;
+        }
+        sprintf(rc_name, "window.button%d.position", num);
+        sprintf(rc_class, "Window.Button%d.Position", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (! sscanf(value.addr, "%d", &b->x)) {
+                b->autoplace = EastType;
+            }
+            else if (b->x != 0) b->autoplace = 0;
+            found = true;
+        }
+        sprintf(rc_name, "window.button%d.state", num);
+        sprintf(rc_class, "Window.Button%d.State", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (! strncasecmp("SHADED", value.addr, value.size))
+                b->cb = ShadeCBoxType;
+            else if(! strncasecmp("MAXIMIZED", value.addr, value.size))
+                b->cb = MaxCBoxType;
+            else if(! strncasecmp("STICKY", value.addr, value.size))
+                b->cb = StickCBoxType;
+            else if(! strncasecmp("ALWAYSONTOP", value.addr, value.size))
+                b->cb = AOTCBoxType;
+            else if(! strncasecmp("ALWAYSATBOTTOM", value.addr, value.size))
+                b->cb = AABCBoxType;
+            else if(! strncasecmp("DECORTITLE", value.addr, value.size))
+                b->cb = TitleCBoxType;
+            else if(! strncasecmp("DECORHANDLE", value.addr, value.size))
+                b->cb = HandleCBoxType;
+            else if(! strncasecmp("DECORBORDER", value.addr, value.size))
+                b->cb = BorderCBoxType;
+            else if(! strncasecmp("DECORALL", value.addr, value.size))
+                b->cb = AllCBoxType;
+            else if(! strncasecmp("CLOSE", value.addr, value.size))
+                b->cb = CloseCBoxType;
+            found = true;
+        }
+        char rc_state[6], rc_statec[6];
+        int i;
+        sprintf(rc_state, "false");
+        sprintf(rc_statec, "False");
+        for (i = 0; i < 2; i++) {
+            sprintf(rc_name, "window.button%d.%s.focus", num, rc_state);
+            sprintf(rc_class, "Window.Button%d.%s.Focus", num, rc_statec);
+            if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                               &value)) {
+                if (first) { BSCLEAR(buttonstyles); first = false; }
+                ReadDatabaseTexture(rc_name, rc_class, &b->t_focused,
+                                    WhitePixel(display, screen), ic);
+                found = true;
+            }        
+            sprintf(rc_name, "window.button%d.%s.focus.picColor", num,
+                    rc_state);
+            sprintf(rc_class, "Window.Button%d.%s.Focus.PicColor", num,
+                    rc_statec);
+            if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                               &value)) {
+                if (first) { BSCLEAR(buttonstyles); first = false; }
+                ReadDatabaseColor(rc_name, rc_class, &b->c_focused,
+                                  BlackPixel(display, screen), ic);
+                found = true;
+            }
+            sprintf(rc_name, "window.button%d.%s.unfocus", num, rc_state);
+            sprintf(rc_class, "Window.Button%d.%s.Unfocus", num, rc_statec);
+            if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                               &value)) {
+                if (first) { BSCLEAR(buttonstyles); first = false; }
+                ReadDatabaseTexture(rc_name, rc_class, &b->t_unfocused,
+                                    WhitePixel(display, screen), ic);
+                found = true;
+            }
+            sprintf(rc_name, "window.button%d.%s.unfocus.picColor", num,
+                    rc_state);
+            sprintf(rc_class, "Window.Button%d.%s.Unfocus.PicColor", num,
+                    rc_statec);
+            if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                               &value)) {
+                if (first) { BSCLEAR(buttonstyles); first = false; }
+                ReadDatabaseColor(rc_name, rc_class, &b->c_unfocused,
+                                  BlackPixel(display, screen), ic);
+                found = true;
+            }
+            sprintf(rc_name, "window.button%d.%s.pressed", num, rc_state);
+            sprintf(rc_class, "Window.Button%d.%s.Pressed", num, rc_statec);
+            if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                               &value)) {
+                if (first) { BSCLEAR(buttonstyles); first = false; }
+                ReadDatabaseTexture(rc_name, rc_class, &b->t_pressed,
+                                    WhitePixel(display, screen), ic);
+                found = true;
+            }
+            sprintf(rc_name, "window.button%d.%s.pressed.picColor", num,
+                    rc_state);
+            sprintf(rc_class, "Window.Button%d.%s.Pressed.PicColor", num,
+                    rc_statec);
+            if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                               &value)) {
+                if (first) { BSCLEAR(buttonstyles); first = false; }
+                ReadDatabaseColor(rc_name, rc_class, &b->c_pressed,
+                                  BlackPixel(display, screen), ic);
+                found = true;
+            }
+            b->t_focused2 = b->t_focused;
+            b->c_focused2 = b->c_focused;
+            b->t_unfocused2 = b->t_unfocused;
+            b->c_unfocused2 = b->c_unfocused;
+            b->t_pressed2 = b->t_pressed;
+            b->c_pressed2 = b->c_pressed;
+            sprintf(rc_state, "true");
+            sprintf(rc_statec, "True");
+        }
+        if (found) buttonstyles->push_back(b);
+        else delete b;
+    }
+    wstyle->buttonstyles = buttonstyles;
+    wstyle->b_num = buttonstyles->size();
+        
     XrmDestroyDatabase(database);
 }
 
@@ -1058,6 +1239,12 @@ void ResourceHandler::LoadActions(void) {
     char *str;
     WaActionExtList *ext_list;
     list<Define *> *defs = new list<Define *>;
+    bacts = new list<WaAction *>*[wascreen->wstyle.b_num];
+    ext_bacts = new list<WaActionExtList *>*[wascreen->wstyle.b_num];
+    for (i = 0; i < wascreen->wstyle.b_num; i++) {
+        bacts[i] = new list<WaAction *>;
+        ext_bacts[i] = new list<WaActionExtList *>;
+    }
     
     if (! (file = fopen(action_file, "r"))) {
         WARNING << "can't open action file \"" << action_file << 
@@ -1227,21 +1414,6 @@ void ResourceHandler::LoadActions(void) {
                             else ReadActions((char *) buffer2, defs, wacts,
                                              pwinacts);
                         }
-                        else if (! strcasecmp(str, ".closebutton")) {
-                            if (ext_list) ext_cbacts.push_back(ext_list);
-                            else ReadActions((char *) buffer2, defs, wacts,
-                                             cbacts);
-                        }
-                        else if (! strcasecmp(str, ".iconifybutton")) {
-                            if (ext_list) ext_ibacts.push_back(ext_list);
-                            else ReadActions((char *) buffer2, defs, wacts,
-                                             ibacts);
-                        }
-                        else if (! strcasecmp(str, ".maximizebutton")) {
-                            if (ext_list) ext_mbacts.push_back(ext_list);
-                            else ReadActions((char *) buffer2, defs, wacts,
-                                             mbacts);
-                        }
                         else if (! strcasecmp(str, ".leftgrip")) {
                             if (ext_list) ext_lgacts.push_back(ext_list);
                             else ReadActions((char *) buffer2, defs, wacts,
@@ -1251,6 +1423,23 @@ void ResourceHandler::LoadActions(void) {
                             if (ext_list) ext_rgacts.push_back(ext_list);
                             else ReadActions((char *) buffer2, defs, wacts,
                                              rgacts);
+                        }
+                        else if (! strncasecmp(str, ".button", 7)) {
+                            int id;
+                            if (strlen(str) > 7) {
+                                id = atoi(str + 7);
+                                if (id < 0 || id >=
+                                    waimea->wascreen->wstyle.b_num)
+                                    WARNING << "bad button id: " <<
+                                        id << endl;
+                                else {
+                                    if (ext_list)
+                                        ext_bacts[id]->push_back(ext_list);
+                                    else
+                                        ReadActions((char *) buffer2, defs,
+                                                    wacts, bacts[id]);
+                                }
+                            }
                         }
                         else {
                             WARNING << "unknown window" << endl;

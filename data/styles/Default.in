@@ -35,16 +35,6 @@ window.label.focus:             parentrelative
 window.label.unfocus:             parentrelative
   window.label.unfocus.textColor: #222222
 
-window.button.focus:            parentrelative
-  window.button.focus.picColor: #000000
-  
-window.button.unfocus:            parentrelative
-  window.button.unfocus.picColor: #222222
-  
-window.button.pressed:           sunken gradient vertical
-  window.button.pressed.color:   #8090c0
-  window.button.pressed.colorTo: #405070
-
 window.handle.focus:           flat gradient crossdiagonal
   window.handle.focus.color:   #90b098
   window.handle.focus.colorTo: #506058
@@ -62,6 +52,39 @@ window.grip.unfocus:           flat gradient crossdiagonal
   window.grip.unfocus.color:   #fff0a0
   window.grip.unfocus.colorTo: #c0a040
   window.grip.unfocus.opacity: 50
+
+window.button0.foreground:           True
+window.button0.state:                SHADED
+window.button0.autoplace:            Left
+window.button0.position:             0
+window.button0.*.focus:              parentrelative
+  window.button0.*.focus.picColor:   #000000
+window.button0.*.unfocus:            parentrelative
+  window.button0.*.unfocus.picColor: #000000
+window.button0.*.pressed:            parentrelative
+  window.button0.*.pressed.picColor: #506058
+
+window.button1.foreground:           True
+window.button1.state:                CLOSE
+window.button1.autoplace:            Right
+window.button1.position:             0
+window.button1.*.focus:              parentrelative
+  window.button1.*.focus.picColor:   #000000
+window.button1.*.unfocus:            parentrelative
+  window.button1.*.unfocus.picColor: #000000
+window.button1.*.pressed:            parentrelative
+  window.button1.*.pressed.picColor: #506058
+
+window.button2.foreground:           True
+window.button2.state:                MAXIMIZED
+window.button2.autoplace:            Right
+window.button2.position:             0
+window.button2.*.focus:              parentrelative
+  window.button2.*.focus.picColor:   #000000
+window.button2.*.unfocus:            parentrelative
+  window.button2.*.unfocus.picColor: #000000
+window.button2.*.pressed:            parentrelative
+  window.button2.*.pressed.picColor: #506058
 
 dockappholder.*.frame:           raised gradient crossdiagonal
   dockappholder.*.frame.color:   #7080b0
@@ -83,4 +106,4 @@ handleWidth: 3
 ! *.xftfont:     arial
 ! *.xftfontsize: 11.0
 
-rootCommand: xv -rmode 2 -root -quit @pkgdatadir@/backgrounds/waimea.png
+rootCommand: Esetroot -s @pkgdatadir@/backgrounds/waimea.png
