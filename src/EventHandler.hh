@@ -14,6 +14,7 @@
 #ifndef __EventHandler_hh
 #define __EventHandler_hh
 
+#include <sys/types.h>
 #include <sys/timeb.h>
 #include <X11/Xlib.h>
 #include <hash_set.h>
