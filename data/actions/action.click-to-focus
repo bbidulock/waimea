@@ -1,6 +1,31 @@
 ! Waimea Action configuration file
 !
-! CLICK-TO-FOCUS
+! Focus model:   Click-to-focus
+! Move method:   Opaque
+! Move window:   Left mouse button click on titlebar
+!                Left mouse button click on handlebar
+!                Alt + left mouse button click anywhere in window
+! Move menu:     Left mouse button click on title item
+!                Alt + left mouse button click anywhere in window
+! Resize method: Opaque
+! Resize window: Mouse button click on left grip
+!                Mouse button click on right grip
+!                Alt + right mouse button click anywhere in window
+!
+! Right mouse button click on titlebar brings up menu named 'window'.
+! Right mouse button click on root window brings up menu named 'rootmenu'.
+! Holding control down on maprequest event, activates non-opaque moving.
+! Menu submenus are mapped on menu item enter event.
+! Right click on menu title item unmaps menu and submenus.
+! Mouse click or release on menu item executes command, calls function
+!    and unmaps menu tree.
+! Screen edge enter event moves viewport one screen in screen edge direction.
+! Screen edge enter event with control key down scroll viewport 25 (20)
+!    pixels in screen edge direction.
+! Alt-F1  Toggle shade
+! Alt-F2  Toggle maximize
+! Alt-F4  Close window
+! Alt-F10 Kill client
 !
 !
 ! Normal Window
@@ -36,8 +61,12 @@ window.handle.6: Raise      : ButtonPress = Button1 & !Mod1Mask
 window.handle.7: Lower      : ButtonPress = Button2 & !Mod1Mask
 window.handle.8: MoveOpaque : ButtonPress = Button1 & !Mod1Mask
 !
-window.client.5: Raise      : MapRequest
-window.client.6: Move       : MapRequest & ControlMask
+window.client.5:  ToggleShade    : KeyPress = F1 & Mod1Mask
+window.client.6:  ToggleMaximize : KeyPress = F2 & Mod1Mask
+window.client.7:  Close          : KeyPress = F4 & Mod1Mask
+window.client.8:  Kill           : KeyPress = F10 & Mod1Mask
+window.client.9:  Raise          : MapRequest
+window.client.10: Move           : MapRequest & ControlMask
 !
 window.closebutton.5: Focus : ButtonPress = AnyButton
 window.closebutton.6: Close : ButtonRelease = AnyButton

@@ -31,10 +31,10 @@
   [end]
   
   [restart] (Restart)
-  ! Same as [item] (Restart) "restart"
+  ! Equivalent to [item] (Restart) "restart"
   
   [exit]    (Exit)
-  ! Same as [item] (Exit) "exit"
+  ! equivalent to [item] (Exit) "exit"
 [end]
 
 !

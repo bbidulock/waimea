@@ -517,13 +517,16 @@ void WaScreen::Focus(XEvent *, WaAction *) {
  * @param ac WaAction object
  */
 void WaScreen::MenuMap(XEvent *e, WaAction *ac) {
+    Window w;
+    int i, rx, ry;
+    unsigned int ui;
     WaMenu *menu = (WaMenu *) ac->param;
-    
-    if (e->type == ButtonPress || e->type == ButtonRelease) {
+
+    if (XQueryPointer(display, id, &w, &w, &rx, &ry, &i, &i, &ui)) {
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
-        menu->Map(e->xbutton.x - (menu->width / 2),
-                  e->xbutton.y - (menu->item_list->front()->height / 2));
+        menu->Map(rx - (menu->width / 2),
+                  ry - (menu->item_list->front()->height / 2));
     }
 }
 
@@ -537,13 +540,16 @@ void WaScreen::MenuMap(XEvent *e, WaAction *ac) {
  * @param ac WaAction object
  */
 void WaScreen::MenuReMap(XEvent *e, WaAction *ac) {
+    Window w;
+    int i, rx, ry;
+    unsigned int ui;
     WaMenu *menu = (WaMenu *) ac->param;
     
-    if (e->type == ButtonPress || e->type == ButtonRelease) {
+    if (XQueryPointer(display, id, &w, &w, &rx, &ry, &i, &i, &ui)) {
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
-        menu->ReMap(e->xbutton.x - (menu->width / 2),
-                    e->xbutton.y - (menu->item_list->front()->height / 2));
+        menu->ReMap(rx - (menu->width / 2),
+                    ry - (menu->item_list->front()->height / 2));
     }
 }
 

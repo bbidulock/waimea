@@ -552,7 +552,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     } else
         mstyle->title_height = 0;
     
-    if (XrmGetResource(database, "menu.frame.height", "menu.frame.height",
+    if (XrmGetResource(database, "menu.item.height", "menu.item.height",
                        &value_type, &value)) {
         if (sscanf(value.addr, "%u", &mstyle->item_height) != 1)
             mstyle->item_height = mstyle->title_height;
@@ -1048,8 +1048,14 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                     break;
                 }
             }
-            if (! *it) {   
-                act_tmp->detail = *token - 29;
+            if (! *it) {
+                if (sscanf(token, "'%u'", &act_tmp->detail) != 1) {
+                    act_tmp->detail = *token - 29;
+                }
+                else {
+                    if (act_tmp->detail > 255 || act_tmp->detail < 0)
+                        act_tmp->detail = 1;
+                }
             }
         } else if (act_tmp->type == ButtonPress ||
                    act_tmp->type == ButtonRelease) {

@@ -339,16 +339,18 @@ void WaWindow::ReparentWin(void) {
         XFree(dummy);
 #endif // SHAPE
         
-        int tmp;
         list<WaAction *>::iterator it = waimea->rh->winacts->begin();
-        for (; it != waimea->rh->winacts->end(); ++it)
-            if (((tmp = (*it)->detail) <= 5) &&
-                ((*it)->type == ButtonPress)) {
-                XGrabButton(display, tmp ? tmp: AnyButton, (*it)->mod, id, True,
-                            ButtonPressMask | ButtonReleaseMask |
-                            ButtonMotionMask, GrabModeAsync, GrabModeAsync,
-                            None, None);
+        for (; it != waimea->rh->winacts->end(); ++it) {
+            if ((*it)->type == ButtonPress || (*it)->type == ButtonRelease) {
+                XGrabButton(display, (*it)->detail ? (*it)->detail: AnyButton,
+                            (*it)->mod, id, True, ButtonPressMask |
+                            ButtonReleaseMask | ButtonMotionMask,
+                            GrabModeAsync, GrabModeAsync, None, None);
+            } else if ((*it)->type == KeyPress || (*it)->type == KeyRelease) {
+                XGrabKey(display, (*it)->detail ? (*it)->detail: AnyKey,
+                         (*it)->mod, id, True, GrabModeAsync, GrabModeAsync); 
             }
+        }
     }
     XUngrabServer(display);
 }
@@ -1662,14 +1664,16 @@ void WaWindow::CloseKill(XEvent *e, WaAction *ac) {
  * @param ac WaAction object
  */
 void WaWindow::MenuMap(XEvent *e, WaAction *ac) {
+    Window w;
+    int i, rx, ry;
+    unsigned int ui;
     WaMenu *menu = (WaMenu *) ac->param;
     
-    if (e->type == ButtonPress || e->type == ButtonRelease) {
+    if (XQueryPointer(display, wascreen->id, &w, &w, &rx, &ry, &i, &i, &ui)) {
         menu->wf = id;
         menu->ftype = MenuWFuncMask;
-        menu->Map(e->xbutton.x_root - (menu->width / 2),
-                  e->xbutton.y_root -
-                  (menu->item_list->front()->height / 2));
+        menu->Map(rx - (menu->width / 2),
+                  ry - (menu->item_list->front()->height / 2));
     }
 }
 
@@ -1685,14 +1689,16 @@ void WaWindow::MenuMap(XEvent *e, WaAction *ac) {
  * @param ac WaAction object
  */
 void WaWindow::MenuReMap(XEvent *e, WaAction *ac) {
+    Window w;
+    int i, rx, ry;
+    unsigned int ui;
     WaMenu *menu = (WaMenu *) ac->param;
     
-    if (e->type == ButtonPress || e->type == ButtonRelease) {
+    if (XQueryPointer(display, wascreen->id, &w, &w, &rx, &ry, &i, &i, &ui)) {
         menu->wf = id;
         menu->ftype = MenuWFuncMask;
-        menu->ReMap(e->xbutton.x_root - (menu->width / 2),
-                    e->xbutton.y_root -
-                    (menu->item_list->front()->height / 2));
+        menu->ReMap(rx - (menu->width / 2),
+                    ry - (menu->item_list->front()->height / 2));
     }
 }
 
