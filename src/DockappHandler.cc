@@ -176,9 +176,7 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
     if (wmhints) {
       if ((wmhints->flags & IconWindowHint) &&
           (wmhints->icon_window != None)) {
-          XMapWindow(display, client_id);
-          XMoveWindow(display, client_id, dh->wascreen->width + 10,
-                      dh->wascreen->height + 10);
+          XUnmapWindow(display, client_id);
           icon_id = wmhints->icon_window;
           id = icon_id;
       } else {
@@ -225,9 +223,9 @@ Dockapp::~Dockapp(void) {
     XGrabServer(display);
     if (validateclient(id)) {
         if (icon_id) XUnmapWindow(display, id);
-        XMoveWindow(display, client_id, dh->map_x + x, dh->map_y + y);
         XReparentWindow(display, id, dh->wascreen->id,
                         dh->map_x + x, dh->map_y + y);
+        XMapWindow(display, client_id);
     }
     XUngrabServer(display);
 }
