@@ -1012,13 +1012,13 @@ void WaMenuItem::Draw(Drawable drawable, bool frame, int y) {
 #ifdef RENDER
     if (menu->render_if_opacity && ! texture->getOpacity()) return;
 #endif // RENDER
-
-    WaFont *wafont = (hilited)? &menu->wascreen->mstyle.wa_fh_font:
+        
+    WaFont *wafont = (hilited && !frame)? &menu->wascreen->mstyle.wa_fh_font:
         &menu->wascreen->mstyle.wa_f_font;
     if (type == MenuTitleType)
         wafont = &menu->wascreen->mstyle.wa_t_font;
     
-    WaFont *wafont_b = (hilited)? &menu->wascreen->mstyle.wa_bh_font:
+    WaFont *wafont_b = (hilited && !frame)? &menu->wascreen->mstyle.wa_bh_font:
         &menu->wascreen->mstyle.wa_b_font;
 
     if (drawable == ParentRelative) {
@@ -1109,6 +1109,12 @@ void WaMenuItem::Draw(Drawable drawable, bool frame, int y) {
                        strlen(menu->wascreen->mstyle.bullet));
     }
     else if (type == MenuCBItemType) {
+        if (frame) {
+            if (wafont_cb == &menu->wascreen->mstyle.wa_cth_font)
+                wafont_cb = &menu->wascreen->mstyle.wa_ct_font;
+            else if (wafont_cb == &menu->wascreen->mstyle.wa_cfh_font)
+                wafont_cb = &menu->wascreen->mstyle.wa_cf_font;
+        }
         wafont_cb->Draw(menu->display, (drawable)? p_tmp: id,
 
 #ifdef    XFT
