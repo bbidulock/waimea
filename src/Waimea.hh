@@ -78,7 +78,8 @@ enum {
     SEdgeType,
     MenuTitleType,
     MenuItemType,
-    MenuSubType
+    MenuSubType,
+    DockAppType
 };
 
 class Waimea {
@@ -96,7 +97,7 @@ public:
     TaskSwitcher *taskswitch;
     Cursor session_cursor, move_cursor, resizeleft_cursor, resizeright_cursor;
     
-    hash_map<int, WindowObject *> *window_table;
+    hash_map<long unsigned int, WindowObject *> *window_table;
     list<Window> *always_on_top_list;
     list<WaWindow *> *wawindow_list;
     list<WaMenu *> *wamenu_list;

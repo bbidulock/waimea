@@ -15,9 +15,9 @@ WAIMEA WINDOW MANAGER
         - Xrender extension support for rendering anti-aliased fonts
         - Virtual desktop
 	- Task switcher
+	- Dockapp holder
 
         Features under development:
-         - Dockapp holder
          - New revolutionary of pager utility
 
         Planned features:
@@ -48,35 +48,47 @@ RUNNING
 
 CONFIG FILE
 
-       Then starting, Waimea looks for a '.waimearc' resource file in the 
-       users home directory. This file should contain configuration options 
-       for Waimea. If file doesn't exist default values for all options are 
-       used (See 'data/waimearc.example' for default options). If you want 
-       to force Waimea to read a different configuration file use '--rcfile'
-       switch.
+        Then starting, Waimea looks for a '.waimearc' resource file in the 
+        users home directory. This file should contain configuration options 
+        for Waimea. If file doesn't exist default values for all options are 
+        used (See 'data/waimearc.example' for default options). If you want 
+        to force Waimea to read a different configuration file use '--rcfile'
+        switch.
        
-       Available Configuration Options:
+        Available Configuration Options:
 
-       styleFile
+        styleFile
                 Style file path.
 
-       menuFile
+        menuFile
                 Menu file path.
 
-       actionFile
+        actionFile
                 Action file path.
 
-       ColorsPerChannel
+        ColorsPerChannel
                 Colors per channel to use for image rendering.
 
-       cacheMax
+        cacheMax
                 Cache limit for pixmap caching.
 
-       virtualSize
+        imageDither
+       		True or False
+
+        virtualSize
                 Virtual desktop size. Ex. '3x3' will set the virtual desktop 
                 size to three times screen height in virtual height and three
                 times screen width in virtual width.
 
+        dock0.geometry
+		Placement of dockapp holder, X11 offset string of the form:
+		[{+-}<xoffset>{+-}<yoffset>]
+		
+	dock0.direction
+		Dockapp holder direction {Vertical, Horizontal}
+
+	dock0.gridSpace
+		Number of pixels spacing between dockapps in dockapp holder.
 
 STYLES
 

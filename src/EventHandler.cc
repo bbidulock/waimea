@@ -141,7 +141,7 @@ XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
                 break;
             default:
                 if (event->type == waimea->wascreen->shape_event) {
-                    hash_map<int, WindowObject *>::iterator it;
+                    hash_map<Window, WindowObject *>::iterator it;
                     if ((it = waimea->window_table->find(event->xany.window)) !=
                         waimea->window_table->end()) {
                         if (((*it).second)->type == WindowType)
@@ -171,7 +171,7 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
 
     if (e->state == PropertyDelete) return;
 
-    hash_map<int, WindowObject *>::iterator it;
+    hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(e->window)) !=
         waimea->window_table->end()) {
         if (((*it).second)->type == WindowType) {
@@ -198,7 +198,7 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
  * @param e	The ExposeEvent
  */
 void EventHandler::EvExpose(XExposeEvent *e) {
-    hash_map<int, WindowObject *>::iterator it;
+    hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(e->window)) !=
         waimea->window_table->end()) {
         switch (((*it).second)->type) {
@@ -235,7 +235,7 @@ void EventHandler::EvExpose(XExposeEvent *e) {
 void EventHandler::EvFocus(XFocusChangeEvent *e) {
     WaWindow *ww = NULL;
 
-    hash_map<int, WindowObject *>::iterator it;
+    hash_map<Window, WindowObject *>::iterator it;
     if (e->type == FocusIn)
         if ((it = waimea->window_table->find(e->window)) !=
             waimea->window_table->end()) {
@@ -269,7 +269,7 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
     XWindowChanges wc;
     int mask;
 
-    hash_map<int, WindowObject *>::iterator it;
+    hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(e->window)) !=
         waimea->window_table->end()) {
         if (((*it).second)->type == WindowType) {
@@ -330,7 +330,7 @@ void EventHandler::EvColormap(XColormapEvent *e) {
 void EventHandler::EvMapRequest(XMapRequestEvent *e) {
     XWindowAttributes attr;
     
-    hash_map<int, WindowObject *>::iterator it;
+    hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(e->window)) !=
         waimea->window_table->end()) {
         if (((*it).second)->type == WindowType) {
@@ -359,13 +359,22 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
  * @param e	The UnmapEvent
  */
 void EventHandler::EvUnmapDestroy(XEvent *e) {
-    hash_map<int, WindowObject *>::iterator it;
-    if ((it = waimea->window_table->find(((e->type == UnmapNotify)?
+    hash_map<Window, WindowObject *>::iterator it;
+    if ((it = waimea->window_table->find((e->type == UnmapNotify)?
                                           e->xunmap.window:
-                                          e->xdestroywindow.window)))
+                                          e->xdestroywindow.window))
         != waimea->window_table->end()) {
-        if (((*it).second)->type == WindowType)
+        if (((*it).second)->type == WindowType) {
+            if (e->type == DestroyNotify)
+                ((WaWindow *) (*it).second)->deleted = True;
             delete ((WaWindow *) (*it).second);
+        }
+        else if (((*it).second)->type == DockAppType) {
+            if (e->type == DestroyNotify)
+                ((Dockapp *) (*it).second)->deleted = True;
+            delete ((Dockapp *) (*it).second);
+            waimea->wascreen->dock->Update();
+        }
     }
 }
 
@@ -384,7 +393,7 @@ void EventHandler::EvUnmapDestroy(XEvent *e) {
 void EventHandler::EvAct(XEvent *e, Window win) {
     WindowObject *wo;
 
-    hash_map<int, WindowObject *>::iterator it;
+    hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(win)) !=
         waimea->window_table->end()) {
         wo = (*it).second;

@@ -40,10 +40,8 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     screen_number = wascreen->screen_number;
     waimea = wascreen->waimea;
     ic = wascreen->ic;
-    net = waimea->net;        
-    
-    waimea->window_table->insert(make_pair(id, this));
-    waimea->wawindow_list->push_back(this);
+    net = waimea->net;
+    frame = NULL;
 
     if (! XFetchName(display, id, &name)) {
         name = strdup("");
@@ -56,7 +54,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     attrib.width  = init_attrib.width;
     attrib.height = init_attrib.height;
     
-    want_focus = mapped = dontsend = False;
+    want_focus = mapped = dontsend = deleted = dock = False;
     
 #ifdef SHAPE
     shaped = False;
@@ -67,6 +65,13 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     flags.sticky = flags.shaded = flags.max_v = flags.max_h = False;
 
     net->GetWMHints(this);
+    if (state == WithdrawnState) {
+        new Dockapp(id, wascreen->dock);
+        wascreen->dock->Update();
+        deleted = dock = True;
+        delete this;
+        return;
+    }
     net->GetMWMHints(this);
     net->GetWMNormalHints(this);
     net->GetVirtualPos(this);
@@ -103,6 +108,9 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     net->GetStateShaded(this);
     net->GetStateMaxV(this);
     net->GetStateMaxH(this);
+    
+    waimea->window_table->insert(make_pair(id, this));
+    waimea->wawindow_list->push_back(this);
 }
 
 /**
@@ -118,7 +126,7 @@ WaWindow::~WaWindow(void) {
         XftDrawDestroy(xftdraw);
 #endif // XFT
     XGrabServer(display);
-    if (validateclient(id)) {
+    if ((! deleted) && validateclient(id)) {
         XRemoveFromSaveSet(display, id);
         Gravitate(RemoveGravity);
         if (flags.shaded) attrib.height = restore_shade.height;
@@ -129,30 +137,32 @@ WaWindow::~WaWindow(void) {
     }
     XSync(display, False);
     XUngrabServer(display);
-    XDestroyWindow(display, frame->id);
-    delete frame;
-    if (title_w) {
-        delete title;
-        delete label;
-        delete button_min;
-        delete button_max;
-        delete button_c;
+    if (frame) {
+        XDestroyWindow(display, frame->id);
+        delete frame;
+        if (title_w) {
+            delete title;
+            delete label;
+            delete button_min;
+            delete button_max;
+            delete button_c;
+        }
+        if (handle_w) {
+            delete handle;
+            delete grip_l;
+            delete grip_r;
+        }
+        waimea->always_on_top_list->remove(o_west);
+        waimea->always_on_top_list->remove(o_east);
+        waimea->always_on_top_list->remove(o_north);
+        waimea->always_on_top_list->remove(o_south);
+        XDestroyWindow(display, o_west);
+        XDestroyWindow(display, o_east);
+        XDestroyWindow(display, o_north);
+        XDestroyWindow(display, o_south);
     }
-    if (handle_w) {
-        delete handle;
-        delete grip_l;
-        delete grip_r;
-    }
-    waimea->always_on_top_list->remove(o_west);
-    waimea->always_on_top_list->remove(o_east);
-    waimea->always_on_top_list->remove(o_north);
-    waimea->always_on_top_list->remove(o_south);
-    XDestroyWindow(display, o_west);
-    XDestroyWindow(display, o_east);
-    XDestroyWindow(display, o_north);
-    XDestroyWindow(display, o_south);
     XFree(name);
-    waimea->window_table->erase(id);
+    if (! dock) waimea->window_table->erase(id);
     waimea->wawindow_list->remove(this);
 }
 
@@ -325,12 +335,12 @@ void WaWindow::ReparentWin(void) {
     XGrabServer(display);
     if (validateclient(id)) {
         XSelectInput(display, id, NoEventMask);
-        XAddToSaveSet(display, id);
         XSetWindowBorderWidth(display, id, 0);
         XReparentWindow(display, id, frame->id, 0, title_w + border_w);
+        XChangeSaveSet(display, id, SetModeInsert);
         XLowerWindow(display, id);
         XSelectInput(display, id, FocusChangeMask | PropertyChangeMask |
-                     StructureNotifyMask);
+                     StructureNotifyMask | SubstructureNotifyMask);
 
 #ifdef SHAPE
         int n, order;

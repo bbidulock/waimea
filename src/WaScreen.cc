@@ -94,18 +94,24 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     shape = XShapeQueryExtension(display, &shape_event, &dummy);
 #endif // SHAPE
 
+    dock = new DockappHandler(this);
+    
     WaWindow *newwin;
     XQueryTree(display, id, &ro, &pa, &children, &nchild);
     for (i = 0; i < (int) nchild; ++i) {
         XGetWindowAttributes(display, children[i], &attr);
         if ((! attr.override_redirect) && (attr.map_state == IsViewable)) {
             newwin = new WaWindow(children[i], this);
-            newwin->net->SetState(newwin, NormalState);
+            hash_map<Window, WindowObject *>::iterator it;
+            if ((it = waimea->window_table->find(children[i]))
+                != waimea->window_table->end()) {
+                if (((*it).second)->type == WindowType) {
+                    newwin->net->SetState(newwin, NormalState);
+                }
+            }
         }
     }
     XFree(children);
-
-    dock = new DockappHandler(this);
 }
 
 /**

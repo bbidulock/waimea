@@ -844,7 +844,7 @@ void WaMenuItem::Exec(XEvent *, WaAction *) {
  * @param ac WaAction object
  */
 void WaMenuItem::Func(XEvent *e, WaAction *ac) {
-    hash_map<int, WindowObject *>::iterator it;
+    hash_map<Window, WindowObject *>::iterator it;
     Window func_win;
     
     if (wf) func_win = wf;

@@ -388,6 +388,31 @@ void ResourceHandler::LoadConfig(void) {
     } else
         image_dither = True;    
 
+    unsigned int dummy;
+    if (XrmGetResource(database, "dock0.geometry", "Dock0.Geometry",
+                       &value_type, &value))
+        dockstyle.geometry = XParseGeometry(value.addr, &dockstyle.x,
+                                            &dockstyle.y, &dummy, &dummy);
+
+    if (XrmGetResource(database, "dock0.direction", "Dock0.Direction",
+                       &value_type, &value)) {
+        if (! strncasecmp("Horizontal", value.addr, value.size))
+            dockstyle.direction = HorizontalDock;
+        else
+            dockstyle.direction = VerticalDock;
+    } else
+        dockstyle.direction = VerticalDock;
+
+    if (XrmGetResource(database, "dock0.gridSpace", "Dock0.GridSpace",
+                     &value_type, &value)) {
+        if (sscanf(value.addr, "%lu", &dockstyle.gridspace) != 1)
+            dockstyle.gridspace = 2;
+    } else
+        dockstyle.gridspace = 2;
+    
+    if (dockstyle.gridspace > 50) dockstyle.gridspace = 50;
+
+    
     XrmDestroyDatabase(database);
 } 
 

@@ -39,6 +39,14 @@ struct _WaAction {
     unsigned int type, detail, mod, nmod;
 };
 
+typedef struct {
+    int x;
+    int y;
+    int geometry;
+    int direction;
+    unsigned int gridspace;
+} DockStyle;
+
 #define LeftJustify   1
 #define RightJustify  2
 #define CenterJustify 3
@@ -66,6 +74,8 @@ public:
     list<WaAction *> *frameacts, *winacts, *titleacts, *labelacts, *handleacts,
         *cbacts, *ibacts, *mbacts, *rgacts, *lgacts, *rootacts, *weacts,
         *eeacts, *neacts, *seacts, *mtacts, *miacts, *msacts;
+
+    DockStyle dockstyle;
     
 private:
     void ReadDatabaseColor(char *, char *, WaColor *, unsigned long,

@@ -73,9 +73,9 @@ void NetHandler::GetWMHints(WaWindow *ww) {
     ww->state = NormalState;
     XGrabServer(display);
     if (validateclient(ww->id))
-    if ((wm_hints = XGetWMHints(display, ww->id)))
-        if (wm_hints->flags & StateHint)
-            ww->state = wm_hints->initial_state;
+        if ((wm_hints = XGetWMHints(display, ww->id)))
+            if (wm_hints->flags & StateHint)
+                ww->state = wm_hints->initial_state;
     XUngrabServer(display);
 }
 

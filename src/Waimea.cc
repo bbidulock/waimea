@@ -40,7 +40,7 @@ WindowObject::WindowObject(Window win_id, int win_type) {
 
 Waimea *waimea;
 char **argv;
-hash_map<int, WindowObject *> *windows;
+hash_map<Window, WindowObject *> *windows;
 char *errfunc;
 
 /**
@@ -59,7 +59,7 @@ char *errfunc;
  */
 Waimea::Waimea(char **av, struct waoptions *options) {
     struct sigaction act;
-
+    
     argv = av;
     XSetErrorHandler((XErrorHandler) xerrorhandler);
     if (! (display = XOpenDisplay(options->display))) {
@@ -74,7 +74,7 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     sigaction(SIGHUP, &act, NULL);
     sigaction(SIGCHLD, &act, NULL);
 
-    windows = window_table = new hash_map<int, WindowObject *>;
+    windows = window_table = new hash_map<Window, WindowObject *>;
     always_on_top_list = new list<Window>;
     wawindow_list = new list<WaWindow *>;
     wamenu_list = new list<WaMenu *>;
@@ -216,7 +216,7 @@ void waexec(const char *command, char *displaystring) {
  */
 int xerrorhandler(Display *d, XErrorEvent *e) {
     char buff[128];
-    hash_map<int, WindowObject *>::iterator it;
+    hash_map<Window, WindowObject *>::iterator it;
    
     XGetErrorDatabaseText(d, "XlibMessage", "XError", "", buff, 128);
     cerr << buff;
