@@ -117,6 +117,8 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaScreen::ScrollViewportUp));
     racts->push_back(new StrComp("scrollviewportdown",
                                  &WaScreen::ScrollViewportDown));
+    racts->push_back(new StrComp("viewportmove",
+                                 &WaScreen::ViewportMove));
     
     macts = new list<StrComp *>;
     macts->push_back(new StrComp("unlink", &WaMenuItem::UnLinkMenu));

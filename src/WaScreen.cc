@@ -498,6 +498,72 @@ void WaScreen::ScrollViewport(int direction, WaAction *ac) {
 }
 
 /**
+ * @fn    ViewportMove(XEvent *e, WaAction *)
+ * @brief Move viewport after mouse movement
+ *
+ * Moves viewport after mouse motion events. Moves the viewport in the same
+ * way as you move a window.
+ *
+ * @param e XEvent causing function call
+ */
+void WaScreen::ViewportMove(XEvent *e, WaAction *) {
+    XEvent *event;
+    int px, py, nx, ny, i;
+    list<XEvent *> *maprequest_list;
+    Window w;
+    unsigned int ui;
+    
+    XQueryPointer(display, id, &w, &w, &px, &py, &i, &i, &ui);
+    
+    maprequest_list = new list<XEvent *>;
+    XGrabPointer(display, id, True, ButtonReleaseMask |
+                 ButtonPressMask | PointerMotionMask | EnterWindowMask |
+                 LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
+                 waimea->move_cursor, CurrentTime);
+    for (;;) {
+        event =
+            waimea->eh->EventLoop(waimea->eh->menu_viewport_move_return_mask);
+        switch (event->type) {
+            case MotionNotify:
+                MoveViewportTo(v_x + (event->xmotion.x_root - px),
+                               v_y + (event->xmotion.y_root - py));
+                px = event->xmotion.x_root;
+                py = event->xmotion.y_root;
+                break;
+            case LeaveNotify:
+            case EnterNotify:
+                break;
+            case DestroyNotify:
+            case UnmapNotify:
+                if ((((event->type == UnmapNotify)? event->xunmap.window:
+                      event->xdestroywindow.window) == id)) {
+                    while (! maprequest_list->empty()) {
+                        XPutBackEvent(display, maprequest_list->front());
+                        maprequest_list->pop_front();
+                    }
+                    delete maprequest_list;
+                    XPutBackEvent(display, event);
+                    return;
+                }
+                waimea->eh->EvUnmapDestroy(event);
+                break;
+            case MapRequest:
+                maprequest_list->push_front(event); break;
+            case ButtonPress:
+            case ButtonRelease:
+                if (e->type == event->type) break;
+                XUngrabPointer(display, CurrentTime);
+                while (! maprequest_list->empty()) {
+                    XPutBackEvent(display, maprequest_list->front());
+                    maprequest_list->pop_front();
+                }
+                delete maprequest_list;
+                return;
+        }
+    }
+}
+
+/**
  * @fn    Focus(XEvent *, WaAction *)
  * @brief Set input focus to root image
  *

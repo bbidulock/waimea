@@ -40,13 +40,24 @@ EventHandler::EventHandler(Waimea *wa) {
     moveresize_return_mask->insert(LeaveNotify);
     moveresize_return_mask->insert(ConfigureRequest);
 
-    menu_move_return_mask = new hash_set<int>;
-    menu_move_return_mask->insert(MotionNotify);
-    menu_move_return_mask->insert(ButtonPress);
-    menu_move_return_mask->insert(ButtonRelease);
-    menu_move_return_mask->insert(MapRequest);
-    menu_move_return_mask->insert(EnterNotify);
-    menu_move_return_mask->insert(LeaveNotify);
+    menu_viewport_move_return_mask = new hash_set<int>;
+    menu_viewport_move_return_mask->insert(MotionNotify);
+    menu_viewport_move_return_mask->insert(ButtonPress);
+    menu_viewport_move_return_mask->insert(ButtonRelease);
+    menu_viewport_move_return_mask->insert(MapRequest);
+    menu_viewport_move_return_mask->insert(EnterNotify);
+    menu_viewport_move_return_mask->insert(LeaveNotify);
+}
+
+/**
+ * @fn    ~EventHandler(void)
+ * @brief Destructor for EventHandler class
+ *
+ * Clears return mask lists
+ */
+EventHandler::~EventHandler(void) {
+    moveresize_return_mask->clear();
+    menu_viewport_move_return_mask->clear();
 }
 
 /**
@@ -278,6 +289,7 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
             mask |= (e->value_mask & CWStackMode)? CWStackMode: 0;
             XConfigureWindow(ww->display, ww->frame->id, mask, &wc);
             if (e->value_mask & CWStackMode) waimea->WaRaiseWindow((Window) 0);
+            ww->net->SetVirtualPos(ww);
             return;
         }
     }

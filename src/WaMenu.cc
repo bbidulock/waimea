@@ -814,32 +814,32 @@ void WaMenuItem::Lower(XEvent *, WaAction *) {
  */
 void WaMenuItem::Move(XEvent *e, WaAction *) {
     XEvent *event;
-    int px, py;
+    int px, py, i;
     list<XEvent *> *maprequest_list;
     bool started = False;
     int nx = menu->x;
     int ny = menu->y;
+    Window w;
+    unsigned int ui;
     
-    switch (e->type) {
-        case ButtonRelease:
-            nx = e->xbutton.x_root;
-            ny = e->xbutton.y_root;
+    XQueryPointer(menu->display, menu->wascreen->id, &w, &w, &px,
+                  &py, &i, &i, &ui);
+    
+    if (e->type != ButtonPress) {
+            nx = px;
+            ny = py;
             menu->DrawOutline(nx - menu->x, ny - menu->y);
             menu->ToggleOutline();
             started = True;
-        case ButtonPress:
-            px = e->xbutton.x_root;
-            py = e->xbutton.y_root; break;
-        default: return;
     }
     maprequest_list = new list<XEvent *>;
-    XGrabPointer(menu->display, e->xany.window, True, ButtonReleaseMask |
+    XGrabPointer(menu->display, id, True, ButtonReleaseMask |
                  ButtonPressMask | PointerMotionMask | EnterWindowMask |
-                 LeaveWindowMask, GrabModeAsync, GrabModeAsync, None, None,
-                 CurrentTime);
+                 LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
+                 menu->waimea->move_cursor, CurrentTime);
     for (;;) {
         event = menu->waimea->eh->EventLoop(
-            menu->waimea->eh->menu_move_return_mask);
+            menu->waimea->eh->menu_viewport_move_return_mask);
         switch (event->type) {
             case MotionNotify:
                 if (! started) {
@@ -868,6 +868,7 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
                 maprequest_list->push_front(event); break;
             case ButtonPress:
             case ButtonRelease:
+                if (e->type == event->type) break;
                 if (started) menu->ToggleOutline();
                 menu->Move(nx - menu->x, ny - menu->y);
                 XUngrabPointer(menu->display, CurrentTime);
@@ -891,29 +892,29 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
  */
 void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
     XEvent *event;
-    int px, py;
+    int px, py, i;
     list<XEvent *> *maprequest_list;
     int nx = menu->x;
     int ny = menu->y;
-
-    switch (e->type) {
-        case ButtonRelease:
-            nx = e->xbutton.x_root;
-            ny = e->xbutton.y_root;
+    Window w;
+    unsigned int ui;
+    
+    XQueryPointer(menu->display, menu->wascreen->id, &w, &w, &px,
+                  &py, &i, &i, &ui);
+    
+    if (e->type != ButtonPress) {
+            nx = px;
+            ny = py;
             menu->Move(nx - menu->x, ny - menu->y);
-        case ButtonPress:
-            px = e->xbutton.x_root;
-            py = e->xbutton.y_root; break;
-        default: return;
     }
     maprequest_list = new list<XEvent *>;
-    XGrabPointer(menu->display, e->xany.window, True, ButtonReleaseMask |
+    XGrabPointer(menu->display, id, True, ButtonReleaseMask |
                  ButtonPressMask | PointerMotionMask | EnterWindowMask |
-                 LeaveWindowMask, GrabModeAsync, GrabModeAsync, None, None,
-                 CurrentTime);
+                 LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
+                 menu->waimea->move_cursor, CurrentTime);
     for (;;) {
         event = menu->waimea->eh->EventLoop(
-            menu->waimea->eh->menu_move_return_mask);
+            menu->waimea->eh->menu_viewport_move_return_mask);
         switch (event->type) {
             case MotionNotify:
                 nx += event->xmotion.x_root - px;
@@ -938,13 +939,14 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                 maprequest_list->push_front(event); break;
             case ButtonPress:
             case ButtonRelease:
-	        XUngrabPointer(menu->display, CurrentTime);
-            while (! maprequest_list->empty()) {
-                XPutBackEvent(menu->display, maprequest_list->front());
-                maprequest_list->pop_front();
-            }
-            delete maprequest_list;
-            return;
+                if (e->type == event->type) break;
+                XUngrabPointer(menu->display, CurrentTime);
+                while (! maprequest_list->empty()) {
+                    XPutBackEvent(menu->display, maprequest_list->front());
+                    maprequest_list->pop_front();
+                }
+                delete maprequest_list;
+                return;
         }
     }
 }

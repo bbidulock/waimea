@@ -32,6 +32,7 @@ struct _EventDetail {
 class EventHandler {
 public:
     EventHandler(Waimea *);
+    virtual ~EventHandler(void);
 
     XEvent *EventLoop(hash_set<int> *);
     void EvExpose(XExposeEvent *);
@@ -41,7 +42,7 @@ public:
 
     EventDetail ed;
     hash_set<int> *moveresize_return_mask;
-    hash_set<int> *menu_move_return_mask;
+    hash_set<int> *menu_viewport_move_return_mask;
     
 private:
     void EvProperty(XPropertyEvent *);

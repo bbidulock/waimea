@@ -88,13 +88,14 @@ public:
     WaScreen(Display *, int, Waimea *);
     virtual ~WaScreen(void);
 
+    void MoveViewportTo(int, int);
+    void ViewportMove(XEvent *, WaAction *);
     void Focus(XEvent *, WaAction *);
     void MenuMap(XEvent *, WaAction *);
     void MenuReMap(XEvent *, WaAction *);
     void MenuUnmap(XEvent *, WaAction *);
     void Restart(XEvent *, WaAction *);
     void Exit(XEvent *, WaAction *);
-    void MoveViewportTo(int, int);
     inline void MoveViewportLeft(XEvent *, WaAction *) {
         MoveViewport(WestDirection);
     }

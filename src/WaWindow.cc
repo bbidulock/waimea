@@ -293,7 +293,6 @@ void WaWindow::RedrawWindow(void) {
     }
     if (move) {
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
-        net->SetVirtualPos(this);
     }
     if (resize) {
         XGrabServer(display);
@@ -307,7 +306,10 @@ void WaWindow::RedrawWindow(void) {
         XUngrabServer(display);
         Shape();
     }
-    if ((move || resize) && (! flags.shaded) && (! dontsend)) SendConfig();
+    if ((move || resize) && (! flags.shaded) && (! dontsend)) {
+        net->SetVirtualPos(this);
+        SendConfig();
+    }
 }
 
 /**
@@ -1097,39 +1099,34 @@ void WaWindow::Focus(XEvent *, WaAction *) {
  */
 void WaWindow::Move(XEvent *e, WaAction *) {
     XEvent *event;
-    int px, py, nx, ny;
+    int px, py, nx, ny, i;
     list<XEvent *> *maprequest_list;
     bool started = False;
+    Window w;
+    unsigned int ui;
     
-    switch (e->type) {
-        case ButtonRelease:
-            if (! mapped) {
-                attrib.x = - (wascreen->v_x + attrib.width + border_w * 2);
-                attrib.y = - (wascreen->v_y + attrib.height + border_w * 4 +
-                              handle_w + title_w);
-                RedrawWindow();
-                net->SetState(this, NormalState);
-            }
-            nx = e->xbutton.x_root + border_w - 3;
-            ny = e->xbutton.y_root + title_w +
-                border_w - 3;
-            px = e->xbutton.x_root;
-            py = e->xbutton.y_root;
-            DrawOutline(nx, ny, attrib.width, attrib.height);
-            ToggleOutline();
-            started = True;
-            break;
-        case ButtonPress:
-            nx = attrib.x;
-            ny = attrib.y;
-            px = e->xbutton.x_root;
-            py = e->xbutton.y_root; break;
-        default: return;
+    XQueryPointer(display, wascreen->id, &w, &w, &px, &py, &i, &i, &ui);
+    
+    nx = attrib.x;
+    ny = attrib.y;
+    if (e->type != ButtonPress) {    
+        if (! mapped) {
+            attrib.x = - (wascreen->v_x + attrib.width + border_w * 2);
+            attrib.y = - (wascreen->v_y + attrib.height + border_w * 4 +
+                          handle_w + title_w);
+            RedrawWindow();
+            net->SetState(this, NormalState);
+        }
+        nx = px + border_w - 3;
+        ny = py + title_w + border_w - 3;
+        DrawOutline(nx, ny, attrib.width, attrib.height);
+        ToggleOutline();
+        started = True;
     }
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id))
-        XGrabPointer(display, e->xany.window, True, ButtonReleaseMask |
+        XGrabPointer(display, id, True, ButtonReleaseMask |
                      ButtonPressMask | PointerMotionMask | EnterWindowMask |
                      LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
                      waimea->move_cursor, CurrentTime);
@@ -1210,27 +1207,26 @@ void WaWindow::Move(XEvent *e, WaAction *) {
  */
 void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
     XEvent *event;
-    int px, py, nx = attrib.x, ny = attrib.y;
+    int px, py, nx = attrib.x, ny = attrib.y, i;
     list<XEvent *> *maprequest_list;
+    Window w;
+    unsigned int ui;
     
-    switch (e->type) {
-        case ButtonRelease:
-            nx = attrib.x = e->xbutton.x_root + border_w - 3;
-            ny = attrib.y = e->xbutton.y_root + title_w + border_w - 3;
-            if (! mapped) {
-                RedrawWindow();
-                net->SetState(this, NormalState);
-            }
-        case ButtonPress:
-            px = e->xbutton.x_root;
-            py = e->xbutton.y_root; break;
-        default: return;
+    XQueryPointer(display, wascreen->id, &w, &w, &px, &py, &i, &i, &ui);
+    
+    if (e->type != ButtonPress) {
+        nx = attrib.x = px + border_w - 3;
+        ny = attrib.y = py + title_w + border_w - 3;
+        if (! mapped) {
+            RedrawWindow();
+            net->SetState(this, NormalState);
+        }
     }
     dontsend = True;
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id))
-        XGrabPointer(display, e->xany.window, True, ButtonReleaseMask |
+        XGrabPointer(display, id, True, ButtonReleaseMask |
                      ButtonPressMask | PointerMotionMask | EnterWindowMask |
                      LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
                      waimea->move_cursor, CurrentTime);
@@ -1289,6 +1285,7 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                 }
                 delete maprequest_list;
                 SendConfig();
+                net->SetVirtualPos(this);
                 dontsend = False;
                 return;
         }
@@ -1308,23 +1305,21 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
  */
 void WaWindow::Resize(XEvent *e, int how) {
     XEvent *event;
-    int px, py, width, height, n_w, n_h, o_w, o_h, n_x, o_x;
+    int px, py, width, height, n_w, n_h, o_w, o_h, n_x, o_x, i;
     list<XEvent *> *maprequest_list;
     bool started = False;
+    Window w;
+    unsigned int ui;
     
-    switch (e->type) {
-        case ButtonPress:
-            px = e->xbutton.x_root;
-            py = e->xbutton.y_root; break;
-        default: return;
-    }
+    XQueryPointer(display, wascreen->id, &w, &w, &px, &py, &i, &i, &ui);
+    
     n_x    = o_x = attrib.x;
     width  = n_w = o_w = attrib.width;
     height = n_h = o_h = attrib.height;
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id))
-        XGrabPointer(display, e->xany.window, False, ButtonReleaseMask |
+        XGrabPointer(display, id, False, ButtonReleaseMask |
                      ButtonMotionMask, GrabModeAsync, GrabModeAsync, None,
                      (how > 0) ? waimea->resizeright_cursor:
                      waimea->resizeleft_cursor, CurrentTime);
@@ -1371,6 +1366,8 @@ void WaWindow::Resize(XEvent *e, int how) {
             case MapRequest:
                 maprequest_list->push_front(event); break;
             case ButtonRelease:
+            case ButtonPress:
+                if (e->type == event->type) break;
                 if (started) ToggleOutline();
                 attrib.x      = n_x;
                 attrib.width  = n_w;
@@ -1401,22 +1398,20 @@ void WaWindow::Resize(XEvent *e, int how) {
  */
 void WaWindow::ResizeOpaque(XEvent *e, int how) {
     XEvent *event;
-    int px, py, width, height, n_w, n_h;
+    int px, py, width, height, n_w, n_h, i;
     list<XEvent *> *maprequest_list;
-
-    switch (e->type) {
-        case ButtonPress:
-            px = e->xbutton.x_root;
-            py = e->xbutton.y_root; break;
-        default: return;
-    }
+    Window w;
+    unsigned int ui;
+    
+    XQueryPointer(display, wascreen->id, &w, &w, &px, &py, &i, &i, &ui);    
+    
     dontsend = True;
     width  = n_w = attrib.width;
     height = n_h = attrib.height;
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id))
-        XGrabPointer(display, e->xany.window, False, ButtonReleaseMask |
+        XGrabPointer(display, id, False, ButtonReleaseMask |
                      ButtonMotionMask, GrabModeAsync, GrabModeAsync, None,
                      (how > 0) ? waimea->resizeright_cursor:
                      waimea->resizeleft_cursor, CurrentTime);
@@ -1456,7 +1451,9 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                 break;
             case MapRequest:
                 maprequest_list->push_front(event); break;
+            case ButtonPress:
             case ButtonRelease:
+                if (e->type == event->type) break;
                 XUngrabPointer(display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
@@ -1464,6 +1461,7 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                 }
                 delete maprequest_list;
                 SendConfig();
+                net->SetVirtualPos(this);
                 dontsend = False;
                 return;
         }

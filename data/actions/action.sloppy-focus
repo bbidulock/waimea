@@ -31,7 +31,7 @@
 ! == Normal Window ==
 !
 window.*.1: Raise             : ButtonPress = Button1 & Mod1Mask
-window.*.2: MoveOpaque        : ButtonPress = Button1 & Mod1Mask
+window.*.2: Move        : ButtonPress = Button1 & Mod1Mask
 window.*.3: ResizeRightOpaque : ButtonPress = Button3 & Mod1Mask
 window.*.4: Lower             : ButtonPress = Button2 & Mod1Mask
 !
@@ -78,8 +78,9 @@ window.rightgrip.5: ResizeRightOpaque : ButtonPress = AnyButton & !Mod1Mask
 !
 ! == Root Window ==
 !
-root.1: menuremap(rootmenu) : ButtonPress = Button3
-root.2: menuunmap(rootmenu) : ButtonPress = Button1
+root.1: MenuRemap(rootmenu) : ButtonPress = Button3
+root.2: MenuUnmap(rootmenu) : ButtonPress = Button1
+root.3: ViewportMove        : ButtonPress = Button2
 !
 !
 ! == Screen Edges ==
@@ -100,7 +101,7 @@ southedge.2: ScrollViewportDown(20) : EnterNotify & ControlMask
 ! == Menu ==
 !
 menu.*.1: Raise      : ButtonPress = Button1 & Mod1Mask
-menu.*.2: MoveOpaque : ButtonPress = Button1 & Mod1Mask
+menu.*.2: Move : ButtonPress = Button1 & Mod1Mask
 menu.*.3: UnLink     : ButtonPress = Button1 & Mod1Mask
 menu.*.4: Lower      : ButtonPress = Button2 & Mod1Mask
 !

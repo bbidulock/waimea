@@ -21,14 +21,16 @@
 !    and unmaps menu tree.  
 ! Screen edge enter event moves viewport one screen in screen edge direction.
 ! Screen edge enter event with control key down scroll viewport 25 (20)
-!    pixels in screen edge direction. 
+!    pixels in screen edge direction.
+! Middle mouse button click on root window moves viewport after mouse
+!    movement
 ! Alt-F1  Toggle shade
 ! Alt-F2  Toggle maximize
 ! Alt-F4  Close window
 ! Alt-F10 Kill client
 !
 !
-! Normal Window
+! == Normal Window ==
 !
 window.*.1: Raise       : ButtonPress = Button1 & Mod1Mask
 window.*.2: Move        : ButtonPress = Button1 & Mod1Mask
@@ -76,13 +78,14 @@ window.leftgrip.5: ResizeLeft : ButtonPress = AnyButton & !Mod1Mask
 window.rightgrip.5: ResizeRight : ButtonPress = AnyButton & !Mod1Mask
 !
 !
-! Root Window
+! == Root Window ==
 !
-root.1: menuremap(rootmenu) : ButtonPress = Button3
-root.2: menuunmap(rootmenu) : ButtonPress = Button1
+root.1: MenuRemap(rootmenu) : ButtonPress = Button3
+root.2: MenuUnmap(rootmenu) : ButtonPress = Button1
+root.3: ViewportMove        : ButtonPress = Button2
 !
 !
-! Screen Edges
+! == Screen Edges ==
 !
 westedge.1: ViewportLeft          : EnterNotify & !ControlMask
 westedge.2: ScrollViewportLeft(25) : EnterNotify & ControlMask
@@ -97,7 +100,7 @@ southedge.1: ViewportDown          : EnterNotify & !ControlMask
 southedge.2: ScrollViewportDown(20) : EnterNotify & ControlMask
 !
 !
-! Menu
+! == Menu ==
 !
 menu.*.1: Raise  : ButtonPress = Button1 & Mod1Mask
 menu.*.2: Move   : ButtonPress = Button1 & Mod1Mask
