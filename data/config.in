@@ -1,8 +1,7 @@
 !
-! 	waimearc.example
-!
-! Waimea default configuration. If no ~/.waimearc is found and no
-! --rcfile option is used, these are the settings used.
+! Waimea system wide configuration. If no ~/.waimearc is found and no
+! --rcfile switch is used, waimea reads configuration options from 
+! this file.
 !
 styleFile:         @pkgdatadir@/styles/Default
 menuFile:          @pkgdatadir@/menu
