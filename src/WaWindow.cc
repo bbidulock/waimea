@@ -133,10 +133,17 @@ WaWindow::~WaWindow(void) {
         XRemoveFromSaveSet(display, id);
         Gravitate(RemoveGravity);
         if (flags.shaded) attrib.height = restore_shade;
-        XReparentWindow(display, id, wascreen->id, attrib.x -
-                        (attrib.x / wascreen->width) * wascreen->width,
-                        attrib.y -
-                        (attrib.y / wascreen->height) * wascreen->height);
+        if (attrib.x > wascreen->width)
+            attrib.x = attrib.x % wascreen->width;
+        if (attrib.y > wascreen->height)
+            attrib.y = attrib.y % wascreen->height;
+
+        if (attrib.x + attrib.width < 0)
+            attrib.x = wascreen->width + (attrib.x % wascreen->width);
+        if (attrib.y + attrib.height < 0)
+            attrib.y = wascreen->height + (attrib.y % wascreen->height);
+
+        XReparentWindow(display, id, wascreen->id, attrib.x, attrib.y);
     }
     XSync(display, False);
     XUngrabServer(display);
