@@ -1,0 +1,36 @@
+/** -*- Mode: C++ -*-
+ *
+ * @file   DockappHandler.hh
+ * @author David Reveman <c99drn@cs.umu.se>
+ * @date   29-Nov-2001 22:13:22
+ *
+ * @brief Definition of DockappHandler class  
+ *
+ * Function declarations and variable definitions for DockappHandler class.
+ *
+ * Copyright (C) David Reveman. All rights reserved.
+ *
+ */
+
+#ifndef __DockappHandler_hh
+#define __DockappHandler_hh
+
+class DockappHandler;
+
+#include "Waimea.hh"
+
+class DockappHandler {
+public:
+    DockappHandler(WaScreen *);
+    virtual ~DockappHandler(void);
+
+    Window id;
+    Display *display;
+    Waimea *waimea;
+    WaScreen *wascreen;
+    int x, y, width, height;
+    Pixmap background;
+    unsigned long background_pixel;
+};
+
+#endif // __DockappHandler_hh

@@ -14,6 +14,7 @@
  *
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -422,18 +423,18 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
 #ifdef XFT
     if (XrmGetResource(database, "window.xftfontsize",
                        "Window.XftFontSize", &value_type, &value)) {
-        if (sscanf(value.addr, "%f", &wstyle->xftsize) != 1) {
+        if (! (wstyle->xftsize = strtod(value.addr, 0))) {
             wstyle->xftsize = 0.0;
         } else {
             if (wstyle->xftsize < 2.0) wstyle->xftsize = 2.0;
-            if (wstyle->xftsize > 100.0) wstyle->xftsize = 100.0;
+            if (wstyle->xftsize > 10.0) wstyle->xftsize = 10.0;
         }
     } else
         wstyle->xftsize = 0.0;
     
     if (XrmGetResource(database, "menu.frame.xftfontsize",
                        "Menu.Frame.XftFontSize", &value_type, &value)) {
-        if (sscanf(value.addr, "%f", &mstyle->f_xftsize) != 1) {
+        if (! (mstyle->f_xftsize = strtod(value.addr, 0))) {
             mstyle->f_xftsize = wstyle->xftsize;
         } else {
             if (mstyle->f_xftsize < 2.0) mstyle->f_xftsize = 2.0;
@@ -444,7 +445,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
 
     if (XrmGetResource(database, "menu.title.xftfontsize",
                        "Menu.Title.XftFontSize", &value_type, &value)) {
-        if (sscanf(value.addr, "%f", &mstyle->t_xftsize) != 1) {
+        if (! (mstyle->t_xftsize = strtod(value.addr, 0))) {
             mstyle->t_xftsize = mstyle->f_xftsize;
         } else {
             if (mstyle->t_xftsize < 2.0) mstyle->t_xftsize = 2.0;
@@ -455,7 +456,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
 
     if (XrmGetResource(database, "menu.bullet.xftfontsize",
                        "Menu.Bullet.XftFontSize", &value_type, &value)) {
-        if (sscanf(value.addr, "%f", &mstyle->b_xftsize) != 1) {
+        if (! (mstyle->b_xftsize = strtod(value.addr, 0))) {
             mstyle->b_xftsize = mstyle->f_xftsize;
         } else {
             if (mstyle->b_xftsize < 2.0) mstyle->b_xftsize = 2.0;

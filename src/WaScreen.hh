@@ -39,6 +39,7 @@ typedef void (WaScreen::*RootActionFn)(XEvent *, WaAction *);
 #include "WaMenu.hh"
 #include "ResourceHandler.hh"
 #include "NetHandler.hh"
+#include "DockappHandler.hh"
 
 #define WestDirection  1
 #define EastDirection  2
@@ -180,6 +181,7 @@ public:
     NetHandler *net;
     ResourceHandler *rh;
     WaImageControl *ic;
+    DockappHandler *dock;
     WindowStyle wstyle;
     MenuStyle mstyle;
     Pixmap fbutton, ubutton, pbutton, fgrip, ugrip;

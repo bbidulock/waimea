@@ -104,6 +104,8 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
         }
     }
     XFree(children);
+
+    dock = new DockappHandler(this);
 }
 
 /**
@@ -113,6 +115,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
  * Deletes all created colors and fonts.
  */
 WaScreen::~WaScreen(void) {
+    delete dock;
     delete west;
     delete east;
     delete north;
