@@ -16,6 +16,7 @@
 #endif // HAVE_CONFIG_H
 
 extern "C" {
+#include <X11/Xlib.h>
 #include <X11/Xutil.h>
     
 #ifdef    SHAPE
