@@ -990,7 +990,8 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
     *n_w = attrib.width;
     *n_h = attrib.height;
     if ((width >= (attrib.width + size.width_inc)) ||
-        (width <= (attrib.width - size.width_inc))) {
+        (width <= (attrib.width - size.width_inc)) ||
+	attrib.width == width) {
         if (width >= size.min_width && width <= size.max_width) {
             resize = True;
             if (size.width_inc == 1)
@@ -1009,7 +1010,8 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
         return resize;
     }
     if ((height >= (attrib.height + size.height_inc)) ||
-        (height <= (attrib.height - size.height_inc))) {
+        (height <= (attrib.height - size.height_inc)) ||
+	attrib.height == height) {
         if ((height < 1) && (size.min_height <= 1) && title_w) {
             resize = True;
             if (! flags.shaded) {
