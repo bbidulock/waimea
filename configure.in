@@ -1,7 +1,7 @@
 dnl configure.in for Waimea
 
-AC_INIT(src/main.cc, 0.4.0)
-AM_INIT_AUTOMAKE(waimea, 0.4.0)
+AC_INIT(src/main.cc, 0.5.0)
+AM_INIT_AUTOMAKE(waimea, 0.5.0)
 
 AM_CONFIG_HEADER(config.h)
 

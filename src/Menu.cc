@@ -51,8 +51,9 @@ WaMenu::WaMenu(char *n) : WindowObject((Window) 0, MenuType) {
     
     height = 0;
     width = 0;
-    mapped = has_focus = built = tasksw = dynamic = dynamic_root =
+    mapped = has_focus = built = dynamic = dynamic_root =
         ignore = db = false;
+    ext_type = NoExtMenuType;
     root_menu = NULL;
     root_item = NULL;
     wf = (Window) 0;
@@ -75,12 +76,6 @@ WaMenu::WaMenu(char *n) : WindowObject((Window) 0, MenuType) {
 WaMenu::~WaMenu(void) {
     LISTDELITEMS(item_list);
     if (built) {
-        if (wascreen->config.menu_stacking == AlwaysOnTop)
-            wascreen->wamenu_list_stacking_aot.remove(this);
-        else if (wascreen->config.menu_stacking == AlwaysAtBottom)
-            wascreen->wamenu_list_stacking_aab.remove(this);
-        else
-            wascreen->wa_list_stacking.remove(this);
         XDestroyWindow(display, frame);
 
 #ifdef RENDER
@@ -443,22 +438,16 @@ void WaMenu::Render(void) {
  * @param my Y coordinate to map menu at
  */
 void WaMenu::Map(int mx, int my) {
-    if (tasksw && item_list.size() < 2) return;
+    if (ext_type && item_list.size() < 2) return;
     if (mapped) return;
 
-    if (wascreen->config.menu_stacking == AlwaysAtBottom) {
-        wascreen->wamenu_list_stacking_aab.remove(this);
-        wascreen->wamenu_list_stacking_aab.push_back(this);
-        wascreen->WaLowerWindow(frame);
-    } else if (wascreen->config.menu_stacking == AlwaysOnTop) {
-        wascreen->wamenu_list_stacking_aot.remove(this);
-        wascreen->wamenu_list_stacking_aot.push_front(this);
-        wascreen->WaRaiseWindow(0);
-    } else {
-        wascreen->wa_list_stacking.remove(this);
-        wascreen->wa_list_stacking.push_front(this);
-        wascreen->WaRaiseWindow(frame);
-    }
+    if (wascreen->config.menu_stacking == AlwaysAtBottom)
+        wascreen->aab_stacking_list.push_front(frame);
+    else if (wascreen->config.menu_stacking == AlwaysOnTop)
+        wascreen->aot_stacking_list.push_front(frame);
+    else
+        wascreen->stacking_list.push_front(frame);
+    wascreen->RaiseWindow(frame);
     x = mx;
     y = my;
     mapped = true;
@@ -481,23 +470,17 @@ void WaMenu::Map(int mx, int my) {
  * @param my Y coordinate to remap menu at
  */
 void WaMenu::ReMap(int mx, int my) {
-    if (tasksw && item_list.size() < 2) return;
+    if (ext_type && item_list.size() < 2) return;
     
     if (mapped) Move(mx - x, my - y);
     else {
-        if (wascreen->config.menu_stacking == AlwaysAtBottom) {
-            wascreen->wamenu_list_stacking_aab.remove(this);
-            wascreen->wamenu_list_stacking_aab.push_back(this);
-            wascreen->WaLowerWindow(frame);
-        } else if (wascreen->config.menu_stacking == AlwaysOnTop) {
-            wascreen->wamenu_list_stacking_aot.remove(this);
-            wascreen->wamenu_list_stacking_aot.push_front(this);
-            wascreen->WaRaiseWindow(0);
-        } else {
-            wascreen->wa_list_stacking.remove(this);
-            wascreen->wa_list_stacking.push_front(this);
-            wascreen->WaRaiseWindow(frame);
-        }
+        if (wascreen->config.menu_stacking == AlwaysAtBottom)
+            wascreen->aab_stacking_list.push_front(frame);
+        else if (wascreen->config.menu_stacking == AlwaysOnTop)
+            wascreen->aot_stacking_list.push_front(frame);
+        else
+            wascreen->stacking_list.push_front(frame);
+        wascreen->RaiseWindow(frame);
     }
     x = mx;
     y = my;
@@ -555,12 +538,14 @@ void WaMenu::Move(int dx, int dy, bool render) {
 void WaMenu::Unmap(bool focus) {
     XEvent e;
 
-    XUnmapWindow(display, frame);
-
     if (wascreen->config.menu_stacking == AlwaysOnTop)
-        wascreen->wamenu_list_stacking_aot.remove(this);
+        wascreen->aot_stacking_list.remove(frame);
     else if (wascreen->config.menu_stacking == AlwaysAtBottom)
-        wascreen->wamenu_list_stacking_aab.remove(this);
+        wascreen->aab_stacking_list.remove(frame);
+    else
+        wascreen->stacking_list.remove(frame);
+
+    XUnmapWindow(display, frame);
     
     root_menu = NULL;
     
@@ -588,8 +573,12 @@ void WaMenu::Unmap(bool focus) {
             root_item->DeHilite();
     }
     else {
-        if (! wascreen->wawindow_list.empty())
-            wascreen->wawindow_list.front()->Focus(false);
+        list<WaWindow *>::iterator it = wascreen->wawindow_list.begin();
+        for (; it != wascreen->wawindow_list.end(); ++it)
+            if (! (*it)->hidden && ! (*it)->flags.hidden) {
+                (*it)->Focus(false);
+                break;
+            }
     }
     if (dynamic_root) {
         wascreen->wamenu_list.remove(this);
@@ -691,14 +680,16 @@ void WaMenu::CreateOutline(void) {
     o_south = XCreateWindow(display, wascreen->id, 0, 0, 1, 1, 0,
                             wascreen->screen_number, CopyFromParent,
                             wascreen->visual, create_mask, &attrib_set);
-    wascreen->always_on_top_list.push_back(o_west);
-    wascreen->always_on_top_list.push_back(o_east);
-    wascreen->always_on_top_list.push_back(o_north);
-    wascreen->always_on_top_list.push_back(o_south);
+    wascreen->aot_stacking_list.push_front(o_west);
+    wascreen->aot_stacking_list.push_front(o_east);
+    wascreen->aot_stacking_list.push_front(o_north);
+    wascreen->aot_stacking_list.push_front(o_south);
     XMapWindow(display, o_west);
     XMapWindow(display, o_east);
     XMapWindow(display, o_north);
     XMapWindow(display, o_south);
+
+    wascreen->RestackWindows(o_west);
     
     list<WaMenuItem *>::iterator it = item_list.begin();
     for (; it != item_list.end(); ++it) {        
@@ -707,7 +698,6 @@ void WaMenu::CreateOutline(void) {
             (*it)->submenu->CreateOutline();
         }
     }
-    wascreen->WaRaiseWindow(0);
 }
 
 /**
@@ -724,10 +714,10 @@ void WaMenu::DestroyOutline(void) {
             (*it)->submenu->DestroyOutline();
         }
     }
-    wascreen->always_on_top_list.remove(o_west);
-    wascreen->always_on_top_list.remove(o_east);
-    wascreen->always_on_top_list.remove(o_north);
-    wascreen->always_on_top_list.remove(o_south);
+    wascreen->aot_stacking_list.remove(o_west);
+    wascreen->aot_stacking_list.remove(o_east);
+    wascreen->aot_stacking_list.remove(o_north);
+    wascreen->aot_stacking_list.remove(o_south);
     XDestroyWindow(display, o_west);
     XDestroyWindow(display, o_east);
     XDestroyWindow(display, o_north);
@@ -770,25 +760,24 @@ void WaMenu::DrawOutline(int dx, int dy) {
  * @fn    Raise(void)
  * @brief Raise menu window in display stack
  *
- * Raises the menu frame to top of all non-alwaysontop windows in the display
- * stack.
+ * Raises the menu frame to the top of the stacking layer.
  */
 void WaMenu::Raise(void) {
-    if (wascreen->config.menu_stacking == AlwaysOnTop) {
-        wascreen->wamenu_list_stacking_aot.remove(this);
-        wascreen->wamenu_list_stacking_aot.push_front(this);
-    } else if (wascreen->config.menu_stacking == AlwaysAtBottom) {
-        wascreen->wamenu_list_stacking_aab.remove(this);
-        wascreen->wamenu_list_stacking_aab.push_back(this);
-    } else {
-        wascreen->wa_list_stacking.remove(this);
-        wascreen->wa_list_stacking.push_front(this);
-    }     
-    wascreen->WaRaiseWindow(frame);
+    wascreen->RaiseWindow(frame);
     list<WaMenuItem *>::iterator it = item_list.begin();
     for (; it != item_list.end(); ++it) {
         if (! (*it)->db) (*it)->Draw();
     }
+}
+
+/**
+ * @fn    Lower(void)
+ * @brief Lowers menu window in display stack
+ *
+ * Lowers the menu frame to the bottom of the stacking layer.
+ */
+void WaMenu::Lower(void) {
+    wascreen->LowerWindow(frame);
 }
 
 /**
@@ -1218,7 +1207,11 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus, bool only) {
     }
     if (submenu->mapped) return;
     
-    if (submenu->tasksw) menu->wascreen->window_menu->Build(menu->wascreen);
+    if (submenu->ext_type == TaskExtMenuType)
+        ((WindowMenu *) submenu)->Build(menu->wascreen);
+    else if (submenu->ext_type == MergeExtMenuType)
+        ((MergeMenu *) submenu)->Build(menu->wascreen, menu->wf);
+    
     submenu->root_menu = menu;
     submenu->root_item = this;
     submenu->wf = menu->wf;
@@ -1279,7 +1272,11 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
             return;
     }
     
-    if (submenu->tasksw) menu->wascreen->window_menu->Build(menu->wascreen);
+    if (submenu->ext_type == TaskExtMenuType)
+        ((WindowMenu *) submenu)->Build(menu->wascreen);
+    else if (submenu->ext_type == MergeExtMenuType)
+        ((MergeMenu *) submenu)->Build(menu->wascreen, menu->wf);
+    
     submenu->root_menu = menu;
     submenu->root_item = this;
     submenu->wf = menu->wf;
@@ -1360,6 +1357,9 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
         tmp_param = ac->param;
         ac->param = param;
     }
+
+    if (menu->ext_type == MergeExtMenuType)
+        e->xany.window = menu->wf;
     
     if (wf) func_win = wf;
     else func_win = menu->wf;
@@ -1378,27 +1378,6 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
         ((*(menu->mf)).*(mfunc))(e, ac);
     
     if (param) ac->param = tmp_param;
-}
-
-/**
- * @fn    Lower(XEvent *, WaAction *)
- * @brief Lowers menu window in display stack
- *
- * Lowers the menu frame to the bottom of the display stack.
- */
-void WaMenuItem::Lower(XEvent *, WaAction *) {
-    if (! in_window) return;
-    if (menu->wascreen->config.menu_stacking == AlwaysOnTop) {
-        menu->wascreen->wamenu_list_stacking_aot.remove(menu);
-        menu->wascreen->wamenu_list_stacking_aot.push_back(menu);
-    } else if (menu->wascreen->config.menu_stacking == AlwaysAtBottom) {
-        menu->wascreen->wamenu_list_stacking_aab.remove(menu);
-        menu->wascreen->wamenu_list_stacking_aab.push_front(menu);
-    } else {
-        menu->wascreen->wa_list_stacking.remove(menu);
-        menu->wascreen->wa_list_stacking.push_back(menu);
-    }     
-    menu->wascreen->WaLowerWindow(menu->frame);
 }
 
 /**
@@ -1844,6 +1823,8 @@ void WaMenuItem::UpdateCBox(void) {
                     switch (cb) {
                         case MaxCBoxType:
                             true_false = ww->flags.max; break;
+                        case MinCBoxType:
+                            true_false = ww->flags.hidden; break;
                         case ShadeCBoxType:
                             true_false = ww->flags.shaded; break;
                         case StickCBoxType:
@@ -1859,7 +1840,9 @@ void WaMenuItem::UpdateCBox(void) {
                         case AOTCBoxType:
                             true_false = ww->flags.alwaysontop; break;
                         case AABCBoxType:
-                            true_false = ww->flags.alwaysatbottom;
+                            true_false = ww->flags.alwaysatbottom; break;
+                        case FsCBoxType:
+                            true_false = ww->flags.fullscreen;
                     }
                     if (true_false) {                        
                         if (hilited)
@@ -1949,7 +1932,7 @@ int WaMenuItem::ExpandAll(WaWindow *w) {
 WindowMenu::WindowMenu(void) : WaMenu("__windowlist__") {
     WaMenuItem *m;
     
-    tasksw = true;
+    ext_type = TaskExtMenuType;
     m = new WaMenuItem("Window List");
     m->type = MenuTitleType;
     AddItem(m);
@@ -1962,7 +1945,7 @@ WindowMenu::WindowMenu(void) : WaMenu("__windowlist__") {
  * Overloaded Build function to make WindowMenu build a menu from
  * current windows.
  *
- * @param wascreen WaScreen to map menu on.
+ * @param wascreen WaScreen to map menu on
  */
 void WindowMenu::Build(WaScreen *wascreen) {
     WaWindow *ww;
@@ -2005,6 +1988,82 @@ void WindowMenu::Build(WaScreen *wascreen) {
     m->func_mask1 |= MenuWFuncMask;
     m->wf = ww->id;
     AddItem(m);
+    
+    WaMenu::Build(wascreen);
+}
+
+/** 
+ * @fn    MergeMenu(int mtype, char *l, char *n) : WaMenu(n)
+ * @brief Constructor for MergeMenu class
+ *
+ * Creates a MergeMenu object, used for merging windows.
+ * This is a WaMenu with some extra functionality.
+ *
+ * @param mtype Type of merge menu
+ * @param l Label for menu
+ * @param n Menu name
+ */
+MergeMenu::MergeMenu(int mtype, char *l, char *n) : WaMenu(n) {
+    WaMenuItem *m;
+    char *__m_wastrdup_tmp;
+
+    ext_type = MergeExtMenuType;
+    mergelabel = __m_wastrdup(l);
+    mergetype = mtype;
+    m = new WaMenuItem(mergelabel);
+    m->type = MenuTitleType;
+    AddItem(m);
+}
+
+/** 
+ * @fn    Build(WaScreen *wascreen, Window ign) 
+ * @brief Builds MergeMenu
+ *
+ * Overloaded Build function to make MergeMenu build a menu from
+ * current windows.
+ *
+ * @param wascreen WaScreen to map menu on
+ * @param ign Window with this id should not be included in menu
+ */
+void MergeMenu::Build(WaScreen *wascreen, Window ign) {
+    WaWindow *ww;
+    WaMenuItem *m;
+    wawindow_list = &wascreen->wawindow_list;
+    
+    LISTCLEAR(item_list);
+
+    list<WaWindow *>::iterator it = wawindow_list->begin();
+    for (; it != wawindow_list->end() &&
+             ((WaWindow *) *it)->flags.tasklist != true &&
+             ((WaWindow *) *it)->id != ign && !ww->master; ++it);
+    
+    if (it == wawindow_list->end()) return;
+
+    m = new WaMenuItem(mergelabel);
+    m->type = MenuTitleType;
+    AddItem(m);
+    
+    for (; it != wawindow_list->end(); ++it) {
+        ww = (WaWindow *) *it;
+        if (ww->flags.tasklist && ww->id != ign && !ww->master) {
+            m = new WaMenuItem(ww->name);
+            m->type = MenuItemType;
+            switch (mergetype) {
+                case CloneMergeType:
+                    m->wfunc = &WaWindow::CloneMergeTo;
+                    break;
+                case VertMergeType:
+                    m->wfunc = &WaWindow::VertMergeTo;
+                    break;
+                case HorizMergeType:
+                    m->wfunc = &WaWindow::HorizMergeTo;
+            }
+            m->func_mask |= MenuWFuncMask;
+            m->func_mask1 |= MenuWFuncMask;
+            m->wf = ww->id;
+            AddItem(m);
+        }
+    }
     
     WaMenu::Build(wascreen);
 }

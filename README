@@ -29,6 +29,7 @@ INTRODUCTION
       Task switcher
       Configurable titlebar buttons
 		KDE3/GNOME2 support
+		Merged windows
 
 
 DEPENDENCIES
@@ -106,6 +107,7 @@ CONFIGURATION
 	screen0.virtualSize:        3x3
 	screen0.menuStacking:       Normal
 	screen0.transientAbove:     True
+   screen0.focusRevertTo:      Window
 	screen0.dock0.geometry:     -0+0
 	screen0.dock0.order:        n/.*/
    screen0.dock0.desktopMask:  All

@@ -1,201 +1,223 @@
-DEF globalKeyBindings {
-   TaskSwitcher               : KeyPress = Tab & Alt_L,
-   MenuRemapFocused(rootmenu) : KeyPress = Escape & Control_L
+DEF GlobalKeyBindings {
+   taskSwitcher               : KeyPress = Tab & Alt_L,
+   menuRemapFocused(rootmenu) : KeyPress = Escape & Control_L,
+   {xterm -name fast-xterm}   : KeyPress = Return & Control_L & Alt_L,   
+   viewportRelativeMove(-W+0) : KeyPress = Left & Control_L & Alt_L,
+   viewportRelativeMove(+W+0) : KeyPress = Right & Control_L & Alt_L,
+   viewportRelativeMove(+0-H) : KeyPress = Up & Control_L & Alt_L,
+   viewportRelativeMove(+0+H) : KeyPress = Down & Control_L & Alt_L
 }
 
-DEF defaultAllWindows {
-   Raise            : ButtonPress = Button1 & Alt_L,
-   StartMove        : ButtonPress = Button1 & Alt_L,
-   StartResizeRight : ButtonPress = Button3 & Alt_L,
-   Lower            : ButtonPress = Button2 & Alt_L,
-   EndMoveResize    : ButtonRelease = Button1 & MoveResizeMask,
-   EndMoveResize    : ButtonRelease = Button3 & MoveResizeMask
+DEF DefaultAllWindows {
+   raise              : ButtonPress = Button1 & Alt_L,
+   setMergeMode(Null) : ButtonPress = Button1 & Alt_L,
+   startMove          : ButtonPress = Button1 & Alt_L,
+   startResizeRight   : ButtonPress = Button3 & Alt_L,
+   lower              : ButtonPress = Button2 & Alt_L,
+   endMoveResize      : ButtonRelease = Button1 & MoveResizeMask,
+   endMoveResize      : ButtonRelease = Button3 & MoveResizeMask,
+   endMoveResize      : KeyPress = Escape & MoveResizeMask
 }
 
-DEF defaultAllDecor {
-	defaultAllWindows,
-   Raise             : ButtonPress = Button1 & !Alt_L,
-   Focus             : ButtonPress = Button1 & !Alt_L,
-   Lower             : ButtonPress = Button2 & !Alt_L,
-   MenuRemap(window) : ButtonPress = Button3 & !Alt_L,
-   MenuUnmap(window) : ButtonPress = Button1 & !Alt_L,
-   MenuUnmap(window) : ButtonPress = Button2 & !Alt_L
+DEF DefaultAllDecor {
+   DefaultAllWindows,
+   focus             : EnterNotify,
+   raise             : ButtonPress = Button1 & !Alt_L,
+   lower             : ButtonPress = Button2 & !Alt_L,
+   menuRemap(window) : ButtonPress = Button3 & !Alt_L,
+   menuUnmap(window) : ButtonPress = Button1 & !Alt_L,
+   menuUnmap(window) : ButtonPress = Button2 & !Alt_L
 }
 
 DEF defaultAllTitle {
-   defaultAllDecor,
-   StartMove   : ButtonPress = Button1 & !Alt_L,
-   ToggleShade : DoubleClick = Button1 & !Alt_L
+   DefaultAllDecor,
+   mergedToFront      : ButtonPress = Button1,
+   focus              : ButtonPress = Button1,
+   setMergeMode(Null) : ButtonPress = Button1 & !Alt_L,
+   startMove          : ButtonPress = Button1 & !Alt_L, 
+   toggleShade        : DoubleClick = Button1 & !Alt_L
 }
 
-window.frame { 
-   defaultAllDecor,
-   Focus : EnterNotify
-}
-window.title { defaultAllTitle }
-window.label { defaultAllTitle }
-window.handle { defaultAllDecor }
+window.title { DefaultAllTitle }
+window.label { DefaultAllTitle }
+window.handle { DefaultAllDecor }
 window.leftgrip { 
-   defaultAllWindows,
-   StartResizeLeft : ButtonPress = Button1 & !Alt_L
+   DefaultAllDecor,
+   startResizeLeft : ButtonPress = Button1 & !Alt_L
 }
 window.rightgrip { 
-   defaultAllWindows,
-   StartResizeRight : ButtonPress = Button1 & !Alt_L
+   DefaultAllDecor,
+   startResizeRight : ButtonPress = Button1 & !Alt_L
 }
-window.button0 {      
-   defaultAllWindows,
-   ToggleShade : ButtonRelease = Button1
+window.button0 {
+   DefaultAllWindows,
+   menuRemap(window) : ButtonRelease = Button1
 }
 window.button1 { 
-   defaultAllWindows, 
-   Close : ButtonRelease = Button1
+   DefaultAllWindows,
+   close : ButtonRelease = Button1
 }
 window.button2 {
-   defaultAllWindows,
-   ToggleMaximize : ButtonRelease = Button1,
-   Raise          : ButtonRelease = Button1
+   DefaultAllWindows,
+   toggleMaximize : ButtonRelease = Button1,
+   raise          : ButtonRelease = Button1
+}
+window.button3 {
+   DefaultAllWindows,
+   toggleShade : ButtonRelease = Button1
 }
 window.passiveclient { 
-   defaultAllWindows,
-   MoveToSmartPlace : MapRequest & !Control_L,
-   Raise            : MapRequest,
-   StartMove        : MapRequest & Control_L,
-   Focus            : MapRequest & Control_L  
+   DefaultAllWindows,
+   focus                           : EnterNotify,
+   moveToSmartPlaceIfUninitialized : MapRequest
 }
 window.activeclient {
-   defaultAllWindows,
-   ToggleShade              : KeyPress = F1 & Alt_L,
-   ToggleMaximize           : KeyPress = F2 & Alt_L,
-   Raise                    : KeyPress = F2 & Alt_L,
-   MenuRemapFocused(window) : KeyPress = F3 & Alt_L,
-   Close                    : KeyPress = F4 & Alt_L,
-   Kill                     : KeyPress = F10 & Alt_L,
-   globalKeyBindings
+   DefaultAllWindows,
+   GlobalKeyBindings,
+   toggleShade              : KeyPress = F1 & Alt_L,
+   toggleMaximize           : KeyPress = F2 & Alt_L,
+   raise                    : KeyPress = F2 & Alt_L,
+   menuRemapFocused(window) : KeyPress = F3 & Alt_L,
+   close                    : KeyPress = F4 & Alt_L,
+   kill                     : KeyPress = F10 & Alt_L,
+   nextMergeMode            : ButtonPress = Button4 & MoveResizeMask,
+   prevMergeMode            : ButtonPress = Button5 & MoveResizeMask,
+   setMergeMode(Null)       : KeyRelease = Meta_L & MoveResizeMask,
+   setMergeMode(Null)       : KeyRelease = Control_L & MoveResizeMask,
+   setMergeMode(Null)       : KeyRelease = Shift_L & MoveResizeMask,
+   setMergeMode(Horizontal) : KeyPress = Meta_L & MoveResizeMask,
+   setMergeMode(Vertical)   : KeyPress = Control_L & MoveResizeMask,
+   setMergeMode(Clone)      : KeyPress = Shift_L & MoveResizeMask
 }
 
 root {
-   MenuRemap(rootmenu) : ButtonPress = Button3,
-   MenuUnmap(rootmenu) : ButtonPress = Button1,
-   StartViewportMove   : ButtonPress = Button2,
-   EndMoveResize       : ButtonRelease = Button2 & MoveResizeMask,
-   globalKeyBindings
+   globalKeyBindings,
+   menuRemap(rootmenu) : ButtonPress = Button3,
+   menuUnmap(rootmenu) : ButtonPress = Button1,
+   startViewportMove   : ButtonPress = Button2,
+   endMoveResize       : ButtonRelease = Button2 & MoveResizeMask
 }
 
-westedge { ViewportLeft : EnterNotify }
+westedge { viewportLeft : EnterNotify }
 
-eastedge { ViewportRight : EnterNotify }
+eastedge { viewportRight : EnterNotify }
  
-northedge { ViewportUp : EnterNotify [250 : LeaveNotify] }
+northedge { viewportUp : EnterNotify }
  
-southedge { ViewportDown : EnterNotify [250 : LeaveNotify] }
+southedge { viewportDown : EnterNotify }
 
-DEF allMenuWindows {
-   Raise         : ButtonPress = Button1 & Alt_L,
-   StartMove     : ButtonPress = Button1 & Alt_L,
-   UnLink        : ButtonPress = Button1 & Alt_L,
-   EndMoveResize : ButtonRelease = Button1 & MoveResizeMask
+DEF AllMenuWindows {
+   raise         : ButtonPress = Button1 & Alt_L,
+   startMove     : ButtonPress = Button1 & Alt_L,
+   unLink        : ButtonPress = Button1 & Alt_L,
+   endMoveResize : ButtonRelease = Button1 & MoveResizeMask
 }
 
-DEF allMenuItems {
-   allMenuWindows,
-   Exec         : ButtonRelease = AnyButton,
-   Func         : ButtonRelease = AnyButton,
-   NextItem     : KeyPress = Tab,
-   NextItem     : KeyPress = Down,
-   PreviousItem : KeyPress = Up,
-   UnmapSubs    : KeyPress = Left,
-   UnmapFocused : KeyPress = Left,
-   UnmapTree    : KeyPress = Escape,
-   Exec         : KeyPress = Return,
-   Func         : KeyPress = Return
+DEF AllMenuItems {
+   AllMenuWindows,
+   exec         : ButtonRelease = AnyButton,
+   func         : ButtonRelease = AnyButton,
+   nextItem     : KeyPress = Tab & !ShiftMask,
+   previousItem : KeyPress = Tab & ShiftMask,
+   nextItem     : KeyPress = Down,
+   previousItem : KeyPress = Up,
+   unmapSubs    : KeyPress = Left,
+   unmapFocused : KeyPress = Left,
+   unmapTree    : KeyPress = Escape,
+   exec         : KeyPress = Return,
+   func         : KeyPress = Return
 } 
 
 menu.title {
-   allMenuWindows,
-   Raise           : ButtonPress = Button1,   
-   UnLink    : ButtonPress = Button1 & !Alt_L,
-   StartMove : ButtonPress = Button1 & !Alt_L,
-   UnmapSubs : ButtonPress = Button3,
-   Unmap     : ButtonPress = Button3
+   AllMenuWindows,
+   raise     : ButtonPress = Button1,
+   unLink    : ButtonPress = Button1 & !Alt_L,
+   startMove : ButtonPress = Button1 & !Alt_L,
+   unmapSubs : ButtonPress = Button3,
+   unmap     : ButtonPress = Button3
 }
 menu.item {
-   allMenuItems,
-   UnmapSubs    : EnterNotify,
-   UnmapTree    : ButtonRelease = AnyButton,
-   UnmapFocused : KeyRelease = Alt_L,
-   Func         : KeyRelease = Alt_L,
-   UnmapTree    : KeyPress = Return
+   AllMenuItems,
+   unmapSubs : EnterNotify,
+   unmapTree : ButtonRelease = AnyButton,
+   unmap     : KeyRelease = Alt_L,
+   func      : KeyRelease = Alt_L,
+   unmapTree : KeyPress = Return
 }
 menu.checkbox {
-   allMenuItems,
-   UnmapSubs : EnterNotify,
-   Exec      : KeyPress = space,
-   Func      : KeyPress = space
+   AllMenuItems,
+   unmapSubs : EnterNotify,
+   exec      : KeyPress = space,
+   func      : KeyPress = space
 }
 menu.sub {
-   allMenuItems,
-   MapSubOnly      : EnterNotify,
-   RemapSub        : ButtonPress = AnyButton,
-   RemapSubFocused : KeyPress = Right,
-   RemapSubFocused : KeyPress = Return
+   AllMenuItems,
+   mapSubOnly      : EnterNotify,
+   remapSub        : ButtonPress = AnyButton,
+   remapSubFocused : KeyPress = Right,
+   remapSubFocused : KeyPress = Return
 }
 
 n/^desktop_window$/.passiveclient {
-   MenuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
-   StartViewportMove    : ButtonPress = Button2 & !Control_L,
-   *MenuUnmap(rootmenu) : ButtonPress = Button1,
-   Focus                : ButtonPress = Button1,
-   EndMoveResize        : ButtonRelease = Button2 & MoveResizeMask
+   menuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
+   startViewportMove    : ButtonPress = Button2 & !Control_L,
+   *menuUnmap(rootmenu) : ButtonPress = Button1,
+   *focus               : ButtonPress = Button1,
+   lower                : ButtonPress = Button1,
+   endMoveResize        : ButtonRelease = Button2 & MoveResizeMask
 }
 
 n/^desktop_window$/.activeclient {
-   globalKeyBindings,
-   MenuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
-   StartViewportMove    : ButtonPress = Button2 & !Control_L,
-   *MenuUnmap(rootmenu) : ButtonPress = Button1
+   GlobalKeyBindings,
+   lower                : ButtonPress = Button3 & !Control_L,
+   menuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
+   startViewportMove    : ButtonPress = Button2 & !Control_L,
+   *menuUnmap(rootmenu) : ButtonPress = Button1
 }
 
-n/^desktop_window$/.frame {}
-
 n/^panel_window$/.passiveclient {
-   *Focus : ButtonPress = Button1
+   *focus : ButtonPress = AnyButton,
+   raise  : ButtonPress = Button1
 }
 
 n/^panel_window$/.activeclient {
-   globalKeyBindings,
-   EndMoveResize : ButtonRelease = Button1 & MoveResizeMask,
-   EndMoveResize : ButtonRelease = Button3 & MoveResizeMask
+   GlobalKeyBindings,
+   *raise        : ButtonPress = AnyButton,
+   endMoveResize : ButtonRelease = Button1 & MoveResizeMask,
+   endMoveResize : ButtonRelease = Button3 & MoveResizeMask
 }
 
-n/^panel_window$/.frame {}
-
-n/^KDE Desktop$/.passiveclient {
-   MenuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
-   StartViewportMove    : ButtonPress = Button2 & !Control_L,
-   *MenuUnmap(rootmenu) : ButtonPress = Button1,
-   Focus                : ButtonPress = Button1,
-   EndMoveResize        : ButtonRelease = Button2 & MoveResizeMask
+t/^KDE Desktop$/.passiveclient {
+   menuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
+   startViewportMove    : ButtonPress = Button2 & !Control_L,
+   *menuUnmap(rootmenu) : ButtonPress = Button1,
+   *focus               : ButtonPress = Button1,
+   lower                : ButtonPress = Button1,
+   endMoveResize        : ButtonRelease = Button2 & MoveResizeMask
 }
 
-n/^KDE Desktop$/.activeclient {
-   globalKeyBindings,
-   MenuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
-   StartViewportMove    : ButtonPress = Button2 & !Control_L,
-   *MenuUnmap(rootmenu) : ButtonPress = Button1
+t/^KDE Desktop$/.activeclient {
+   GlobalKeyBindings,
+   lower                : ButtonPress = Button3 & !Control_L,
+   menuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
+   startViewportMove    : ButtonPress = Button2 & !Control_L,
+   *menuUnmap(rootmenu) : ButtonPress = Button1
 }
-
-n/^KDE Desktop$/.frame {}
 
 n/^kicker$/.passiveclient {
-   *Focus : ButtonPress = Button1
+   *focus : ButtonPress = AnyButton,
+   raise  : ButtonPress = Button1
 }
 
 n/^kicker$/.activeclient {
-   globalKeyBindings,
-   EndMoveResize : ButtonRelease = Button1 & MoveResizeMask,
-   EndMoveResize : ButtonRelease = Button3 & MoveResizeMask
+   GlobalKeyBindings,
+   *raise        : ButtonPress = AnyButton,
+   endMoveResize : ButtonRelease = Button1 & MoveResizeMask,
+   endMoveResize : ButtonRelease = Button3 & MoveResizeMask
 }
 
-n/^kicker$/.frame {}
-
+n/^fast-xterm$/.passiveclient {
+   DefaultAllWindows,
+   focus         : EnterNotify,
+   moveToPointer : MapRequest
+}

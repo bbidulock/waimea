@@ -81,6 +81,15 @@ public:
     WaScreen *ws;
 };
 
+class MReq {
+public:
+    inline MReq(Window m, WaWindow *w, int t) { mid = m; win = w; type = t; }
+
+    Window mid;
+    WaWindow *win;
+    int type;
+};
+
 #define WestDirection  1
 #define EastDirection  2
 #define NorthDirection 3
@@ -120,7 +129,7 @@ typedef struct {
     unsigned int desktops;
     int colors_per_channel, menu_stacking;
     long unsigned int cache_max;
-    bool image_dither, transient_above, db;
+    bool image_dither, transient_above, db, revert_to_window;
 
 #ifdef RENDER
     bool lazy_trans;
@@ -141,12 +150,12 @@ public:
     WaScreen(Display *, int, Waimea *);
     virtual ~WaScreen(void);
 
-    void WaRaiseWindow(Window);
-    void WaLowerWindow(Window);
+    void RaiseWindow(Window);
+    void LowerWindow(Window);
+    void RestackWindows(Window);
     void UpdateCheckboxes(int);
     WaMenu *GetMenuNamed(char *);
     WaMenu *CreateDynamicMenu(char *);
-
     void MoveViewportTo(int, int);
     void MoveViewport(int);
     void ScrollViewport(int, bool, WaAction *);
@@ -157,6 +166,9 @@ public:
     void GetWorkareaSize(int *, int *, int *, int *);
     void AddDockapp(Window window);
     void GoToDesktop(unsigned int);
+    WaWindow *RegexMatchWindow(char *, WaWindow * = NULL);
+    void SmartName(WaWindow *);
+    void SmartNameRemove(WaWindow *);
 
 #ifdef RANDR
     void RRUpdate(void);
@@ -249,19 +261,15 @@ public:
     list<Desktop *> desktop_list;
     Desktop *current_desktop;
 
-    list<Window> always_on_top_list;
-    list<Window> always_at_bottom_list;
-    list<WindowObject *> wa_list_stacking;
+    list<Window> aot_stacking_list, stacking_list, aab_stacking_list;
     list<WaWindow *> wawindow_list;
     list<WaWindow *> wawindow_list_map_order;
-    list<WaWindow *> wawindow_list_stacking_aot;
-    list<WaWindow *> wawindow_list_stacking_aab;
     list<WaMenu *> wamenu_list;
-    list<WaMenu *> wamenu_list_stacking_aot;
-    list<WaMenu *> wamenu_list_stacking_aab;
     list<WMstrut *> strut_list;
     list<DockappHandler *> docks;
     list<Window> systray_window_list;
+    
+    list<MReq *> mreqs;
 
 private:
     void CreateVerticalEdges(void);

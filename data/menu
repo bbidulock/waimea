@@ -12,33 +12,34 @@
 
   [submenu] (graphics)
     [item] (the gimp) {gimp}
+    [item] (xmag)     {xmag}
     [item] (xpaint)   {xpaint}
     [item] (xv)       {xv}
   [end]
 
   [submenu] (multimedia)
-    [item] (mplayer)    {gmplayer}
-    [item] (realplayer) {realplay}
+    [item] (mplayer)    {gmplayer}    
     [item] (xmms)       {xmms}
   [end]
 
   [submenu] (networking)
-    [item] (netscape) {netscape}
-    [item] (mozilla)  {mozilla}
     [item] (licq)     {licq}
-    [item] (ncftp)    {xterm -e ncftp} 
-    [item] (telnet)   {xterm -e telnet}
+    [item] (mozilla)  {mozilla}
+    [item] (ncftp)    {xterm -e ncftp}
+    [item] (netscape) {netscape}
   [end]
-
-  [sub] (styles) <!stylesdir.pl>
 
   [submenu] (desktops)
-    [item] (go to desktop 1) "gotodesktop(0)"
-    [item] (go to desktop 2) "gotodesktop(1)"
-    [item] (go to desktop 3) "gotodesktop(2)"
-    [item] (go to desktop 4) "gotodesktop(3)"
+    [item] (go to desktop 1) "gotoDesktop(0)"
+    [item] (go to desktop 2) "gotoDesktop(1)"
+    [item] (go to desktop 3) "gotoDesktop(2)"
+    [item] (go to desktop 4) "gotoDesktop(3)"
   [end]
-  
+
+  [sub] (styles)        <!stylesdir.pl>
+
+  [sub] (proclist)      <!procinfo.pl>
+
   [restart] (restart)
   [exit]    (exit)
 [end]
@@ -48,53 +49,55 @@
 !
 [start] (window)
   [title]   (\n)
-
   [submenu] (settings)
-    [checkbox=MAXIMIZED]      @FALSE (maximized)        "maximize"         @TRUE (maximized)        "unmaximize"
-    [checkbox=SHADED]         @FALSE (shaded)           "shade"            @TRUE (shaded)           "unshade"
-    [checkbox=STICKY]         @FALSE (sticky)           "sticky"           @TRUE (sticky)           "unsticky"
-    [checkbox=ALWAYSONTOP]    @FALSE (always on top)    "alwaysontopon"    @TRUE (always on top)    "alwaysontopoff"
-    [checkbox=ALWAYSATBOTTOM] @FALSE (always at bottom) "alwaysatbottomon" @TRUE (always at bottom) "alwaysatbottomoff"
-    [checkbox=DECORTITLE]     @FALSE (titlebar)         "decortitleon"     @TRUE (titlebar)         "decortitleoff"
-    [checkbox=DECORHANDLE]    @FALSE (handlebar)        "decorhandleon"    @TRUE (handlebar)        "decorhandleoff"
-    [checkbox=DECORBORDER]    @FALSE (border)           "decorborderon"    @TRUE (border)           "decorborderoff"
-    [checkbox=DECORALL]       @FALSE (all decorations)  "decorallon"       @TRUE (all decorations)  "decoralloff"
+    [checkbox=MAXIMIZED]      @FALSE (maximized)        "maximize"         @TRUE (maximized)        "unMaximize"
+    [checkbox=MINIMIZED]      @FALSE (minimized)        "minimize"         @TRUE (minimized)        "unMinimize"
+    [checkbox=FULLSCREEN]     @FALSE (fullscreen)       "fullscreenOn"     @TRUE (fullscreen)       "fullscreenOff"
+    [checkbox=SHADED]         @FALSE (shaded)           "shade"            @TRUE (shaded)           "unShade"
+    [checkbox=STICKY]         @FALSE (sticky)           "sticky"           @TRUE (sticky)           "unSticky"
+    [checkbox=ALWAYSONTOP]    @FALSE (always on top)    "alwaysOnTopOn"    @TRUE (always on top)    "alwaysOnTopOff"
+    [checkbox=ALWAYSATBOTTOM] @FALSE (always at bottom) "alwaysAtBottomOn" @TRUE (always at bottom) "alwaysAtBottomOff"
+    [checkbox=DECORTITLE]     @FALSE (titlebar)         "decorTitleOn"     @TRUE (titlebar)         "decorTitleOff"
+    [checkbox=DECORHANDLE]    @FALSE (handlebar)        "decorHandleOn"    @TRUE (handlebar)        "decorHandleOff"
+    [checkbox=DECORBORDER]    @FALSE (border)           "decorBorderOn"    @TRUE (border)           "decorBorderOff"
+    [checkbox=DECORALL]       @FALSE (all decorations)  "decorAllOn"       @TRUE (all decorations)  "decorAllOff"
   [end]
-
   [sub]     (process info) <!procinfo.pl -host \"\h\" -pid \"\p\">
-
   [submenu] (desktop functions)
     [sub] (join desktop) <join_desk>
     [start] (join_desk)
-      [item] (desktop 1) "joindesktop(0)"
-      [item] (desktop 2) "joindesktop(1)"
-      [item] (desktop 3) "joindesktop(2)"
-      [item] (desktop 4) "joindesktop(3)"
+      [item] (desktop 1) "joinDesktop(0)"
+      [item] (desktop 2) "joinDesktop(1)"
+      [item] (desktop 3) "joinDesktop(2)"
+      [item] (desktop 4) "joinDesktop(3)"
     [end]
-
     [sub] (part desktop) <part_desk>
     [start] (part_desk)
-      [item] (desktop 1) "partdesktop(0)"
-      [item] (desktop 2) "partdesktop(1)"
-      [item] (desktop 3) "partdesktop(2)"
-      [item] (desktop 4) "partdesktop(3)"
+      [item] (desktop 1) "partDesktop(0)"
+      [item] (desktop 2) "partDesktop(1)"
+      [item] (desktop 3) "partDesktop(2)"
+      [item] (desktop 4) "partDesktop(3)"
     [end]
-
     [sub] (send to desktop) <send_desk>
     [start] (send_desk)
-      [item] (desktop 1) "partcurrentjoindesktop(0)"
-      [item] (desktop 2) "partcurrentjoindesktop(1)"
-      [item] (desktop 3) "partcurrentjoindesktop(2)"
-      [item] (desktop 4) "partcurrentjoindesktop(3)"
+      [item] (desktop 1) "partCurrentJoinDesktop(0)"
+      [item] (desktop 2) "partCurrentJoinDesktop(1)"
+      [item] (desktop 3) "partCurrentJoinDesktop(2)"
+      [item] (desktop 4) "partCurrentJoinDesktop(3)"
     [end]
-
-    [item] (join all)     "joinalldesktops"
-    [item] (part all)     "partalldesktopsexceptcurrent"
-    [item] (part current) "partcurrentdesktop"
+    [item] (join all)     "joinAllDesktops"
+    [item] (part all)     "partAllDesktopsExceptCurrent"
+    [item] (part current) "partCurrentDesktop"
   [end]
-  
-  [item]    (raise)        "raise"
-  [item]    (lower)        "lower"
-  [item]    (kill client)  "kill"
-  [item]    (close)        "close"
+  [submenu] (merge functions)  
+    [sub]     (merge with)              <__mergelist__>
+    [sub]     (merge vertically with)   <__mergelist_vertically__>
+    [sub]     (merge horizontally with) <__mergelist_horizontally__>    
+    [item]    (explode)                 "explode"
+    [item]    (unmerge)                 "unmerge"
+  [end] 
+  [item]    (raise)       "raise"
+  [item]    (lower)       "lower"
+  [item]    (kill client) "kill"
+  [item]    (close)       "close"
 [end]

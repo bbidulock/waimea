@@ -37,8 +37,18 @@ typedef void (WaWindow::*WwActionFn)(XEvent *, WaAction *);
 #define DELETED { deleted = true; XUngrabServer(display); return; }
 #define WW_DELETED { ww->deleted = true; XUngrabServer(display); return; }
 
+#define MERGED_LOOP \
+    list<WaWindow *>::iterator __mw_it = merged.begin(); \
+    for (WaWindow *_mw = NULL; _mw != this && \
+             (_mw = (__mw_it == merged.end())? this: *__mw_it); __mw_it++)
+
 #define ApplyGravity   1
 #define RemoveGravity -1
+
+#define NullMergeType  1
+#define CloneMergeType 2
+#define HorizMergeType 3
+#define VertMergeType  4
 
 typedef struct {
     int max_width;
@@ -62,9 +72,10 @@ typedef struct {
     bool all;
     bool alwaysontop;
     bool alwaysatbottom;
-    bool forcedatbottom;
     bool focusable;
     bool tasklist;
+    bool fullscreen;
+    bool hidden;
 } WaWindowFlags;
 
 typedef struct {
@@ -85,6 +96,7 @@ public:
     void MapWindow(void);
     void Show(void);
     void Hide(void);
+    void UpdateTitlebar(void);
     void UpdateAllAttributes(void);
     list <WaAction *> *GetActionList(list<WaActionExtList *> *);
     void SetActionLists(void);
@@ -100,12 +112,17 @@ public:
     void UnFocusWin(void);
     void Focus(bool);
     void _Maximize(int, int);
+    void Merge(WaWindow *, int);
+    void Unmerge(WaWindow *);
+    bool CheckMoveMerge(int, int, int = 0, int = 0);
+    
     void MenuMap(XEvent *, WaAction *, bool);
     void MenuRemap(XEvent *, WaAction *, bool);
     void MenuUnmap(XEvent *, WaAction *, bool);
 
 #ifdef SHAPE
     void Shape(void);
+    void ShapeEvent(Window);
 #endif // SHAPE
     
     void Raise(XEvent *, WaAction *);
@@ -161,6 +178,12 @@ public:
     void Sticky(XEvent *, WaAction *);
     void UnSticky(XEvent *, WaAction *);
     void ToggleSticky(XEvent *, WaAction *);
+    void Minimize(XEvent *, WaAction *);
+    void UnMinimize(XEvent *, WaAction *);
+    void ToggleMinimize(XEvent *, WaAction *);
+    void FullscreenOn(XEvent *, WaAction *);
+    void FullscreenOff(XEvent *, WaAction *);
+    void FullscreenToggle(XEvent *, WaAction *);
     void ViewportMove(XEvent *e, WaAction *);
     void ViewportRelativeMove(XEvent *e, WaAction *);
     void ViewportFixedMove(XEvent *e, WaAction *);
@@ -201,6 +224,9 @@ public:
     void MoveResizeVirtual(XEvent *, WaAction *);
     void MoveWindowToPointer(XEvent *, WaAction *);
     void MoveWindowToSmartPlace(XEvent *, WaAction *);
+    inline void moveToSmartPlaceIfUninitialized(XEvent *, WaAction *) {
+        if (! pos_init) MoveWindowToSmartPlace(NULL, NULL);
+    }
     void GoToDesktop(XEvent *, WaAction *);
     void PreviousDesktop(XEvent *, WaAction *);
     void NextDesktop(XEvent *, WaAction *);
@@ -209,8 +235,37 @@ public:
     void PartCurrentJoinDesktop(XEvent *, WaAction *);
     void PartDesktop(XEvent *, WaAction *);
     void PartCurrentDesktop(XEvent *, WaAction *);
+    void JoinCurrentDesktop(void);
     void JoinAllDesktops(XEvent *, WaAction *);
     void PartAllDesktopsExceptCurrent(XEvent *, WaAction *);
+    void MergeWithWindow(WaAction *, int);
+    void CloneMergeWithWindow(XEvent *, WaAction *ac) {
+        MergeWithWindow(ac, CloneMergeType);
+    }
+    void VertMergeWithWindow(XEvent *, WaAction *ac) {
+        MergeWithWindow(ac, VertMergeType);
+    }
+    void HorizMergeWithWindow(XEvent *, WaAction *ac) {
+        MergeWithWindow(ac, HorizMergeType);
+    }
+    void Explode(XEvent *, WaAction *);
+    void ToFront(XEvent *, WaAction *);
+    void MergeTo(XEvent *, int);
+    inline void CloneMergeTo(XEvent *e, WaAction *) {
+        MergeTo(e, CloneMergeType);
+    }
+    inline void VertMergeTo(XEvent *e, WaAction *) {
+        MergeTo(e, VertMergeType);
+    }
+    inline void HorizMergeTo(XEvent *e, WaAction *) {
+        MergeTo(e, HorizMergeType);
+    }
+    inline void UnMergeMaster(XEvent *, WaAction *) {
+        if (master) master->Unmerge(this);
+    }
+    void SetMergeMode(XEvent *, WaAction *);
+    void NextMergeMode(XEvent *, WaAction *);
+    void PrevMergeMode(XEvent *, WaAction *);
     void Restart(XEvent *, WaAction *);
     void Exit(XEvent *, WaAction *);
     inline void Nop(XEvent *, WaAction *) {}
@@ -218,6 +273,7 @@ public:
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
     
     char *name, *host, *pid;
+    int realnamelen;
     bool has_focus, want_focus, mapped, dontsend, deleted, ign_config_req,
                    hidden;
     Display *display;
@@ -234,10 +290,12 @@ public:
     Window transient_for;
     XClassHint *classhint;
     list<Window> transients;
-    list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
-        *handleacts, *lgacts, *rgacts;
-    list<WaAction *> **bacts;
     unsigned int desktop_mask;
+    list<WaWindow *> merged;
+    list<WaChildWindow *> titles;
+    WaWindow *master;
+    int mergetype, mergemode;
+    bool mergedback;
 
 #ifdef RENDER
     bool render_if_opacity;
@@ -251,13 +309,14 @@ private:
     void DrawOutline(int, int, int, int);
     void Resize(XEvent *, int);
     void ResizeOpaque(XEvent *, int);
+    bool _MoveOpaque(XEvent *, int, int, int, int, list<XEvent *> *);
     
     WaImageControl *ic;
     Window o_west, o_north, o_south, o_east;
-    bool move_resize;
+    bool move_resize, sendcf, pos_init;
     
 #ifdef SHAPE
-    bool shaped;
+    bool shaped, been_shaped;
 #endif // SHAPE
     
 };

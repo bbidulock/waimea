@@ -126,6 +126,13 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     wacts.push_back(new StrComp("maximize", &WaWindow::Maximize));
     wacts.push_back(new StrComp("unmaximize", &WaWindow::UnMaximize));
     wacts.push_back(new StrComp("togglemaximize", &WaWindow::ToggleMaximize));
+    wacts.push_back(new StrComp("minimize", &WaWindow::Minimize));
+    wacts.push_back(new StrComp("unminimize", &WaWindow::UnMinimize));
+    wacts.push_back(new StrComp("toggleminimize", &WaWindow::ToggleMinimize));
+    wacts.push_back(new StrComp("fullscreenon", &WaWindow::FullscreenOn));
+    wacts.push_back(new StrComp("fullscreenoff", &WaWindow::FullscreenOff));
+    wacts.push_back(new StrComp("fullscreentoggle",
+                                &WaWindow::FullscreenToggle));
     wacts.push_back(new StrComp("sticky", &WaWindow::Sticky));
     wacts.push_back(new StrComp("unsticky", &WaWindow::UnSticky));
     wacts.push_back(new StrComp("togglesticky", &WaWindow::ToggleSticky));
@@ -187,6 +194,8 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaWindow::MoveWindowToPointer));
     wacts.push_back(new StrComp("movetosmartplace",
                                  &WaWindow::MoveWindowToSmartPlace));
+    wacts.push_back(new StrComp("movetosmartplaceifuninitialized",
+                                 &WaWindow::moveToSmartPlaceIfUninitialized));
     wacts.push_back(new StrComp("gotodesktop", &WaWindow::GoToDesktop));
     wacts.push_back(new StrComp("nextdesktop", &WaWindow::NextDesktop));
     wacts.push_back(new StrComp("previousdesktop",
@@ -202,6 +211,18 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                 &WaWindow::PartAllDesktopsExceptCurrent));
     wacts.push_back(new StrComp("partcurrentjoindesktop",
                                 &WaWindow::PartCurrentJoinDesktop));
+    wacts.push_back(new StrComp("mergewithwindow",
+                                &WaWindow::CloneMergeWithWindow));
+    wacts.push_back(new StrComp("vertmergewithwindow",
+                                &WaWindow::VertMergeWithWindow));
+    wacts.push_back(new StrComp("horizmergewithwindow",
+                                &WaWindow::HorizMergeWithWindow));
+    wacts.push_back(new StrComp("explode", &WaWindow::Explode));
+    wacts.push_back(new StrComp("mergedtofront", &WaWindow::ToFront));
+    wacts.push_back(new StrComp("unmerge", &WaWindow::UnMergeMaster));
+    wacts.push_back(new StrComp("setmergemode", &WaWindow::SetMergeMode));
+    wacts.push_back(new StrComp("nextmergemode", &WaWindow::NextMergeMode));
+    wacts.push_back(new StrComp("prevmergemode", &WaWindow::PrevMergeMode));
     wacts.push_back(new StrComp("restart", &WaWindow::Restart));
     wacts.push_back(new StrComp("exit", &WaWindow::Exit));
     wacts.push_back(new StrComp("nop", &WaWindow::Nop));
@@ -603,6 +624,15 @@ void ResourceHandler::LoadConfig(WaScreen *wascreen) {
     } else
         sc->transient_above = true;
 
+    sprintf(rc_name, "screen%d.focusRevertTo", sn);
+    sprintf(rc_class, "Screen%d.focusRevertTo", sn);
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        if (! strncasecmp("Root", value.addr, value.size))
+            sc->revert_to_window = false;
+        else
+            sc->revert_to_window = true;
+    } else
+        sc->transient_above = true;
     
     unsigned int dummy;
     char *token;
@@ -1282,6 +1312,8 @@ void ResourceHandler::LoadStyle(WaScreen *wascreen) {
                 b->cb = ShadeCBoxType;
             else if(! strncasecmp("MAXIMIZED", value.addr, value.size))
                 b->cb = MaxCBoxType;
+            else if(! strncasecmp("MINIMIZED", value.addr, value.size))
+                b->cb = MinCBoxType;
             else if(! strncasecmp("STICKY", value.addr, value.size))
                 b->cb = StickCBoxType;
             else if(! strncasecmp("ALWAYSONTOP", value.addr, value.size))
@@ -1296,6 +1328,8 @@ void ResourceHandler::LoadStyle(WaScreen *wascreen) {
                 b->cb = BorderCBoxType;
             else if(! strncasecmp("DECORALL", value.addr, value.size))
                 b->cb = AllCBoxType;
+            else if(! strncasecmp("FULLSCREEN", value.addr, value.size))
+                b->cb = FsCBoxType;
             else if(! strncasecmp("CLOSE", value.addr, value.size))
                 b->cb = CloseCBoxType;
             found = true;
@@ -2166,46 +2200,12 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
                 if (s) delete [] s; s = NULL;
                 return;
             }
-        if (*par == '\0' || *par == ')') {
-            if ((! strncasecmp(token, "menu", 4)) ||
-                (! strncasecmp(token, "pointer", 7)) ||
-                (! strncasecmp(token, "viewportrelative", 16)) ||
-                (! strncasecmp(token, "viewportfixed", 13)) ||
-                (! strncasecmp(token, "gotodesktop", 11)) ||
-                (! strncasecmp(token, "partdesktop", 11)) ||
-                (! strncasecmp(token, "joindesktop", 11)) ||
-                (! strncasecmp(token, "desktopmask", 11)) ||
-                (! strncasecmp(token, "partcurrentjoindesktop", 22)) ) {
-                WARNING "`" << token << "' action must have a parameter" <<
-                    endl;
-                delete act_tmp;
-                delete [] line;
-                if (s) delete [] s; s = NULL;
-                return;
-            }
-        }
         if (strlen(par)) {
             par[i] = '\0';
             act_tmp->param = param_eval(token, par, wascreen);
         }
         for (i = 0; token[i] != '('; i++);
         token[i] = '\0';
-    }
-    else if ((! strncasecmp(token, "menu", 4)) ||
-             (! strncasecmp(token, "pointer", 7)) ||
-             (! strncasecmp(token, "viewportrelative", 16)) ||
-             (! strncasecmp(token, "viewportfixed", 13)) ||
-             (! strncasecmp(token, "gotodesktop", 11)) ||
-             (! strncasecmp(token, "partdesktop", 11)) ||
-             (! strncasecmp(token, "joindesktop", 11)) ||
-             (! strncasecmp(token, "desktopmask", 11)) ||
-             (! strncasecmp(token, "partcurrentjoindesktop", 22)) ) {
-        WARNING "`" << token << "' action must have a parameter" <<
-            endl;
-        delete act_tmp;
-        delete [] line;
-        if (s) delete [] s; s = NULL;
-        return;
     }
     delete [] tmp_par;
     
@@ -2227,6 +2227,83 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
             act_tmp->exec = __m_wastrdup(s);
         } else {
             WARNING << "`" << token << "' unknown action" << endl;
+            delete act_tmp;
+            delete [] line;
+            if (s) delete [] s; s = NULL;
+            return;
+        }
+    }
+
+    if (! act_tmp->param || *(act_tmp->param) == '\0') {
+        if (act_tmp->winfunc && (
+            act_tmp->winfunc == (WwActionFn) &WaWindow::MenuMap ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::MenuRemap ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::MenuMapFocused ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::MenuRemapFocused ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::MenuUnmap ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::MenuUnmapFocus ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::PointerRelativeWarp ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::PointerFixedWarp ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::ViewportRelativeMove ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::ViewportFixedMove ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::GoToDesktop ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::PartDesktop ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::JoinDesktop ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::DesktopMask ||
+            act_tmp->winfunc == (WwActionFn)
+            &WaWindow::PartCurrentJoinDesktop ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::VertMergeWithWindow ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::HorizMergeWithWindow ||
+            act_tmp->winfunc == (WwActionFn)
+            &WaWindow::CloneMergeWithWindow ||
+            act_tmp->winfunc == (WwActionFn) &WaWindow::SetMergeMode)) {
+            WARNING "`" << token << "' action must have a parameter" <<
+                endl;
+            delete act_tmp;
+            delete [] line;
+            if (s) delete [] s; s = NULL;
+            return;
+        }
+        if (act_tmp->rootfunc && (
+            act_tmp->rootfunc == (RootActionFn) &WaScreen::MenuMap ||
+            act_tmp->rootfunc == (RootActionFn) &WaScreen::MenuRemap ||
+            act_tmp->rootfunc == (RootActionFn) &WaScreen::MenuMapFocused ||
+            act_tmp->rootfunc == (RootActionFn) &WaScreen::MenuRemapFocused ||
+            act_tmp->rootfunc == (RootActionFn) &WaScreen::MenuUnmap ||
+            act_tmp->rootfunc == (RootActionFn) &WaScreen::MenuUnmapFocus ||
+            act_tmp->rootfunc == (RootActionFn)
+            &WaScreen::PointerRelativeWarp ||
+            act_tmp->rootfunc == (RootActionFn) &WaScreen::PointerFixedWarp ||
+            act_tmp->rootfunc == (RootActionFn)
+            &WaScreen::ViewportRelativeMove ||
+            act_tmp->rootfunc == (RootActionFn) &WaScreen::ViewportFixedMove ||
+            act_tmp->rootfunc == (RootActionFn) &WaScreen::GoToDesktop)) {
+            WARNING "`" << token << "' action must have a parameter" <<
+                endl;
+            delete act_tmp;
+            delete [] line;
+            if (s) delete [] s; s = NULL;
+            return;
+        }
+        if (act_tmp->menufunc && (
+            act_tmp->menufunc == (MenuActionFn) &WaMenuItem::MenuMap ||
+            act_tmp->menufunc == (MenuActionFn) &WaMenuItem::MenuRemap ||
+            act_tmp->menufunc == (MenuActionFn) &WaMenuItem::MenuMapFocused ||
+            act_tmp->menufunc == (MenuActionFn)
+            &WaMenuItem::MenuRemapFocused ||
+            act_tmp->menufunc == (MenuActionFn) &WaMenuItem::MenuUnmap ||
+            act_tmp->menufunc == (MenuActionFn) &WaMenuItem::MenuUnmapFocus ||
+            act_tmp->menufunc == (MenuActionFn)
+            &WaMenuItem::PointerRelativeWarp ||
+            act_tmp->menufunc == (MenuActionFn)
+            &WaMenuItem::PointerFixedWarp ||
+            act_tmp->menufunc == (MenuActionFn)
+            &WaMenuItem::ViewportRelativeMove ||
+            act_tmp->menufunc == (MenuActionFn)
+            &WaMenuItem::ViewportFixedMove ||
+            act_tmp->menufunc == (MenuActionFn) &WaMenuItem::GoToDesktop)) {
+            WARNING "`" << token << "' action must have a parameter" <<
+                endl;
             delete act_tmp;
             delete [] line;
             if (s) delete [] s; s = NULL;
@@ -2571,6 +2648,10 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file,
                 type = MenuCBItemType;
                 cb = MaxCBoxType;
             }
+            else if (! strcasecmp(s + 9, "MINIMIZED")) {
+                type = MenuCBItemType;
+                cb = MinCBoxType;
+            }
             else if (! strcasecmp(s + 9, "SHADED")) {
                 type = MenuCBItemType;
                 cb = ShadeCBoxType;
@@ -2602,6 +2683,10 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file,
             else if (! strcasecmp(s + 9, "ALWAYSATBOTTOM")) {
                 type = MenuCBItemType;
                 cb = AABCBoxType;
+            }
+            else if (! strcasecmp(s + 9, "FULLSCREEN")) {
+                type = MenuCBItemType;
+                cb = FsCBoxType;
             }
             else {
                 WARNING << "(" << basename(menu_file) << ":" << linenr << 

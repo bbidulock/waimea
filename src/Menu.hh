@@ -34,6 +34,10 @@ typedef void (WaMenuItem::*MenuActionFn)(XEvent *, WaAction *);
 #define MenuRFuncMask (1L << 3)
 #define MenuMFuncMask (1L << 4)
 
+#define NoExtMenuType    0
+#define TaskExtMenuType  1
+#define MergeExtMenuType 2
+
 class WaMenu : public WindowObject {
 public:
     WaMenu(char *);
@@ -52,6 +56,7 @@ public:
     void DestroyOutline(void);
     void DrawOutline(int, int);
     void Raise(void);
+    void Lower(void);
     void FocusFirst(void);
     
     Waimea *waimea;
@@ -59,11 +64,11 @@ public:
     WaScreen *wascreen;
     WaImageControl *ic;
     
-    list<WaMenuItem *> item_list;    
+    list<WaMenuItem *> item_list;
 
     Window frame, o_west, o_north, o_south, o_east;
     int x, y, width, height, bullet_width, cb_width, extra_width;
-    bool mapped, built, has_focus, tasksw, dynamic, dynamic_root, ignore, db,
+    bool mapped, built, has_focus, dynamic, dynamic_root, ignore, db,
         cb_db_upd;
     char *name;
     Pixmap pbackframe, ptitle, philite, psub, psubhilite;
@@ -72,6 +77,7 @@ public:
     WaMenu *root_menu;
     WaMenuItem *root_item;
 
+    int ext_type;
     int ftype; 
     Window wf;
     WaScreen *rf;
@@ -131,7 +137,6 @@ public:
     void Move(XEvent *, WaAction *);
     void MoveOpaque(XEvent *, WaAction *);
     void EndMoveResize(XEvent *, WaAction *);
-    void Lower(XEvent *, WaAction *);
     inline void Focus(XEvent *, WaAction *) {
         if (! in_window) return;
         Focus();
@@ -147,6 +152,10 @@ public:
     inline void Raise(XEvent *, WaAction *) {
         if (! in_window) return;
         menu->Raise();
+    }
+    inline void Lower(XEvent *, WaAction *) {
+        if (! in_window) return;
+        menu->Lower();
     }
     void ViewportMove(XEvent *, WaAction *);
     void ViewportRelativeMove(XEvent *, WaAction *);
@@ -214,6 +223,18 @@ public:
     
 private:
     list<WaWindow *> *wawindow_list;
+};
+
+class MergeMenu : public WaMenu {
+public:
+    MergeMenu(int, char *, char *);
+
+    void Build(WaScreen *, Window);
+    
+private:
+    list<WaWindow *> *wawindow_list;
+    int mergetype;
+    char *mergelabel;
 };
 
 #endif // __Menu_hh

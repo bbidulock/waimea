@@ -117,6 +117,8 @@ WaImage::WaImage(WaImageControl *c, unsigned int w, unsigned int h) {
     
     width = ((signed) w > 0) ? w : 1;
     height = ((signed) h > 0) ? h : 1;
+    display = control->getDisplay();
+    bpp = control->getDepth();
     
     red = new unsigned char[width * height];
     green = new unsigned char[width * height];
@@ -320,8 +322,7 @@ Pixmap WaImage::render_gradient(WaTexture *texture) {
 
 XImage *WaImage::renderXImage(void) {
     XImage *image =
-        XCreateImage(control->getDisplay(),
-                     control->getVisual(), control->getDepth(), ZPixmap, 0, 0,
+        XCreateImage(display, control->getVisual(), bpp, ZPixmap, 0, 0,
                      width, height, 32, 0);
     
     if (! image) {

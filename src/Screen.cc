@@ -181,6 +181,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     north->SetActionlist(&config.neacts);
     south = new ScreenEdge(this, 0, height - 2, width, 2, SEdgeType);
     south->SetActionlist(&config.seacts);
+    RestackWindows(0);
     
     net->SetDesktopGeometry(this);
     net->SetNumberOfDesktops(this);
@@ -203,6 +204,15 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     
     window_menu = new WindowMenu();
     wamenu_list.push_back(window_menu);
+    wamenu_list.push_back(new MergeMenu(CloneMergeType,
+                                        "Merge with",
+                                        "__mergelist__"));
+    wamenu_list.push_back(new MergeMenu(VertMergeType,
+                                        "Merge vertically with",
+                                        "__mergelist_vertically__"));
+    wamenu_list.push_back(new MergeMenu(HorizMergeType,
+                                        "Merge horizontally with",
+                                        "__mergelist_horizontally__"));
     
     list<WaMenu *>::iterator mit = wamenu_list.begin();
     for (; mit != wamenu_list.end(); ++mit)
@@ -248,16 +258,22 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
             else if ((waimea->window_table.find(children[i]))
                      == waimea->window_table.end()) {
                 WaWindow *newwin = new WaWindow(children[i], this);
-                if (waimea->FindWin(children[i], WindowType))
+                if (waimea->FindWin(children[i], WindowType)) {
                     newwin->net->SetState(newwin, NormalState);
+                    net->GetMergedState(newwin);
+                    list<MReq *>::iterator it = mreqs.begin();
+                    for (; it != mreqs.end(); it++)
+                        if ((*it)->mid == children[i])
+                            newwin->Merge((*it)->win, (*it)->type);
+                }
             }
             if (wm_hints) XFree(wm_hints);
         }
     }
     XFree(children);
+    LISTDEL(mreqs);
     net->GetClientListStacking(this);
     net->SetClientList(this);
-    net->SetClientListStacking(this);
     net->GetActiveWindow(this);
 
     actionlist = &config.rootacts;
@@ -273,6 +289,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
  * Deletes all created colors and fonts.
  */
 WaScreen::~WaScreen(void) {
+    WaChildWindow *wc;
     shutdown = true;
     XSelectInput(display, id, NoEventMask);
     net->DeleteSupported(this);
@@ -282,35 +299,31 @@ WaScreen::~WaScreen(void) {
 
     WaWindow **delstack = new WaWindow*[wawindow_list.size()];
     int stackp = 0;
-
-    list<WaWindow *>::reverse_iterator rwit = wawindow_list.rbegin();
-    for (; rwit != wawindow_list.rend(); rwit++)
-        if ((*rwit)->flags.forcedatbottom)
-            delstack[stackp++] = ((WaWindow *) *rwit);
-    list<WaWindow *>::iterator wit = wawindow_list_stacking_aab.begin();
-    for (; wit != wawindow_list_stacking_aab.end(); wit++)
-        delstack[stackp++] = *wit;
-    list<WindowObject *>::reverse_iterator rwoit = wa_list_stacking.rbegin();
-    for (; rwoit != wa_list_stacking.rend(); rwoit++)
-        if ((*rwoit)->type == WindowType)
-            delstack[stackp++] = ((WaWindow *) *rwoit);
-    rwit = wawindow_list_stacking_aot.rbegin();
-    for (; rwit != wawindow_list_stacking_aot.rend(); rwit++)
-        delstack[stackp++] = ((WaWindow *) *rwit);
+    
+    list<Window>::reverse_iterator it = aab_stacking_list.rbegin();
+    for (; it != aab_stacking_list.rend(); ++it) {
+        wc = (WaChildWindow *) waimea->FindWin(*it, FrameType);
+        if (wc) delstack[stackp++] = wc->wa;
+    }
+    it = stacking_list.rbegin();
+    for (; it != stacking_list.rend(); ++it) {
+        wc = (WaChildWindow *) waimea->FindWin(*it, FrameType);
+        if (wc) delstack[stackp++] = wc->wa;
+    }
+    it = aot_stacking_list.rbegin();
+    for (; it != aot_stacking_list.rend(); ++it) {
+        wc = (WaChildWindow *) waimea->FindWin(*it, FrameType);
+        if (wc) delstack[stackp++] = wc->wa;
+    }
 
     for (int i = 0; i < stackp; i++)
         delete delstack[i];
-
+    
     delete [] delstack;
     
     LISTCLEAR(wawindow_list);
-    LISTCLEAR(wa_list_stacking);
-    LISTCLEAR(wawindow_list_stacking_aab);
-    LISTCLEAR(wawindow_list_stacking_aot);
     LISTCLEAR(wawindow_list_map_order);
-    LISTCLEAR(always_on_top_list);
-    LISTCLEAR(always_at_bottom_list);
-
+    
     LISTDEL(strut_list);
     
     list<ButtonStyle *>::iterator bit = wstyle.buttonstyles.begin();
@@ -394,135 +407,205 @@ WaScreen::~WaScreen(void) {
 }
 
 /**
- * @fn    WaRaiseWindow(Window win)
- * @brief Raise window
+ * @fn    RaiseWindow(Window win)
+ * @brief Raises window
  *
- * Raises a window in the display stack keeping alwaysontop windows, always
- * on top. To update the stacking order so that alwaysontop windows are on top
- * of all other windows we call this function with zero as win argument. 
+ * Raises a window in the display stack, still keeping it in the same stacking
+ * layer.
  *
- * @param win Window to Raise, or 0 for alwaysontop windows update
+ * @param win Window to raise, win equal to zero will restacks all windows
  */
-void WaScreen::WaRaiseWindow(Window win) {
-    int i;
-    bool in_list = false;
+void WaScreen::RaiseWindow(Window win) {
+    bool end = false;
     
-    if (always_on_top_list.size() || wawindow_list_stacking_aot.size() ||
-        wamenu_list_stacking_aot.size()) {
-        Window *stack = new Window[always_on_top_list.size() +
-                                  wawindow_list_stacking_aot.size() +
-                                  wamenu_list_stacking_aot.size() +
-                                  ((win)? 1: 0)];
-        
-        list<Window>::iterator it = always_on_top_list.begin();
-        for (i = 0; it != always_on_top_list.end(); ++it) {
-            if (*it == win) in_list = true;
-            stack[i++] = *it;
+    list<Window>::iterator it = aot_stacking_list.begin();
+    for (; it != aot_stacking_list.end(); ++it) {
+        if (*it == win) {
+            aot_stacking_list.erase(it);
+            aot_stacking_list.push_front(win);
+            WaChildWindow *wc = (WaChildWindow *)
+                waimea->FindWin(*it, FrameType);
+            if (wc) {
+                WaWindow *ww = wc->wa;
+                if (! ww->transients.empty()) {
+                    list<Window>::iterator tit = ww->transients.begin();
+                    for (; tit != ww->transients.end(); ++tit) {
+                        WaWindow *wt = (WaWindow *)
+                            waimea->FindWin(*tit, WindowType);
+                        if (wt) {
+                            stacking_list.remove(wt->frame->id);
+                            aab_stacking_list.remove(wt->frame->id);
+                            aot_stacking_list.remove(wt->frame->id);
+                            aot_stacking_list.push_front(wt->frame->id);
+                        }
+                        else {
+                            ww->transients.erase(tit);
+                            tit = ww->transients.begin();
+                        }
+                    }
+                }
+            }
+            end = true;
+            break;
         }
-        list<WaMenu *>::iterator mit = wamenu_list_stacking_aot.begin();
-        for (; mit != wamenu_list_stacking_aot.end(); ++mit) {
-            if ((*mit)->frame == win) in_list = true;
-            stack[i++] = (*mit)->frame;
+    }
+    if (! end) {
+        it = stacking_list.begin();
+        for (; it != stacking_list.end(); ++it) {
+            if (*it == win) {
+                stacking_list.erase(it);
+                stacking_list.push_front(win);
+                WaChildWindow *wc = (WaChildWindow *)
+                    waimea->FindWin(*it, FrameType);
+                if (wc) {
+                    WaWindow *ww = wc->wa;
+                    if (! ww->transients.empty()) {
+                        list<Window>::iterator tit = ww->transients.begin();
+                        for (; tit != ww->transients.end(); ++tit) {
+                            WaWindow *wt = (WaWindow *)
+                                waimea->FindWin(*tit, WindowType);
+                            if (wt) {
+                                stacking_list.remove(wt->frame->id);
+                                aab_stacking_list.remove(wt->frame->id);
+                                aot_stacking_list.remove(wt->frame->id);
+                                stacking_list.push_front(wt->frame->id);
+                            }
+                            else {
+                                ww->transients.erase(tit);
+                                tit = ww->transients.begin();
+                            }
+                        }
+                    }
+                }
+                end = true;
+                break;
+            }
         }
-        list<WaWindow *>::iterator wit = wawindow_list_stacking_aot.begin();
-        for (; wit != wawindow_list_stacking_aot.end(); ++wit) {
-            if ((*wit)->frame->id == win) in_list = true;
-            stack[i++] = (*wit)->frame->id;
+    }
+    if (! end) {
+        it = aab_stacking_list.begin();
+        for (; it != aab_stacking_list.end(); ++it) {
+            if (*it == win) {
+                aab_stacking_list.erase(it);
+                aab_stacking_list.push_front(win);
+                WaChildWindow *wc = (WaChildWindow *)
+                    waimea->FindWin(*it, FrameType);
+                if (wc) {
+                    WaWindow *ww = wc->wa;
+                    if (! ww->transients.empty()) {
+                        list<Window>::iterator tit = ww->transients.begin();
+                        for (; tit != ww->transients.end(); ++tit) {
+                            WaWindow *wt = (WaWindow *)
+                                waimea->FindWin(*tit, WindowType);
+                            if (wt) {
+                                stacking_list.remove(wt->frame->id);
+                                aab_stacking_list.remove(wt->frame->id);
+                                aot_stacking_list.remove(wt->frame->id);
+                                aab_stacking_list.push_front(wt->frame->id);
+                            }
+                            else {
+                                ww->transients.erase(tit);
+                                tit = ww->transients.begin();
+                            }
+                        }
+                    }
+                }
+                end = true;
+                break;
+            }
         }
-        if (win && ! in_list) stack[i++] = win;
-        
-        XRaiseWindow(display, stack[0]);
-        XRestackWindows(display, stack, i);
-        
-        delete [] stack;
-    } else
-        if (win) {
-            XGrabServer(display);
-            if (validatedrawable(win))
-                XRaiseWindow(display, win);
-            XUngrabServer(display);
-        }
+    }
+
+    RestackWindows(win);
 }
 
 /**
- * @fn    WaLowerWindow(Window win)
- * @brief Lower window
+ * @fn    LowerWindow(Window win)
+ * @brief Lowers window
  *
- * Lowers a window in the display stack keeping alwaysatbottom windows, always
- * at bottom.
+ * Lowers a window in the display stack, still keeping it in the same stacking
+ * layer.
  *
- * @param win Window to Lower, or 0 for alwaysatbottom windows update
+ * @param win Window to lower, win equal to zero will restacks all windows
  */
-void WaScreen::WaLowerWindow(Window win) {
-    int i;
+void WaScreen::LowerWindow(Window win) {
     bool end = false;
-    list<WaMenu *>::iterator mit;
-    list<WaWindow *>::iterator wit;
-    list<WindowObject *>::iterator woit;
     
-    Window *stack = new Window[always_on_top_list.size() +
-                              wawindow_list_stacking_aot.size() +
-                              wamenu_list_stacking_aot.size() +
-                              wa_list_stacking.size() +
-                              wawindow_list_stacking_aab.size() +
-                              wamenu_list_stacking_aab.size() +
-                              always_at_bottom_list.size()];
-        
-    list<Window>::iterator it = always_on_top_list.begin();
-    for (i = 0; it != always_on_top_list.end(); ++it) {
-        if (*it == win) { end = true; break; } 
+    list<Window>::iterator it = aot_stacking_list.begin();
+    for (; it != aot_stacking_list.end(); ++it) {
+        if (*it == win) {
+            aot_stacking_list.erase(it);
+            aot_stacking_list.push_back(win);
+            end = true;
+            break;
+        }
+    }
+    if (! end) {
+        it = stacking_list.begin();
+        for (; it != stacking_list.end(); ++it) {
+            if (*it == win) {
+                stacking_list.erase(it);
+                stacking_list.push_back(win);
+                end = true;
+                break;
+            }
+        }
+    }
+    if (! end) {
+        it = aab_stacking_list.begin();
+        for (; it != aab_stacking_list.end(); ++it) {
+            if (*it == win) {
+                aab_stacking_list.erase(it);
+                aab_stacking_list.push_back(win);
+                end = true;
+                break;
+            }
+        }
+    }
+
+    RestackWindows(win);
+}
+
+/**
+ * @fn    RestackWindows(Window win)
+ * @brief Updates window stacking
+ *
+ * Update the display stacking order above window win. If win is equal to zero
+ * then the complete stacking order is updated.
+ *
+ * @param win Window to to update stacking order above, win equal to zero will
+ *            restacks all windows
+ */
+void WaScreen::RestackWindows(Window win) {
+    int i = 0;
+    bool end = false;
+    
+    Window *stack = new Window[aot_stacking_list.size() +
+                              stacking_list.size() +
+                              aab_stacking_list.size() + 4];
+
+    if (! west->actionlist->empty()) stack[i++] = west->id;
+    if (! east->actionlist->empty()) stack[i++] = east->id;
+    if (! north->actionlist->empty()) stack[i++] = north->id;
+    if (! south->actionlist->empty()) stack[i++] = south->id;
+    
+    list<Window>::iterator it = aot_stacking_list.begin();
+    for (; it != aot_stacking_list.end(); ++it) {
         stack[i++] = *it;
+        if (*it == win) { end = true; break; }
     }
     if (! end) {
-        mit = wamenu_list_stacking_aot.begin();
-        for (; mit != wamenu_list_stacking_aot.end(); ++mit) {
-            if ((*mit)->frame == win) { end = true; break; }
-            stack[i++] = (*mit)->frame;
-        }
-    }
-    if (! end) {
-        wit = wawindow_list_stacking_aot.begin();
-        for (; wit != wawindow_list_stacking_aot.end(); ++wit) {
-            if ((*wit)->frame->id == win) { end = true; break; }
-            stack[i++] = (*wit)->frame->id;
-        }
-    }
-    if (! end) {
-        woit = wa_list_stacking.begin();
-        for (; woit != wa_list_stacking.end(); ++woit) {
-            if ((*woit)->type == WindowType) {
-                if (((WaWindow *) (*woit))->frame->id == win) {
-                    end = true; break;
-                }
-                stack[i++] = ((WaWindow *) (*woit))->frame->id;
-            }
-            else if ((*woit)->type == MenuType) {
-                if (((WaMenu *) (*woit))->frame == win) {
-                    end = true; break;
-                }
-                stack[i++] = ((WaMenu *) (*woit))->frame;
-            }
-        }
-    }
-    if (! end) {
-        wit = wawindow_list_stacking_aab.begin();
-        for (; wit != wawindow_list_stacking_aab.end(); ++wit) {
-            if ((*wit)->frame->id == win) { end = true; break; }
-            stack[i++] = (*wit)->frame->id;
-        }
-    }
-    if (! end) {
-        mit = wamenu_list_stacking_aab.begin();
-        for (; mit != wamenu_list_stacking_aab.end(); ++mit) {
-            if ((*mit)->frame == win) { end = true; break; }
-            stack[i++] = (*mit)->frame;
-        }
-    }
-    if (! end) {
-        it = always_at_bottom_list.begin();
-        for (; it != always_at_bottom_list.end(); ++it) {
-            if (*it == win) { end = true; break; }
+        it = stacking_list.begin();
+        for (; it != stacking_list.end(); ++it) {
             stack[i++] = *it;
+            if (*it == win) { end = true; break; }
+        }
+    }
+    if (! end) {
+        it = aab_stacking_list.begin();
+        for (; it != aab_stacking_list.end(); ++it) {
+            stack[i++] = *it;
+            if (*it == win) { end = true; break; }
         }
     }
     XRaiseWindow(display, stack[0]);
@@ -1347,7 +1430,7 @@ void WaScreen::MenuMap(XEvent *, WaAction *ac, bool focus) {
     GetWorkareaSize(&workx, &worky, &workw, &workh);
 
     if (XQueryPointer(display, id, &w, &w, &x, &y, &i, &i, &ui)) {
-        if (menu->tasksw) menu->Build(this);
+        if (menu->ext_type) menu->Build(this);
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
         if ((y + menu->height + mstyle.border_width * 2) >
@@ -1387,7 +1470,7 @@ void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     GetWorkareaSize(&workx, &worky, &workw, &workh);
     
     if (XQueryPointer(display, id, &w, &w, &x, &y, &i, &i, &ui)) {
-        if (menu->tasksw) menu->Build(this);
+        if (menu->ext_type) menu->Build(this);
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
         if ((y + menu->height + mstyle.border_width * 2) >
@@ -1792,6 +1875,170 @@ void WaScreen::RRUpdate(void) {
 #endif // RANDR
 
 /**
+ * @fn    RegexMatchWindow(char *s, WaWindow *ign)
+ * @brief Find window matching regular expression
+ *
+ * Searches all windows of screen for a window matching regular expression
+ * created from string `s'. If `s' starts with "c/" matching is done with
+ * window class, if `s' starts with "n/" matching is done with class name and
+ * if `s' starts with "t/" matching is done with window title name.
+ *
+ * @param s String to create regular expression from
+ * @param ign Window that isn't allowed to match
+ *
+ * @return Matching window if found, otherwise NULL
+ */
+WaWindow *WaScreen::RegexMatchWindow(char *s, WaWindow *ign) {
+    int type = 0;
+    if (! s) return NULL;
+
+    int len = strlen(s);
+    if (len < 4) return NULL;
+    
+    if (*s == 't') type = 1;
+    else if (*s == 'c') type = 2;
+    else if (*s == 'n') type = 3;
+    else return NULL;
+
+    s[len - 1] = '\0';
+    Regex *r = new Regex(s + 2);
+    s[len - 1] = '/';
+
+    list<WaWindow *>::iterator it = wawindow_list.begin();
+    for (; it != wawindow_list.end(); it++) {
+        if (*it == ign) continue;
+        switch (type) {
+            case 1: {
+                char tmp = (*it)->name[(*it)->realnamelen];
+                (*it)->name[(*it)->realnamelen] = '\0';
+                if (r->Match((*it)->name)) {
+                    (*it)->name[(*it)->realnamelen] = tmp;
+                    delete r;
+                    return *it;
+                }
+                (*it)->name[(*it)->realnamelen] = tmp;
+            } break;
+            case 2:
+                if ((*it)->classhint && (*it)->classhint->res_class)
+                    if (r->Match((*it)->classhint->res_class)) {
+                        delete r;
+                        return *it;
+                    }
+                break;
+            case 3:
+                if ((*it)->classhint && (*it)->classhint->res_name)
+                    if (r->Match((*it)->classhint->res_name)) {
+                        delete r;
+                        return *it;
+                    }
+        }
+    }
+    delete r;
+    return NULL;
+}
+
+/**
+ * @fn    SmartName(WaWindow *ww)
+ * @brief Sets viewable title name for a window
+ *
+ * Checks if a window with the same name exists and adds a unique prefix to
+ * the window name if this is the case. Viewable titles of old matching
+ * windows are also updated so that they have unique prefixes.
+ *
+ * @param ww Window to set viewable name for
+ */
+void WaScreen::SmartName(WaWindow *ww) {
+    int match = 0;
+    list<WaWindow *>::iterator it = wawindow_list_map_order.begin();
+    for (; it != wawindow_list_map_order.end(); it++) {
+        if (*it == ww) continue;
+        int i = 0;
+        for (;i < ww->realnamelen && i < (*it)->realnamelen; i++)
+            if ((*it)->name[i] != ww->name[i])
+                break;
+        if (i == ww->realnamelen && i == (*it)->realnamelen) {
+            char *newn = new char[(*it)->realnamelen + 6];
+            (*it)->name[(*it)->realnamelen] = '\0';
+            sprintf(newn, "%s <%d>", (*it)->name, match + 1);
+            delete [] (*it)->name;
+            (*it)->name = newn;
+            if (config.db) {
+                (*it)->title->Render();
+                (*it)->label->Render();
+            } else
+                (*it)->label->Draw();
+            net->SetVisibleName(*it);
+            match++;
+            if (match >= 989) return;
+        }
+    }
+    if (match) {
+        char *newn = new char[ww->realnamelen + 6];
+        sprintf(newn, "%s <%d>", ww->name, match + 1);
+        delete [] ww->name;
+        ww->name = newn;
+    }
+}
+
+/**
+ * @fn    SmartNameRemove(WaWindow *ww)
+ * @brief Indicate that a title name no longer exists
+ *
+ * Updates viewable title names for windows with same title name as the title
+ * name that no longer exists.
+ *
+ * @param ww Window that have a title name that no longer exists
+ */
+void WaScreen::SmartNameRemove(WaWindow *ww) {
+    int match = 1;
+    bool second = false;
+    WaWindow *fw = NULL;
+    list<WaWindow *>::iterator it = wawindow_list_map_order.begin();
+    for (; it != wawindow_list_map_order.end(); it++) {
+        if (*it == ww) continue;
+        int i = 0;
+        for (;i < ww->realnamelen && i < (*it)->realnamelen; i++)
+            if ((*it)->name[i] != ww->name[i])
+                break;
+        if (i == ww->realnamelen && i == (*it)->realnamelen) {
+            if (second || fw) {
+                second = true;
+                char *newn = new char[(*it)->realnamelen + 6];
+                (*it)->name[(*it)->realnamelen] = '\0';
+                sprintf(newn, "%s <%d>", (*it)->name, match + 1);
+                delete [] (*it)->name;
+                (*it)->name = newn;
+                if (config.db) {
+                    (*it)->title->Render();
+                    (*it)->label->Render();
+                } else
+                    (*it)->label->Draw();
+                net->SetVisibleName(*it);
+                match++;
+                if (match >= 998) return;
+            } else
+                fw = *it;
+        }
+    }
+    if (fw) {
+        char *newn = new char[fw->realnamelen + 6];
+        fw->name[fw->realnamelen] = '\0';
+        if (second)
+            sprintf(newn, "%s <%d>", fw->name, 1);
+        else
+            sprintf(newn, "%s", fw->name);
+        delete [] fw->name;
+        fw->name = newn;
+        if (config.db) {
+            fw->title->Render();
+            fw->label->Render();
+        } else
+            fw->label->Draw();
+        net->SetVisibleName(fw);
+    }
+}
+
+/**
  * @fn    ScreenEdge(WaScreen *wascrn, int x, int y, int width, int height,
  *                   int type) : WindowObject(0, type)
  * @brief Constructor for ScreenEdge class
@@ -1834,8 +2081,6 @@ void ScreenEdge::SetActionlist(list<WaAction *> *list) {
     actionlist = list;
     if (! actionlist->empty()) {
         XMapWindow(wa->display, id);
-        wa->always_on_top_list.push_back(id);
-        wa->WaRaiseWindow(0);
         wa->waimea->window_table.insert(make_pair(id, this));
     }
 }
@@ -1847,9 +2092,7 @@ void ScreenEdge::SetActionlist(list<WaAction *> *list) {
  * Destroys ScreenEdge window
  */
 ScreenEdge::~ScreenEdge(void) {
-    if (! actionlist->empty()) {
-        wa->always_on_top_list.remove(id);
+    if (! actionlist->empty())
         wa->waimea->window_table.erase(id);
-    }
     XDestroyWindow(wa->display, id);
 }

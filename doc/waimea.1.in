@@ -4,7 +4,7 @@
 .\" This manual page may be freely distributed and modified.
 .\" Author: David Reveman <david@waimea.org>
 .\" 
-.TH WAIMEA 1 "Nov 06 2002" "0.4.0" "User Manual"
+.TH WAIMEA 1 "Nov 15 2002" "0.5.0" "User Manual"
 
 
 .SH NAME
@@ -250,6 +250,17 @@ will always keep transient windows above and focused relative to the
 the 'transient for' window.
 Default value is
 .I True.
+
+.TP
+.B screen0.focusRevertTo:     RevertType
+Specifies where the input focus reverts to if a window or menu becomes
+not viewable. RevertType can be one of Root or Window. When set to Root
+.I waimea
+will revert focus to the root window. When set to Window
+.I waimea
+will revert focus to the last focused window that is viewable. 
+Default value is
+.I Window.
 
 .PP
 Dockappholder Resources
@@ -903,6 +914,8 @@ one of these:
 .br
 MAXIMIZED
 .br
+MINIMIZED
+.br
 SHADED
 .br
 STICKY
@@ -918,6 +931,10 @@ DECORHANDLE
 DECORBORDER
 .br
 DECORALL
+.br
+FULLSCREEN
+.br
+CLOSE
 .br
 None
 .br
@@ -1021,17 +1038,17 @@ the order of the action lines.
 For convenience it's also possible to define lists of action lines. e.g.:
 .nf
 
-DEF definedTitleActions {
-    StartMove     : ButtonPress = Button1,
-    EndMoveResize : ButtonRelease = Button1
+DEF DefinedTitleActions {
+    startMove     : ButtonPress = Button1,
+    endMoveResize : ButtonRelease = Button1
 }
 window.title {
-   definedTitleActions,
-   ToggleShade : DoubleClick = Button1
+   DefinedTitleActions,
+   toggleShade : DoubleClick = Button1
 }
 
 .fi
-In window.title action list 'definedTitleActions' will be replaced by
+In window.title action list 'DefinedTitleActions' will be replaced by
 the action lines defined above.
 .PP 
 An action line should start with an action and then a ':' character
@@ -1043,8 +1060,8 @@ a modifier mask.
 Here are two good examples:
 .nf
 
-StartMove   : ButtonPress = Button1 & Mod1Mask & ControlMask
-StartResize : ButtonPress = Button1 & Mod1Mask & !ControlMask
+startMove   : ButtonPress = Button1 & Mod1Mask & ControlMask
+startResize : ButtonPress = Button1 & Mod1Mask & !ControlMask
 
 .fi
 The first line will create a startmove 
@@ -1069,7 +1086,7 @@ with a colon and the events in the delay break list are separated with
 pipe signs. e.g.:
 .nf
 
-Raise : EnterNotify [2000 : LeaveNotify | ButtonPress]
+raise : EnterNotify [2000 : LeaveNotify | ButtonPress]
 
 .fi
 Adds a 2000 milliseconds delay to the Raise action, LeaveNotify and 
@@ -1181,13 +1198,13 @@ Special characters are:
 Set input focus to the event window.
 
 .PP
-.B viewportleft
+.B viewportLeft
 .br
-.B viewportright
+.B viewportRight
 .br
-.B viewportup
+.B viewportUp
 .br
-.B viewportdown
+.B viewportDown
 .RS
 Moves viewport one screen width and warps the pointer one screen width
 in the opposite direction.
@@ -1195,7 +1212,7 @@ in the opposite direction.
 
 .PP
 .TP
-.B viewportrelativemove(OffsetString)
+.B viewportRelativeMove(OffsetString)
 Moves viewport relative to its current position. MUST have an X offset 
 string as parameter:
 [{+-}<xoffset>{+-}<yoffset>] See
@@ -1207,7 +1224,7 @@ screenheight.
 
 .PP
 .TP
-.B viewportfixedmove(OffsetString)
+.B viewportFixedMove(OffsetString)
 Moves viewport to a fixed position. MUST have an X offset 
 string as parameter:
 [{+-}<xoffset>{+-}<yoffset>] See 
@@ -1219,7 +1236,7 @@ replace with screenheight.
 
 .PP
 .TP
-.B startviewportmove
+.B startViewportMove
 Moves viewport after mouse motion events, kind of
 the same way as you move windows. Must be ended with 
 .B endmoveresize 
@@ -1227,36 +1244,36 @@ action.
 
 .PP
 .TP
-.B taskswitcher
+.B taskSwitcher
 Maps windowlist menu at the middle of the screen. This menu is very
 useful for switching between windows.
 
 .PP
 .TP
-.B nexttask
+.B nextTask
 Sets focus to the window that was focused longest time ago. 
 
 .PP
 .TP
-.B previoustask
+.B previousTask
 Sets focus to the window that was focused before the currently focused
 window.
 
 .PP
 .TP
-.B gotodesktop(Desktop number)
+.B gotoDesktop(Desktop number)
 Sets current desktop to desktop specified by desktop number parameter.
 
 .PP
 .TP
-.B nextdesktop
+.B nextDesktop
 Sets current desktop to desktop with number one higher than
 current desktop. Current desktop is set to desktop 0 if no desktop with 
 higher number than current desktop exists.
 
 .PP
 .TP
-.B previousdesktop
+.B previousDesktop
 Sets current desktop to desktop with number one lower than
 current desktop. Current desktop is set to desktop with highest number
 if no desktop with lower number than current desktop exists.
@@ -1277,7 +1294,7 @@ executes the same command line as waimea was started with.
 
 .PP
 .TP 
-.B pointerrelativewarp(OffsetString)
+.B pointerRelativeWarp(OffsetString)
 Warps pointer relative to its current position. MUST have an X offset
 string as parameter:
 [{+-}<xoffset>{+-}<yoffset>] See
@@ -1287,7 +1304,7 @@ pointer.
 
 .PP
 .TP
-.B pointerfixedmove(OffsetString)
+.B pointerFixedWarp(OffsetString)
 Warp pointer to a fixed position. MUST have an X offset
 string as parameter:
 [{+-}<xoffset>{+-}<yoffset>] See  
@@ -1312,7 +1329,7 @@ Raise window to top of display stack.
 
 .PP
 .TP
-.B raisefocus
+.B raiseFocus
 Raise window to top of display stack and focus it.
 
 .PP
@@ -1321,9 +1338,9 @@ Raise window to top of display stack and focus it.
 Lower window to bottom of display stack.
 
 .PP
-.B startmove
+.B startMove
 .br
-.B startopaquemove
+.B startOpaqueMove
 .RS
 Move window by dragging the mouse. startmove
 .I action
@@ -1332,18 +1349,18 @@ actual window when you're finished dragging. startopaquemove
 .I action
 will move the actual window while you're dragging the mouse. Both must be 
 ended with 
-.B endmoveresize 
+.B endMoveResize 
 action.
 .RE
 
 .PP
-.B startresizeright
+.B startResizeRight
 .br
-.B startresizeleft
+.B startResizeLeft
 .br
-.B startopaqueresizeright
+.B startOpaqueResizeRight
 .br
-.B startopaqueresizeleft
+.B startOpaqueResizeLeft
 .RS
 Resize window by dragging the mouse.
 .I Actions 
@@ -1354,13 +1371,13 @@ dragging.
 ending with 'opaque' will resize the actual window while
 you're dragging the mouse. All four must be 
 ended with 
-.B endmoveresize 
+.B endMoveResize 
 action.
 .RE
 
 .PP
 .TP
-.B endmoveresize
+.B endMoveResize
 Ends a move or resize process.
 
 .PP
@@ -1377,25 +1394,74 @@ killing the process that created it.
 
 .PP
 .TP
-.B closekill
+.B closeKill
 Checks if the window will accept a delete message. If it will, then we
 send a delete message to the client window otherwise we tell the
 X server to kill the client that created it.
 
 .PP
-.B menumap(menu_name)
+.B cloneMergeWithWindow(Window matching regex)
 .br
-.B menuremap(menu_name)
+.B vertMergeWithWindow(Window matching regex)
 .br
-.B menuunmap(menu_name)
-.br
-.B menumapfocused(menu_name)
-.br
-.B menuremapfocused(menu_name)
-.br
-.B menuunmapfocused(menu_name)
+.B horizMergeWithWindow(Window matching regex)
 .RS
-Map, remap or unmap a menu. Mapping a menu that is already mapped
+Clone/Vertically/Horizontally merge window with master window matching
+regular expression specified by parameter. Parameter must be one of 
+n/Regexp/, c/Regexp/ or t/Regexp/ where Regexp is the regular
+expression to match window name/class/title with.
+.RE
+
+.PP
+.TP
+.B setMergeMode(String)
+Sets merge mode used for move merging. String parameter must be a valid 
+merge type. Valid merge types are 
+.I Null, Clone, Vertically
+or 
+.I Horizontally.
+
+.PP
+.B nextMergeMode
+.br
+.B prevMergeMode
+.RS
+Shifts merge mode used for move merging. Merge modes are ordered is this
+sequence: 
+.I Null - Clone - Vertically - Horizontally
+Reaching an end of this sequence will warp to the other end.
+.RE
+
+.PP
+.TP
+.B mergedToFront
+If window is a clone merged window or a master window with a clone merged 
+client then this action will bring it to the front.
+
+.PP
+.TP
+.B unmerge
+Unmerges a window from its current master.
+
+.PP
+.TP
+.B explode
+Unmerges all merged windows from a master window.
+
+.PP
+.B menuMap(MenuName)
+.br
+.B menuRemap(MenuName)
+.br
+.B menuUnmap(MenuName)
+.br
+.B menuMapFocused(MenuName)
+.br
+.B menuRemapFocused(MenuName)
+.br
+.B menuUnmapFocused(MenuName)
+.RS
+Map, Remap or Unmap a menu. Mapping a menu that is already mapped
 will do nothing. Remapping a menu that is already mapped will move the 
 mapped menu to the new mapping position.
 .I Actions 
@@ -1409,32 +1475,49 @@ Menu can be a dynamic menu.
 .PP
 .B shade
 .br
-.B unshade
+.B unShade
 .br
-.B toggleshade
+.B toggleShade
 .RS
 shade 
 .I action
-will put window in shaded state. unshade 
+will put window in shaded state. unShade 
 .I action 
-will restore window from shaded to normal state. toggleshade 
+will restore window from shaded to normal state. toggleShade 
 .I action 
 will toggle between shaded and normal state.
 In shaded state only the titlebar for the window is shown.
 .RE
 
 .PP
+.B minimize
+.br
+.B unMinimized
+.br
+.B toggleMinimize
+.RS
+minimize
+.I action
+will put window in minimize state. unMinimize
+.I action 
+will restore window from minimize to normal state. toggleMinimize
+.I action 
+will toggle between minimize and normal state.
+In minimize state the window will not be visible on any desktop.
+.RE
+
+.PP
 .B maximize
 .br
-.B unmaximize
+.B unMaximize
 .br
-.B togglemaximize
+.B toggleMaximize
 .RS
 maximize 
 .I action
-will put window in maximized state. unmaximize 
+will put window in maximized state. unMaximize 
 .I action 
-will restore window from maximized to normal state. togglemaximize 
+will restore window from maximized to normal state. toggleMaximize 
 .I action 
 will toggle between maximized and normal state.
 In maximized state the window will have maximum allowed size fitted 
@@ -1444,15 +1527,15 @@ in screen.
 .PP
 .B sticky
 .br
-.B unsticky
+.B unSticky
 .br
-.B togglesticky
+.B toggleSticky
 .RS
 sticky
 .I action
-will put window in sticky state. unsticky
+will put window in sticky state. unSticky
 .I action 
-will restore window from sticky to normal state. togglesticky
+will restore window from sticky to normal state. toggleSticky
 .I action 
 will toggle between sticky and normal state.
 In sticky state the window will stick to its position whatever the viewport 
@@ -1460,105 +1543,123 @@ is.
 .RE
 
 .PP
-.B decortitleon
+.B fullscreenOn
 .br
-.B decortitleoff
+.B fullscreenOff
 .br
-.B decortitletoggle
+.B fullscreenToggle
+.RS
+Turn on, off or toggle fullscreen mode. When window is maximized in 
+fullscreen mode it is maximized to the edges of the screen.
+.RE
+
+.PP
+.B decorTitleOn
+.br
+.B decorTitleOff
+.br
+.B decorTitleToggle
 .RS
 Turn on, off or toggle the window titlebar decoration.
 .RE
 
 .PP
-.B decorhandleon
+.B decorHandleOn
 .br
-.B decorhandleoff
+.B decorHandleOff
 .br
-.B decorhandletoggle
+.B decorHandleToggle
 .RS
 Turn on, off or toggle the window handlebar decoration.
 .RE
 
 .PP
-.B decorborderon
+.B decorBorderOn
 .br
-.B decorborderoff
+.B decorBorderOff
 .br
-.B decorbordertoggle
+.B decorBorderToggle
 .RS
 Turn on, off or toggle the window border decoration.
 .RE
 
 .PP
-.B decorallon
+.B decorAllOn
 .br
-.B decoralloff
+.B decorAllOff
 .RS
 Turn on or off all window decorations.
 .RE
 
 .PP
-.B alwaysontopon
+.B alwaysOnTopOn
 .br
-.B alwaysontopoff
+.B alwaysOnTopOff
 .br
-.B alwaysontoptoggle
+.B alwaysOnTopToggle
 .RS
 Turn on, off or toggle if window should be always on top. Always on top 
 windows are always at the top of the display stack.
 .RE
 
 .PP
-.B alwaysatbottomon
+.B alwaysAtBottomOn
 .br
-.B alwaysatbottomoff
+.B alwaysAtBottomOff
 .br
-.B alwaysatbottomtoggle
+.B alwaysAtBottomToggle
 .RS
 Turn on, off or toggle if window should be always at bottom. Always at
 bottom windows are always at the bottom of the display stack.
 .RE
 
 .PP
-.B acceptconfigrequeston
+.B acceptConfigRequestOn
 .br
-.B acceptconfigrequestoff
+.B acceptConfigRequestOff
 .br
-.B acceptconfigrequesttoggle
+.B acceptConfigRequestToggle
 .RS
-Turn on, off or toggle if window should handle received configure request 
-events.
+Turn on, off or toggle if window should handle received configure request
+events (don't use this unless you know what you're doing).
 .RE
 
 .PP
-.B moveresize(X11 geometry string)
+.B moveResize(X11 geometry string)
 .br
-.B moveresizevirtual(X11 geometry string)
+.B moveResizeVirtual(X11 geometry string)
 .RS
 MUST have an X11 geometry string as parameter:
 [<width>{xX}<height>][{+-}<xoffset>{+-}<yoffset>] See
 .BR X(7).
-Sets window geometry. moveresize action moves window to a actual screen 
-position. moveresizevirtual action moves window to a virtual screen
+Sets window geometry. moveResize action moves window to a actual screen 
+position. moveResizeVirtual action moves window to a virtual screen
 position. A 'W' character in the OffsetString is replaced with
 screenwidth. A 'H' character in the OffsetString is replace with
 screenheight.
-
 .RE
 
 .PP
 .TP
-.B movetopointer
+.B moveToPointer
 Moves center of window to mouse pointer position.
 
 .PP
-.TP
-.B movetosmartplace
-Moves window to position calculated by Smart Placement algorithm.
+.B moveToSmartPlace
+.br
+.B moveToSmartPlaceIfUninitialized
+.RS
+Moves window to position calculated by Smart Placement algorithm. The
+.I moveToSmartPlaceIfUninitialized
+action will only perform the move if the window position haven't been
+initialized by the client to anything other then (0,0), this is useful 
+for moving windows on MapRequest events when you only want to
+move windows that are uninitialized.
+.RE
 
 .PP
 .TP
-.B desktopmask(Desktop number list)
+.B desktopMask(Desktop number list)
 Sets desktop mask for window. Parameter should be a whitespace separated
 list of desktop numbers. Window will only appear in desktops specified 
 by this list. To make window appear in all desktops, replace list with 
@@ -1566,32 +1667,32 @@ the string `All'.
 
 .PP
 .TP
-.B joindesktop(Desktop number)
+.B joinDesktop(Desktop number)
 Makes window a member of desktop specified by desktop number parameter.
 
 .PP
 .TP
-.B partdesktop(Desktop number)
+.B partDesktop(Desktop number)
 Makes window not a member of desktop specified by desktop number parameter.
 
 .PP
 .TP
-.B partcurrentdesktop
+.B partCurrentDesktop
 Makes window not a member of current desktop.
 
 .PP
 .TP
-.B joinalldesktops
+.B joinAllDesktops
 Makes window a member of all desktops.
 
 .PP
 .TP
-.B partalldesktopsexceptcurrent
-Makes window not a member of all desktops except the current desktop.
+.B partAllDesktopsExceptCurrent
+Makes window member of only the current desktop.
 
 .PP
 .TP
-.B partcurrentjoindesktop(Desktop number)
+.B partCurrentJoinDesktop(Desktop number)
 Makes window not a member of current desktop and instead makes it a
 member of desktop specified by desktop number parameter.
 
@@ -1610,42 +1711,42 @@ Raise menu to top of display stack.
 Lower menu to bottom of display stack.
 
 .PP
-.B startmove
+.B startMove
 .br
-.B startopaquemove
+.B startOpaqueMove
 .RS
-Move menu by dragging the mouse. startmove
+Move menu by dragging the mouse. startMove
 .I action
 will display a menu outline while dragging the mouse and first move the
-actual menu when you're finished dragging. startopaquemove
+actual menu when you're finished dragging. startOpaqueMove
 .I action
 will move the actual menu while you're dragging the mouse. Both must be 
 ended with 
-.B endmoveresize 
+.B endMoveResize 
 action.
 .RE
 
 .PP
 .TP
-.B endmoveresize
+.B endMoveResize
 Ends a move or resize process.
 
 .PP
-.B mapsub
+.B mapSub
 .br
-.B mapsubonly
+.B mapSubOnly
 .br
-.B remapsub
+.B remapSub
 .br
-.B mapsubfocused
+.B mapSubFocused
 .br
-.B mapsubfocusedonly
+.B mapSubFocusedOnly
 .br
-.B remapsubfocused
+.B remapSubFocused
 .br
 .B unmap
 .br
-.B unmapfocused
+.B unmapFocused
 .RS
 Map, remap or unmap menu items submenu. If menu item doesn't 
 have a submenu, nothing is done. Mapping a submenu that is 
@@ -1653,22 +1754,22 @@ already mapped will do nothing.
 Remapping a submenu that is already mapped will move the 
 mapped submenu to the new mapping position.
 .I Actions 
-ending with 'focused' will set input focus to the first
+ending with 'Focused' will set input focus to the first
 focusable window in the submenu when being mapped.
 .I Actions 
-ending with 'only' will unmap all other submenus before mapping submenu.
+ending with 'Only' will unmap all other submenus before mapping submenu.
 .RE
 
 .PP
 .TP
-.B unmapsubs
+.B unmapSubs
 Unmaps the submenutree of the menu that contains the menu item. 
 Only linked menus are part of the submenutree and will be unmapped by 
 this action.
 
 .PP
 .TP
-.B unmaptree
+.B unmapTree
 Unmaps the complete menutree that the menu containing the menu item 
 is part of. Only linked menus are part of the menutree and will be 
 unmapped by this action.
@@ -1687,7 +1788,7 @@ have a linked command line, nothing is done.
 
 .PP
 .TP
-.B unlink
+.B unLink
 unlinks menu containing the menu item from its menu tree.
 
 
@@ -1695,23 +1796,23 @@ unlinks menu containing the menu item from its menu tree.
 Here is the list of additional actions for root, *edge windows:
 
 .PP
-.B menumap(menu_name)
+.B menuMap(MenuName)
 .br
-.B menuremap(menu_name)
+.B menuRemap(MenuName)
 .br
-.B menuunmap(menu_name)
+.B menuUnmap(MenuName)
 .br
-.B menumapfocused(menu_name)
+.B menuMapFocused(MenuName)
 .br
-.B menuremapfocused(menu_name)
+.B menuRemapFocused(MenuName)
 .br
-.B menuunmapfocused(menu_name)
+.B menuUnmapFocused(MenuName)
 .RS
 Map, remap or unmap a menu. Mapping a menu that is already mapped
 will do nothing. Remapping a menu that is already mapped will move the 
 mapped menu to the new mapping position.
 .I Actions 
-ending with 'focused' will set input focus to the first
+ending with 'Focused' will set input focus to the first
 focusable menu item in the menu when being mapped.
 A menu must be given as parameter to all these 
 .I actions.
@@ -1723,58 +1824,58 @@ Here is the list of event types that can be linked to an
 
 .PP
 .TP
-.B buttonpress
+.B ButtonPress
 Occurs when a mouse button is pressed.
 Event detail for this event can be one of 
-.I button1, button2, button3, button4, button5, button6, button7 or anybutton.
+.I Button1, Button2, Button3, Button4, Button5, Button6, Button7 or AnyButton.
 
 .PP
 .TP
-.B buttonrelease
+.B ButtonRelease
 Occurs when a mouse button is released.
 Event detail for this event can be one of 
-.I button1, button2, button3, button4, button5, button6, button7 or anybutton.
+.I Button1, Button2, Button3, Button4, Button5, Button6, Button7 or AnyButton.
 
 .PP
 .TP
-.B doubleclick
+.B DoubleClick
 Occurs when a mouse button is pressed two times within time of the 
 double click interval.
 Event detail for this event can be one of 
-.I button1, button2, button3, button4, button5, button6, button7 or anybutton.
+.I Button1, Button2, Button3, Button4, Button5, Button6, Button7 or AnyButton.
 
 .PP
 .TP
-.B keypress
+.B KeyPress
 Occurs when a key is pressed.
 Event detail for this event should be standard KeySym name obtained 
 from <X11/keysymdef.h> by removing the XK_ prefix from each name or 
-.I anykey.
+.I AnyKey.
 
 .PP
 .TP
-.B keyrelease
+.B KeyRelease
 Occurs when a key is released.
 Event detail for this event should be standard KeySym name obtained 
 from <X11/keysymdef.h> by removing the XK_ prefix from each name or 
-.I anykey.
+.I AnyKey.
 
 
 .PP
 .TP
-.B enternotify
+.B EnterNotify
 Occurs when mouse enters a window.
 No event details for this event type.
 
 .PP
 .TP
-.B leavenotify
+.B LeaveNotify
 Occurs when mouse leaves a window.
 No event details for this event type.
 
 .PP
 .TP
-.B maprequest
+.B MapRequest
 Occurs when a window requests to be mapped.
 No event details for this event type.
 
@@ -1783,17 +1884,17 @@ No event details for this event type.
 Here is the list of event modifiers that can used in the modifier mask:
 
 .PP
-.B shiftmask
+.B ShiftMask
 .br
-.B lockmask
+.B LockMask
 .br
-.B controlmask
+.B ControlMask
 .br
-.B mod[1-5]mask
+.B Mod[1-5]Mask
 .br
-.B button[1-5]mask
+.B Button[1-5]Mask
 .br
-.B moveresizemask
+.B MoveResizeMask
 .br
 .B Any KeySym that is assigned to a modifier
 
@@ -1937,6 +2038,8 @@ Here is the list of flags that can be used with checkbox items:
 .br
 MAXIMIZED
 .br
+MINIMIZED
+.br
 SHADED
 .br
 STICKY
@@ -1951,7 +2054,7 @@ DECORHANDLE
 .br
 DECORBORDER
 .br
-DECORALL
+FULLSCREEN
 .br
 .PP
 
@@ -1960,6 +2063,14 @@ DECORALL
 .br
 Predefined menu named "__windowlist__" can be used in menu file
 and action file to access the taskswitcher menu.
+
+.PP
+.B Window merging
+.br
+Predefined menus named "__mergelist__", "__mergelist_vertically__" and
+"__mergelist_horizontally__" can be used in menu file
+and action file to access window merging menus.
+
 
 .PP
 .B Dynamic menus

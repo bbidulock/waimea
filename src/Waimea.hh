@@ -106,27 +106,27 @@ struct waoptions {
     } \
     delete map;
 
-#define FrameType       (1L << 1)
-#define WindowType      (1L << 2)
-#define TitleType       (1L << 3)
-#define LabelType       (1L << 4)
-#define ButtonType      (1L << 5)
-#define HandleType      (1L << 6)
-#define LGripType       (1L << 7)
-#define RGripType       (1L << 8)
-#define RootType        (1L << 9)
-#define WEdgeType       (1L << 10)
-#define EEdgeType       (1L << 11)
-#define NEdgeType       (1L << 12)
-#define SEdgeType       (1L << 13)
-#define MenuTitleType   (1L << 14)
-#define MenuItemType    (1L << 15)
-#define MenuCBItemType  (1L << 16)
-#define MenuSubType     (1L << 17)
-#define DockHandlerType (1L << 18)
-#define DockAppType     (1L << 19)
-#define MenuType        (1L << 20)
-#define SystrayType     (1L << 21)
+#define FrameType       (1L <<  0)
+#define WindowType      (1L <<  1)
+#define TitleType       (1L <<  2)
+#define LabelType       (1L <<  3)
+#define ButtonType      (1L <<  4)
+#define HandleType      (1L <<  5)
+#define LGripType       (1L <<  6)
+#define RGripType       (1L <<  7)
+#define RootType        (1L <<  8)
+#define WEdgeType       (1L <<  9)
+#define EEdgeType       (1L << 10)
+#define NEdgeType       (1L << 11)
+#define SEdgeType       (1L << 12)
+#define MenuTitleType   (1L << 13)
+#define MenuItemType    (1L << 14)
+#define MenuCBItemType  (1L << 15)
+#define MenuSubType     (1L << 16)
+#define DockHandlerType (1L << 17)
+#define DockAppType     (1L << 18)
+#define MenuType        (1L << 19)
+#define SystrayType     (1L << 20)
 
 enum {
     MoveType,
@@ -136,17 +136,19 @@ enum {
     EndMoveResizeType
 };
 
-#define MaxCBoxType    1
-#define ShadeCBoxType  2
-#define StickCBoxType  3
-#define TitleCBoxType  4
-#define HandleCBoxType 5
-#define BorderCBoxType 6
-#define AllCBoxType    7
-#define AOTCBoxType    8
-#define AABCBoxType    9
+#define MaxCBoxType     1
+#define MinCBoxType     2
+#define ShadeCBoxType   3
+#define StickCBoxType   4
+#define TitleCBoxType   5
+#define HandleCBoxType  6
+#define BorderCBoxType  7
+#define AllCBoxType     8
+#define AOTCBoxType     9
+#define AABCBoxType    10
+#define FsCBoxType     11
 
-#define CloseCBoxType  10
+#define CloseCBoxType  12
 
 #include "Screen.hh"
 #include "Timer.hh"

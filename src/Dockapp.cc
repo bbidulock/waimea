@@ -68,9 +68,10 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
                        &attrib_set);
 
     if (style->stacking == AlwaysOnTop)
-        wascreen->always_on_top_list.push_back(id);
+        wascreen->aot_stacking_list.push_back(id);
     else
-        wascreen->always_at_bottom_list.push_back(id);
+        wascreen->aab_stacking_list.push_back(id);
+        
 
     if (! style->inworkspace) {
         wm_strut = new WMstrut;
@@ -92,9 +93,9 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
  */
 DockappHandler::~DockappHandler(void) {
     if (style->stacking == AlwaysOnTop)
-        wascreen->always_on_top_list.remove(id);
+        wascreen->aot_stacking_list.remove(id);
     else
-        wascreen->always_at_bottom_list.remove(id);
+        wascreen->aab_stacking_list.remove(id);
     LISTPTRDELITEMS(dockapp_list);
     XDestroyWindow(display, id);
     if (! style->inworkspace) {

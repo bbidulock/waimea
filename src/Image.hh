@@ -139,47 +139,47 @@ public:
 };
 
 // bevel options
-#define WaImage_Flat		   (1l<<1)
-#define WaImage_Sunken		   (1l<<2)
-#define WaImage_Raised		   (1l<<3)
+#define WaImage_Flat		   (1L <<  1)
+#define WaImage_Sunken		   (1L <<  2)
+#define WaImage_Raised		   (1L <<  3)
 
 // textures
-#define WaImage_Solid		   (1l<<4)
-#define WaImage_Gradient	   (1l<<5)
+#define WaImage_Solid		   (1L <<  4)
+#define WaImage_Gradient	   (1L <<  5)
 
 // gradients
-#define WaImage_Horizontal	   (1l<<6)
-#define WaImage_Vertical	   (1l<<7)
-#define WaImage_Diagonal	   (1l<<8)
-#define WaImage_CrossDiagonal  (1l<<9)
-#define WaImage_Rectangle	   (1l<<10)
-#define WaImage_Pyramid		   (1l<<11)
-#define WaImage_PipeCross	   (1l<<12)
-#define WaImage_Elliptic	   (1l<<13)
+#define WaImage_Horizontal	   (1L <<  6)
+#define WaImage_Vertical	   (1L <<  7)
+#define WaImage_Diagonal	   (1L <<  8)
+#define WaImage_CrossDiagonal  (1L <<  9)
+#define WaImage_Rectangle	   (1L << 10)
+#define WaImage_Pyramid		   (1L << 11)
+#define WaImage_PipeCross	   (1L << 12)
+#define WaImage_Elliptic	   (1L << 13)
 
 // bevel types
-#define WaImage_Bevel1		   (1l<<14)
-#define WaImage_Bevel2		   (1l<<15)
+#define WaImage_Bevel1		   (1L << 14)
+#define WaImage_Bevel2		   (1L << 15)
 
 // inverted image
-#define WaImage_Invert		   (1l<<16)
+#define WaImage_Invert		   (1L << 16)
 
 // parent relative image
-#define WaImage_ParentRelative (1l<<17)
+#define WaImage_ParentRelative (1L << 17)
 
 #ifdef    INTERLACE
 // fake interlaced image
-#  define WaImage_Interlaced   (1l<<18)
+#  define WaImage_Interlaced   (1L << 18)
 #endif // INTERLACE
 
 #ifdef PIXMAP
 // pixmap image
-#define WaImage_Pixmap		   (1l<<19)
+#define WaImage_Pixmap		   (1L << 19)
 
 // scaling methods
-#define WaImage_Tile		   (1l<<20)
-#define WaImage_Scale	       (1l<<21)
-#define WaImage_Stretch		   (1l<<22)
+#define WaImage_Tile		   (1L << 20)
+#define WaImage_Scale	       (1L << 21)
+#define WaImage_Stretch		   (1L << 22)
 #endif // PIXMAP
 
 
@@ -227,6 +227,8 @@ public:
     Pixmap render(WaTexture *);
     Pixmap render_solid(WaTexture *);
     Pixmap render_gradient(WaTexture *);
+    Display *display;
+    unsigned int bpp;
 
 #ifdef PIXMAP
     Pixmap render_pixmap(WaTexture *);

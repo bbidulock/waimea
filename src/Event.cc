@@ -144,7 +144,6 @@ void EventHandler::HandleEvent(XEvent *event) {
         case UnmapNotify:
             if(event->xunmap.event != event->xunmap.window) return;
         case DestroyNotify:
-        case ReparentNotify:
             EvUnmapDestroy(event); break;
         case FocusOut:
         case FocusIn:
@@ -229,7 +228,7 @@ void EventHandler::HandleEvent(XEvent *event) {
                 WaWindow *ww = (WaWindow *)
                     waimea->FindWin(e->window, WindowType);
                 if (ww && waimea->shape)
-                    ww->Shape();
+                    ww->ShapeEvent(e->window);
             }            
 #endif // SHAPE
 
@@ -361,17 +360,10 @@ void EventHandler::EvExpose(XExposeEvent *e) {
  */
 void EventHandler::EvFocus(XFocusChangeEvent *e) {
     WaWindow *ww = NULL, *ww2;
+    WaScreen *ws = NULL;
 
     if (e->type == FocusIn && e->window != focused) {
         ww = (WaWindow *) waimea->FindWin(e->window, WindowType);
-        if ((ww2 = (WaWindow *) waimea->FindWin(focused, WindowType))) {
-            ww2->actionlist =
-                ww2->GetActionList(&ww2->wascreen->config.ext_pwinacts);
-            if (! ww2->actionlist)
-                ww2->actionlist = &ww2->wascreen->config.pwinacts;
-            ww2->UpdateGrabs();
-            ww2->UnFocusWin();
-        }
         if (ww) {
             ww->actionlist =
                 ww->GetActionList(&ww->wascreen->config.ext_awinacts);
@@ -380,11 +372,20 @@ void EventHandler::EvFocus(XFocusChangeEvent *e) {
             ww->UpdateGrabs();
             ww->FocusWin();
             ww->net->SetActiveWindow(ww->wascreen, ww);
+        } else if ((ws = (WaScreen *) waimea->FindWin(e->window, RootType)))
+            ws->focus = true;
+        
+        if ((ww2 = (WaWindow *) waimea->FindWin(focused, WindowType))) {
+            ww2->actionlist =
+                ww2->GetActionList(&ww2->wascreen->config.ext_pwinacts);
+            if (! ww2->actionlist)
+                ww2->actionlist = &ww2->wascreen->config.pwinacts;
+            ww2->UpdateGrabs();
+            ww2->UnFocusWin();
+            if (! ww) waimea->net->SetActiveWindow(ww2->wascreen, NULL);
         }
         focused = e->window;
     }
-    if (WaScreen *ws = (WaScreen *) waimea->FindWin(e->window, RootType))
-        waimea->net->SetActiveWindow(ws, NULL);
 }
 
 /**
@@ -405,7 +406,6 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
     WaWindow *ww;
     Dockapp *da;
     XWindowChanges wc;
-    int mask;
 
     wc.x = e->x;
     wc.y = e->y;
@@ -418,7 +418,6 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
     if ((wo = waimea->FindWin(e->window, WindowType | DockAppType))) {
         if (wo->type == WindowType) {
             ww = (WaWindow *) wo;
-            waimea->net->GetWMNormalHints(ww);
             if (ww->ign_config_req) return;
             ww->Gravitate(RemoveGravity);
             if (e->value_mask & CWX) ww->attrib.x = e->x;
@@ -426,24 +425,35 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
             if (e->value_mask & CWWidth) ww->attrib.width = e->width;
             if (e->value_mask & CWHeight) ww->attrib.height = e->height;
             ww->Gravitate(ApplyGravity);
-            ww->RedrawWindow();
-            wc.sibling = e->above;
-            wc.stack_mode = e->detail;
-            wc.border_width = 0;
-            mask = (e->value_mask & CWSibling)? CWSibling: 0;
-            mask |= (e->value_mask & CWStackMode)? CWStackMode: 0;
-            XConfigureWindow(ww->display, ww->frame->id, mask, &wc);
             if (e->value_mask & CWStackMode) {
-                ww->wascreen->WaRaiseWindow((Window) 0);
+                switch (e->detail) {
+                    case Above:
+                        ww->wascreen->RaiseWindow(ww->frame->id);
+                        break;
+                    case Below:
+                        ww->wascreen->LowerWindow(ww->frame->id);
+                        break;
+                    case TopIf:
+                        ww->AlwaysontopOn(NULL, NULL);
+                        break;
+                    case BottomIf:
+                        ww->AlwaysatbottomOn(NULL, NULL);
+                        break;
+                    case Opposite:
+                        if (ww->flags.alwaysontop)
+                            ww->AlwaysatbottomOn(NULL, NULL);
+                        else if (ww->flags.alwaysatbottom)
+                            ww->AlwaysontopOn(NULL, NULL);
+                }
             }
-            ww->net->SetVirtualPos(ww);
+            ww->RedrawWindow();
             return;
         }
         else if (wo->type == DockAppType) {
             da = (Dockapp *) wo;
-            XGrabServer(e->display);
             if (e->value_mask & CWWidth) da->width = e->width; 
-            if (e->value_mask & CWHeight) da->height = e->height; 
+            if (e->value_mask & CWHeight) da->height = e->height;
+            XGrabServer(e->display);
             if (validatedrawable(da->id))
                 XConfigureWindow(e->display, da->id, e->value_mask, &wc);
             XUngrabServer(e->display);
@@ -484,7 +494,7 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
     XWMHints *wm_hints;
 
     if (WaWindow *ww = (WaWindow *) waimea->FindWin(e->window, WindowType)) {
-        ww->net->SetState(ww, NormalState);
+        if (ww->flags.hidden) ww->UnMinimize(NULL, NULL);
     }
     else if (WaScreen *ws =
              (WaScreen *) waimea->FindWin(e->parent, RootType)) {
@@ -581,13 +591,11 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
     Window w;
     int i, rx, ry;
     WaWindow *ww;
-    
+
     if (e->xclient.message_type == waimea->net->net_active_window) {
         if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
-                                               WindowType))) {
-            ww->Focus(true);
-            ww->Raise(NULL, NULL);
-        }
+                                               WindowType)))
+            ww->RaiseFocus(NULL, NULL);
     }
     else if (e->xclient.message_type == waimea->net->net_wm_name) {
         if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
@@ -598,6 +606,17 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                 ww->label->Render();
             } else
                 ww->label->Draw();
+        }
+    }
+    else if (e->xclient.message_type == waimea->net->wm_change_state) {
+        if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
+                                               WindowType))) {
+            if ((unsigned int) e->xclient.data.l[0] == IconicState)
+                ww->Minimize(NULL, NULL);
+            else if ((unsigned int) e->xclient.data.l[0] == NormalState)
+                ww->UnMinimize(NULL, NULL);
+            else if ((unsigned int) e->xclient.data.l[0] == WithdrawnState)
+                delete ww;
         }
     }
     else if (e->xclient.message_type == waimea->net->net_wm_desktop) {
@@ -624,7 +643,8 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
             }
         }
     }
-    else if (e->xclient.message_type == waimea->net->net_wm_desktop_mask) {
+    else if (e->xclient.message_type ==
+             waimea->net->waimea_net_wm_desktop_mask) {
         if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
                                                WindowType))) {
             if (e->xclient.data.l[0] <
@@ -641,13 +661,13 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
             }
         }
     }
-    else if (e->xclient.message_type == waimea->net->net_state) {
+    else if (e->xclient.message_type == waimea->net->net_wm_state) {
         if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
                                                WindowType))) {
             bool max_done = false;
             for (int i = 1; i < 3; i++) {
                 if ((unsigned long) e->xclient.data.l[i] ==
-                    waimea->net->net_state_sticky) {
+                    waimea->net->net_wm_state_sticky) {
                     switch (e->xclient.data.l[0]) {
                         case _NET_WM_STATE_REMOVE:
                             ww->UnSticky(NULL, NULL); break;
@@ -657,7 +677,7 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                             ww->ToggleSticky(NULL, NULL); break;
                     }
                 } else if ((unsigned long) e->xclient.data.l[i] ==
-                           waimea->net->net_state_shaded) {
+                           waimea->net->net_wm_state_shaded) {
                     switch (e->xclient.data.l[0]) {
                         case _NET_WM_STATE_REMOVE:
                             ww->UnShade(NULL, NULL); break;
@@ -667,9 +687,19 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                             ww->ToggleShade(NULL, NULL); break;
                     }
                 } else if ((unsigned long) e->xclient.data.l[i] ==
-                           waimea->net->net_maximized_vert ||
+                           waimea->net->net_wm_state_hidden) {
+                    switch (e->xclient.data.l[0]) {
+                        case _NET_WM_STATE_REMOVE:
+                            ww->Minimize(NULL, NULL); break;
+                        case _NET_WM_STATE_ADD:
+                            ww->UnMinimize(NULL, NULL); break;
+                        case _NET_WM_STATE_TOGGLE:
+                            ww->ToggleMinimize(NULL, NULL); break;
+                    }
+                } else if ((unsigned long) e->xclient.data.l[i] ==
+                           waimea->net->net_wm_maximized_vert ||
                            (unsigned long) e->xclient.data.l[i] ==
-                           waimea->net->net_maximized_horz) {
+                           waimea->net->net_wm_maximized_horz) {
                     if (max_done) break;
                     max_done = true;
                     switch (e->xclient.data.l[0]) {
@@ -681,7 +711,9 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                             ww->ToggleMaximize(NULL, NULL); break;
                     }
                 } else if ((unsigned long) e->xclient.data.l[i] ==
-                           waimea->net->net_state_aot) {
+                           waimea->net->net_wm_state_above ||
+                           (unsigned long) e->xclient.data.l[i] ==
+                           waimea->net->net_wm_state_stays_on_top) {
                     switch (e->xclient.data.l[0]) {
                         case _NET_WM_STATE_REMOVE:
                             ww->AlwaysontopOff(NULL, NULL); break;
@@ -691,7 +723,9 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                             ww->AlwaysontopToggle(NULL, NULL); break;
                     }
                 } else if ((unsigned long) e->xclient.data.l[i] ==
-                           waimea->net->net_state_aab) {
+                           waimea->net->net_wm_state_below ||
+                           (unsigned long) e->xclient.data.l[i] ==
+                           waimea->net->net_wm_state_stays_at_bottom) {
                     switch (e->xclient.data.l[0]) {
                         case _NET_WM_STATE_REMOVE:
                             ww->AlwaysatbottomOff(NULL, NULL); break;
@@ -701,7 +735,46 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                             ww->AlwaysatbottomToggle(NULL, NULL); break;
                     }
                 } else if ((unsigned long) e->xclient.data.l[i] ==
-                           waimea->net->net_state_decor) {
+                           waimea->net->net_wm_state_skip_taskbar) {
+                    switch (e->xclient.data.l[0]) {
+                        case _NET_WM_STATE_REMOVE:
+                            ww->flags.tasklist = false; break;
+                        case _NET_WM_STATE_ADD:
+                            ww->flags.tasklist = true; break;
+                        case _NET_WM_STATE_TOGGLE:
+                            ww->flags.tasklist = !ww->flags.tasklist; break;
+                    }
+                } else if ((unsigned long) e->xclient.data.l[i] ==
+                           waimea->net->net_wm_state_fullscreen) {
+                    switch (e->xclient.data.l[0]) {
+                        case _NET_WM_STATE_REMOVE:
+                            ww->FullscreenOff(NULL, NULL);
+                            ww->UnMaximize(NULL, NULL);
+                            ww->AlwaysontopOff(NULL, NULL);
+                            ww->DecorAllOn(NULL, NULL);
+                            break;
+                        case _NET_WM_STATE_ADD:
+                            ww->DecorAllOff(NULL, NULL);
+                            ww->AlwaysontopOn(NULL, NULL);
+                            ww->FullscreenOn(NULL, NULL);
+                            ww->Maximize(NULL, NULL);
+                            break;
+                        case _NET_WM_STATE_TOGGLE:
+                            if (ww->flags.fullscreen) {
+                                ww->FullscreenOff(NULL, NULL);
+                                ww->UnMaximize(NULL, NULL);
+                                ww->AlwaysontopOff(NULL, NULL);
+                                ww->DecorAllOn(NULL, NULL);
+                            } else {
+                                ww->DecorAllOff(NULL, NULL);
+                                ww->AlwaysontopOn(NULL, NULL);
+                                ww->FullscreenOn(NULL, NULL);
+                                ww->Maximize(NULL, NULL);
+                            }
+                            break;
+                    }
+                } else if ((unsigned long) e->xclient.data.l[i] ==
+                           waimea->net->waimea_net_wm_state_decor) {
                     switch (e->xclient.data.l[0]) {
                         case _NET_WM_STATE_REMOVE:
                             ww->DecorAllOff(NULL, NULL); break;
@@ -713,7 +786,7 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                             break;
                     } 
                 } else if ((unsigned long) e->xclient.data.l[i] ==
-                           waimea->net->net_state_decortitle) {
+                           waimea->net->waimea_net_wm_state_decortitle) {
                     switch (e->xclient.data.l[0]) {
                         case _NET_WM_STATE_REMOVE:
                             ww->DecorTitleOff(NULL, NULL); break;
@@ -723,7 +796,7 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                             ww->DecorTitleToggle(NULL, NULL); break;
                     }
                 } else if ((unsigned long) e->xclient.data.l[i] ==
-                           waimea->net->net_state_decorhandle) {
+                           waimea->net->waimea_net_wm_state_decorhandle) {
                     switch (e->xclient.data.l[0]) {
                         case _NET_WM_STATE_REMOVE:
                             ww->DecorHandleOff(NULL, NULL); break;
@@ -733,7 +806,7 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                             ww->DecorHandleToggle(NULL, NULL); break;
                     }
                 } else if ((unsigned long) e->xclient.data.l[i] ==
-                           waimea->net->net_state_decorborder) {
+                           waimea->net->waimea_net_wm_state_decorborder) {
                     switch (e->xclient.data.l[0]) {
                         case _NET_WM_STATE_REMOVE:
                             ww->DecorBorderOff(NULL, NULL); break;
@@ -746,9 +819,9 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
             }
         }
     }
-    else if (e->xclient.message_type == waimea->net->xa_xdndenter ||
-        e->xclient.message_type == waimea->net->xa_xdndleave) {
-        if (e->xclient.message_type == waimea->net->xa_xdndenter) {
+    else if (e->xclient.message_type == waimea->net->xdndenter ||
+             e->xclient.message_type == waimea->net->xdndleave) {
+        if (e->xclient.message_type == waimea->net->xdndenter) {
             e->type = EnterNotify;
             ed->type = EnterNotify;
         } else {
@@ -784,10 +857,78 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                                                         RootType))
             ws->GoToDesktop(e->xclient.data.l[0]);
     }
-    else if (e->xclient.message_type == waimea->net->net_restart) {
+    else if (e->xclient.message_type == waimea->net->net_moveresize_window) {
+        if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
+                                               WindowType))) {
+
+            char gravity = (char) e->xclient.data.l[0];
+            if (gravity == 0) gravity = (char) ww->size.win_gravity;
+
+            int x = ww->attrib.x;
+            int y = ww->attrib.y;
+            int width = ww->attrib.width;
+            int height = ww->attrib.height;
+
+            if (e->xclient.data.l[0] & (1L << 8)) x = e->xclient.data.l[1];
+            if (e->xclient.data.l[0] & (1L << 9)) y = e->xclient.data.l[2];
+            if (e->xclient.data.l[0] & (1L << 10))
+                width = e->xclient.data.l[3];
+            if (e->xclient.data.l[0] & (1L << 11))
+                height = e->xclient.data.l[4];
+            
+            ww->IncSizeCheck(width, height, &ww->attrib.width,
+                             &ww->attrib.height);
+
+            if (gravity != StaticGravity)
+                ww->Gravitate(RemoveGravity);
+            if (gravity == NorthEastGravity ||
+                gravity == EastGravity ||
+                gravity == SouthEastGravity)
+                ww->attrib.x = ww->wascreen->width - x - ww->attrib.width;
+            else ww->attrib.x = x;
+
+            if (gravity == SouthWestGravity ||
+                gravity == SouthGravity ||
+                gravity == SouthEastGravity)
+                ww->attrib.y = ww->wascreen->height - y - ww->attrib.height;
+            else ww->attrib.y = y;
+
+            if (gravity == NorthGravity ||
+                gravity == SouthGravity ||
+                gravity == CenterGravity)
+                ww->attrib.x -= ww->attrib.width / 2;
+
+            if (gravity == EastGravity ||
+                gravity == WestGravity ||
+                gravity == CenterGravity)
+                ww->attrib.y -= ww->attrib.height / 2;            
+            
+            if (gravity != StaticGravity)
+                ww->Gravitate(ApplyGravity);
+            
+            ww->RedrawWindow();
+            ww->CheckMoveMerge(ww->attrib.x, ww->attrib.y);
+        }
+    }
+    else if (e->xclient.message_type == waimea->net->net_wm_moveresize) {
+        if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
+                                               WindowType))) {
+            if (e->xclient.data.l[2] == _NET_WM_MOVERESIZE_MOVE ||
+                e->xclient.data.l[2] == _NET_WM_MOVERESIZE_MOVE_KEYBOARD)
+                ww->MoveOpaque(NULL, NULL);
+            else if (e->xclient.data.l[2] == _NET_WM_MOVERESIZE_SIZE_TOPLEFT ||
+                     e->xclient.data.l[2] ==
+                     _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT ||
+                     e->xclient.data.l[2] == _NET_WM_MOVERESIZE_SIZE_LEFT)
+                ww->ResizeLeftOpaque(NULL, NULL);
+            else
+                ww->ResizeRightOpaque(NULL, NULL);
+        }
+    }
+    else if (e->xclient.message_type == waimea->net->waimea_net_restart) {
         restart(NULL);
     }
-    else if (e->xclient.message_type == waimea->net->net_shutdown) {
+    else if (e->xclient.message_type == waimea->net->waimea_net_shutdown) {
         quit(EXIT_SUCCESS);
     }
 }

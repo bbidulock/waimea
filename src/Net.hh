@@ -43,6 +43,18 @@ typedef struct {
 #define _NET_WM_STATE_ADD    1
 #define _NET_WM_STATE_TOGGLE 2
 
+#define _NET_WM_MOVERESIZE_SIZE_TOPLEFT      0
+#define _NET_WM_MOVERESIZE_SIZE_TOP          1
+#define _NET_WM_MOVERESIZE_SIZE_TOPRIGHT     2
+#define _NET_WM_MOVERESIZE_SIZE_RIGHT        3
+#define _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT  4
+#define _NET_WM_MOVERESIZE_SIZE_BOTTOM       5
+#define _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT   6
+#define _NET_WM_MOVERESIZE_SIZE_LEFT         7
+#define _NET_WM_MOVERESIZE_MOVE              8
+#define _NET_WM_MOVERESIZE_SIZE_KEYBOARD     9
+#define _NET_WM_MOVERESIZE_MOVE_KEYBOARD    10
+
 #include "Waimea.hh"
 
 class NetHandler {
@@ -63,6 +75,8 @@ public:
     void GetWmPid(WaWindow *);
     void GetXaName(WaWindow *);
     bool GetNetName(WaWindow *);
+    void SetVisibleName(WaWindow *);
+    void RemoveVisibleName(WaWindow *);
     void SetDesktop(WaWindow *);
     void SetDesktopMask(WaWindow *);
     void GetDesktop(WaWindow *);
@@ -84,6 +98,7 @@ public:
 
     void wXDNDMakeAwareness(Window);
     void wXDNDClearAwareness(Window);
+    
     void SetWorkarea(WaScreen *);
     void DeleteSupported(WaScreen *);
 
@@ -92,6 +107,16 @@ public:
 #endif // RENDER
 
     void GetWmType(WaWindow *);
+    
+    void SetAllowedActions(WaWindow *);
+    void RemoveAllowedActions(WaWindow *);
+
+    void GetMergedState(WaWindow *);
+    void SetMergedState(WaWindow *);
+    void SetMergeAtfront(WaWindow *, Window);
+    void GetMergeAtfront(WaWindow *);
+    void GetMergeOrder(WaWindow *);
+    void SetMergeOrder(WaWindow *);
 
     bool IsSystrayWindow(Window);
     void SetSystrayWindows(WaScreen *);
@@ -102,23 +127,46 @@ public:
     XSizeHints *size_hints;
     MwmHints *mwm_hints;
 
-    Atom mwm_hints_atom, wm_state, net_supported, net_supported_wm_check,
-        net_client_list, net_client_list_stacking, net_active_window,
-        net_state, net_state_sticky, net_state_shaded, net_maximized_vert,
-        net_maximized_horz, net_state_decor, net_state_decortitle,
-        net_state_decorhandle, net_state_decorborder, net_state_aot,
-        net_state_aab, net_state_parentrelative_background,
-        net_maximized_restore, net_virtual_pos, net_desktop_viewport,
-        net_desktop_geometry, net_wm_strut, net_workarea, xa_xdndaware,
-        xa_xdndenter, xa_xdndleave, net_wm_name, net_restart, net_shutdown,
-        net_wm_pid, net_wm_window_type, net_wm_window_type_desktop,
+    Atom utf8_string;
+
+    Atom mwm_hints_atom;
+    Atom wm_state, wm_change_state;
+
+    Atom net_supported, net_supported_wm_check;
+    Atom net_client_list, net_client_list_stacking, net_active_window;
+    Atom net_desktop_viewport, net_desktop_geometry, net_current_desktop,
+        net_number_of_desktops, net_desktop_names, net_workarea;
+    Atom net_wm_desktop, net_wm_name, net_wm_visible_name, net_wm_strut,
+        net_wm_pid;
+    Atom net_wm_state, net_wm_state_sticky, net_wm_state_shaded,
+        net_wm_state_hidden, net_wm_maximized_vert, net_wm_maximized_horz,
+        net_wm_state_above, net_wm_state_below, net_wm_state_stays_on_top,
+        net_wm_state_stays_at_bottom, net_wm_state_fullscreen,
+        net_wm_state_skip_taskbar;
+    Atom net_wm_allowed_actions, net_wm_action_move, net_wm_action_resize,
+        net_wm_action_minimize, net_wm_action_shade, net_wm_action_stick,
+        net_wm_action_maximize_horz, net_wm_action_maximize_vert,
+        net_wm_action_fullscreen, net_wm_action_change_desktop,
+        net_wm_action_close;
+    Atom net_wm_window_type, net_wm_window_type_desktop,
         net_wm_window_type_dock, net_wm_window_type_toolbar,
         net_wm_window_type_menu, net_wm_window_type_splash,
         net_wm_window_type_dialog, net_wm_window_type_utility,
-        net_wm_window_type_normal, net_current_desktop,
-        net_number_of_desktops, net_close_window, net_wm_visible_name,
-        net_desktop_names, utf8_string, net_wm_desktop, net_wm_desktop_mask,
-        kde_net_system_tray_windows, kde_net_wm_system_tray_window_for;
+        net_wm_window_type_normal;
+    Atom net_close_window, net_moveresize_window, net_wm_moveresize;
+
+    Atom waimea_net_wm_state_decor, waimea_net_wm_state_decortitle,
+        waimea_net_wm_state_decorhandle,
+        waimea_net_wm_state_decorborder;
+    Atom waimea_net_maximized_restore, waimea_net_virtual_pos,
+        waimea_net_wm_desktop_mask;
+    Atom waimea_net_wm_merged_to, waimea_net_wm_merged_type,
+        waimea_net_wm_merge_order, waimea_net_wm_merge_atfront;
+    Atom waimea_net_restart, waimea_net_shutdown;
+
+    Atom xdndaware, xdndenter, xdndleave;
+
+    Atom kde_net_wm_system_tray_window_for, kde_net_system_tray_windows;
     
 #ifdef RENDER
     Atom xrootpmap_id;

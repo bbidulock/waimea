@@ -21,6 +21,7 @@ screen0.imageDither:        True
 screen0.virtualSize:        3x3
 screen0.menuStacking:       Normal
 screen0.transientAbove:     True
+screen0.focusRevertTo:      Window
 screen0.dock0.geometry:     -0+0
 screen0.dock0.order:        n/.*/
 screen0.dock0.desktopMask:  All
