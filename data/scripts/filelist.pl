@@ -90,7 +90,7 @@ sub print_directory {
 				     "$script_location -dir \\\"$dir/$dir_list[$i+$offset]\\\"");
 	}
 	if (S_ISREG($mode)) {
-	    if (S_ISEXEC($mode)) {
+	    if ($mode & S_IXUSR) {
 		push  @output, print_sub("$dir_list[$i+$offset]",
 					 "\\\"$dir/$dir_list[$i+$offset]\\\"",
 					 "$script_location -file \\\"$dir/$dir_list[$i+$offset]\\\"");
