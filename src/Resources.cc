@@ -2236,6 +2236,13 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
         if (mod) token = strtok(NULL, "&");
         else token = strtok(NULL, "[");
     }
+    if (! token) {
+        WARNING << "`" << _s << "' no event type in action line" << endl;
+        delete act_tmp;
+        delete [] line;
+        if (s) delete [] s; s = NULL;
+        return;
+    }
     token = strtrim(token);
     
     it = types.begin();
@@ -2273,8 +2280,7 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
                     act_tmp->detail = XKeysymToKeycode(display, keysym);
                     if (act_tmp->detail < (unsigned int) min_key ||
                         act_tmp->detail > (unsigned int) max_key) {
-                        WARNING << "bad keycode for `" << token << "'" <<
-                            endl;
+                        WARNING << "`" << token << "' bad keycode" << endl;
                         delete act_tmp;
                         delete [] line;
                         if (s) delete [] s; s = NULL;
