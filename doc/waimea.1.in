@@ -4,7 +4,7 @@
 .\" This manual page may be freely distributed and modified.
 .\" Author: David Reveman <c99drn@cs.umu.se>
 .\" 
-.TH WAIMEA 1 "Feb 21 2002" "0.2.0" "User Manual"
+.TH WAIMEA 1 "May 10 2002" "0.3.1" "User Manual"
 
 
 .SH NAME
