@@ -1,0 +1,1 @@
+SUBDIRS = data doc src
