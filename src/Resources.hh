@@ -83,6 +83,7 @@ struct _DockStyle {
     int geometry;
     int direction;
     int stacking;
+    long int desktop_mask;
     unsigned int gridspace;
     list<Regex *> order;
     list<int> order_type;

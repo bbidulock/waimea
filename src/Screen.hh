@@ -53,6 +53,18 @@ typedef struct {
     int height;
 } Workarea;
 
+class Desktop {
+public:
+    inline Desktop(int _number, int w, int h) {
+        number = _number;
+        workarea.x = workarea.y = 0;
+        workarea.width = w;
+        workarea.height = h;
+    }
+    int number;
+    Workarea workarea;
+};
+
 #define WestDirection  1
 #define EastDirection  2
 #define NorthDirection 3
@@ -89,6 +101,7 @@ typedef struct {
     char *style_file, *menu_file, *action_file;
     unsigned int virtual_x;
     unsigned int virtual_y;
+    unsigned int desktops;
     int colors_per_channel, menu_stacking;
     long unsigned int cache_max;
     bool image_dither, transient_above, db;
@@ -126,6 +139,7 @@ public:
     void MenuUnmap(XEvent *, WaAction *, bool);
     void UpdateWorkarea(void);
     void AddDockapp(Window window);
+    void GoToDesktop(unsigned int);
     
     inline void MenuMap(XEvent *e, WaAction *ac) {
         MenuMap(e, ac, false);
@@ -157,6 +171,7 @@ public:
     void PointerFixedWarp(XEvent *, WaAction *);
     void ViewportRelativeMove(XEvent *, WaAction *);
     void ViewportFixedMove(XEvent *, WaAction *);
+    void GoToDesktop(XEvent *, WaAction *);
 
     inline void MoveViewportLeft(XEvent *, WaAction *) {
         MoveViewport(WestDirection);
@@ -205,9 +220,11 @@ public:
         ugrip_pixel;
     char displaystring[1024];
     ScreenEdge *west, *east, *north, *south;
-    Workarea *workarea;
     Window wm_check;
     bool focus, shutdown;
+
+    list<Desktop *> desktop_list;
+    Desktop *current_desktop;
 
     list<Window> always_on_top_list;
     list<Window> always_at_bottom_list;

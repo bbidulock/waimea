@@ -58,9 +58,10 @@ window.button2 {
 }
 window.passiveclient { 
    defaultAllWindows,
-   Raise     : MapRequest,
-   StartMove : MapRequest & Control_L,
-   Focus     : MapRequest & Control_L  
+   MoveToSmartPlace : MapRequest & !Control_L,
+   Raise            : MapRequest,
+   StartMove        : MapRequest & Control_L,
+   Focus            : MapRequest & Control_L  
 }
 window.activeclient {
    defaultAllWindows,

@@ -35,6 +35,7 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
     waimea = wascreen->waimea;
     display = waimea->display;
     background = (Pixmap) 0;
+    hidden = true;
     x = 1;
     y = 1;
     if (style->geometry & XValue ||
@@ -255,9 +256,12 @@ void DockappHandler::Update(void) {
     }
     XResizeWindow(display, id, width, height);
     XMoveWindow(display, id, map_x, map_y);
-    XMapWindow(display, id);
-    Render();
-    wascreen->UpdateWorkarea();
+    if (style->desktop_mask & (1L << wascreen->current_desktop->number)) {
+        XMapWindow(display, id);
+        hidden = false;
+        Render();
+        wascreen->UpdateWorkarea();
+    }
 }
 
 /**

@@ -11,6 +11,8 @@ doubleClickInterval:        300
 screen0.styleFile:          @pkgdatadir@/styles/Default.style
 screen0.menuFile:           @pkgdatadir@/menu
 screen0.actionFile:         @pkgdatadir@/actions/action
+screen0.numberOfDesktops:   4
+screen0.desktopNames:       Desktop 1,Desktop 2,Desktop 3,Desktop 4
 screen0.doubleBufferedText: True
 screen0.lazyTransparency:   False
 screen0.colorsPerChannel:   4
@@ -21,6 +23,7 @@ screen0.menuStacking:       Normal
 screen0.transientAbove:     True
 screen0.dock0.geometry:     -0+0
 screen0.dock0.order:        n/.*/
+screen0.dock0.desktopMask:  All
 screen0.dock0.direction:    Vertical
 screen0.dock0.centered:     False
 screen0.dock0.gridSpace:    2

@@ -183,6 +183,19 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaWindow::MoveResizeVirtual));
     wacts.push_back(new StrComp("movetopointer",
                                  &WaWindow::MoveWindowToPointer));
+    wacts.push_back(new StrComp("movetosmartplace",
+                                 &WaWindow::MoveWindowToSmartPlace));
+    wacts.push_back(new StrComp("gotodesktop", &WaWindow::GoToDesktop));
+    wacts.push_back(new StrComp("joindesktop", &WaWindow::JoinDesktop));
+    wacts.push_back(new StrComp("partdesktop", &WaWindow::PartDesktop));
+    wacts.push_back(new StrComp("partcurrentdesktop",
+                                &WaWindow::PartCurrentDesktop));
+    wacts.push_back(new StrComp("joinalldesktops",
+                                &WaWindow::JoinAllDesktops));
+    wacts.push_back(new StrComp("partalldesktopsexceptcurrent",
+                                &WaWindow::PartAllDesktopsExceptCurrent));
+    wacts.push_back(new StrComp("partcurrentjoindesktop",
+                                &WaWindow::PartCurrentJoinDesktop));
     wacts.push_back(new StrComp("restart", &WaWindow::Restart));
     wacts.push_back(new StrComp("exit", &WaWindow::Exit));
     wacts.push_back(new StrComp("nop", &WaWindow::Nop));
@@ -217,6 +230,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaScreen::PointerRelativeWarp));
     racts.push_back(new StrComp("pointerfixedwarp",
                                  &WaScreen::PointerFixedWarp));
+    racts.push_back(new StrComp("gotodesktop", &WaScreen::GoToDesktop));
     racts.push_back(new StrComp("nop", &WaScreen::Nop));
     
     macts.push_back(new StrComp("unlink", &WaMenuItem::UnLinkMenu));
@@ -272,6 +286,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     macts.push_back(new StrComp("menuunmap", &WaMenuItem::MenuUnmap));
     macts.push_back(new StrComp("menuunmapfocused",
                                  &WaMenuItem::MenuUnmapFocus));
+    macts.push_back(new StrComp("gotodesktop", &WaMenuItem::GoToDesktop));
     macts.push_back(new StrComp("restart", &WaMenuItem::Restart));
     macts.push_back(new StrComp("exit", &WaMenuItem::Exit));
     macts.push_back(new StrComp("nop", &WaMenuItem::Nop));
@@ -468,6 +483,24 @@ void ResourceHandler::LoadConfig(WaScreen *wascreen) {
         }
     }
 
+    sprintf(rc_name, "screen%d.numberOfDesktops", sn);
+    sprintf(rc_class, "Screen%d.NumberOfDesktops", sn);
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        if (sscanf(value.addr, "%u", &sc->desktops) != 1) {
+            sc->desktops = 1;
+        } else {
+            if (sc->desktops < 1) sc->desktops = 1;
+            if (sc->desktops > 16) sc->desktops = 16;
+        }
+    } else
+        sc->desktops = 1;
+    
+    sprintf(rc_name, "screen%d.desktopNames", sn);
+    sprintf(rc_class, "Screen%d.DesktopNames", sn);
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        wascreen->net->SetDesktopNames(wascreen, value.addr);
+    }
+
     sprintf(rc_name, "screen%d.virtualSize", sn);
     sprintf(rc_class, "Screen%d.VirtualSize", sn);
     if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
@@ -610,6 +643,25 @@ void ResourceHandler::LoadConfig(WaScreen *wascreen) {
                 token = token + strlen(token) + 1;
             }
         }
+        
+        sprintf(rc_name, "screen%d.dock%d.desktopMask", sn, dock_num);
+        sprintf(rc_class, "Screen%d.Dock%d.DesktopMask", sn, dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            d_exists = true;
+            if (! strncasecmp("all", value.addr, 3))
+                dockstyle->desktop_mask = (1L << 16) - 1;
+            else {
+                dockstyle->desktop_mask = 0;
+                char *token = strtok(value.addr, " \t");
+                while (token) {
+                    int desk = (unsigned int) atoi(token);
+                    if (desk < 16) dockstyle->desktop_mask |= (1L << desk);
+                    token = strtok(NULL, " \t");
+                }
+            }
+        } else
+            dockstyle->desktop_mask = (1L << 16) - 1;
 
         sprintf(rc_name, "screen%d.dock%d.centered", sn, dock_num);
         sprintf(rc_class, "Screen%d.Dock%d.Centered", sn, dock_num);
@@ -2098,7 +2150,11 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
             if ((! strncasecmp(token, "menu", 4)) ||
                 (! strncasecmp(token, "pointer", 7)) ||
                 (! strncasecmp(token, "viewportrelative", 16)) ||
-                (! strncasecmp(token, "viewportfixed", 13)) ) {
+                (! strncasecmp(token, "viewportfixed", 13)) ||
+                (! strncasecmp(token, "gotodesktop", 11)) ||
+                (! strncasecmp(token, "partdesktop", 11)) ||
+                (! strncasecmp(token, "joindesktop", 11)) ||
+                (! strncasecmp(token, "partcurrentjoindesktop", 22)) ) {
                 WARNING "`" << token << "' action must have a parameter" <<
                     endl;
                 delete act_tmp;
@@ -2117,7 +2173,11 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
     else if ((! strncasecmp(token, "menu", 4)) ||
              (! strncasecmp(token, "pointer", 7)) ||
              (! strncasecmp(token, "viewportrelative", 16)) ||
-             (! strncasecmp(token, "viewportfixed", 13)) ) {
+             (! strncasecmp(token, "viewportfixed", 13)) ||
+             (! strncasecmp(token, "gotodesktop", 11)) ||
+             (! strncasecmp(token, "partdesktop", 11)) ||
+             (! strncasecmp(token, "joindesktop", 11)) ||
+             (! strncasecmp(token, "partcurrentjoindesktop", 22)) ) {
         WARNING "`" << token << "' action must have a parameter" <<
             endl;
         delete act_tmp;

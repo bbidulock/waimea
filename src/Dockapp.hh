@@ -37,6 +37,7 @@ public:
     unsigned long background_pixel;
     WMstrut *wm_strut;
     DockStyle *style;
+    bool hidden;
 
     list<Dockapp *> *dockapp_list;
 };

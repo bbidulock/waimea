@@ -81,6 +81,8 @@ public:
     virtual ~WaWindow(void);
 
     void MapWindow(void);
+    void Show(void);
+    void Hide(void);
     void UpdateAllAttributes(void);
     list <WaAction *> *GetActionList(list<WaActionExtList *> *);
     void SetActionLists(void);
@@ -196,6 +198,14 @@ public:
     void MoveResize(XEvent *, WaAction *);
     void MoveResizeVirtual(XEvent *, WaAction *);
     void MoveWindowToPointer(XEvent *, WaAction *);
+    void MoveWindowToSmartPlace(XEvent *, WaAction *);
+    void GoToDesktop(XEvent *, WaAction *);
+    void JoinDesktop(XEvent *, WaAction *);
+    void PartCurrentJoinDesktop(XEvent *, WaAction *);
+    void PartDesktop(XEvent *, WaAction *);
+    void PartCurrentDesktop(XEvent *, WaAction *);
+    void JoinAllDesktops(XEvent *, WaAction *);
+    void PartAllDesktopsExceptCurrent(XEvent *, WaAction *);
     void Restart(XEvent *, WaAction *);
     void Exit(XEvent *, WaAction *);
     inline void Nop(XEvent *, WaAction *) {}
@@ -203,7 +213,8 @@ public:
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
     
     char *name, *host, *pid;
-    bool has_focus, want_focus, mapped, dontsend, deleted, ign_config_req;
+    bool has_focus, want_focus, mapped, dontsend, deleted, ign_config_req,
+                   hidden;
     Display *display;
     Waimea *waimea;
     WaScreen *wascreen;
@@ -221,6 +232,7 @@ public:
     list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
         *handleacts, *lgacts, *rgacts;
     list<WaAction *> **bacts;
+    long int desktop_mask;
 
 #ifdef XRENDER
     bool render_if_opacity;

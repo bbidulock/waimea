@@ -88,7 +88,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     if (! (pdisplay = XOpenDisplay(wa->options->display))) {
         ERROR << "can't open display: " << wa->options->display << endl;
         exit(1);
-    }
+    }    
     
 #ifdef PIXMAP
     imlib_context = imlib_context_new();
@@ -119,15 +119,6 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
             displaystring + 8 << endl;
         return;
     }
-    
-    waimea->window_table.insert(make_pair(id, this));
-    
-    attrib_set.override_redirect = true;
-    wm_check = XCreateWindow(display, id, 0, 0, 1, 1, 0,
-                             CopyFromParent, InputOnly, CopyFromParent,
-                             CWOverrideRedirect, &attrib_set);
-    net->SetSupportedWMCheck(this, wm_check);
-    net->SetSupported(this);
 	
     v_x = v_y = 0;
 
@@ -138,6 +129,23 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
 #endif // XRENDER
 
     rh->LoadConfig(this);
+    
+    current_desktop = new Desktop(0, width, height);
+    desktop_list.push_back(current_desktop);
+    net->SetWorkarea(this);
+    
+    for (unsigned int i = 1; config.desktops > i; i++)
+        desktop_list.push_back(new Desktop(i, width, height));
+
+    waimea->window_table.insert(make_pair(id, this));
+    
+    attrib_set.override_redirect = true;
+    wm_check = XCreateWindow(display, id, 0, 0, 1, 1, 0,
+                             CopyFromParent, InputOnly, CopyFromParent,
+                             CWOverrideRedirect, &attrib_set);
+    net->SetSupportedWMCheck(this, wm_check);
+    net->SetSupported(this);
+        
     rh->LoadMenus(this);
 
     ic = new WaImageControl(pdisplay, this, config.image_dither,
@@ -162,15 +170,13 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     north->SetActionlist(&config.neacts);
     south = new ScreenEdge(this, 0, height - 2, width, 2, SEdgeType);
     south->SetActionlist(&config.seacts);
-    net->SetDesktopHints(this);
+    
+    net->SetDesktopGeometry(this);
+    net->SetNumberOfDesktops(this);
+    net->GetCurrentDesktop(this);
+    net->SetCurrentDesktop(this);
     net->GetDesktopViewPort(this);
     net->SetDesktopViewPort(this);
-    
-    workarea = new Workarea;
-    workarea->x = workarea->y = 0;
-    workarea->width = width;
-    workarea->height = height;
-    net->SetWorkarea(this);
 
 #ifdef XRENDER
     if (render_extension) {
@@ -347,7 +353,6 @@ WaScreen::~WaScreen(void) {
     delete north;
     delete south;
     delete ic;
-    delete workarea;
 
     delete [] config.menu_file;
     delete [] mstyle.bullet;
@@ -855,31 +860,48 @@ void WaScreen::RenderCommonImages(void) {
  * workarea.
  */
 void WaScreen::UpdateWorkarea(void) {
-    int old_x = workarea->x, old_y = workarea->y,
-        old_width = workarea->width, old_height = workarea->height;
+    int old_x = current_desktop->workarea.x,
+        old_y = current_desktop->workarea.y,
+        old_width = current_desktop->workarea.width,
+        old_height = current_desktop->workarea.height;
     
-    workarea->x = workarea->y = 0;
-    workarea->width = width;
-    workarea->height = height;
+    current_desktop->workarea.x = current_desktop->workarea.y = 0;
+    current_desktop->workarea.width = width;
+    current_desktop->workarea.height = height;
     list<WMstrut *>::iterator it = strut_list.begin();
     for (; it != strut_list.end(); ++it) {
-        if ((*it)->left > workarea->x) workarea->x = (*it)->left;
-        if ((*it)->top > workarea->y) workarea->y = (*it)->top;
-        if ((width - (*it)->right) < workarea->width)
-            workarea->width = width - (*it)->right;
-        if ((height - (*it)->bottom) < workarea->height)
-            workarea->height = height - (*it)->bottom;
+        WindowObject *wo = waimea->FindWin((*it)->window,
+                                           WindowType | DockHandlerType);
+        if (wo && wo->type == WindowType) {
+            if (! (((WaWindow *) wo)->desktop_mask &
+                   (1L << current_desktop->number)))
+                break;
+        }
+            
+        if ((*it)->left > current_desktop->workarea.x)
+            current_desktop->workarea.x = (*it)->left;
+        if ((*it)->top > current_desktop->workarea.y)
+            current_desktop->workarea.y = (*it)->top;
+        if ((width - (*it)->right) < current_desktop->workarea.width)
+            current_desktop->workarea.width = width - (*it)->right;
+        if ((height - (*it)->bottom) < current_desktop->workarea.height)
+            current_desktop->workarea.height = height - (*it)->bottom;
     }
-    workarea->width = workarea->width - workarea->x;
-    workarea->height = workarea->height - workarea->y;
-
+    current_desktop->workarea.width = current_desktop->workarea.width -
+        current_desktop->workarea.x;
+    current_desktop->workarea.height = current_desktop->workarea.height -
+        current_desktop->workarea.y;
+    
     int res_x, res_y, res_w, res_h;
-    if (old_x != workarea->x || old_y != workarea->y ||
-        old_width != workarea->width || old_height != workarea->height) {
+    if (old_x != current_desktop->workarea.x ||
+        old_y != current_desktop->workarea.y ||
+        old_width != current_desktop->workarea.width ||
+        old_height != current_desktop->workarea.height) {
         net->SetWorkarea(this);
         
         list<WaWindow *>::iterator wa_it = wawindow_list.begin();
         for (; wa_it != wawindow_list.end(); ++wa_it) {
+            if (! ((*wa_it)->desktop_mask & current_desktop->number)) break;
             if ((*wa_it)->flags.max) {
                 (*wa_it)->flags.max = false;
                 res_x = (*wa_it)->restore_max.x;
@@ -1149,7 +1171,7 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                 }
                 delete maprequest_list;
                 it = wawindow_list.begin();
-                for (; it != wawindow_list.end(); ++it) {                    
+                for (; it != wawindow_list.end(); ++it) {
                     (*it)->dontsend = false;
                     net->SetVirtualPos(*it);
                     if ((((*it)->attrib.x + (*it)->attrib.width) > 0 &&
@@ -1232,10 +1254,12 @@ void WaScreen::MenuMap(XEvent *, WaAction *ac, bool focus) {
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
         if ((y + menu->height + mstyle.border_width * 2) >
-            (unsigned int) (workarea->height + workarea->y))
+            (unsigned int) (current_desktop->workarea.height +
+                            current_desktop->workarea.y))
            y -= (menu->height + mstyle.border_width * 2);
         if ((x + menu->width + mstyle.border_width * 2) >
-            (unsigned int) (workarea->width + workarea->x))
+            (unsigned int) (current_desktop->workarea.width +
+                            current_desktop->workarea.x))
             x -= (menu->width + mstyle.border_width * 2);
         menu->Map(x, y);
         if (focus) menu->FocusFirst();
@@ -1269,10 +1293,12 @@ void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
         if ((y + menu->height + mstyle.border_width * 2) >
-            (unsigned int) (workarea->height + workarea->y))
+            (unsigned int) (current_desktop->workarea.height +
+                            current_desktop->workarea.y))
            y -= (menu->height + mstyle.border_width * 2);
         if ((x + menu->width + mstyle.border_width * 2) >
-            (unsigned int) (workarea->width + workarea->x))
+            (unsigned int) (current_desktop->workarea.width +
+                            current_desktop->workarea.x))
             x -= (menu->width + mstyle.border_width * 2);
         menu->ignore = true;
         menu->ReMap(x, y);
@@ -1412,7 +1438,57 @@ void WaScreen::PointerRelativeWarp(XEvent *, WaAction *ac) {
                     
     mask = XParseGeometry(ac->param, &x, &y, &w, &h);
     XWarpPointer(display, None, None, 0, 0, 0, 0, x, y);
-} 
+}
+
+/** 
+ * @fn    GoToDesktop(unsigned int number)
+ * @brief Go to desktop
+ *
+ * Sets current desktop to the one specified by number parameter.
+ * 
+ * @param number Desktop number to go to
+ */
+void WaScreen::GoToDesktop(unsigned int number) {
+    list<Desktop *>::iterator dit = desktop_list.begin();
+    for (; dit != desktop_list.end(); dit++)
+        if ((unsigned int) (*dit)->number == number) break;
+    
+    if (dit != desktop_list.end() && *dit != current_desktop) {
+        current_desktop = (*dit);
+
+        list<WaWindow *>::iterator it = wawindow_list.begin();
+        for (; it != wawindow_list.end(); ++it) {
+            if ((*it)->desktop_mask & (1L << current_desktop->number)) {
+                (*it)->Show();
+                net->SetDesktop(*it);
+            }
+            else
+                (*it)->Hide();
+        }
+        list<DockappHandler *>::iterator dock_it = docks.begin();
+        for (; dock_it != docks.end(); ++dock_it) {
+            if ((*dock_it)->style->desktop_mask &
+                (1L << current_desktop->number)) {
+                if ((*dock_it)->hidden) {
+                    XMapWindow(display, (*dock_it)->id);
+                    (*dock_it)->hidden = false;
+                    (*dock_it)->Render();
+                }
+            } else if (! (*dock_it)->hidden) {
+                XUnmapWindow(display, (*dock_it)->id);
+                (*dock_it)->hidden = true;
+            }
+        }
+        UpdateWorkarea();
+        net->SetCurrentDesktop(this);
+    } else
+        if (dit == desktop_list.end())
+            WARNING << "bad desktop id `" << number << "', desktop " <<
+                number << " doesn't exist" << endl;
+}
+void WaScreen::GoToDesktop(XEvent *, WaAction *ac) {
+    if (ac->param) GoToDesktop((unsigned int) atoi(ac->param));
+}
 
 /**
  * @fn    EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts)

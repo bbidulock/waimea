@@ -61,6 +61,9 @@ public:
     void GetWmPid(WaWindow *);
     void GetXaName(WaWindow *);
     bool GetNetName(WaWindow *);
+    void SetDesktop(WaWindow *);
+    void SetDesktopMask(WaWindow *);
+    void GetDesktop(WaWindow *);
 
     void SetSupported(WaScreen *);
     void SetSupportedWMCheck(WaScreen *, Window);
@@ -71,7 +74,11 @@ public:
     void GetActiveWindow(WaScreen *);
     void GetDesktopViewPort(WaScreen *);
     void SetDesktopViewPort(WaScreen *);
-    void SetDesktopHints(WaScreen *);
+    void SetDesktopGeometry(WaScreen *);
+    void SetNumberOfDesktops(WaScreen *);
+    void SetCurrentDesktop(WaScreen *);
+    void GetCurrentDesktop(WaScreen *);
+    void SetDesktopNames(WaScreen *, char *);
 
     void wXDNDMakeAwareness(Window);
     void wXDNDClearAwareness(Window);
@@ -104,7 +111,8 @@ public:
         net_wm_window_type_menu, net_wm_window_type_splash,
         net_wm_window_type_dialog, net_wm_window_type_utility,
         net_wm_window_type_normal, net_current_desktop,
-        net_number_of_desktops, net_close_window, net_wm_visible_name;
+        net_number_of_desktops, net_close_window, net_wm_visible_name,
+        net_desktop_names, utf8_string, net_wm_desktop, net_wm_desktop_mask;
     
 #ifdef XRENDER
     Atom xrootpmap_id;

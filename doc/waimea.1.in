@@ -4,7 +4,7 @@
 .\" This manual page may be freely distributed and modified.
 .\" Author: David Reveman <c99drn@cs.umu.se>
 .\" 
-.TH WAIMEA 1 "Oct 10 2002" "0.3.4" "User Manual"
+.TH WAIMEA 1 "Oct 14 2002" "0.3.5" "User Manual"
 
 
 .SH NAME
@@ -25,15 +25,17 @@ The design goal for
 is to create the most efficient desktop working environment available. 
 To achieve this
 .I waimea
-is a fast and highly customizable virtual desktop window manager.
-It uses
-.BR blackbox (1)
-image rendering engine (blackbox styles support) and can use 
-Xft library for font rendering (anti-aliased font support). 
-It also features a very advanced configuration system with which
-it's possible to make 
+is a fast and highly customizable virtual multiple desktop window manager.
+It has a very advanced style engine with features like blackbox style support, 
+pixmap style support and transparent textures. Text can be rendered double
+buffered using both X core fonts and Xft fonts. 
+.I Waimea 
+also includes a fast lightweight menu system with dynamic menus support.
+The built in action configuration system makes
 .I waimea
-behave as almost any other window manager.
+the most configurable window manager available. It allows the user to set up 
+.I waimea
+to behave as any other window manager or in new ways never before possible.
 
 
 .SH OPTIONS
@@ -154,6 +156,18 @@ Path to alternate
 .I ACTIONFILE
 instead of
 .IR @pkgdatadir@/actions/action.
+
+.TP
+.B  screen0.numberOfDesktops:     Integer
+This tells 
+.I waimea 
+how many virtual desktops we should use.
+Default value is 
+.I 4.
+
+.TP
+.B  screen0.desktopNames:     List of desktop names
+A comma separated list of desktop names.
 
 .TP
 .B  screen0.doubleBufferedText:     Boolean
@@ -281,6 +295,13 @@ This will put dockapp window with name ending with `meter' at
 the first position in dockappholder and dockapp with classname containing
 `pager' at second position. All dockapp windows that doesn't match any 
 regular expression will be put in last dockapp at last position.
+
+.TP
+.B screen0.dock[num].desktopMask:     Desktop number list
+A whitespace separated list of desktop numbers. Dockappholder will only
+appear in desktops specified by this list. To make dockappholder appear in all
+desktops, replace list with the string `All'. Default is 
+.I All
 
 .TP
 .B screen0.dock[num].direction:     Direction
@@ -1222,6 +1243,25 @@ Sets focus to the window that was focused before the currently focused
 window.
 
 .PP
+.TP
+.B gotodesktop(Desktop number)
+Sets current desktop to desktop specified by desktop number parameter.
+
+.PP
+.TP
+.B exit
+Shutdowns waimea.
+
+.PP
+.TP
+.B restart[(command line)]
+Shutdowns waimea and executes command line parameter. If no command line
+parameter was given this 
+.I action
+executes the same command line as waimea was started with.
+
+
+.PP
 .TP 
 .B pointerrelativewarp(OffsetString)
 Warps pointer relative to its current position. MUST have an X offset
@@ -1498,6 +1538,43 @@ screenheight.
 Moves center of window to mouse pointer position.
 
 .PP
+.TP
+.B movetosmartplace
+Moves window to position calculated by Smart Placement algorithm.
+
+.PP
+.TP
+.B joindesktop(Desktop number)
+Makes window a member of desktop specified by desktop number parameter.
+
+.PP
+.TP
+.B partdesktop(Desktop number)
+Makes window not a member of desktop specified by desktop number parameter.
+
+.PP
+.TP
+.B partcurrentdesktop
+Makes window not a member of current desktop.
+
+.PP
+.TP
+.B joinalldesktops
+Makes window a member of all desktops.
+
+.PP
+.TP
+.B partalldesktopsexceptcurrent
+Makes window not a member of all desktops except the current desktop.
+
+.PP
+.TP
+.B partcurrentjoindesktop(Desktop number)
+Makes window not a member of current desktop and instead makes it a
+member of desktop specified by desktop number parameter.
+
+
+.PP
 Here is the list of additional actions for menu.* windows:
 
 .PP
@@ -1617,19 +1694,6 @@ focusable menu item in the menu when being mapped.
 A menu must be given as parameter to all these 
 .I actions.
 .RE
-
-.PP
-.TP
-.B exit
-Shutdowns waimea.
-
-.PP
-.TP
-.B restart[(command line)]
-Shutdowns waimea and executes command line parameter. If no command line
-parameter was given this 
-.I action
-executes the same command line as waimea was started with.
 
 .PP
 Here is the list of event types that can be linked to an 

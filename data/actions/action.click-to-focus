@@ -62,13 +62,14 @@ window.button2 {
    Raise          : ButtonRelease = Button1
 }
 window.passiveclient { 
-   Raise     : ButtonPress = Button1,
-   Focus     : ButtonPress = Button1,
-   Focus     : ButtonPress = Button3,
+   Raise            : ButtonPress = Button1,
+   Focus            : ButtonPress = Button1,
+   Focus            : ButtonPress = Button3,
    defaultAllWindows,
-   Raise     : MapRequest,
-   StartMove : MapRequest & Control_L,
-   Focus     : MapRequest & Control_L  
+   MoveToSmartPlace : MapRequest & !Control_L,
+   Raise            : MapRequest,
+   StartMove        : MapRequest & Control_L,
+   Focus            : MapRequest & Control_L  
 }
 window.activeclient {
    *Raise                   : ButtonPress = Button1,

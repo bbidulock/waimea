@@ -1,6 +1,13 @@
+Mon Oct 14 2002 David Reveman (c99drn@cs.umu.se)
+
+	*** Waimea v0.3.5 release ***
+   Added multiple desktop support
+	Added lazy transparency redrawing
+
 Sun Oct 13 2002 David Reveman (c99drn@cs.umu.se)
 
    Added double buffered text rendering support
+	Added MoveToSmartPlace action
 
 Wed Oct 09 2002 David Reveman (c99drn@cs.umu.se)
 

@@ -165,6 +165,7 @@ public:
     void MenuRemapFocused(XEvent *, WaAction *);
     void MenuUnmap(XEvent *, WaAction *);
     void MenuUnmapFocus(XEvent *, WaAction *);
+    void GoToDesktop(XEvent *, WaAction *);
     void Restart(XEvent *, WaAction *);
     void Exit(XEvent *, WaAction *);
     inline void Nop(XEvent *, WaAction *) {}

@@ -9,10 +9,11 @@ DEF globalKeyBindings {
 
 window.frame { Focus : EnterNotify }
 window.passiveclient {
-   Raise         : MapRequest,
-   StartMove     : MapRequest & Control_L,
-   Focus         : MapRequest & Control_L,
-   EndMoveResize : KeyRelease = Alt_L & MoveResizeMask
+   MoveToSmartPlace : MapRequest & !Control_L,
+   Raise            : MapRequest,
+   StartMove        : MapRequest & Control_L,
+   Focus            : MapRequest & Control_L,
+   EndMoveResize    : KeyRelease = Alt_L & MoveResizeMask
 }
 window.activeclient {
    ToggleShade              : KeyPress = F1 & Alt_L,

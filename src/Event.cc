@@ -550,6 +550,27 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
     else if (e->xclient.message_type == waimea->net->net_state) {
         if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
                                                WindowType))) {
+            if (e->xclient.data.l[0] == 0xffffffff) {
+                ww->desktop_mask = (1L << 16) - 1;
+                ww->Show();
+                ww->net->SetDesktop(ww);
+                ww->net->SetDesktopMask(ww);
+            }
+            else if ((unsigned int) e->xclient.data.l[0] <
+                ww->wascreen->config.desktops) {
+                ww->desktop_mask |=
+                    (1L << (unsigned int) e->xclient.data.l[0]);
+                if (ww->desktop_mask &
+                    (1L << ww->wascreen->current_desktop->number))
+                    ww->Show();
+                ww->net->SetDesktop(ww);
+                ww->net->SetDesktopMask(ww);
+            }
+        }
+    }
+    else if (e->xclient.message_type == waimea->net->net_state) {
+        if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
+                                               WindowType))) {
             bool max_done = false;
             for (int i = 1; i < 3; i++) {
                 if ((unsigned long) e->xclient.data.l[i] ==
@@ -684,6 +705,11 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
     else if (e->xclient.message_type == waimea->net->net_close_window) {
         if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window, WindowType)))
             ww->Close(NULL, NULL);
+    }
+    else if (e->xclient.message_type == waimea->net->net_current_desktop) {
+        if (WaScreen *ws = (WaScreen *) waimea->FindWin(e->xclient.window,
+                                                        RootType))
+            ws->GoToDesktop(e->xclient.data.l[0]);
     }
     else if (e->xclient.message_type == waimea->net->net_restart) {
         restart(NULL);

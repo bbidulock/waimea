@@ -67,7 +67,9 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     attrib.width  = init_attrib.width;
     attrib.height = init_attrib.height;
     
-    want_focus = mapped = dontsend = deleted = ign_config_req = false;
+    want_focus = mapped = dontsend = deleted = ign_config_req = hidden = false;
+
+    desktop_mask = (1L << wascreen->current_desktop->number);
 
 #ifdef SHAPE
     shaped = false;
@@ -98,6 +100,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     net->GetMWMHints(this);
     net->GetWMNormalHints(this);
     net->GetWmPid(this);
+    net->GetDesktop(this);
     
     Gravitate(ApplyGravity);
     InitPosition();
@@ -416,8 +419,36 @@ void WaWindow::MapWindow(void) {
         for (; bit != buttons.end(); ++bit)
             XUnmapWindow(display, (*bit)->id);
     }
-    XMapWindow(display, frame->id);
+    if (desktop_mask & (1L << wascreen->current_desktop->number))
+        XMapWindow(display, frame->id);
+    else hidden = true;
     mapped = true;
+}
+
+/**
+ * @fn    Show(void)
+ * @brief Show window
+ *
+ * Map frame window if not mapped.
+ */
+void WaWindow::Show(void) {
+    if (hidden && mapped) {
+        XMapWindow(display, frame->id);
+        hidden = false;
+    }
+}
+
+/**
+ * @fn    Hide(void)
+ * @brief Hide window
+ *
+ * Unmap frame window if mapped.
+ */
+void WaWindow::Hide(void) {
+    if (! hidden) {
+        XUnmapWindow(display, frame->id);
+        hidden = true;
+    }
 }
 
 /**
@@ -1213,12 +1244,22 @@ void WaWindow::Lower(XEvent *, WaAction *) {
 void WaWindow::Focus(bool vis) {
     int newvx, newvy, x, y;
     XEvent e;
-    if (! flags.focusable) return;
+    if (! flags.focusable || ((! vis) && hidden)) return;
     
     if (mapped) {
         XGrabServer(display);
         if (validateclient_mapped(id)) {
             if (vis) {
+                if (! (desktop_mask &
+                       (1L << wascreen->current_desktop->number))) {
+                    list<Desktop *>::iterator dit =
+                        wascreen->desktop_list.begin();
+                    for (; dit != wascreen->desktop_list.end(); dit++)
+                        if (desktop_mask & (1L << (*dit)->number)) {
+                            wascreen->GoToDesktop((*dit)->number);
+                            break;
+                        }
+                }
                 if (attrib.x >= wascreen->width ||
                     attrib.y >= wascreen->height ||
                     (attrib.x + attrib.width) <= 0 ||
@@ -1805,8 +1846,10 @@ void WaWindow::_Maximize(int x, int y) {
 
     if (flags.max) return;
     
-    new_width = wascreen->workarea->width - (flags.border * border_w * 2);
-    new_height = wascreen->workarea->height - (flags.border * border_w * 2) -
+    new_width = wascreen->current_desktop->workarea.width -
+        (flags.border * border_w * 2);
+    new_height = wascreen->current_desktop->workarea.height -
+        (flags.border * border_w * 2) -
         title_w - handle_w - (border_w * flags.title) -
         (border_w * flags.handle);
 
@@ -1821,8 +1864,8 @@ void WaWindow::_Maximize(int x, int y) {
         new_height = attrib.height;
     }
     if (IncSizeCheck(new_width, new_height, &n_w, &n_h)) {
-        attrib.x = wascreen->workarea->x + border_w;
-        attrib.y = wascreen->workarea->y + title_w + border_w +
+        attrib.x = wascreen->current_desktop->workarea.x + border_w;
+        attrib.y = wascreen->current_desktop->workarea.y + title_w + border_w +
             (border_w * flags.title);
         attrib.width = n_w;
         attrib.height = n_h;
@@ -1990,11 +2033,12 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
             exp += (*it)->ExpandAll(this);
         if (exp) menu->Build(wascreen);
         if ((y + menu->height + wascreen->mstyle.border_width * 2) > 
-            (unsigned int) (wascreen->workarea->height +
-                            wascreen->workarea->y))
+            (unsigned int) (wascreen->current_desktop->workarea.height +
+                            wascreen->current_desktop->workarea.y))
             y -= (menu->height + wascreen->mstyle.border_width * 2);
         if ((x + menu->width + wascreen->mstyle.border_width * 2) > 
-            (unsigned int) (wascreen->workarea->width + wascreen->workarea->x))
+            (unsigned int) (wascreen->current_desktop->workarea.width +
+                            wascreen->current_desktop->workarea.x))
             x -= (menu->width + wascreen->mstyle.border_width * 2);
         menu->Map(x, y);
         if (focus) menu->FocusFirst();
@@ -2034,11 +2078,12 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
             exp += (*it)->ExpandAll(this);
         if (exp) menu->Build(wascreen);
         if ((y + menu->height + wascreen->mstyle.border_width * 2) > 
-            (unsigned int) (wascreen->workarea->height +
-                            wascreen->workarea->y))
+            (unsigned int) (wascreen->current_desktop->workarea.height +
+                            wascreen->current_desktop->workarea.y))
             y -= (menu->height + wascreen->mstyle.border_width * 2);
         if ((x + menu->width + wascreen->mstyle.border_width * 2) > 
-            (unsigned int) (wascreen->workarea->width + wascreen->workarea->x))
+            (unsigned int) (wascreen->current_desktop->workarea.width +
+                            wascreen->current_desktop->workarea.x))
             x -= (menu->width + wascreen->mstyle.border_width * 2);
         menu->ignore = true;
         menu->ReMap(x, y);
@@ -2697,7 +2742,7 @@ void WaWindow::MoveResizeVirtual(XEvent *e, WaAction *ac) {
 }
 
 /**
- * @fn    MoveWindowToPointer(XEvent *e, WaAction *ac)
+ * @fn    MoveWindowToPointer(XEvent *e, WaAction *)
  * @brief Moves window to pointer position
  *
  * Moves window to mouse pointer position and makes sure that it isn't
@@ -2727,6 +2772,182 @@ void WaWindow::MoveWindowToPointer(XEvent *e, WaAction *) {
     RedrawWindow();
 }
 
+/**
+ * @fn    MoveWindowToSmartPlace(XEvent *, WaAction *)
+ * @brief Moves window to smart position
+ *
+ * Moves window using Smart Placement algorithm.
+ */
+void WaWindow::MoveWindowToSmartPlace(XEvent *, WaAction *) {
+    int temp_h, temp_w;
+    int test_x = attrib.x - wascreen->current_desktop->workarea.x;
+    int test_y = attrib.y - (title_w + flags.title * border_w * 2) -
+        wascreen->current_desktop->workarea.y;
+    int loc_ok = False, tw, tx, ty, th;
+    
+    temp_h = attrib.height + title_w + flags.title * border_w +
+        handle_w + flags.handle * border_w;
+    temp_w = attrib.width;
+
+    while (((test_y + temp_h) <
+            (wascreen->current_desktop->workarea.height)) && (!loc_ok)) {
+        test_x = 0;
+        while (((test_x + temp_w) <
+                (wascreen->current_desktop->workarea.width)) && (!loc_ok)) {
+            loc_ok = True;
+            list<WaWindow *>::iterator it = wascreen->wawindow_list.begin();
+            for (; it != wascreen->wawindow_list.end() &&
+                     (loc_ok == True); it++) {
+                if ((*it != this) && ((*it)->flags.tasklist) &&
+                    ((((*it)->attrib.x + (*it)->attrib.width) > 0 &&
+                      (*it)->attrib.x < wascreen->width) && 
+                     (((*it)->attrib.y + (*it)->attrib.height) > 0 &&
+                      (*it)->attrib.y < wascreen->height))) {
+                    tw = (*it)->attrib.width;
+                    th = (*it)->attrib.height +
+                        (*it)->title_w + (*it)->flags.title * (*it)->border_w +
+                        (*it)->handle_w + (*it)->flags.handle *
+                        (*it)->border_w;
+                    tx = (*it)->attrib.x -
+                        wascreen->current_desktop->workarea.x;
+                    ty = (*it)->attrib.y - ((*it)->title_w +
+                                            (*it)->flags.title *
+                                            (*it)->border_w) -
+                        wascreen->current_desktop->workarea.y;
+
+                    if ((tx < (test_x + attrib.width)) &&
+                        ((tx + tw) > test_x) &&
+                        (ty < (test_y + attrib.height)) &&
+                        ((ty + th) > test_y)) {
+                        loc_ok = False;
+                        test_x = tx + tw;
+                    }
+                }
+            }
+            test_x += 1;
+        }
+        test_y += 1;
+    }
+    if (loc_ok != False) {
+        attrib.x = test_x + wascreen->current_desktop->workarea.x;
+        attrib.y = test_y + (title_w + flags.title * border_w) +
+            wascreen->current_desktop->workarea.y;
+        RedrawWindow();
+    }
+}
+
+/**
+ * @fn    JoinDesktop(XEvent *, WaAction *ac)
+ * @brief Join desktop
+ *
+ * Join window to desktop specified by action parameter.
+ *
+ * @param ac WaAction object
+ */
+void WaWindow::JoinDesktop(XEvent *, WaAction *ac) {
+    if (ac->param) {
+        unsigned int desk = (unsigned int) atoi(ac->param);
+        if (desk < wascreen->config.desktops) {
+            desktop_mask |= (1L << desk);
+            if (desktop_mask & (1L << wascreen->current_desktop->number))
+                Show();
+            net->SetDesktop(this);
+            net->SetDesktopMask(this);
+        }
+    }
+}
+
+/**
+ * @fn    PartDesktop(XEvent *, WaAction *ac)
+ * @brief Part desktop
+ *
+ * Part window from desktop specified by action parameter.
+ *
+ * @param ac WaAction object
+ */
+void WaWindow::PartDesktop(XEvent *, WaAction *ac) {
+    if (ac->param) {
+        unsigned int desk = (unsigned int) atoi(ac->param);
+        if (desk < wascreen->config.desktops) {
+            long int new_mask = desktop_mask & ~(1L << desk);
+            if (new_mask) {
+                desktop_mask = new_mask;
+                if (! (desktop_mask &
+                       (1L << wascreen->current_desktop->number))) 
+                    Hide();
+                net->SetDesktop(this);
+                net->SetDesktopMask(this);
+            }
+        }
+    }
+}
+
+/**
+ * @fn    PartCurrentDesktop(XEvent *, WaAction *)
+ * @brief Part current desktop
+ *
+ * Part window from current desktop if window is part of another desktop.
+ */
+void WaWindow::PartCurrentDesktop(XEvent *, WaAction *) {
+    long int new_mask = desktop_mask &
+        ~(1L << wascreen->current_desktop->number);
+        if (new_mask) {
+            desktop_mask = new_mask;
+            Hide();
+            net->SetDesktop(this);
+            net->SetDesktopMask(this);
+        }
+}
+
+/**
+ * @fn    JoinAllDesktops(XEvent *, WaAction *)
+ * @brief Join all desktops
+ *
+ * Join window to all desktops.
+ */
+void WaWindow::JoinAllDesktops(XEvent *, WaAction *) {
+    desktop_mask = (1L << 16) - 1;
+    Show();
+    net->SetDesktop(this);
+    net->SetDesktopMask(this);
+}
+
+/**
+ * @fn    PartAllDesktopsExceptCurrent(XEvent *, WaAction *)
+ * @brief Part all desktops
+ *
+ * Part window from all desktops except current desktop.
+ */
+void WaWindow::PartAllDesktopsExceptCurrent(XEvent *, WaAction *) {
+    desktop_mask = (1L << wascreen->current_desktop->number);
+    Show();
+    net->SetDesktop(this);
+    net->SetDesktopMask(this);
+}
+
+/**
+ * @fn    PartCurrentJoinDesktop(XEvent *, WaAction *ac)
+ * @brief Part current desktop and join desktop
+ *
+ * Part current desktop and join desktop specified by parameter.
+ *
+ * @param ac WaAction object
+ */
+void WaWindow::PartCurrentJoinDesktop(XEvent *, WaAction *ac) {
+    if (ac->param) {
+        unsigned int desk = (unsigned int) atoi(ac->param);
+        if (desk < wascreen->config.desktops) {
+            desktop_mask = desktop_mask &
+                ~(1L << wascreen->current_desktop->number);
+            desktop_mask |= (1L << desk);
+            if (desktop_mask & (1L << wascreen->current_desktop->number))
+                Show();
+            else Hide();
+            net->SetDesktop(this);
+            net->SetDesktopMask(this);
+        }
+    }
+}
 
 /**
  * @fn    EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
@@ -3296,6 +3517,9 @@ void WaWindow::PointerRelativeWarp(XEvent *e, WaAction *ac) {
 }
 void WaWindow::PointerFixedWarp(XEvent *e, WaAction *ac) {
     wascreen->PointerFixedWarp(e, ac);
+}
+void WaWindow::GoToDesktop(XEvent *, WaAction *ac) {
+    if (ac->param) wascreen->GoToDesktop((unsigned int) atoi(ac->param));
 }
 void WaWindow::Restart(XEvent *e, WaAction *ac) {
     wascreen->Restart(e, ac);

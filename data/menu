@@ -31,6 +31,13 @@
   [end]
 
   [sub] (styles) <!stylesdir.pl>
+
+  [submenu] (desktops)
+    [item] (go to desktop 1) "gotodesktop(0)"
+    [item] (go to desktop 2) "gotodesktop(1)"
+    [item] (go to desktop 3) "gotodesktop(2)"
+    [item] (go to desktop 4) "gotodesktop(3)"
+  [end]
   
   [restart] (restart)
   [exit]    (exit)
@@ -41,6 +48,7 @@
 !
 [start] (window)
   [title]   (\n)
+
   [submenu] (settings)
     [checkbox=MAXIMIZED]      @FALSE (maximized)        "maximize"         @TRUE (maximized)        "unmaximize"
     [checkbox=SHADED]         @FALSE (shaded)           "shade"            @TRUE (shaded)           "unshade"
@@ -52,7 +60,39 @@
     [checkbox=DECORBORDER]    @FALSE (border)           "decorborderon"    @TRUE (border)           "decorborderoff"
     [checkbox=DECORALL]       @FALSE (all decorations)  "decorallon"       @TRUE (all decorations)  "decoralloff"
   [end]
+
   [sub]     (process info) <!procinfo.pl -host \"\h\" -pid \"\p\">
+
+  [submenu] (desktop functions)
+    [sub] (join desktop) <join_desk>
+    [start] (join_desk)
+      [item] (desktop 1) "joindesktop(0)"
+      [item] (desktop 2) "joindesktop(1)"
+      [item] (desktop 3) "joindesktop(2)"
+      [item] (desktop 4) "joindesktop(3)"
+    [end]
+
+    [sub] (part desktop) <part_desk>
+    [start] (part_desk)
+      [item] (desktop 1) "partdesktop(0)"
+      [item] (desktop 2) "partdesktop(1)"
+      [item] (desktop 3) "partdesktop(2)"
+      [item] (desktop 4) "partdesktop(3)"
+    [end]
+
+    [sub] (send to desktop) <send_desk>
+    [start] (send_desk)
+      [item] (desktop 1) "partcurrentjoindesktop(0)"
+      [item] (desktop 2) "partcurrentjoindesktop(1)"
+      [item] (desktop 3) "partcurrentjoindesktop(2)"
+      [item] (desktop 4) "partcurrentjoindesktop(3)"
+    [end]
+
+    [item] (join all)     "joinalldesktops"
+    [item] (part all)     "partalldesktopsexceptcurrent"
+    [item] (part current) "partcurrentdesktop"
+  [end]
+  
   [item]    (raise)        "raise"
   [item]    (lower)        "lower"
   [item]    (kill client)  "kill"
