@@ -901,6 +901,7 @@ void WaMenuItem::Render(void) {
         return;
     }
     int bw = menu->wascreen->mstyle.border_width;
+    
     if (((menu->x + menu->width) > 0 && menu->x < menu->wascreen->width) && 
         ((menu->y + dy + height) > 0 && (menu->y + dy) <
          menu->wascreen->height)) {
@@ -1048,8 +1049,6 @@ void WaMenuItem::Draw(Drawable drawable, bool frame, int y) {
     }
     if (frame) p_tmp = drawable;
     
-    cb_y = menu->wascreen->mstyle.cf_y_pos;
-    cbox = menu->wascreen->mstyle.checkbox_false;
     if (cb) UpdateCBox();
 
     if (e_label) l = e_label;
@@ -1853,6 +1852,8 @@ void WaMenuItem::UpdateCBox(void) {
                             wafont_cb = &menu->wascreen->mstyle.wa_ct_font;
                         
                         cb_y = menu->wascreen->mstyle.ct_y_pos;
+                        if (cbox != menu->wascreen->mstyle.checkbox_true)
+                            menu->cb_db_upd = true;
                         cbox = menu->wascreen->mstyle.checkbox_true;
                         label = label2;
                         sub = sub2;
@@ -1873,6 +1874,8 @@ void WaMenuItem::UpdateCBox(void) {
                             wafont_cb = &menu->wascreen->mstyle.wa_cf_font;
                         
                         cb_y = menu->wascreen->mstyle.cf_y_pos;
+                        if (cbox != menu->wascreen->mstyle.checkbox_false)
+                            menu->cb_db_upd = true;
                         cbox = menu->wascreen->mstyle.checkbox_false;
                         label = label1;
                         sub = sub1;

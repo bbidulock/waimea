@@ -63,7 +63,8 @@ public:
 
     Window frame, o_west, o_north, o_south, o_east;
     int x, y, width, height, bullet_width, cb_width, extra_width;
-    bool mapped, built, has_focus, tasksw, dynamic, dynamic_root, ignore, db;
+    bool mapped, built, has_focus, tasksw, dynamic, dynamic_root, ignore, db,
+        cb_db_upd;
     char *name;
     Pixmap pbackframe, ptitle, philite, psub, psubhilite;
     unsigned long backframe_pixel, title_pixel, hilite_pixel,

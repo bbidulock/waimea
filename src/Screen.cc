@@ -522,11 +522,14 @@ void WaScreen::UpdateCheckboxes(int type) {
     
     list<WaMenu *>::iterator mit = wamenu_list.begin();
     for (; mit != wamenu_list.end(); ++mit) {
+        (*mit)->cb_db_upd = false;
         miit = (*mit)->item_list.begin();
         for (; miit != (*mit)->item_list.end(); ++miit) {
             if ((*miit)->cb == type && (*miit)->menu->mapped)
-                (*miit)->Draw();
+                (*miit)->Render();
         }
+        if ((*mit)->cb_db_upd && config.db)
+            (*mit)->Render();
     }
 }
 
