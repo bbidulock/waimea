@@ -1428,7 +1428,7 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
     Window w;
     unsigned int ui;
     
-    XQueryPointer(display, wascreen->id, &w, &w, &px, &py, &i, &i, &ui);    
+    XQueryPointer(display, wascreen->id, &w, &w, &px, &py, &i, &i, &ui);
     
     dontsend = True;
     width  = n_w = attrib.width;
@@ -1436,8 +1436,9 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id))
-        XGrabPointer(display, id, False, ButtonReleaseMask |
-                     ButtonMotionMask, GrabModeAsync, GrabModeAsync, None,
+        XGrabPointer(display, id, True, ButtonReleaseMask |
+                     ButtonMotionMask | EnterWindowMask | LeaveWindowMask,
+                     GrabModeAsync, GrabModeAsync, None,
                      (how > 0) ? waimea->resizeright_cursor:
                      waimea->resizeleft_cursor, CurrentTime);
     XUngrabServer(display);
@@ -1454,6 +1455,20 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                     attrib.width  = n_w;
                     attrib.height = n_h;
                     RedrawWindow();
+                }
+                break;
+            case LeaveNotify:
+            case EnterNotify:
+                if (wascreen->west->id == event->xcrossing.window ||
+                    wascreen->east->id == event->xcrossing.window ||
+                    wascreen->north->id == event->xcrossing.window ||
+                    wascreen->south->id == event->xcrossing.window) {
+                    waimea->eh->ed.type = event->type;
+                    waimea->eh->ed.mod = event->xcrossing.state;
+                    waimea->eh->ed.detail = 0;
+                    waimea->eh->EvAct(event, event->xcrossing.window);
+                    XQueryPointer(display, wascreen->id, &w, &w, &px, &py,
+                                  &i, &i, &ui);
                 }
                 break;
             case DestroyNotify:
