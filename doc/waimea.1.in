@@ -1,0 +1,1334 @@
+.\"
+.\" Man page for Waimea
+.\" 
+.\" This manual page may be freely distributed and modified.
+.\" Author: David Reveman <c99drn@cs.umu.se>
+.\" 
+.TH WAIMEA 1 "Feb 21 2002" "0.2.0" "User Manual"
+
+
+.SH NAME
+Waimea \- an X11 window manager designed for maximum efficiency
+
+
+.SH SYNOPSIS
+.B waimea 
+[--display=DISPLAYNAME] [--rcfile=CONFIGFILE] 
+[--stylefile=STYLEFILE] [--actionfile=ACTIONFILE] [--menufile=MENUFILE] 
+[--usage] [--help] [--version]
+
+
+.SH DESCRIPTION
+
+The design goal for
+.I waimea 
+is to create the most efficient desktop working environment available. 
+To achieve this
+.I waimea
+is a fast and highly customizable virtual desktop window manager.
+It uses
+.BR blackbox (1)
+image rendering engine (blackbox styles support) and can use 
+Xrender extension for rendering fonts 
+(anti-aliased font support). It also features a very advanced 
+configuration system with which it's possible to make 
+.I waimea
+behave as almost any other window manager.
+
+
+.SH OPTIONS
+.TP
+.B "--display DISPLAYNAME"
+X server to contact
+
+.TP
+.B "--rcfile CONFIGFILE"
+Use the alternate
+.I CONFIGFILE
+instead of
+.IR ~/.waimearc.
+
+.TP
+.B "--stylefile STYLEFILE"
+Use the alternate
+.I STYLEFILE
+instead of
+.IR @pkgdatadir@/styles/Default.
+This overrides styleFile resource.
+
+.TP
+.B "--actionfile ACTIONFILE"
+Use the alternate
+.I ACTIONFILE
+instead of
+.IR @pkgdatadir@/actions/action.
+This overrides actionFile resource.
+
+.TP
+.B "--menufile MENUFILE"
+Use the alternate
+.I MENUFILE
+instead of
+.IR @pkgdatadir@/menu
+This overrides menuFile resource.
+
+.TP
+.B "--usage"
+Display brief usage message
+
+.TP
+.B "--help"
+Show full help message
+
+.TP
+.B "--version"
+Output version information and exit
+
+
+.SH "CONFIG FILE"
+When starting, 
+.I waimea
+looks for a 
+.I .waimearc 
+resource file in the users home directory. 
+This file should contain configuration options. 
+If file doesn't exist default values for all options are
+used. To force 
+.I waimea 
+to read a different configuration file use 
+.I --rcfile
+switch. Below are a list of the configuration options 
+.I waimea
+understands.
+
+.TP
+.B  styleFile
+Path to alternate
+.I STYLEFILE
+instead of
+.I @pkgdatadir@/styles/Default.
+
+.TP
+.B  menuFile
+Path to alternate
+.I MENUFILE
+instead of
+.I @pkgdatadir@/menu.
+
+.TP
+.B actionFile
+Path to alternate
+.I ACTIONFILE
+instead of
+.IR @pkgdatadir@/actions/action.
+	
+.TP
+.B colorsPerChannel
+This tells 
+.I waimea
+how many colors to take from the X
+server on pseudocolor displays. A channel would be red,
+green, or blue. 
+.I Waimea 
+will allocate this variable ^ 3 colors and make them always available.
+Value must be between 2 and 6. When you run 
+.I waimea 
+on an 8-bit display, you must set this resource to 4. 
+Default value is 
+.I 4.
+
+.TP
+.B  cacheMax
+This tells 
+.I waimea 
+how much memory (in Kb) it may use to store cached pixmaps on the X server.
+If your machine runs short of memory, you may lower this value. 
+Default value is 
+.I 200.
+
+.TP
+.B  imageDither
+Tells 
+.I waimea
+to dither images on none TrueColor screens. Default value is 
+.I True.
+
+.TP
+.B doubleClickInterval
+Adjust the delay (in ms) between mouse clicks for 
+.I waimea
+to consider it a double click. Default value is 
+.I 300.
+
+.TP
+.B virtualSize
+Tells 
+.I waimea 
+what virtual desktop size to use. Example:
+.I 3x3
+will set the virtual desktop size to three times screen height 
+in virtual height and three times screen width in virtual width.
+Default value is 
+.I 3x3.
+
+.PP
+Dockapp Holder Resources
+.PP
+It is possible to have more than one dockapp holder running.
+First dockapp holder should be named 
+.I dock0
+and the second 
+.I dock1
+and so on. One dockapp holder is always running whether you have a
+.I dock0
+line in your 
+.I CONFIGFILE  
+or not.
+
+.TP
+.B dock[num].geometry
+Define dockapp holder position, X11 offset string of form:
+[{+-}<xoffset>{+-}<yoffset>]. See 
+.BR X(1).
+
+.TP
+.B dock[num].order
+A whitespace separated list describing how to order the
+dockapps in the dockapp holder. Dockapps can be ordered
+by window name and class. For window name use 
+.I "N_" 
+prefix followed by window name and for window class use 
+.I "C_" 
+prefix followed by window class.
+
+Example:
+
+dock0.order:    N_cpumeter C_pager UNKNOWN
+
+This will put dockapp window named cpumeter at the first
+position in dockapp holder and pager dockapp at second
+position. All dockapp windows that doesn't match any 
+.I "N_*"
+or
+.I "C_*" 
+will be but at the position of the 
+.I UNKNOWN 
+string.
+The 
+.I UNKNOWN 
+string MUST exist in ONE AND ONLY ONE of the
+dockapp holder order resources.
+
+.TP
+.B dock[num].direction
+Dockapp holder direction {Vertical, Horizontal}
+
+.TP
+.B dock[num].centered
+True if you want the dockapp holder to be centered. If
+direction is Vertical, yoffset from geometry resource will
+be ignored and dockapp holder will be centered vertically.
+If direction is Horizontal, xoffset from geometry resource
+will be ignored and dockapp holder will be centered
+horizontally.
+
+.TP
+.B dock[num].gridSpace
+Number of pixels spacing between dockapps in dockapp holder.
+
+.TP
+.B dock[num].stacking
+Stacking order for dockapp holder {AlwaysOnTop, AlwaysAtBottom}.
+
+
+.SH STYLES
+.I Waimea 
+enables you to use 
+.I blackbox 
+specialized style files that contain 
+.BR X(1)
+resources to specify colors, textures and fonts, and thus the 
+overall look of your window decorations and menus. 
+However there are a few keys in 
+.I blackbox 
+styles that 
+.I waimea
+doesn't use and there are a few new keys that doesn't exist in standard
+.I blackbox 
+styles. 
+.PP
+To understand how the style mechanism works, you should have a little 
+knowledge of how X resources work. See 
+.BR X(1) 
+for this.
+.PP
+.I Waimea 
+allows you to configure the style of menus and the windows.
+Dockapp holders uses the same style as the windows.
+.PP 
+Here are the different types of values:
+.TP
+.B Color
+Is a color name. See
+.BR X(1)
+for how to write valid color names. 
+e.g.: 'green'.
+.TP
+.B Font
+Is a font name. See
+.BR X(1)
+for how to write valid font names. 
+e.g.: '-adobe-courier-medium-r-normal--10-100-75-75-m-60-iso8859-1'.
+.TP
+.B XftFont
+Is a xftfont name. Should not be a full font specification only a name.
+e.g.: 'arial'.
+.TP
+.B Font justification
+Is one of left, right or center. 
+e.g.: 'left'.
+
+.TP
+.B Texture descriptions
+Texture descriptions are specified directly to the key that they
+should apply to, e.g.:
+.nf
+ 
+window.label:  Raised Gradient Diagonal Bevel1
+
+.fi
+A texture description consists of up to five fields, which are as follows:
+.nf
+ 
+.I Flat / Raised / Sunken
+.fi
+gives the component either a flat, raised or sunken appearance.
+.nf 
+
+.I Gradient / Solid
+.fi
+tells 
+.I waimea 
+to draw either a solid color or a gradiented texture.
+.nf
+
+.fi
+.I Horizontal / Vertical / Diagonal / Crossdiagonal / Pipecross / Elliptic / Rectangle / Pyramid
+.nf
+.fi
+Select one of these texture types. They only work when also
+.I Gradient
+is specified!
+.nf
+ 
+.I Interlaced
+.fi
+tells 
+.I waimea 
+to interlace the texture (darken every other line).
+This option is most commonly used with gradiented textures, but it 
+also works in solid textures.
+.nf
+ 
+.I Bevel1 / Bevel2
+.fi
+tells 
+.I waimea 
+which type of bevel to use.
+Bevel1 is the default bevel.
+The shading is placed on the edge of the image.
+Bevel2 is an alternative.
+The shading is placed one pixel in from the edge of the image.
+
+Instead of a texture description, also the option
+.I ParentRelative
+is available, which makes the component appear as a part of its parent, e.g.
+totally transparant.
+.nf
+
+.fi
+All gradiented textures are composed of two color values: the
+.IR color " and " colorTo " resources."
+When
+.I Interlaced
+is used in
+.I Solid
+mode, the
+.I colorTo
+resource is used to find the interlacing color.
+.PP
+Here are the keys 
+.I waimea 
+understands together with the kind of value they can contain. 
+The '*' in the window keys can be one of:
+.I title, label, button, button.pressed, button.hilite, handle 
+or 
+.I grip.
+The '*' in the menu keys can be one of:
+.I title, frame
+or 
+.I hilite.
+
+.PP
+.B window.*.focus.color:     Color
+.br
+.B window.*.focus.colorTo:     Color
+.RS
+Colors used for focused window textures.
+.RE
+
+.PP
+.TP
+.B window.*.focus.textColor:     Color
+Color used for focused window fonts.
+
+.PP
+.B window.*.unfocus.color:     Color
+.br
+.B window.*.unfocus.colorTo:     Color
+.RS
+Colors used for unfocused window textures.
+.RE
+
+.PP
+.TP 
+.B window.*.unfocus.textColor:     Color
+Color used for unfocused window fonts.
+
+.PP
+.B menu.*.color:     Color 
+.br
+.B menu.*.colorTo:     Color
+.RS
+Colors used for menu textures.
+.RE
+
+.PP
+.TP 
+.B menu.*.textColor:     Color
+Color used for menu fonts.
+
+.PP
+.TP 
+.B borderColor:     Color
+Color of window border.
+
+.PP
+.TP 
+.B outlineColor:     Color
+Color of window outline used for non-opaque moving and resizing.
+
+.PP
+.TP 
+.B window.button.focus.picColor:    Color
+Color used for focused window button symbols.
+
+.PP
+.TP 
+.B window.button.unfocus.picColor:    Color
+Color used for unfocused window button symbols.
+
+.PP
+.TP 
+.B window.button.pressed.picColor:    Color
+Color used for pressed button symbols.
+
+.PP
+.TP 
+.B window.button.hilite.picColor:    Color
+Color used for hilited button symbols.
+
+.PP
+.TP 
+.B window.justify:     Font Justification
+Font justification for window labels.
+
+.PP
+.TP 
+.B menu.justify:     Font Justification
+Font justification for menu items.
+
+.PP
+.B window.font:     Font
+.br
+.B window.xftFont:     XftFont
+.RS
+Font for window titles.
+.RE
+
+.PP
+.TP 
+.B window.xftSize:     Float
+Floating point number between 2.0 and 100.0. This option sets the 
+size of the xft font to used for window titles. This is not really 
+in pixels but instead in a percentage of the screen height. See
+.BR Xft(3).
+
+.PP
+.B menu.*.font:     Font 
+.br
+.B menu.*.xftFont:     XftFont
+.RS
+Font for menu items.
+.RE
+
+.PP
+.TP 
+.B menu.*.xftSize:     Float
+Floating point number between 2.0 and 100.0. This option sets the 
+size of the xft font to used for menu items. This is not really 
+in pixels but instead in a percentage of the screen height. See
+.BR Xft(3).
+
+.PP
+.TP 
+.B menu.bullet.look:	String or 'char'
+String or character code used for menu bullets.
+
+.PP
+.TP 
+.B menu.checkbox.true.look:	String or 'char'
+String or character code used for true checkboxes.
+
+.PP
+.TP 
+.B menu.checkbox.false.look:	String or 'char'
+String or character code used for false checkboxes.
+
+.PP
+.TP 
+.B borderWidth:     Integer
+Integer value for window border width.
+
+.PP
+.TP 
+.B menu.borderWidth:     Integer
+Integer value for menu border width.
+
+.PP
+.TP 
+.B window.title.height:    Integer
+Integer value for forced titlebar height. If key isn't defined the title
+height is set by the height of the font.
+
+.PP
+.TP 
+.B menu.item.height:    Integer
+Integer value for forced menu frame item height. If key isn't defined the 
+frame menu item height is set by the height of the font.
+
+.PP
+.TP 
+.B menu.title.height:    Integer
+Integer value for forced menu title item height. If key isn't defined the 
+frame menu title height is set by the height of the font.
+
+.PP
+.TP 
+.B rootCommand:     Command line
+This command is executed whenever this style is loaded.
+Typically it sets the root window to a nice picture.
+
+.PP
+Default style file is /usr/local/shar/Waimea/styles/Default.
+You can study or edit this style to grasp how the style mechanism works.
+
+
+.SH ACTIONS
+.I Waimea 
+uses special action files for controlling its behavior.
+The idea is that you could specify an 
+.I action 
+for every useful X event received.
+.PP
+To understand how the action file mechanism works, you should have a little 
+knowledge of how X resources work. See 
+.BR X(1) 
+for this.
+.PP
+When 
+.I waimea 
+parses the action file it creates lists with actions for the
+different type if windows. A line in the action file should begin with a key
+defining the window that the action should apply to and the position of the
+.I action
+in the windows action list. 
+.PP
+Remember that when waimea creates a action list
+for a window it first tries to find a key with position number 1 when if
+number 1 was find it continues with number 2 and so on 
+until a position number isn't found. This means that you can't have 
+a key with number 3 if you don't have a key with number 2.
+Keys can't have the same position numbers.
+.PP
+The key should be followed by a value string,
+containing an action and an event type.
+The value string should start with an action and then a ':' character
+followed by an event description.
+.PP
+The event description contains an event type, an optional event detail and 
+a modifier mask.
+.PP
+Here are two good examples:
+.nf
+
+window.label.1: Move : ButtonPress = Button1 & Mod1Mask | ControlMask
+window.label.2: Resize : ButtonPress = Button1 & Mod1Mask | !ControlMask
+
+.fi
+The first line will create a move 
+.I action 
+that will be performed when
+a ButtonPress event is received from Button1 and at least mod1 
+modifier and control modifier are active. The second line will
+create a resize 
+.I action 
+that will be performed when a ButtonPress
+event is received from Button1 and at least mod1 modifier is active
+and the control modifier is not active.
+.PP
+Here is the key list of all windows that you can create actions for:
+.TP
+.B window.frame
+This is the parent window for the client window and all decoration
+windows. Use this key if you want to set an 
+.I action 
+for the window border.
+.PP
+.TP
+.B window.title
+This is the parent window for the label and button windows. You probably
+want this window to have the same action list as the label window.
+.PP
+.TP
+.B window.label
+This is the window that holds the titlebar text.
+
+.PP
+.B window.client.active
+.br
+.B window.client.passive
+.RS
+This is the actual window created by the client.
+The modifier mask for this window is exact and not a minimum as for other 
+windows.
+.I window.client.active
+is the action list for active (focused) windows and
+.I window.client.passive
+is the action list for passive (unfocused) windows.
+All actions for window.client.* can be prefixed with a '*' character
+to make them pass-through actions (Events matching pass-through actions
+will also be sent to the client window).
+.RE
+
+.PP
+.B window.closeButton
+.br
+.B window.iconifyButton
+.br
+.B window.maximizeButton
+.RS
+        Titlebar button windows.
+.RE
+
+.PP
+.TP
+.B window.handle
+This is the window for the middle part of the handlebar.
+
+.PP
+.B window.leftgrip
+.br
+.B window.rightgrip
+.RS
+Windows for the left and right grip in the handlebar.
+.RE
+
+.PP
+.B menu.title
+.br
+.B menu.item
+.br
+.B menu.sub
+.br
+.B menu.checkbox
+.RS
+Menu item windows.
+.RE
+
+.PP
+.TP
+.B root
+Root window (background).
+.PP
+.B westedge
+.br
+.B eastedge
+.br
+.B northedge
+.br
+.B southedge
+.RS
+Transparent windows at the edges of the screen. Useful for viewport
+shifting.
+.RE
+
+.PP
+Here is the list of actions common for all window types:
+
+.PP
+.TP
+.B {command line}
+You can specify a command line to execute instead of
+a function. Command line must be between a '{'
+character and a '}' character.
+
+.PP
+.TP
+.B focus
+Set input focus to the event window.
+
+.PP
+.B viewportleft
+.br
+.B viewportright
+.br
+.B viewportup
+.br
+.B viewportdown
+.br
+.B viewportleftnowarp
+.br
+.B viewportrightnowarp
+.br
+.B viewportupnowarp
+.br
+.B viewportdownnowarp
+.RS
+Moves viewport one screen width. 
+.I Actions 
+ending with nowarp moves viewport without mouse warping.
+.RE
+
+.PP
+.B scrollviewportleft[(pixels)]
+.br
+.B scrollviewportright[(pixels)]
+.br
+.B scrollviewportup[(pixels)]
+.br
+.B scrollviewportdown[(pixels)]
+.br
+.B scrollviewportleftnowarp[(pixels)]
+.br
+.B scrollviewportrightnowarp[(pixels)]
+.br
+.B scrollviewportupnowarp[(pixels)]
+.br
+.B scrollviewportdownnowarp[(pixels)]
+.RS
+Scrolls viewport the number of pixels given as parameter. If no pixel
+parameter is given a pixel value of 30 is used.
+.I Actions 
+ending with nowarp scrolls viewport without mouse warping.
+.RE
+
+.PP
+.TP
+.B viewportmove
+Moves viewport after mouse motion events, kind of
+the same way as you move windows.
+
+.PP
+.TP
+.B taskswitcher
+Maps windowlist menu at the middle of the screen. This menu is very
+useful for switching between windows.
+
+.PP
+.TP
+.B nexttask
+Sets focus to the window that was focused longest time ago. 
+
+.PP
+.TP
+.B previoustask
+Sets focus to the window that was focused before the currently focused
+window.
+
+.PP
+Here is the list of additional actions for window.* windows:
+
+.PP
+.TP
+.B raise
+Raise window to top of display stack.
+
+.PP
+.TP
+.B raisefocus
+Raise window to top of display stack and focus it.
+
+.PP
+.TP
+.B lower
+Lower window to bottom of display stack.
+
+.PP
+.B move
+.br
+.B moveopaque
+.RS
+Move window by dragging the mouse. move
+.I action
+will display a window outline while dragging the mouse and first move the
+actual window when you're finished dragging. moveopaque
+.I action
+will move the actual window while you're dragging the mouse.
+.RE
+
+.PP
+.B resizeright
+.br
+.B resizeleft
+.br
+.B resizerightopaque
+.br
+.B resizeleftopaque
+.RS
+Resize window by dragging the mouse.
+.I Actions 
+not ending with 'opaque' will display a window outline while dragging
+the mouse and first move the actual window when you're finished
+dragging.
+.I Actions 
+ending with 'opaque' will resize the actual window while
+you're dragging the mouse.
+.RE
+
+.PP
+.TP
+.B close
+Sends a delete message to the client window. A normal running X window
+should accept this event and destroy itself.
+
+.PP
+.TP
+.B kill
+Tells the the X server to remove the window from the screen through
+killing the process that created it.
+
+.PP
+.TP
+.B closekill
+Checks if the window will accept a delete message. If it will, then we
+send a delete message to the client window otherwise we tell the
+X server to kill the client that created it.
+
+.PP
+.B menumap(menu_name)
+.br
+.B menuremap(menu_name)
+.br
+.B menuunmap(menu_name)
+.br
+.B menumapfocused(menu_name)
+.br
+.B menuremapfocused(menu_name)
+.br
+.B menuunmapfocused(menu_name)
+.RS
+Map, remap or unmap a menu. Mapping a menu that is already mapped
+will do nothing. Remapping a menu that is already mapped will move the 
+mapped menu to the new mapping position.
+.I Actions 
+ending with 'focused' will set input focus to the first
+focusable menu item in the menu when being mapped.
+A menu must be given as parameter to all these 
+.I actions
+.RE
+
+.PP
+.B shade
+.br
+.B unshade
+.br
+.B toggleshade
+.RS
+shade 
+.I action
+will put window in shaded state. unshade 
+.I action 
+will restore window from shaded to normal state. toggleshade 
+.I action 
+will toggle between shaded and normal state.
+In shaded state only the titlebar for the window is shown.
+.RE
+
+.PP
+.B maximize
+.br
+.B unmaximize
+.br
+.B togglemaximize
+.RS
+maximize 
+.I action
+will put window in maximized state. unmaximize 
+.I action 
+will restore window from maximized to normal state. togglemaximize 
+.I action 
+will toggle between maximized and normal state.
+In maximized state the window will have maximum allowed size fitted 
+in screen.
+.RE
+
+.PP
+.B sticky
+.br
+.B unsticky
+.br
+.B togglesticky
+.RS
+sticky
+.I action
+will put window in sticky state. unsticky
+.I action 
+will restore window from sticky to normal state. togglesticky
+.I action 
+will toggle between sticky and normal state.
+In sticky state the window will stick to its position whatever the viewport 
+is. 
+.RE
+
+.PP
+.B decortitleon
+.br
+.B decortitleoff
+.br
+.B decortitletoggle
+.RS
+Turn on, off or toggle the window titlebar decoration.
+.RE
+
+.PP
+.B decorhandleon
+.br
+.B decorhandleoff
+.br
+.B decorhandletoggle
+.RS
+Turn on, off or toggle the window handlebar decoration.
+.RE
+
+.PP
+.B decorborderon
+.br
+.B decorborderoff
+.br
+.B decorbordertoggle
+.RS
+Turn on, off or toggle the window border decoration.
+.RE
+
+.PP
+.B decorallon
+.br
+.B decoralloff
+.RS
+Turn on or off all window decorations.
+.RE
+
+.PP
+.B alwaysontopon
+.br
+.B alwaysontopoff
+.br
+.B alwaysontoptoggle
+.RS
+Turn on, off or toggle if window should be always on top. Always on top 
+windows are always at the top of the display stack.
+.RE
+
+.PP
+.B alwaysatbottomon
+.br
+.B alwaysatbottomoff
+.br
+.B alwaysatbottomtoggle
+.RS
+Turn on, off or toggle if window should be always at bottom. Always at
+bottom windows are always at the bottom of the display stack.
+.RE
+
+
+.PP
+Here is the list of additional actions for menu.* windows:
+
+.PP
+.TP
+.B raise
+Raise menu to top of display stack.
+
+.PP
+.TP
+.B lower
+Lower menu to bottom of display stack.
+
+.PP
+.B move
+.br
+.B moveopaque
+.RS
+Move menu by dragging the mouse. move
+.I action
+will display a menu outline while dragging the mouse and first move the
+actual menu when you're finished dragging. moveopaque
+.I action
+will move the actual menu while you're dragging the mouse.
+.RE
+
+.PP
+.B mapsub
+.br
+.B remapsub
+.br
+.B mapsubfocused
+.br
+.B remapsubfocused
+.br
+.B unmap
+.br
+.B unmapfocused
+.RS
+Map, remap or unmap menu items submenu. If menu item doesn't 
+have a submenu, nothing is done. Mapping a submenu that is 
+already mapped will do nothing. 
+Remapping a submenu that is already mapped will move the 
+mapped submenu to the new mapping position.
+.I Actions 
+ending with 'focused' will set input focus to the first
+focusable window in the submenu when being mapped.
+.RE
+
+.PP
+.TP
+.B unmapsubs
+Unmaps the submenutree of the menu that contains the menu item. 
+Only linked menus are part of the submenutree and will be unmapped by 
+this action.
+
+.PP
+.TP
+.B unmaptree
+Unmaps the complete menutree that the menu containing the menu item 
+is part of. Only linked menus are part of the menutree and will be 
+unmapped by this action.
+
+.PP
+.TP
+.B func
+Calls function linked to menu item. If menu item doesn't 
+have a linked function, nothing is done.
+
+.PP
+.TP
+.B exec
+Executes command line linked to menu item. If menu item doesn't 
+have a linked command line, nothing is done.
+
+.PP
+.TP
+.B unlink
+unlinks menu containing the menu item from its menu tree.
+
+.PP
+Here is the list of additional actions for root, *edge windows:
+
+.PP
+.B menumap(menu_name)
+.br
+.B menuremap(menu_name)
+.br
+.B menuunmap(menu_name)
+.br
+.B menumapfocused(menu_name)
+.br
+.B menuremapfocused(menu_name)
+.br
+.B menuunmapfocused(menu_name)
+.RS
+Map, remap or unmap a menu. Mapping a menu that is already mapped
+will do nothing. Remapping a menu that is already mapped will move the 
+mapped menu to the new mapping position.
+.I Actions 
+ending with 'focused' will set input focus to the first
+focusable menu item in the menu when being mapped.
+A menu must be given as parameter to all these 
+.I actions
+.RE
+
+.PP
+.TP
+.B exit
+Shutdowns waimea.
+
+.PP
+.TP
+.B restart[(command line)]
+Shutdowns waimea and executes command line parameter. If no command line
+parameter was given this 
+.I action
+executes the same command line as waimea was started with.
+
+.PP
+Here is the list of event types that can be linked to an 
+.I action
+:
+
+.PP
+.TP
+.B buttonpress
+Occurs when a mouse button is pressed.
+Event detail for this event can be one of 
+.I button1, button2, button3, button4, button5, button6, button7 or anybutton
+
+.PP
+.TP
+.B buttonrelease
+Occurs when a mouse button is released.
+Event detail for this event can be one of 
+.I button1, button2, button3, button4, button5, button6, button7 or anybutton
+
+.PP
+.TP
+.B doubleclick
+Occurs when a mouse button is pressed two times within time of the 
+double click interval.
+Event detail for this event can be one of 
+.I button1, button2, button3, button4, button5, button6, button7 or anybutton
+
+.PP
+.TP
+.B keypress
+Occurs when a key is pressed.
+Event detail for this event should be standard KeySym name obtained 
+from <X11/keysymdef.h> by removing the XK_ prefix from each name or 
+.I anykey.
+
+.PP
+.TP
+.B keyrelease
+Occurs when a key is released.
+Event detail for this event should be standard KeySym name obtained 
+from <X11/keysymdef.h> by removing the XK_ prefix from each name or 
+.I anykey.
+
+
+.PP
+.TP
+.B enternotify
+Occurs when mouse enters a window.
+No event details for this event type.
+
+.PP
+.TP
+.B leavenotify
+Occurs when mouse leaves a window.
+No event details for this event type.
+
+.PP
+.TP
+.B maprequest
+Occurs when a window requests to be mapped.
+No event details for this event type.
+
+
+.PP
+Here is the list of event modifiers that can used in the modifier mask:
+
+.PP
+.B shiftmask
+.br
+.B lockmask
+.br
+.B controlmask
+.br
+.B mod[1-5]mask
+.br
+.B button[1-5]mask
+
+.PP
+Default action file is /usr/local/shar/Waimea/actions/action.sloppy-focus.
+You can study or edit this action file to grasp how the action system works.
+
+
+.SH MENUS
+
+All menus used in the action file must be defined in the menu file.
+.PP
+A menu definition starts with a [start] (menu_name) statement and ends
+with a [end] statement. Remember that a [start] must be followed by a
+menu name. Between the [start] and [end] statements a number of
+[item], [title], [sub] and [checkbox=flag] statements should be put. 
+The only thing separating these three menu item types are their 
+looks and action lists. All three of these statements could be 
+followed by a (string), "string", {string} and <string>.
+
+.PP
+.I Waimea
+menu system is compatible with 
+.I blackbox(1)
+menu system so higher level statements as [begin], [exec], [submenu], 
+[nop], [restart] and [exit] are supported.
+
+.PP
+() = menu item title
+.br
+"" = action
+.br
+{} = command line
+.br
+<> = sub menu
+.PP
+
+e.g.:
+.nf
+
+[start]   (menu)
+  [title] (Menu)
+  [item]  (Xterm)    {xterm}
+  [sub]   (Programs) <progs>
+  [item]  (Restart)  "restart"
+  [item]  (Exit)     "exit"
+[end]
+
+.fi
+It is possible to start defining a new menu within another menu.
+e.g.:
+.nf
+
+[start]    (menu)
+  [start]  (menu2)
+    [item] (not smart)    {rm -rf ~/.}
+    [end]  
+  [sub]    <menu2>
+[end]
+
+.fi
+If you want to use (,),{,},<,>,[,] characters within the strings use
+%(, %) and so on. %% is converted to single %.
+
+.PP
+It is also possible to have environment variables inserted into the 
+strings. All strings within $ characters is looked up as environment
+variables. e.g.:
+.nf
+
+[item] (Logout $USER$) "exit"
+
+.fi
+$USER$ will be replaced with USER environment variable.
+
+.PP
+Predefined menu named "__windowlist__" can be used in menu file
+and action file to access the taskswitcher menu.
+
+.PP
+A checkbox item is a item that have two modes and a flag decides which
+mode the item is in. e.g.:
+.nf
+
+[checkbox=STICKY] @FALSE (Sticky) "sticky" @TRUE (Sticky) "unsticky"
+
+.fi
+Flag to decide which mode to be in for this checkbox is STICKY (the
+sticky flag for a window). If STICKY flag is 'False' the checkbox item
+will be in mode defined by menu string after @FALSE and if STICKY flag
+is 'True' the checkbox item will be in mode defined by the menu string
+after @TRUE.
+
+.PP
+Here is the list of flags that can be used checkbox items:
+MAXIMIZED
+.br
+SHADED
+.br
+STICKY
+.br
+ALWAYSONTOP
+.br
+ALWAYSATBOTTOM
+.br
+DECORTITLE
+.br
+DECORHANDLE
+.br
+DECORBORDER
+.br
+DECORALL
+.br
+.PP
+
+.PP
+Default menu file is /usr/local/shar/Waimea/menu.
+You can study or edit this menu file to grasp how the menu system works.
+
+
+.SH ENVIRONMENT
+.TP
+.B  HOME
+.I Waimea 
+uses this variable to find its
+.I .waimearc
+file.
+.TP
+.B DISPLAY
+When no other display was given on the command line, 
+.I waimea 
+will start on the display specified by this variable.
+
+
+
+.SH FILES
+.TP
+.B ~/.waimearc
+User configuration file. See
+.I "CONFIG FILE"
+section for further details.
+
+.TP
+.B @pkgdatadir@/style/Default
+The system wide style file. See
+.I STYLES
+section for further details.
+
+.TP
+.B @pkgdatadir@/actions/action
+The system wide action file. See
+.I ACTIONS
+section for further details.
+
+.TP
+.B @pkgdatadir@/menu
+The system wide menu file. See
+.I MENUS
+section for further details.
+
+
+.SH BUGS
+Bug reports, patches and suggestions are much appreciated,
+send them to the author.
+.SH AUTHOR
+David Reveman <c99drn@cs.umu.se>
+
+The Waimea website:
+.nh
+.B http://waimea.sourceforge.net
+.ny
+.SH "SEE ALSO"
+.BR blackbox (1), 
+.BR X (1)
+
+
+

@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
  * 
  */
 void usage(void) {
-    cout << "Usage: " << program_name << " [--display=DISPLAY]" <<
+    cout << "Usage: " << program_name << " [--display=DISPLAYNAME]" <<
         " [--rcfile=CONFIGFILE]" << endl << "\t[--stylefile=STYLEFILE]" <<
         " [--actionfile=ACTIONFILE]" << " [--menufile=MENUFILE]" << endl <<
         "\t[--usage]" << " [--help]" << " [--version]" << endl;
@@ -117,12 +117,13 @@ void usage(void) {
  */
 void help(void) {
     cout << "Usage: " << program_name << " [OPTION...]" << endl;
-    cout << "Waimea Window Manager - an X11 Window Manager" << endl << endl;
-    cout << "   --display=DISPLAY        X display to use" << endl;
-    cout << "   --rcfile=CONFIGFILE      Configfile to use" << endl;
-    cout << "   --stylefile=STYLEFILE    Stylefile to use" << endl;
-    cout << "   --actionfile=ACTIONFILE  Actionfile to use" << endl;
-    cout << "   --menufile=MENUFILE      Menufile to use" << endl;
+    cout << "Waimea - an X11 window manager designed for maximum efficiency" << 
+	    endl << endl;
+    cout << "   --display=DISPLAYNAME    X server to contact" << endl;
+    cout << "   --rcfile=CONFIGFILE      Config-file to use" << endl;
+    cout << "   --stylefile=STYLEFILE    Style-file to use" << endl;
+    cout << "   --actionfile=ACTIONFILE  Action-file to use" << endl;
+    cout << "   --menufile=MENUFILE      Menu-file to use" << endl;
     cout << "   --usage                  Display brief usage message" << endl;
     cout << "   --help                   Show this help message" << endl;
     cout << "   --version                Output version information and exit" <<

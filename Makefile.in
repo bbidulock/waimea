@@ -68,7 +68,7 @@ VERSION = @VERSION@
 XFT = @XFT@
 regex_cmd = @regex_cmd@
 
-SUBDIRS = data src
+SUBDIRS = data doc src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 

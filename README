@@ -1,487 +1,99 @@
-WAIMEA WINDOW MANAGER
+INFO
 
-       Waimea is a virtual desktop window manager designed to be fast and 
-       highly customizable. It uses Blackbox image rendering engine (Blackbox
-       styles support) and can use Xrender extension for rendering fonts 
-       (anti-aliased font support). It also features a very advanced 
-       configuration system with which it's possible to make Waimea behave 
-       as almost any other window manager.
-
-       Implemented features:
-        - Blackbox image rendering engine (blackbox style support)
-        - Action Configuration System
-        - Advanced Menu System
-        - Standard X core fonts
-        - Xrender extension support for rendering anti-aliased fonts
-        - Virtual desktop
-	- Task switcher
-	- Dockapp holder
-
-        Features under development:
-         - New revolutionary of pager utility
-	 - Per window style and action configuration support
-
-        Planned features:
-         - Configuration program
-         - ...
-
+       The design goal for waimea is to create the most efficient
+       desktop  working  environment  available.  To achieve this
+       waimea is a fast and highly customizable  virtual  desktop
+       window  manager.   It  uses  blackbox(1)  image  rendering
+       engine (blackbox  styles  support)  and  can  use  Xrender
+       extension for rendering fonts (anti-aliased font support).
+       It also features a very advanced configuration system with
+       which  it's  possible  to make waimea behave as almost any
+       other window manager.
+       
+       Features already included are:
+         Virtual desktop
+         Blackbox image rendering engine (blackbox style support)
+	 Action Configuration System
+         Advanced Menu System
+         Standard X core fonts
+         Xft fonts (anti-aliased fonts)
+         Dockapp handler system
+         Task switcher	     
 
 INSTALLATION
 
-        1. Run './configure' script. By default Waimea configures to compile 
-        with Xft/Xrender support for anti-aliased fonts if support for it 
-        could be found (Need Xfree86 4.0.3 or later). If you don't want 
-        Xft fonts use '--disable-xft' switch when running configure script. 
-	For all configure script options type './configure --help'.
+	1. Run './configure' script. By default Waimea configures 
+	to  compile  with  Xft/Xrender  support for  anti-aliased 
+	fonts  if support  for it  could be  found  (Need Xfree86 
+	4.0.3  or  later).  If  you  don't  want  Xft  fonts  use 
+	'--disable-xft' switch when running configure script. For
+	a list of all available  configure  script  options  type 
+	'./configure --help'.
 
-        2. Run 'make'. Should compile without errors.
+	2. Run 'make'. Should compile without errors.
 
-        3. Run 'make install' to install binary and data files.
+	3. Run 'make install' to install binary and data files.
+	
+	That should be it,  waimea installs itself in  /usr/local 
+	as default.
 
+CONFIGURATION
+
+	You can run Waimea without doing any of these configurat-
+	ion steps but you are then stuck with the default config-
+	uration  options. If  you  wish to  have  your  own  user 
+	configuration, do the following steps. 
+
+	Create a '.waimea' directory structure in your home dire-
+	ctory.
+	mkdir ~/.waimearc
+	mkdir ~/.waimearc/actions
+	mkdir ~/.waimearc/styles
+
+	Copy default data files into directory structure.
+	cp WAIMEA_DATA_INSTALL_DIR/menu ~/.waimea/menu
+	cp WAIMEA_DATA_INSTALL_DIR/actions/* ~/.waimea/actions/
+	cp WAIMEA_DATA_INSTALL_DIR/styles/* ~/.waimea/styles/
+
+	Copy  the example  configuration file  to  '.waimearc' in 
+	your homedir.
+	cp WAIMEA_DATA_INSTALL_DIR/waimearc.example ~/.waimearc
+
+        Edit '.waimearc'. 
+        Set the styleFile option  to the full  path of the  style 
+	you wish to use, 'HOME_DIR/.waimea/styles/Default' to use
+	default style. Set the  menuFile  option to the full path 
+	of the menu file, 'HOME_DIR/.waimea/menu' if you followed 
+	the instructions above.  Set the actionFile option to the 
+	full path of the action file you wish to use. At the  top 
+	of the action  files there's a  description  for how they 
+	work, read the descriptions and decide which action  file 
+	you wish to use.  'HOME_DIR/.waimea/actions.sloppy-focus' 
+	to use default sloppy-focus action.
+
+	'HOME_DIR' must be the full path to your home directory 
+	'~' doesn't work.
+ 
+	For info on how to edit the action, menu and style  files 
+	see waimea(1) manual page.
 
 RUNNING
 
-        Run 'waimea'
-
-        Try '--help' switch for complete help message.
-
-
-CONFIG FILE
-
-        Then starting, Waimea looks for a '.waimearc' resource file in the 
-        users home directory. This file should contain configuration options 
-        for Waimea. If file doesn't exist default values for all options are 
-        used (See 'data/waimearc.example' for default options). If you want 
-        to force Waimea to read a different configuration file use '--rcfile'
-        switch.
-       
-        Available Configuration Options:
-
-        styleFile
-                Style file path.
-
-        menuFile
-                Menu file path.
-
-        actionFile
-                Action file path.
-
-        ColorsPerChannel
-                Colors per channel to use for image rendering.
-
-        cacheMax
-                Cache limit for pixmap caching.
-
-        imageDither
-       		True or False
-
-	doubleClickInterval
-		Between 0-1000, double click interval in milliseconds. Default
-		is 300.
-
-        virtualSize
-                Virtual desktop size. Ex. '3x3' will set the virtual desktop 
-                size to three times screen height in virtual height and three
-                times screen width in virtual width.
-
-
-	Dockapp Holders
-	
-	It is possible to have more than one dockapp holder running.
-	First dockapp handler should be named dock0 and the second dock1
-	and so on. One dockapp holder is always running whether you have a 
-	put a dock0 line in the config file or not.
-
-        dock[num].geometry
-		Placement of dockapp holder, X11 offset string of the form:
-		[{+-}<xoffset>{+-}<yoffset>]
-	
-	dock[num].order
-		A whitespace separated list describing how to order the
-		dockapps in the dockapp holder. Dockapps can be ordered
-		by window name and class. For window name use "N_" prefix
-		followed by window name and for window class use "C_" prefix
-		followed by window class.
-		Example:
-			dock0.order:	N_cpumeter C_pager UNKNOWN
-			
-		This will put dockapp window named cpumeter at the first
-		position in dockapp holder and pager dockapp at second 
-		position. All dockapp windows that doesn't match any "N_" or 
-		"C_" will be but at the position of the UNKNOWN string.
-		The UNKNOWN string MUST exist in ONE AND ONLY ONE of the
-		dockapp holder order resources.
-		
-	dock[num].direction
-		Dockapp holder direction {Vertical, Horizontal}
-
-	dock[num].centered
-		True if you want the dockapp holder to be centered. If
-		direction is Vertical, yoffset from geometry resource will
-		be ignored and dockapp holder will be centered vertically.
-		If direction is Horizontal, xoffset from geometry resource 
-		will be ignored and dockapp holder will be centered 
-		horizontally.
-
-	dock[num].gridSpace
-		Number of pixels spacing between dockapps in dockapp holder.
-
-	dock[num].stacking:
-		Stacking order for dockapp holder
-		{AlwaysOnTop, AlwaysAtBottom}.
-
-STYLES
-
-        In this section I only describe the new options added in Waimea, for 
-        a complete description of all style options you'll have to read 
-        Blackbox manual page. Waimea doesn't use all options in a standard 
-        Blackbox style. Blackbox styles should work fine without any of the 
-        new options. The new options are for enabling some extra features in 
-        Waimea. As default Waimea reads the style file specified in the 
-        config file and if not specified in config file the global system 
-        style file. If you want to force Waimea to read a specified style 
-        file use '--stylefile' switch.
-
-        menu.bullet.look
-                Could be a string, or character ASCII-code within two "'". 
-                The string or character is used for submenu bullet. By default
-                ">" string is used.
-
-	menu.checkbox.true.look
-                Could be a string, or character ASCII-code within two "'".
-                The string or character is used as checkbox symbol 'True'. 
-		By default "[x]" string is used.
-
-	menu.checkbox.true.look
-                Could be a string, or character ASCII-code within two "'".
-                The string or character is used as checkbox symbol 'False'. 
-                By default "[ ]" string is used.	
-
-        menu.borderWidth
-                Border width of all menus, By default 2.
-
-        window.title.height
-                Forces title title to a number of pixels. By default the title 
-                height is set by the height of the font.
-
-        *.xftFont
-                This option can be used for all items that the .font option 
-                can be used for, plus the new menu.bullet, menu.checkbox.false
-		and menu.checkbox.true items. If Waimea is compiled with 
-		xft support then it will use font specified by this option 
-		instead of the one specified by .font. By default Waimea 
-		uses the font specified by .font option. If neither options 
-		are specified, Waimea uses 'fixed' font for standard X core 
-		fonts and 'arial' for Xft font.
-
-        *.xftSize
-		This should be a floating point number between 2.0 and 100.0
-                and can be used for all items as the above option can be 
-                used for. This option specifies the size of the xft font to 
-		use. This is not really in pixels but instead in a percentage 
-		of the screen height (read xft manual page for info about this).
-
-        window.button.hilite.picColor
-                This specifies the picColor to use when mouse is hovering 
-                over the titlebar buttons. By default this color is the same 
-                as window.button.focus.picColor and no hover effect will then
-                be seen. 
-
-	outlineColor
-		Color for non-opaque move and resize outlines. Default is
-		white.
-
-
-ACTIONS
-
-        With this file you can configure Waimea to work exactly as you want 
-        it to. As default Waimea reads the action file specified in the 
-        config file and if not specified in config file the global system 
-        action file. If you want to force Waimea to read a specified action 
-        file use '--actionfile' switch. The idea is that you could specify
-        an 'action' for every X event received. The file is read as an X 
-        resource file. First you use a resource line ending with a priority 
-        number to specify the window that you want to assign an 'action' for.
-        If you have more than one 'action' for an event the 'action' with the
-        lowest priority number will be executed first. Two 'actions' can't 
-        have the same priority number and remember that you can't skip 
-        priority numbers, reading of 'actions' for a window will stop when a 
-        priority number isn't found. The resource line should be followed by
-        an 'action' then a ':' character and the event. 
-
-        If you want to specify a detail for the event use a '=' after the 
-        event. The '&' character is used for specifying a modifier mask. 
-        Action and event must always be specified. Here's an example (the 
-        best way to learn how this work is to look at the action files in 
-	'data/actions/' directory).
-
-        window.label.1: Move : ButtonPress = Button1 & Mod1Mask | ControlMask
-        window.label.2: Resize : ButtonPress = Button1 & Mod1Mask | \
-                        !ControlMask
-
-        The first line will create a move action that will be performed when 
-        a ButtonPress event is received from Button1 and at least mod1 
-        modifier and control modifier is held down. The second line will 
-        create a resize action that will be performed when a ButtonPress 
-        event is received from Button1 and at least mod1 modifier is held 
-        down and the control modifier key is not held down.
-
-        (menumap, menuremap and menuunmap actions needs a menu as parameter. 
-        Ex. "menumap(rootmenu)")
-
-        (Description of all of the following list elements should be made 
-        when I have time.)
-
-        List of windows possible to create actions for:
-                window.frame
-                window.title
-                window.label
-                window.client.active
-		window.client.passive
-                window.closeButton
-                window.iconifyButton
-                window.maximizeButton
-                window.handle
-                window.leftgrip
-                window.rightgrip
-                window.leftgrip
-                menu.title
-                menu.item
-                menu.sub
-		menu.checkbox
-                root
-                westedge
-                eastedge
-                northedge
-                southedge
-
-	List of actions common for all window types:
-		{command line}
-			 You can specify a command line to execute instead of
-			 a function. Command line must be between a '{' 
-			 character and a '}' character.
-		focus
-	        viewportleft
-                viewportright
-                viewportup
-                viewportdown
-		viewportleftnowarp
-                viewportrightnowarp
-                viewportupnowarp
-                viewportdownnowarp
-                scrollviewportleft(pixels)
-                scrollviewportright(pixels)
-                scrollviewportup(pixels)
-                scrollviewportdown(pixels)
-                scrollviewportleftnowarp(pixels)
-                scrollviewportrightnowarp(pixels)
-                scrollviewportupnowarp(pixels)
-                scrollviewportdownnowarp(pixels)
-			For the scrollviewport actions it's possible to 
-			specify with a parameter how many pixels to scroll.
-			If no parameter then default value (30) is used.
-		viewportmove
-			Moves viewport after mouse motion events (kind of 
-			the same way as you move windows).
-		taskswicher
-			Maps task switcher menu.
-		nexttask
-			Switches to next task
-		previoustask
-			Switches to previous task
-
-        List of actions for window.* windows:
-                raise
-                lower
-                move
-                resizeright
-                resizeleft
-                moveopaque
-                resizerightopaque
-                resizeleftopaque
-                close
-                kill
-                closekill
-                menumap(menu_name)
-                menuremap(menu_name)
-                menuunmap(menu_name)
-		menumapfocused(menu_name)
-                menuremapfocused(menu_name)
-                menuunmapfocused(menu_name)
-                shade
-                unshade
-                toggleshade
-                maximize
-                unmaximize
-                togglemaximize
-                sticky
-                unsticky
-                togglesticky
-		raisefocus
-		decortitleon
-		decortitleoff
-		decortitletoggle
-		decorhandleon
-		decorhandleoff
-		decorhandletoggle
-		decorborderon
-		decorborderoff
-		decorbordertoggle
-		decorallon
-		decoralloff
-		alwaysontopon
-		alwaysontopoff
-		alwaysontoptoggle
-		alwaysatbottomon
-		alwaysatbottomoff
-		alwaysatbottomtoggle
-
-	All actions for window.client.* can be prefixed with a '*' character
-	to make them pass-through actions (Events matching pass-throught actions
-	will also be sent to the client window).
-
-        List of actions for menu.* windows:
-                unlink
-                mapsub
-                remapsub
-		mapsubfocused
-                remapsubfocused
-                unmap
-		unmapfocused
-                unmapsubs
-                unmapsubs
-                unmaptree
-                exec
-                func
-                raise
-                lower
-                move
-                moveopaque
-
-        List of actions for root, *edge windows:
-                menumap(menu_name)
-                menuremap(menu_name)
-                menuunmap(menu_name)
-		menumapfocused(menu_name)
-                menuremapfocused(menu_name)
-                restart[(command line)]
-                exit
-
-        List of event types:
-                buttonpress
-                buttonrelease
-		doubleclick
-		keypress
-		keyrelease
-                enternotify
-                leavenotify
-                maprequest
-
-        List of event details:
-		For ButtonEvents:
-                	anybutton
-                	button1-7
-		For KeyEvents:
-			Standard KeySym names obtained from <X11/keysymdef.h>
-			by removing the XK_ prefix from each name.
-			
-			anykey
-				You can use anykey as detail if you want action
-				to match any key pressed or released.
-
-        List of event modifiers:
-                shiftmask
-                lockmask
-                controlmask
-                mod1-5mask
-                button1-5mask
-
-
-MENUS
-
-        In the menu configuration file should all menus used in the action 
-        configuration file be defined. As default Waimea reads the menu 
-        file specified in the config file and if not specified in config file 
-        the global system menu file. If you want to force Waimea to read a 
-        specified menu file use '--menufile' switch. 
-
-        A menu definition starts with a [start] (menu_name) statement and ends
-        with a [end] statement. Remember that a [start] must be followed by a
-        menu name. Between the [begin] and [end] statements a number of 
-        [item], [title] and [sub] statements should be put. The only thing 
-        separating these three menu item types are there looks and action 
-        lists. All three of these statements could be followed by a (string),
-        "string", {string} and <string>. 
-
-        () = menu item title
-        "" = action
-        {} = command line
-        <> = sub menu
-
-        Example:
-
-        [start]   (menu)
-          [title] (Menu)
-          [item]  (Xterm)    {xterm}
-          [sub]   (Programs) <progs>
-          [item]  (Restart)  "restart"
-          [item]  (Exit)     "exit"
-        [end]
-
-        It is possible to start defining a new menu within another menu.
-        Example:
-
-        [start]    (menu)
-          [start]  (menu2)
-            [item] (not smart)    {rm -rf ~/.}
-            [end]
-          [sub]    <menu2>
-        [end]
-
-        If you want to use (,),{,},<,>,[,] characters within the strings use 
-        %(, %) and so on. %% is converted to single %.
-
-        It is also possible to have environment variables inserted into the 
-        strings. All strings within $ characters is looked up as environment 
-        variables.
-        Example:
-
-        [item] (Logout $USER$) "exit"
-
-        $USER$ will be replaced with USER environment variable.
-
-        Predefined menu named "__windowlist__" can be used in menu file
-	and action file to access the taskswitcher menu.
-
-	A checkbox item is a item that have two modes and a flag decides which
-	mode the item is in. 
-	Example:
-	
-	[checkbox=STICKY] @FALSE (Sticky) "sticky" @TRUE (Sticky) "unsticky"
-
-	Flag to decide which mode to be in for this checkbox is STICKY (the
-	sticky flag for a window). If STICKY flag is 'False' the checkbox item
-	will be in mode defined by menu string after @FALSE and if STICKY flag
-	is 'True' the checkbox item will be in mode defined by the menu string
-	after @TRUE.
-
-	List of flags:
-	MAXIMIZED
-	SHADED
-	STICKY
-	ALWAYSONTOP
-	ALWAYSATBOTTOM
-	DECORTITLE
-	DECORHANDLE
-	DECORBORDER
-	DECORALL
-	
-	See data/menu for good example of menu file.
-
+	This can be different from system to system but the foll-
+	oing should work on most systems. 
+
+	If you're running xdm, modify the '~.xsession' by  adding
+	'exec waimea' as the last executed command of the script.
+
+	If you use startx script to start X, modify the '~.xinit-
+	rx' by adding 'exec waimea' as the last executed command of 
+	the script.
 
 BUGS
+       Bug reports, patches and suggestions are much appreciated,
+       send them to the author.
 
-        Waimea is in a early stage of development and there are of course
-        many bugs. Bug reports, patches and suggestions are much appreciated,
-        send them to <c99drn@cs.umu.se> or <c99drn@axtorpsv044.sn.umu.se>.
+AUTHOR
+	David Reveman <c99drn@cs.umu.se>
 
+	The Waimea website: http://waimea.sourceforge.net

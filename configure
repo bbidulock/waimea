@@ -1123,7 +1123,7 @@ fi
 
 PACKAGE=Waimea
 
-VERSION=0.1.7-1
+VERSION=0.2.0
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { { echo "$as_me:1129: error: source directory already configured; run \"make distclean\" there first" >&5
@@ -4183,7 +4183,7 @@ echo "${ECHO_T}no" >&6
 
 fi;
 
-ac_config_files="$ac_config_files Makefile src/Makefile data/Makefile data/actions/Makefile data/styles/Makefile data/backgrounds/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile data/Makefile data/actions/Makefile data/styles/Makefile data/backgrounds/Makefile doc/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -4486,14 +4486,15 @@ Try \`$0 --help' for more information." >&2;}
   'data/actions/Makefile' ) CONFIG_FILES="$CONFIG_FILES data/actions/Makefile" ;;
   'data/styles/Makefile' ) CONFIG_FILES="$CONFIG_FILES data/styles/Makefile" ;;
   'data/backgrounds/Makefile' ) CONFIG_FILES="$CONFIG_FILES data/backgrounds/Makefile" ;;
+  'doc/Makefile' ) CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
 
   # This is an error.
-  -*) { { echo "$as_me:4491: error: unrecognized option: $1
+  -*) { { echo "$as_me:4492: error: unrecognized option: $1
 Try \`$0 --help' for more information." >&5
 echo "$as_me: error: unrecognized option: $1
 Try \`$0 --help' for more information." >&2;}
    { (exit 1); exit 1; }; } ;;
-  *) { { echo "$as_me:4496: error: invalid argument: $1" >&5
+  *) { { echo "$as_me:4497: error: invalid argument: $1" >&5
 echo "$as_me: error: invalid argument: $1" >&2;}
    { (exit 1); exit 1; }; };;
   esac
@@ -4732,7 +4733,7 @@ done; }
   esac
 
   if test x"$ac_file" != x-; then
-    { echo "$as_me:4735: creating $ac_file" >&5
+    { echo "$as_me:4736: creating $ac_file" >&5
 echo "$as_me: creating $ac_file" >&6;}
     rm -f "$ac_file"
   fi
@@ -4750,7 +4751,7 @@ echo "$as_me: creating $ac_file" >&6;}
       -) echo $tmp/stdin ;;
       [\\/$]*)
          # Absolute (can't be DOS-style, as IFS=:)
-         test -f "$f" || { { echo "$as_me:4753: error: cannot find input file: $f" >&5
+         test -f "$f" || { { echo "$as_me:4754: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          echo $f;;
@@ -4763,7 +4764,7 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
            echo $srcdir/$f
          else
            # /dev/null tree
-           { { echo "$as_me:4766: error: cannot find input file: $f" >&5
+           { { echo "$as_me:4767: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          fi;;
