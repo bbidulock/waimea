@@ -1,0 +1,10 @@
+!
+! 	waimearc.example
+! This is waimea's standard configuration.
+!
+styleFile:		@pkgdatadir@/styles/Default
+menuFile:		@pkgdatadir@/menu
+actionFile:		@pkgdatadir@/action
+colorsPerChannel:	4
+cacheMax:		200
+virtualSize:		1x1

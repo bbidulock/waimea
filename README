@@ -1,0 +1,328 @@
+WAIMEA WINDOW MANAGER
+
+       Waimea is a virtual desktop window manager designed to be fast and 
+       highly customizable. It uses Blackbox image rendering engine (Blackbox
+       styles support) and can use Xrender extension for rendering fonts 
+       (anti-aliased font support). It also features a very advanced 
+       configuration system with which it's possible to make Waimea behave 
+       as almost any other window manager.
+
+       Implemented features:
+        - Blackbox image rendering engine (blackbox style support)
+        - Action Configuration System
+        - Advanced Menu System
+        - Standard X core fonts
+        - Xrender extension support for rendering anti-aliased fonts
+        - Virtual desktop
+
+        Features under development:
+         - Dockapp holder
+         - Task switcher
+         - New revolutionary of pager utility
+	 - KDE support
+	 - GNOME support
+
+        Planned features:
+         - Xinerama support
+         - copy/cut/paste buffers control
+         - Configuration program
+         - ...
+
+
+INSTALLATION
+
+        1. Run './configure' script. By default Waimea configures to compile 
+        with Xft/Xrender support for anti-aliased fonts if support for it 
+        could be found (Need Xfree86 4.0.3 or later). If you don't want 
+        Xft/Xrender for rendering fonts use '--disable-xft' switch with 
+        configure script. For all configure script options type './configure
+         --help'.
+
+        2. Run 'make'. Should compile without errors.
+
+        3. Run 'make install' to install binary and data files.
+
+
+RUNNING
+
+        Run 'waimea'
+
+        Try '--help' switch for complete help message.
+
+
+CONFIG FILE
+
+       Then starting, Waimea looks for a '.waimearc' resource file in the 
+       users home directory. This file should contain configuration options 
+       for Waimea. If file doesn't exist default values for all options are 
+       used (See 'data/waimearc.example' for default options). If you want 
+       to force Waimea to read a different configuration file use '--rcfile'
+       switch.
+       
+       Available Configuration Options:
+
+       styleFile
+                Style file path.
+
+        menuFile
+                Menu file path.
+
+        actionFile
+                Action file path.
+
+        ColorsPerChannel
+                Colors per channel to use for image rendering.
+
+        cacheMax
+                Cache limit for pixmap caching.
+
+        virtualSize
+                Virtual desktop size. Ex. '3x3' will set the virtual desktop 
+                size to three times screen height in virtual height and three
+                times screen width in virtual width.
+
+
+STYLES
+
+        In this section I only describe the new options added in Waimea, for 
+        a complete description of all style options you'll have to read 
+        Blackbox manual page. Waimea doesn't use all options in a standard 
+        Blackbox style. Blackbox styles should work fine without any of the 
+        new options. The new options are for enabling some extra features in 
+        Waimea. As default Waimea reads the style file specified in the 
+        config file and if not specified in config file the global system 
+        style file. If you want to force Waimea to read a specified style 
+        file use '--stylefile' switch.
+
+        menu.bullet
+                Could be a string, or character ASCII-code within two "'". 
+                The string or character is used for submenu bullet. By default
+                ">" string is used.
+
+        menu.borderWidth
+                Border with of all menus, By default 2.
+
+        titleWidth
+                Forces title with to number of pixels. By default the title 
+                width is set by the height of the font.
+
+        *.xftFont
+                This option can be used for all items that the .font option 
+                can be used for, plus the new menu.bullet item. If Waimea is 
+                compiled with xft support when it will use font specified by 
+                this option instead of the one specified by .font. By default
+                Waimea uses the font specified by .font option. If neither 
+                options are specified, Waimea uses 'fixed' font.
+
+        *.xftSize
+                This can be used for all items as the above option can be 
+                used and specifies the size of the xft font to use. This is 
+                not really in pixels but instead in a percentage of the 
+                screen height (read xft manual page for info about this). By
+                default size 7 is used.
+
+        window.button.hilite.picColor
+                This specifies the picColor to use when mouse is hovering 
+                over the titlebar buttons. By default this color is the same 
+                as window.button.focus.picColor and no hover effect will then
+                be seen. 
+
+
+ACTIONS
+
+        With this file you can configure Waimea to work exactly as you want 
+        it to. As default Waimea reads the action file specified in the 
+        config file and if not specified in config file the global system 
+        action file. If you want to force Waimea to read a specified action 
+        file use '--actionfile' switch. The idea is that you could specify 
+        an 'action' for every X event received. The file is read as an X 
+        resource file. First you use a resource line ending with a priority 
+        number to specify the window that you want to assign an 'action' for.
+        If you have more than one 'action' for an event the 'action' with the
+        lowest priority number will be executed first. Two 'actions' can't 
+        have the same priority number and remember that you can't skip 
+        priority numbers, reading of 'actions' for a window will stop when a 
+        priority number isn't found. The resource line should be followed by
+        an 'action' then a ':' character and the event. 
+
+        If you want to specify a detail for the event use a '=' after the 
+        event. The '&' character is used for specifying a modifier mask. 
+        Action and event must always be specified. Here's an example (the 
+        best way to learn how this work is to look at the standard action 
+        file 'data/action').
+
+        window.label.1: Move : ButtonPress = Button1 & Mod1Mask | ControlMask
+        window.label.2: Resize : ButtonPress = Button1 & Mod1Mask | \
+                        !ControlMask
+
+        The first line will create a move action that will be performed when 
+        a ButtonPress event is received from Button1 and at least mod1 
+        modifier and control modifier is held down. The second line will 
+        create a resize action that will be performed when a ButtonPress 
+        event is received from Button1 and at least mod1 modifier is held 
+        down and the control modifier key is not held down.
+
+        (menumap, menuremap and menuunmap actions needs a menu as parameter. 
+        Ex. "menumap(rootmenu)")
+
+        (Description of all of the following list elements should be made 
+        when I have time.)
+
+        List of windows possible to create actions for:
+                window.frame
+                window.title
+                window.label
+                window.client
+                window.closeButton
+                window.iconifyButton
+                window.maximizeButton
+                window.handle
+                window.leftgrip
+                window.rightgrip
+                window.leftgrip
+                menu.title
+                menu.item
+                menu.sub
+                root
+                westedge
+                eastedge
+                northedge
+                southedge
+
+        List of actions for window.* windows:
+                raise
+                lower
+                focus
+                move
+                resizeright
+                resizeleft
+                moveopaque
+                resizerightopaque
+                resizeleftopaque
+                close
+                kill
+                closekill
+                menumap
+                menuremap
+                menuunmap
+                shade
+                unshade
+                toggleshade
+                maximize
+                unmaximize
+                togglemaximize
+                sticky
+                unsticky
+                togglesticky
+
+        List of actions for menu.* windows:
+                unlink
+                mapsub
+                remapsub
+                unmap
+                unmapsubs
+                unmaptree
+                exec
+                func
+                raise
+                lower
+                move
+                moveopaque
+
+        List of actions for root, *edge windows:
+                focus
+                menumap
+                menuremap
+                menuunmap
+                restart
+                exit
+                viewportleft
+                viewportright
+                viewportup
+                viewportdown
+                scrollviewportleft
+                scrollviewportright
+                scrollviewportup
+                scrollviewportdown
+
+        List of event types:
+                buttonpress
+                buttonrelease
+                enternotify
+                leavenotify
+                maprequest
+
+        List of event details:
+                anybutton
+                button1-7
+
+        List of event modifiers:
+                shiftmask
+                lockmask
+                controlmask
+                mod1-5mask
+                button1-5mask
+
+
+MENUS
+
+        In the menu configuration file should all menus used in the action 
+        configuration file be defined. As default Waimea reads the menu 
+        file specified in the config file and if not specified in config file 
+        the global system menu file. If you want to force Waimea to read a 
+        specified menu file use '--menufile' switch. 
+
+        A menu definition starts with a [begin] (menu_name) statement and ends
+        with a [end] statement. Remember that a [begin] must be followed by a
+        menu name. Between the [begin] and [end] statements a number of 
+        [item], [title] and [sub] statements should be put. The only thing 
+        separating these three menu item types are there looks and action 
+        lists. All three of these statements could be followed by a (string),
+        "string", {string} and <string>. 
+
+        () = menu item title
+        "" = action
+        {} = command line
+        <> = sub menu
+
+        Example:
+
+        [begin]   (menu)
+          [title] (Menu)
+          [item]  (Xterm)    {xterm}
+          [sub]   (Programs) <progs>
+          [item]  (Restart)  "restart"
+          [item]  (Exit)     "exit"
+        [end]
+
+        It is possible to start defining a new menu within another menu.
+        Example:
+
+        [begin]    (menu)
+          [begin]  (menu2)
+            [item] (not smart)    {rm -rf ~/.}
+            [end]
+          [sub]    <menu2>
+        [end]
+
+        If you want to use (,),{,},<,>,[,] characters within the strings use 
+        %(, %) and so on. %% is converted to single %.
+
+        It is also possible to have environment variables inserted into the 
+        strings. All strings within $ characters is looked up as environment 
+        variables.
+        Example:
+
+        [item] (Logout $USER$) "exit"
+
+        $USER$ will be replaced with USER environment variable.
+
+        See data/menu for good example of menu file.
+
+
+BUGS
+
+        Waimea is in a early stage of development and there are of course
+        many bugs. Bug reports, patches and suggestions are much appreciated,
+        send them to <c99drn@cs.umu.se> or <c99drn@axtorpsv044.sn.umu.se>.
+

@@ -1,0 +1,72 @@
+menu.title:				flat gradient crossdiagonal
+  menu.title.color:			#8090c0
+  menu.title.colorTo:			#405070
+  menu.title.textColor:			#ffffff
+
+menu.frame:				flat gradient crossdiagonal
+  menu.frame.color:			#ffffff
+  menu.frame.colorTo:			#b0c0d8
+  menu.frame.textColor:			#000000
+
+menu.hilite:				flat gradient horizontal
+  menu.hilite.color:			#606878
+  menu.hilite.colorTo:			#000000
+  menu.hilite.textColor:		#e0f0ff
+
+menu.bulletlook:			>
+
+window.title.focus:			flat gradient crossdiagonal
+  window.title.focus.color:		#8090c0
+  window.title.focus.colorTo:		#101828
+  
+window.title.unfocus:			sunken gradient crossdiagonal
+  window.title.unfocus.color:		#303848
+  window.title.unfocus.colorTo:		#101828
+  
+window.justify:                   	right
+
+window.label.focus:			parentrelative
+  window.label.focus.textColor:		#ffffff
+  
+window.label.unfocus:			parentrelative
+  window.label.unfocus.textColor:	#505468
+
+window.button.focus:			parentrelative
+  window.button.focus.picColor:		#000000
+  
+window.button.unfocus:			parentrelative
+  window.button.unfocus.picColor: 	#505468
+  
+window.button.pressed:			sunken gradient vertical
+  window.button.pressed.color:		#8090c0
+  window.button.pressed.colorTo:	#405070
+
+window.button.hilite.picColor:		#ffffff
+
+window.handle.focus:			flat gradient crossdiagonal
+  window.handle.focus.color:		#90b098
+  window.handle.focus.colorTo:		#506058
+  
+window.handle.unfocus:			sunken gradient crossdiagonal
+  window.handle.unfocus.color:		#303848
+  window.handle.unfocus.colorTo:	#101828
+
+window.grip.focus:			flat gradient crossdiagonal
+  window.grip.focus.color:		#fff0a0
+  window.grip.focus.colorTo:		#c0a040
+  
+window.grip.unfocus:			sunken gradient crossdiagonal
+  window.grip.unfocus.color:		#303848
+  window.grip.unfocus.colorTo:		#101828
+
+borderColor:				#000000
+borderWidth:				2
+handleWidth:				3
+menu.borderWidth:			2
+!menu.*.height:				15
+
+*.font:		fixed
+*.xftfont:	arial
+*.xftfontsize:	8
+
+rootCommand: bsetbg @pkgdatadir@/backgrounds/waimea.png

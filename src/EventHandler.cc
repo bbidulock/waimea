@@ -1,0 +1,441 @@
+/** -*- Mode: C++ -*-
+ *
+ * @file   EventHandler.cc
+ * @author David Reveman <c99drn@cs.umu.se>
+ * @date   11-May-2001 11:48:03
+ *
+ * @brief Implementation of EventHandler class  
+ *
+ * Eventloop function and functions for handling XEvents.
+ *
+ * Copyright (C) David Reveman. All rights reserved.
+ *
+ */
+
+#include "EventHandler.hh"
+
+#include <stdio.h>
+#include <X11/Xatom.h>
+
+/**
+ * @fn    EventHandler(Waimea *wa)
+ * @brief Constructor for EventHandler class
+ *
+ * Sets waimea and rh pointers. Creates menu move return mask and window
+ * move/resize return mask hash_sets.
+ */
+EventHandler::EventHandler(Waimea *wa) {
+    waimea = wa;
+    rh = waimea->rh;
+    focused = 0;
+    
+    moveresize_return_mask = new hash_set<int>;
+    moveresize_return_mask->insert(MotionNotify);
+    moveresize_return_mask->insert(ButtonPress);
+    moveresize_return_mask->insert(ButtonRelease);
+    moveresize_return_mask->insert(MapRequest);
+    moveresize_return_mask->insert(UnmapNotify);
+    moveresize_return_mask->insert(DestroyNotify);
+    moveresize_return_mask->insert(EnterNotify);
+    moveresize_return_mask->insert(LeaveNotify);
+    moveresize_return_mask->insert(ConfigureRequest);
+
+    menu_move_return_mask = new hash_set<int>;
+    menu_move_return_mask->insert(MotionNotify);
+    menu_move_return_mask->insert(ButtonPress);
+    menu_move_return_mask->insert(ButtonRelease);
+    menu_move_return_mask->insert(MapRequest);
+    menu_move_return_mask->insert(EnterNotify);
+    menu_move_return_mask->insert(LeaveNotify);
+}
+
+/**
+ * @fn    EventHandler::EventLoop(void)
+ * @brief Eventloop
+ *
+ * Infinite loop waiting for an event to occur. Executes a matching function
+ * for an event then it occurs. If what to do when an event occurs is
+ * controlled by a action list we set etype, edetail and emod variables and
+ * jump into EvAct() function. This function can be called from move and resize
+ * functions the return_mask hash_set is then used for deciding if an event
+ * should be processed as normal or returned to the function caller.
+ */
+XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
+    Window w;
+    int i, rx, ry;
+
+    XEvent *event = new XEvent;
+    
+    for (;;) {
+        XNextEvent(waimea->display, event);
+        
+        if (return_mask->find(event->type) != return_mask->end()) return event;
+        
+        switch (event->type) {
+            case Expose:
+                EvExpose(&event->xexpose); break;
+            case PropertyNotify:
+                EvProperty(&event->xproperty); break;
+            case UnmapNotify:
+            case DestroyNotify:
+                EvUnmapDestroy(event); break;
+            case FocusOut:
+            case FocusIn:
+                EvFocus(&event->xfocus); break;
+            case LeaveNotify:
+            case EnterNotify:
+                if (event->xcrossing.mode == NotifyGrab) break;
+                ed.type = event->type;
+                ed.mod = event->xcrossing.state;
+                ed.detail = 0;
+                EvAct(event, event->xcrossing.window);
+                break;
+            case KeyPress:
+            case KeyRelease:
+                ed.type = event->type;
+                ed.mod = event->xkey.state;
+                ed.detail = event->xkey.keycode;
+                EvAct(event, event->xkey.window);
+                break;
+            case ButtonPress:
+            case ButtonRelease:
+                ed.type = event->type;
+                ed.mod = event->xbutton.state;
+                ed.detail = event->xbutton.button;
+                EvAct(event, event->xbutton.window);
+                break;
+            case ColormapNotify:
+                EvColormap(&event->xcolormap); break;
+            case ConfigureRequest:
+                EvConfigureRequest(&event->xconfigurerequest); break;
+            case MapRequest:
+                EvMapRequest(&event->xmaprequest);
+                ed.type = event->type;
+                XQueryPointer(waimea->wascreen->display,
+                              waimea->wascreen->id, &w, &w, &rx, &ry, &i, &i,
+                              &(ed.mod));
+                ed.detail = 0;
+                event->xbutton.x_root = rx;
+                event->xbutton.y_root = ry;
+                event->type = ButtonRelease;
+                EvAct(event, event->xmaprequest.window);
+        }
+    }
+}
+
+/**
+ * @fn    EvProperty(XPropertyEvent *e)
+ * @brief PropertyEvent handler
+ *
+ * We receive a property event when a window want us to update some window
+ * info. Unless the state of the property event is PropertyDelete, we try 
+ * to find the WaWindow managing the the window who sent the event. If a
+ * WaWindow was found, we update the stuff indicated by the event. If the 
+ * name should be updated we also redraw the label foreground for the
+ * WaWindow. 
+ *
+ * @param e	The PropertyEvent
+ */
+void EventHandler::EvProperty(XPropertyEvent *e) {
+    WaWindow *ww;
+
+    if (e->state == PropertyDelete) return;
+
+    hash_map<int, WindowObject *>::iterator it;
+    if ((it = waimea->window_table->find(e->window)) !=
+        waimea->window_table->end()) {
+        if (((*it).second)->type == WindowType) {
+            ww = (WaWindow *) (*it).second;
+            if (e->atom == XA_WM_NAME) {
+                XGrabServer(e->display);
+                if (validateclient(ww->id))
+                    XFetchName(ww->display, ww->id, &(ww->name));
+                XUngrabServer(e->display);
+                if (ww->title_w) ww->DrawLabelFg();
+            }
+        }
+    }
+}
+
+/**
+ * @fn    EvExpose(XExposeEvent *e)
+ * @brief ExposeEvent handler
+ *
+ * We receive an expose event when a windows foreground has been exposed
+ * for some change. If the event is from one of our windows with
+ * foreground, we redraw the foreground for this window.  
+ * 
+ * @param e	The ExposeEvent
+ */
+void EventHandler::EvExpose(XExposeEvent *e) {
+    hash_map<int, WindowObject *>::iterator it;
+    if ((it = waimea->window_table->find(e->window)) !=
+        waimea->window_table->end()) {
+        switch (((*it).second)->type) {
+            case LabelType:
+                (((WaChildWindow *) (*it).second)->wa)->DrawLabelFg(); break;
+            case CButtonType:
+                (((WaChildWindow *) (*it).second)->wa)->DrawCloseButtonFg();
+                break;
+            case IButtonType:
+                (((WaChildWindow *) (*it).second)->wa)->DrawIconifyButtonFg();
+                break;
+            case MButtonType:
+                (((WaChildWindow *) (*it).second)->wa)->DrawMaxButtonFg();
+                break;
+            case MenuTitleType:
+            case MenuItemType:
+            case MenuSubType:
+                ((WaMenuItem *) (*it).second)->DrawFg();
+        }
+    }
+}
+
+/**
+ * @fn    EvFocus(XFocusChangeEvent *e)
+ * @brief FocusChangeEvent handler
+ *
+ * We receive a focus change event when a window gets the keyboard focus.
+ * If a WaWindow is managing the window pointed to by the event then we change
+ * the WaWindows decorations to represent a focused window, and we change the
+ * before focused WaWindows decorations to represent an unfocused window.
+ *
+ * @param e	The FocusChangeEvent
+ */
+void EventHandler::EvFocus(XFocusChangeEvent *e) {
+    WaWindow *ww;
+
+    hash_map<int, WindowObject *>::iterator it;
+    if ((it = waimea->window_table->find(e->window)) !=
+        waimea->window_table->end()) {
+        if (((*it).second)->type == WindowType) {
+            ww = (WaWindow *) (*it).second;
+            if (e->type == FocusIn) {
+                if ((it = waimea->window_table->find(focused)) !=
+                    waimea->window_table->end()) {
+                    if (((*it).second)->type == WindowType)
+                        ((WaWindow *) (*it).second)->UnFocusWin();
+                }
+                ww->FocusWin();
+                focused = ww->id;
+            }  
+        }
+    }
+}
+
+/**
+ * @fn    EvConfigureRequest(XConfigureRequestEvent *e)
+ * @brief ConfigureRequestEvent handler
+ *
+ * When we receive this event a window wants to be reconfigured (raised,
+ * lowered, moved, resized). We try find a matching WaWindow managing the
+ * window, if found we update that WaWindow with the values from the configure
+ * request event. If we don't found a WaWindow managing the window who wants
+ * to be reconfigured, we just update that window with the values from the
+ * configure request event.
+ *
+ * @param e	The ConfigureRequestEvent
+ */
+void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
+    WaWindow *ww;
+    XWindowChanges wc;
+    int mask;
+
+    hash_map<int, WindowObject *>::iterator it;
+    if ((it = waimea->window_table->find(e->window)) !=
+        waimea->window_table->end()) {
+        if (((*it).second)->type == WindowType) {
+            ww = (WaWindow *) (*it).second;
+            ww->Gravitate(RemoveGravity);
+            if (e->value_mask & CWX) ww->attrib.x = e->x;
+            if (e->value_mask & CWY) ww->attrib.y = e->y;
+            if (e->value_mask & CWWidth) ww->attrib.width = e->width;
+            if (e->value_mask & CWHeight) ww->attrib.height = e->height;
+            ww->Gravitate(ApplyGravity);
+            ww->RedrawWindow();
+            wc.sibling = e->above;
+            wc.stack_mode = e->detail;
+            mask = (e->value_mask & CWSibling)? CWSibling: 0;
+            mask |= (e->value_mask & CWStackMode)? CWStackMode: 0;
+            XConfigureWindow(ww->display, ww->frame->id, mask, &wc);
+            if (e->value_mask & CWStackMode) waimea->WaRaiseWindow((Window) 0);
+            return;
+        }
+    }
+    wc.x = e->x;
+    wc.y = e->y;
+    wc.width = e->width;
+    wc.height = e->height;
+    wc.sibling = e->above;
+    wc.stack_mode = e->detail;
+    XGrabServer(e->display);
+    if (validateclient(e->window))
+        XConfigureWindow(e->display, e->window, e->value_mask, &wc);
+    XUngrabServer(e->display);
+    if (e->value_mask & CWStackMode) waimea->WaRaiseWindow((Window) 0);
+}
+
+/**
+ * @fn    EvColormap(XColormapEvent *e)
+ * @brief ColormapEvent handler
+ *
+ * A window wants to install a new colormap, so we do it.
+ *
+ * @param e	The ColormapEvent
+ */
+void EventHandler::EvColormap(XColormapEvent *e) {
+    XInstallColormap(e->display, e->colormap);
+}
+
+/**
+ * @fn    EvMapRequest(XMapRequestEvent *e)
+ * @brief MapRequestEvent handler
+ *
+ * We receive this event then a window wants to be mapped. If the window 
+ * isn't in our window hash_map already it's a new window and we create 
+ * a WaWindow for it. If the window already is managed we just set its
+ * state to NormalState.
+ *
+ * @param e	The MapRequestEvent
+ */
+void EventHandler::EvMapRequest(XMapRequestEvent *e) {
+    XWindowAttributes attr;
+    
+    hash_map<int, WindowObject *>::iterator it;
+    if ((it = waimea->window_table->find(e->window)) !=
+        waimea->window_table->end()) {
+        if (((*it).second)->type == WindowType) {
+            ((WaWindow *) (*it).second)->net->SetState(
+                ((WaWindow *) (*it).second), NormalState);
+        }
+    } 
+    else {
+        XGrabServer(e->display);
+        if (validateclient(e->window)) {
+            XGetWindowAttributes(e->display, e->window, &attr);
+            if (! attr.override_redirect) 
+                new WaWindow(e->window, waimea->wascreen);
+        }
+        XUngrabServer(e->display);
+    }
+}
+
+/**
+ * @fn    EvUnmapDestroy(XEvent *e)
+ * @brief UnmapEvent and DestroyEvent handler
+ *
+ * We receive this event then a window has been unmapped or destroyed.
+ * If we can find a WaWindow for this window then the delete that WaWindow.
+ *
+ * @param e	The UnmapEvent
+ */
+void EventHandler::EvUnmapDestroy(XEvent *e) {
+    hash_map<int, WindowObject *>::iterator it;
+    if ((it = waimea->window_table->find(((e->type == UnmapNotify)?
+                                          e->xunmap.window:
+                                          e->xdestroywindow.window)))
+        != waimea->window_table->end()) {
+        if (((*it).second)->type == WindowType)
+            delete ((WaWindow *) (*it).second);
+    }
+}
+
+/**
+ * @fn    EvAct(XEvent *e, Window win)
+ * @brief Event action handler
+ *
+ * The eventloop will call this function whenever a event that could
+ * be controlled by the actionlists occur. This function finds the WindowObject
+ * for the window, gets the actionlist for that type of WindowObject and
+ * executes all functions in the list that match the received event.
+ *
+ * @param e	The Event
+ * @param win The window we should use in the WindowObject search
+ */
+void EventHandler::EvAct(XEvent *e, Window win) {
+    WindowObject *wo;
+
+    hash_map<int, WindowObject *>::iterator it;
+    if ((it = waimea->window_table->find(win)) !=
+        waimea->window_table->end()) {
+        wo = (*it).second;
+        
+        switch (wo->type) {
+            case FrameType:
+                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->frameacts,
+                                                    wo->type); break;
+            case WindowType:
+                ((WaWindow *) wo)->EvAct(e, &ed, rh->winacts, wo->type);
+                break;
+            case TitleType:
+                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->titleacts,
+                                                    wo->type); break;
+            case LabelType:
+                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->labelacts,
+                                                    wo->type); break;
+            case HandleType:
+                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->handleacts,
+                                                    wo->type); break;
+            case CButtonType:
+                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->cbacts,
+                                                    wo->type); break;
+            case IButtonType:
+                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->ibacts,
+                                                    wo->type); break;
+            case MButtonType:
+                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->mbacts,
+                                                    wo->type); break;
+            case LGripType:
+                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->lgacts,
+                                                    wo->type); break;
+            case RGripType:
+                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->rgacts,
+                                                    wo->type); break;
+            case MenuTitleType:
+                ((WaMenuItem *) wo)->EvAct(e, &ed, rh->mtacts); break;
+            case MenuItemType:
+                ((WaMenuItem *) wo)->EvAct(e, &ed, rh->miacts); break;
+            case MenuSubType:
+                ((WaMenuItem *) wo)->EvAct(e, &ed, rh->msacts); break;
+            case WEdgeType:
+                (((ScreenEdge *) wo)->wa)->EvAct(e, &ed, rh->weacts); break;
+            case EEdgeType:
+                (((ScreenEdge *) wo)->wa)->EvAct(e, &ed, rh->eeacts); break;
+            case NEdgeType:
+                (((ScreenEdge *) wo)->wa)->EvAct(e, &ed, rh->neacts); break;
+            case SEdgeType:
+                (((ScreenEdge *) wo)->wa)->EvAct(e, &ed, rh->seacts); break;
+            case RootType:
+                ((WaScreen *) wo)->EvAct(e, &ed, rh->rootacts); break;
+        }    
+    }
+}
+
+/**
+ * @fn    eventmatch(WaAction *act, EventDetail *ed)
+ * @brief Event to action matcher
+ *
+ * Checks if action type, detail and modifiers are correct.
+ *
+ * @param act Action to use for matching
+ * @param ed Structure containing event details
+ *
+ * @return True if match, otherwise False
+ */
+Bool eventmatch(WaAction *act, EventDetail *ed) {
+    int i;
+    
+    if (ed->type != act->type) return False;
+    if ((act->detail && ed->detail) ? (act->detail == ed->detail): True) {
+        for (i = 0; i <= 12; i++)
+            if (act->mod & (1<<i))
+                if (! (ed->mod & (1<<i)))
+                    return False;
+        for (i = 0; i <= 12; i++)
+            if (act->nmod & (1<<i))
+                if (ed->mod & (1<<i))
+                    return False;
+        return True;
+    }
+    return False;
+}

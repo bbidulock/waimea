@@ -1,0 +1,1270 @@
+/** -*- Mode: C++ -*-
+ *
+ * @file   ResourceHandler.cc
+ * @author David Reveman <c99drn@cs.umu.se>
+ * @date   18-Jul-2001 00:31:22
+ *
+ * @brief Implementation of ResourceHandler and StrComp classes
+ *
+ * ResourceHandler class is used for reading window manager settings.
+ * Most settings are retrieved from X resource files. StrComp class
+ * is used for comparing strings to objects.
+ *
+ * Copyright (C) David Reveman. All rights reserved.
+ *
+ */
+
+#include <stdlib.h>
+#include <string.h>
+
+#include "ResourceHandler.hh"
+
+/**
+ * @fn    ResourceHandler(void)
+ * @brief Constructor for ResourceHandler class
+ *
+ * Sets config file variables. Creates lists with function pointers and
+ * lists for actions.
+ */
+ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
+    waimea = wa;
+    display = waimea->display;
+    
+    homedir = getenv("HOME");
+
+    rc_file = (char *) 0;
+    style_file = (char *) DEFAULTSTYLE;
+    action_file = (char *) DEFAULTACTION;
+    menu_file = (char *) DEFAULTMENU;
+    rc_forced = style_forced = action_forced = menu_forced = False;
+    if (options->rcfile) {
+        rc_file = options->rcfile;
+        rc_forced = True;
+    } else {
+        rc_file = new char[strlen(homedir) + strlen("/.waimearc") + 1];
+        sprintf(rc_file, "%s/.waimearc", homedir);
+    }
+    if (options->stylefile) {
+        style_file = options->stylefile;
+        style_forced = True;
+    }
+    if (options->actionfile) {
+        action_file = options->actionfile;
+        action_forced = True;
+    }
+    if (options->menufile) {
+        menu_file = options->menufile;
+        menu_forced = True;
+    }
+
+    wacts = new list<StrComp *>;
+    wacts->push_back(new StrComp("raise", &WaWindow::Raise));
+    wacts->push_back(new StrComp("lower", &WaWindow::Lower));
+    wacts->push_back(new StrComp("focus", &WaWindow::Focus));
+    wacts->push_back(new StrComp("move", &WaWindow::Move));
+    wacts->push_back(new StrComp("resizeright", &WaWindow::ResizeRight));
+    wacts->push_back(new StrComp("resizeleft", &WaWindow::ResizeLeft));
+    wacts->push_back(new StrComp("moveopaque", &WaWindow::MoveOpaque));
+    wacts->push_back(new StrComp("resizerightopaque",
+                             &WaWindow::ResizeRightOpaque));
+    wacts->push_back(new StrComp("resizeleftopaque",
+                              &WaWindow::ResizeLeftOpaque));
+    wacts->push_back(new StrComp("close", &WaWindow::Close));
+    wacts->push_back(new StrComp("kill", &WaWindow::Kill));
+    wacts->push_back(new StrComp("closekill", &WaWindow::CloseKill));    
+    wacts->push_back(new StrComp("menumap", &WaWindow::MenuMap));
+    wacts->push_back(new StrComp("menuremap", &WaWindow::MenuReMap));
+    wacts->push_back(new StrComp("menuunmap", &WaWindow::MenuUnmap));
+    wacts->push_back(new StrComp("shade", &WaWindow::Shade));
+    wacts->push_back(new StrComp("unshade", &WaWindow::UnShade));
+    wacts->push_back(new StrComp("toggleshade", &WaWindow::ToggleShade));
+    wacts->push_back(new StrComp("maximize", &WaWindow::Maximize));
+    wacts->push_back(new StrComp("unmaximize", &WaWindow::UnMaximize));
+    wacts->push_back(new StrComp("togglemaximize", &WaWindow::ToggleMaximize));
+    wacts->push_back(new StrComp("sticky", &WaWindow::Sticky));
+    wacts->push_back(new StrComp("unsticky", &WaWindow::UnSticky));
+    wacts->push_back(new StrComp("togglesticky", &WaWindow::ToggleSticky));
+    
+    racts = new list<StrComp *>;
+    racts->push_back(new StrComp("focus", &WaScreen::Focus));
+    racts->push_back(new StrComp("menumap", &WaScreen::MenuMap));
+    racts->push_back(new StrComp("menuremap", &WaScreen::MenuReMap));
+    racts->push_back(new StrComp("menuunmap", &WaScreen::MenuUnmap));
+    racts->push_back(new StrComp("restart", &WaScreen::Restart));
+    racts->push_back(new StrComp("exit", &WaScreen::Exit));
+    racts->push_back(new StrComp("viewportleft", &WaScreen::MoveViewportLeft));
+    racts->push_back(new StrComp("viewportright",
+                                 &WaScreen::MoveViewportRight));
+    racts->push_back(new StrComp("viewportup", &WaScreen::MoveViewportUp));
+    racts->push_back(new StrComp("viewportdown", &WaScreen::MoveViewportDown));
+    racts->push_back(new StrComp("scrollviewportleft",
+                                 &WaScreen::ScrollViewportLeft));
+    racts->push_back(new StrComp("scrollviewportright",
+                                 &WaScreen::ScrollViewportRight));
+    racts->push_back(new StrComp("scrollviewportup",
+                                 &WaScreen::ScrollViewportUp));
+    racts->push_back(new StrComp("scrollviewportdown",
+                                 &WaScreen::ScrollViewportDown));
+    
+    macts = new list<StrComp *>;
+    macts->push_back(new StrComp("unlink", &WaMenuItem::UnLinkMenu));
+    macts->push_back(new StrComp("mapsub", &WaMenuItem::MapSubmenu));
+    macts->push_back(new StrComp("remapsub", &WaMenuItem::ReMapSubmenu));
+    macts->push_back(new StrComp("unmap", &WaMenuItem::UnmapMenu));
+    macts->push_back(new StrComp("unmapsubs", &WaMenuItem::UnmapSubmenus));
+    macts->push_back(new StrComp("unmaptree", &WaMenuItem::UnmapTree));
+    macts->push_back(new StrComp("exec", &WaMenuItem::Exec));
+    macts->push_back(new StrComp("func", &WaMenuItem::Func));
+    macts->push_back(new StrComp("raise", &WaMenuItem::Raise));
+    macts->push_back(new StrComp("lower", &WaMenuItem::Lower));
+    macts->push_back(new StrComp("move", &WaMenuItem::Move));
+    macts->push_back(new StrComp("moveopaque", &WaMenuItem::MoveOpaque));
+    
+    types = new list<StrComp *>;
+    types->push_back(new StrComp("keypress", KeyPress));
+    types->push_back(new StrComp("keyrelease", KeyRelease));
+    types->push_back(new StrComp("buttonpress", ButtonPress));
+    types->push_back(new StrComp("buttonrelease", ButtonRelease));
+    types->push_back(new StrComp("enternotify", EnterNotify));
+    types->push_back(new StrComp("leavenotify", LeaveNotify));
+    types->push_back(new StrComp("maprequest", MapRequest));
+
+    details = new list<StrComp *>;
+    details->push_back(new StrComp("anybutton", 0));
+    details->push_back(new StrComp("button1", Button1));
+    details->push_back(new StrComp("button2", Button2));
+    details->push_back(new StrComp("button3", Button3));
+    details->push_back(new StrComp("button4", Button4));
+    details->push_back(new StrComp("button5", Button5));
+    details->push_back(new StrComp("button6", 6));
+    details->push_back(new StrComp("button7", 7));
+    
+    mods = new list<StrComp *>;
+    mods->push_back(new StrComp("shiftmask", ShiftMask));
+    mods->push_back(new StrComp("lockmask", LockMask));
+    mods->push_back(new StrComp("controlmask", ControlMask));
+    mods->push_back(new StrComp("mod1mask", Mod1Mask));
+    mods->push_back(new StrComp("mod2mask", Mod2Mask));
+    mods->push_back(new StrComp("mod3mask", Mod3Mask));
+    mods->push_back(new StrComp("mod4mask", Mod4Mask));
+    mods->push_back(new StrComp("mod5mask", Mod5Mask));
+    mods->push_back(new StrComp("button1mask", Button1Mask));
+    mods->push_back(new StrComp("button2mask", Button2Mask));
+    mods->push_back(new StrComp("button3mask", Button3Mask));
+    mods->push_back(new StrComp("button4mask", Button4Mask));
+    mods->push_back(new StrComp("button5mask", Button5Mask));
+    
+    frameacts  = new list<WaAction *>;
+    winacts    = new list<WaAction *>;
+    titleacts  = new list<WaAction *>;
+    labelacts  = new list<WaAction *>;
+    handleacts = new list<WaAction *>;
+    cbacts     = new list<WaAction *>;
+    ibacts     = new list<WaAction *>;
+    mbacts     = new list<WaAction *>;
+    rgacts     = new list<WaAction *>;
+    lgacts     = new list<WaAction *>;
+    rootacts   = new list<WaAction *>;
+    weacts     = new list<WaAction *>;
+    eeacts     = new list<WaAction *>;
+    neacts     = new list<WaAction *>;
+    seacts     = new list<WaAction *>;
+    mtacts     = new list<WaAction *>;
+    miacts     = new list<WaAction *>;
+    msacts     = new list<WaAction *>;
+}
+
+/**
+ * @fn    ~ResourceHandler(void)
+ * @brief Destructor for ResourceHandler class
+ *
+ * Deletes all action lists and all WaActions in them.
+ */
+ResourceHandler::~ResourceHandler(void) {
+    LISTCLEAR(frameacts);
+    LISTCLEAR(winacts);
+    LISTCLEAR(titleacts);
+    LISTCLEAR(labelacts);
+    LISTCLEAR(handleacts);
+    LISTCLEAR(cbacts);
+    LISTCLEAR(mbacts);
+    LISTCLEAR(ibacts);
+    LISTCLEAR(rgacts);
+    LISTCLEAR(lgacts);
+    LISTCLEAR(rootacts);
+    LISTCLEAR(weacts);
+    LISTCLEAR(eeacts);
+    LISTCLEAR(neacts);
+    LISTCLEAR(seacts);
+    LISTCLEAR(mtacts);
+    LISTCLEAR(miacts);
+    LISTCLEAR(msacts);
+}
+
+/**
+ * @fn    LoadConfig(void)
+ * @brief Reads config file
+ *
+ * Reads all configuration resources from config file.
+ */
+void ResourceHandler::LoadConfig(void) {
+    XrmValue value;
+    char *value_type;
+    
+    database = (XrmDatabase) 0;
+    if (! (database = XrmGetFileDatabase(rc_file)))
+        if (rc_forced) WARNING << "can't open rcfile \"" << rc_file <<
+                           "\" for reading" << endl;
+
+    if (! style_forced)
+        if (XrmGetResource(database, "styleFile", "StyleFile",
+                           &value_type, &value))
+            style_file = strdup(value.addr);
+
+    if (! action_forced)
+        if (XrmGetResource(database, "actionFile", "ActionFile",
+                           &value_type, &value))
+            action_file = strdup(value.addr);
+
+    if (! menu_forced)
+        if (XrmGetResource(database, "menuFile", "MenuFile",
+                           &value_type, &value))
+            menu_file = strdup(value.addr);
+    
+    if (XrmGetResource(database, "virtualSize", "ViriualSize",
+                     &value_type, &value)) {
+        if (sscanf(value.addr, "%dx%d", &virtual_x, &virtual_y) != 2) {
+            virtual_x = virtual_y = 1;
+        }
+    } else
+        virtual_x = virtual_y = 1;
+    if (virtual_x > 9) virtual_x = 9;
+    if (virtual_y > 9) virtual_y = 9;
+    
+    if (XrmGetResource(database, "colorsPerChannel",
+                       "ColorsPerChannel", &value_type, &value)) {
+        if (sscanf(value.addr, "%d", &colors_per_channel) != 1) {
+            colors_per_channel = 4;
+        } else {
+            if (colors_per_channel < 2) colors_per_channel = 2;
+            if (colors_per_channel > 6) colors_per_channel = 6;
+        }
+    } else
+        colors_per_channel = 4;
+    
+    if (XrmGetResource(database, "cacheMax", "CacheMax",
+                     &value_type, &value)) {
+        if (sscanf(value.addr, "%lu", &cache_max) != 1)
+            cache_max = 200;
+    } else
+        cache_max = 200;
+
+    if (XrmGetResource(database, "imageDither", "ImageDither",
+                       &value_type, &value)) {
+        if (! strncasecmp("true", value.addr, value.size))
+            image_dither = True;
+        else
+            image_dither = False;
+    } else
+        image_dither = True;    
+
+    XrmDestroyDatabase(database);
+} 
+
+/**
+ * @fn    LoadStyle(WaScreen *scrn)
+ * @brief Reads style file
+ *
+ * Reads a style resources from a style file.
+ *
+ * @param scrn WaScreen to load style for
+ */
+void ResourceHandler::LoadStyle(WaScreen *scrn) {
+    XrmValue value;
+    char *value_type;
+    int screen = scrn->screen_number;
+    WindowStyle *wstyle = &scrn->wstyle;
+    MenuStyle   *mstyle = &scrn->mstyle;
+    WaImageControl *ic = scrn->ic;
+    
+    database = (XrmDatabase) 0;
+    
+    if (! (database = XrmGetFileDatabase(style_file))) {
+        ERROR << "can't open stylefile\"" << style_file << "\" for reading" <<
+            endl; exit(1);
+    }
+    ReadDatabaseFont("window.font", "Window.Font", &wstyle->fontname, "fixed");
+    ReadDatabaseFont("menu.frame.font", "Menu.Frame.Font",
+                     &mstyle->f_fontname, wstyle->fontname);
+    ReadDatabaseFont("menu.title.font", "Menu.Title.Font",
+                     &mstyle->t_fontname, mstyle->f_fontname);
+    ReadDatabaseFont("menu.bullet.font", "Menu.Bullet.Font",
+                     &mstyle->b_fontname, mstyle->f_fontname);
+#ifdef XFT
+    if (XrmGetResource(database, "window.xftfontsize",
+                       "Window.XftFontSize", &value_type, &value)) {
+        if (sscanf(value.addr, "%d", &wstyle->xftsize) != 1) {
+            wstyle->xftsize = 7;
+        } else {
+            if (wstyle->xftsize < 2) wstyle->xftsize = 2;
+            if (wstyle->xftsize > 100) wstyle->xftsize = 100;
+        }
+    } else
+        wstyle->xftsize = 7;
+    
+    if (XrmGetResource(database, "menu.frame.xftfontsize",
+                       "Menu.Frame.XftFontSize", &value_type, &value)) {
+        if (sscanf(value.addr, "%d", &mstyle->f_xftsize) != 1) {
+            mstyle->f_xftsize = wstyle->xftsize;
+        } else {
+            if (mstyle->f_xftsize < 2) mstyle->f_xftsize = 2;
+            if (mstyle->f_xftsize > 100) mstyle->f_xftsize = 100;
+        }
+    } else
+        mstyle->f_xftsize = wstyle->xftsize;
+
+    if (XrmGetResource(database, "menu.title.xftfontsize",
+                       "Menu.Title.XftFontSize", &value_type, &value)) {
+        if (sscanf(value.addr, "%d", &mstyle->t_xftsize) != 1) {
+            mstyle->t_xftsize = mstyle->f_xftsize;
+        } else {
+            if (mstyle->t_xftsize < 2) mstyle->t_xftsize = 2;
+            if (mstyle->t_xftsize > 100) mstyle->t_xftsize = 100;
+        }
+    } else
+        mstyle->t_xftsize = mstyle->f_xftsize;
+
+    if (XrmGetResource(database, "menu.bullet.xftfontsize",
+                       "Menu.Bullet.XftFontSize", &value_type, &value)) {
+        if (sscanf(value.addr, "%d", &mstyle->b_xftsize) != 1) {
+            mstyle->b_xftsize = mstyle->f_xftsize;
+        } else {
+            if (mstyle->b_xftsize < 2) mstyle->b_xftsize = 2;
+            if (mstyle->b_xftsize > 100) mstyle->b_xftsize = 100;
+        }
+    } else
+        mstyle->b_xftsize = mstyle->f_xftsize;
+    
+    ReadDatabaseFont("window.xftfont", "Window.xftFont",
+                     &wstyle->xftfontname, wstyle->fontname);
+    ReadDatabaseFont("menu.frame.xftfont", "Menu.Frame.xftFont",
+                     &mstyle->f_xftfontname, mstyle->f_fontname);
+    ReadDatabaseFont("menu.title.xftfont", "Menu.Title.xftFont",
+                     &mstyle->t_xftfontname, mstyle->t_fontname);
+    ReadDatabaseFont("menu.bullet.xftfont", "Menu.Bullet.xftFont",
+                     &mstyle->b_xftfontname, mstyle->b_fontname);
+#endif // XFT
+    ReadDatabaseTexture("window.title.focus", "Window.Title.Focus",
+                        &wstyle->t_focus, WhitePixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseTexture("window.title.unfocus", "Window.Title.Unfocus",
+                        &wstyle->t_unfocus, BlackPixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseTexture("window.label.focus", "Window.Label.Focus",
+                        &wstyle->l_focus, WhitePixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseTexture("window.label.unfocus", "Window.Label.Unfocus",
+                        &wstyle->l_unfocus, BlackPixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseTexture("window.handle.focus", "Window.Handle.Focus",
+                        &wstyle->h_focus, WhitePixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseTexture("window.handle.unfocus", "Window.Handle.Unfocus",
+                        &wstyle->h_unfocus, BlackPixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseTexture("window.grip.focus", "Window.Grip.Focus",
+                        &wstyle->g_focus, WhitePixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseTexture("window.grip.unfocus", "Window.Grip.Unfocus",
+                        &wstyle->g_unfocus, BlackPixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseTexture("window.button.focus", "Window.Button.Focus",
+                        &wstyle->b_focus, WhitePixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseTexture("window.button.unfocus", "Window.Button.Unfocus",
+                        &wstyle->b_unfocus, BlackPixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseTexture("window.button.pressed", "Window.Button.Pressed",
+                        &wstyle->b_pressed, BlackPixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseColor("window.frame.focusColor", "Window.Frame.FocusColor",
+                      &wstyle->f_focus, WhitePixel(display, screen), ic);
+    ReadDatabaseColor("window.frame.unfocusColor",
+                      "Window.Frame.UnfocusColor",
+                      &wstyle->f_unfocus, BlackPixel(display, screen), ic);
+    ReadDatabaseColor("window.label.focus.textColor",
+                      "Window.Label.Focus.TextColor",
+                      &wstyle->l_text_focus, BlackPixel(display, screen), ic);
+    ReadDatabaseColor("window.label.unfocus.textColor",
+                      "Window.Label.Unfocus.TextColor",
+                      &wstyle->l_text_unfocus, WhitePixel(display, screen),
+                      ic);
+    ReadDatabaseColor("window.button.focus.picColor",
+                      "Window.Button.Focus.PicColor",
+                      &wstyle->b_pic_focus, BlackPixel(display, screen), ic);
+    ReadDatabaseColor("window.button.unfocus.picColor",
+                      "Window.Button.Unfocus.PicColor",
+                      &wstyle->b_pic_unfocus, WhitePixel(display, screen),
+                      ic);
+    ReadDatabaseColor("window.button.hilite.picColor",
+                      "Window.Button.Hilite.PicColor",
+                      &wstyle->b_pic_hilite, wstyle->b_pic_focus.getPixel(),
+                      ic);
+    
+    if (XrmGetResource(database, "window.justify", "Window.Justify",
+                       &value_type, &value)) {
+        if (strstr(value.addr, "right") || strstr(value.addr, "Right"))
+            wstyle->justify = RightJustify;
+        else if (strstr(value.addr, "center") || strstr(value.addr, "Center"))
+            wstyle->justify = CenterJustify;
+        else
+            wstyle->justify = LeftJustify;
+    } else
+        wstyle->justify = LeftJustify;
+
+    ic->parseTexture(&mstyle->frame, "parentrelative");
+    
+    ReadDatabaseTexture("menu.frame", "Menu.Frame",
+                        &mstyle->back_frame, BlackPixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseTexture("menu.hilite", "Menu.Hilite",
+                        &mstyle->hilite, WhitePixel(display, screen), ic,
+                        scrn);
+    ReadDatabaseTexture("menu.title", "Menu.Title",
+                        &mstyle->title, WhitePixel(display, screen), ic, scrn);
+
+    ReadDatabaseColor("menu.frame.textColor", "Menu.Frame.TextColor",
+                      &mstyle->f_text, WhitePixel(display, screen), ic);
+    ReadDatabaseColor("menu.hilite.textColor", "Menu.Hilite.TextColor",
+                      &mstyle->f_hilite_text, BlackPixel(display, screen), ic);
+    ReadDatabaseColor("menu.title.textColor", "Menu.Title.TextColor",
+                      &mstyle->t_text, BlackPixel(display, screen), ic);
+    
+    if (XrmGetResource(database, "menu.frame.justify", "Menu.Frame.Justify",
+                       &value_type, &value)) {
+        if (strstr(value.addr, "right") || strstr(value.addr, "Right"))
+            mstyle->f_justify = RightJustify;
+        else if (strstr(value.addr, "center") || strstr(value.addr, "Center"))
+            mstyle->f_justify = CenterJustify;
+        else
+            mstyle->f_justify = LeftJustify;
+    } else
+        mstyle->f_justify = LeftJustify;
+    
+    if (XrmGetResource(database, "menu.title.justify", "Menu.Title.Justify",
+                       &value_type, &value)) {
+        if (strstr(value.addr, "right") || strstr(value.addr, "Right"))
+            mstyle->t_justify = RightJustify;
+        else if (strstr(value.addr, "center") || strstr(value.addr, "Center"))
+            mstyle->t_justify = CenterJustify;
+        else
+            mstyle->t_justify = LeftJustify;
+    } else
+        mstyle->t_justify = LeftJustify;
+
+    char bullet[2];
+    int ch = (int) '>';
+    if (XrmGetResource(database, "menu.bulletlook", "Menu.Bulletlook",
+                       &value_type, &value)) {
+        if (sscanf(value.addr, "'%u'", &ch) != 1) {
+            mstyle->bullet = strdup(value.addr);
+        } else {
+            bullet[0] = (char) ch;
+            bullet[1] = '\0';
+            mstyle->bullet = strdup(bullet);
+        }
+    } else {
+        bullet[0] = (char) ch;
+        bullet[1] = '\0';
+        mstyle->bullet = strdup(bullet);
+    }
+
+    ReadDatabaseColor("borderColor", "BorderColor",
+                      &wstyle->border_color, BlackPixel(display, screen), ic);
+    mstyle->border_color = wstyle->border_color;
+    
+    if (XrmGetResource(database, "handleWidth", "HandleWidth", &value_type,
+                       &value)) {
+        if (sscanf(value.addr, "%u", &wstyle->handle_width) != 1 ||
+            wstyle->handle_width > 6)
+            wstyle->handle_width = 6;
+    } else
+        wstyle->handle_width = 6;
+    
+    if (XrmGetResource(database, "borderWidth", "BorderWidth", &value_type,
+                       &value)) {
+        if (sscanf(value.addr, "%u", &wstyle->border_width) != 1)
+            wstyle->border_width = 1;
+    } else
+        wstyle->border_width = 1;
+
+    mstyle->border_width = wstyle->border_width;
+
+    if (XrmGetResource(database, "menu.borderWidth", "Menu.BorderWidth",
+                       &value_type, &value))
+        sscanf(value.addr, "%u", &mstyle->border_width);
+    
+    if (XrmGetResource(database, "window.title.height", "window.title.height",
+                       &value_type, &value)) {
+        if (sscanf(value.addr, "%u", &wstyle->title_height) != 1)
+            wstyle->title_height = 0;
+        else if (wstyle->title_height > 50)
+            wstyle->title_height = 50;   
+    } else
+        wstyle->title_height = 0;
+    
+    if (XrmGetResource(database, "menu.title.height", "menu.title.height",
+                       &value_type, &value)) {
+        if (sscanf(value.addr, "%u", &mstyle->title_height) != 1)
+            mstyle->title_height = 0;
+        else if (mstyle->title_height > 50)
+            mstyle->title_height = 50;   
+    } else
+        mstyle->title_height = 0;
+    
+    if (XrmGetResource(database, "menu.frame.height", "menu.frame.height",
+                       &value_type, &value)) {
+        if (sscanf(value.addr, "%u", &mstyle->item_height) != 1)
+            mstyle->item_height = mstyle->title_height;
+        else if (mstyle->item_height > 50)
+            mstyle->item_height = 50;
+    } else
+        mstyle->item_height = mstyle->title_height;
+    
+    if (XrmGetResource(database, "rootCommand", "RootCommand",
+                       &value_type, &value))
+        waexec(value.addr, scrn->displaystring);
+    
+    XrmDestroyDatabase(database);
+}
+
+/**
+ * @fn    LoadMenus(void)
+ * @brief Reads menu file
+ *
+ * Creates all menus by parsing the menu file.
+ */
+void ResourceHandler::LoadMenus(void) {
+    FILE *file;
+    char *s, line[1024];
+    int i;
+    
+    if (! (file = fopen(menu_file, "r"))) {
+        ERROR << "can't open menufile \"" << menu_file << 
+		"\" for reading" << endl; exit(1);
+    }
+    while (fgets(line, 1024, file)) {
+        for (i = 0; line[i] == ' '; i++);
+        if (line[i] == '\n') continue;
+        if (line[i] == '#') continue;
+        
+        if ((s = strwithin(line, '[', ']')))
+            if (! strcasecmp("begin", s)) {
+                free(s);
+                if ((s = strwithin(line, '(', ')')))
+                    ParseMenu(s, file);
+                else
+                    WARNING << "failed to find menu name in line \"" <<
+                        line << "\"" << endl;
+            }
+            else {
+                free(s);
+                WARNING << "missing [begin] statement in line \"" << line <<
+                    "\"" << endl;
+            }
+        else
+            WARNING << "missing [begin] statement in line \"" << line 
+		    << "\"" << endl;
+    }
+    fclose(file);
+}
+
+/**
+ * @fn    LoadActions(Waimea *waimea)
+ * @brief Reads action file
+ *
+ * Creates action lists from action resource file.
+ *
+ * @param waimea Pointer to waimea object
+ */
+void ResourceHandler::LoadActions(Waimea *waimea) {
+    database = (XrmDatabase) 0;
+
+    if (! (database = XrmGetFileDatabase(action_file))) {
+        ERROR << "action_file \"" << action_file << "\" not found" << endl;
+        exit(1);
+    }
+    
+    ReadDatabaseActions("window.frame", "Window.Frame",
+                        wacts, frameacts);
+    ReadDatabaseActions("window.title", "Window.Title",
+                        wacts, titleacts);
+    ReadDatabaseActions("window.label", "Window.Label",
+                        wacts, labelacts);
+    ReadDatabaseActions("window.handle", "Window.Handle",
+                        wacts, handleacts);
+    ReadDatabaseActions("window.client", "Window.Client",
+                        wacts, winacts);
+    ReadDatabaseActions("window.closebutton", "Window.Closebutton",
+                        wacts, cbacts);
+    ReadDatabaseActions("window.iconifybutton", "Window.Iconifybutton",
+                        wacts, ibacts);
+    ReadDatabaseActions("window.maximizebutton", "Window.Maximizebutton",
+                        wacts, mbacts);
+    ReadDatabaseActions("window.leftgrip", "Window.Leftgrip",
+                        wacts, lgacts);
+    ReadDatabaseActions("window.rightgrip", "Window.Rightgrip",
+                        wacts, rgacts);
+
+    ReadDatabaseActions("root", "Root",
+                        racts, rootacts);
+    ReadDatabaseActions("westedge", "Westedge",
+                        racts, weacts);
+    ReadDatabaseActions("eastedge", "Eastedge",
+                        racts, eeacts);
+    ReadDatabaseActions("northedge", "Northedge",
+                        racts, neacts);
+    ReadDatabaseActions("southedge", "Southedge",
+                        racts, seacts);
+    
+    ReadDatabaseActions("menu.title", "Menu.Title",
+                        macts, mtacts);
+    ReadDatabaseActions("menu.item", "Menu.Item",
+                        macts, miacts);
+    ReadDatabaseActions("menu.sub", "Menu.Sub",
+                        macts, msacts);
+    
+    XrmDestroyDatabase(database);
+
+    LISTCLEAR(wacts);
+    LISTCLEAR(racts);
+    LISTCLEAR(macts);
+    LISTCLEAR(types);
+    LISTCLEAR(details);
+    LISTCLEAR(mods);
+}
+
+/**
+ * @fn    ReadDatabaseActions(char *rname, char *rclass,
+ *                            list<WaAction *> *comp,
+ *                            list<WaAction *> *insert)
+ * @brief Reads actions for an item
+ *
+ * Reads action number 1 and then action number 2 and so on until an action
+ * number doesn't exist. All action resource lines found are parsed with
+ * ParseAction function.
+ *
+ * @param rname Resource name to use
+ * @param rclass Resource class name to use
+ * @param comp List with available actions
+ * @param insert List to insert action in
+ */
+void ResourceHandler::ReadDatabaseActions(char *rname, char *rclass,
+                                          list<StrComp *> *comp,
+                                          list<WaAction *> *insert) {
+    XrmValue value;
+    char *value_type, name_lookup[1024], class_lookup[1024];
+    int i, more;
+    
+    for (i = 1, more = 1; more; i++) {
+        sprintf(name_lookup, "%s.%d", rname, i);
+        sprintf(class_lookup, "%s.%d", rclass, i);
+        if ((more = XrmGetResource(database, name_lookup, class_lookup,
+                           &value_type, &value))) {
+            ParseAction(value.addr, comp, insert);
+        }
+    }
+}
+
+/**
+ * @fn    ReadDatabaseColor(char *rname, char *rclass,
+ *                          WaColor *color,
+ *                          unsigned long default_pixel,
+ *                          WaImageControl *ic)
+ * @brief Reads a color
+ *
+ * Reads a color from resource database.
+ *
+ * @param rname Resource name to use
+ * @param rclass Resource class name to use
+ * @param default_pixel Pixel value to use if resource doesn't exist
+ * @param ic WaImageControl to use for parsing color
+ */
+void ResourceHandler::ReadDatabaseColor(char *rname, char *rclass,
+                                        WaColor *color,
+                                        unsigned long default_pixel,
+                                        WaImageControl *ic) {
+    XrmValue value;
+    char *value_type;
+    
+    if (XrmGetResource(database, rname, rclass, &value_type,
+                       &value)) {
+        ic->parseColor(color, value.addr);
+    } else {
+        ic->parseColor(color);
+        color->setPixel(default_pixel);
+    }
+}
+
+/**
+ * @fn    ReadDatabaseTexture(char *rname, char *rclass,
+ *                            WaColor *color,
+ *                            unsigned long default_pixel,
+ *                            WaImageControl *ic, WaScreen *scrn)
+ * @brief Reads a texture
+ *
+ * Reads a texture from resource database.
+ *
+ * @param rname Resource name to use
+ * @param rclass Resource class name to use
+ * @param default_pixel Pixel value to use if resource doesn't exist
+ * @param ic WaImageControl to use for parsing color
+ * @param scrn WaScreen that should display the texture
+ */
+void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
+                                          WaTexture *texture,
+                                          unsigned long default_pixel,
+                                          WaImageControl *ic, WaScreen *scrn) {
+    
+    XrmValue value;
+    char *value_type;
+
+    Colormap colormap = scrn->colormap;
+
+    if (XrmGetResource(database, rname, rclass, &value_type,
+                       &value))
+        ic->parseTexture(texture, value.addr);
+    else
+        texture->setTexture(WaImage_Solid | WaImage_Flat);
+
+    if (texture->getTexture() & WaImage_Solid) {
+        int clen = strlen(rclass) + 32, nlen = strlen(rname) + 32;
+        
+        char *colorclass = new char[clen], *colorname = new char[nlen];
+        
+        sprintf(colorclass, "%s.Color", rclass);
+        sprintf(colorname,  "%s.color", rname);
+        
+        ReadDatabaseColor(colorname, colorclass, texture->getColor(),
+                          default_pixel, ic);
+
+#ifdef    INTERLACE
+        sprintf(colorclass, "%s.ColorTo", rclass);
+        sprintf(colorname,  "%s.colorTo", rname);
+
+        ReadDatabaseColor(colorname, colorclass, texture->getColorTo(),
+                          default_pixel, ic);
+#endif // INTERLACE
+        
+        delete [] colorclass;
+        delete [] colorname;
+        
+        if ((! texture->getColor()->isAllocated()) ||
+            (texture->getTexture() & WaImage_Flat))
+            return;
+        
+        XColor xcol;
+        
+        xcol.red = (unsigned int) (texture->getColor()->getRed() +
+                                   (texture->getColor()->getRed() >> 1));
+        if (xcol.red >= 0xff) xcol.red = 0xffff;
+        else xcol.red *= 0xff;
+        xcol.green = (unsigned int) (texture->getColor()->getGreen() +
+                                     (texture->getColor()->getGreen() >> 1));
+        if (xcol.green >= 0xff) xcol.green = 0xffff;
+        else xcol.green *= 0xff;
+        xcol.blue = (unsigned int) (texture->getColor()->getBlue() +
+                                    (texture->getColor()->getBlue() >> 1));
+        if (xcol.blue >= 0xff) xcol.blue = 0xffff;
+        else xcol.blue *= 0xff;
+
+        if (! XAllocColor(display, colormap, &xcol))
+            xcol.pixel = 0;
+        
+        texture->getHiColor()->setPixel(xcol.pixel);
+        
+        xcol.red =
+            (unsigned int) ((texture->getColor()->getRed() >> 2) +
+                            (texture->getColor()->getRed() >> 1)) * 0xff;
+        xcol.green =
+            (unsigned int) ((texture->getColor()->getGreen() >> 2) +
+                            (texture->getColor()->getGreen() >> 1)) * 0xff;
+        xcol.blue =
+            (unsigned int) ((texture->getColor()->getBlue() >> 2) +
+                            (texture->getColor()->getBlue() >> 1)) * 0xff;
+        
+        if (! XAllocColor(display, colormap, &xcol))
+            xcol.pixel = 0;
+        
+        texture->getLoColor()->setPixel(xcol.pixel);
+    } else if (texture->getTexture() & WaImage_Gradient) {
+        int clen = strlen(rclass) + 10, nlen = strlen(rname) + 10;
+        char *colorclass = new char[clen], *colorname = new char[nlen],
+            *colortoclass = new char[clen], *colortoname = new char[nlen];
+        
+        sprintf(colorclass, "%s.Color", rclass);
+        sprintf(colorname,  "%s.color", rname);
+        
+        sprintf(colortoclass, "%s.ColorTo", rclass);
+        sprintf(colortoname,  "%s.colorTo", rname);
+
+        ReadDatabaseColor(colorname, colorclass, texture->getColor(),
+                          default_pixel, ic);
+        ReadDatabaseColor(colortoname, colortoclass, texture->getColorTo(),
+                          default_pixel, ic);
+
+        delete [] colorclass;
+        delete [] colorname;
+        delete [] colortoclass;
+        delete [] colortoname;
+    }
+}
+
+/**
+ * @fn    ReadDatabaseFont(char *rname, char *rclass,
+ *                         char **fontname, char *defaultfont)
+ * @brief Reads a font
+ *
+ * Reads a font from resource database.
+ *
+ * @param rname Resource name to use
+ * @param rclass Resource class name to use
+ * @param fontname For storing font name
+ * @param defaultfont Font to use if resource doesn't exist  
+ */
+void ResourceHandler::ReadDatabaseFont(char *rname, char *rclass,
+                                       char **fontname, char *defaultfont) {
+    XrmValue value;
+    char *value_type;
+    
+    if (XrmGetResource(database, rname, rclass, &value_type, &value)) {
+        if (! (*fontname = strdup(value.addr))) {
+            ERROR << "strdup returned NULL pointer (insufficient memory)" << endl;
+            quit(1);
+        }
+    } else
+        *fontname = defaultfont;
+}
+
+/**
+ * @fn    ParseAction(const char *s, list<StrComp *> *comp,
+ *                    list<WaAction *> *insert)
+ * @brief Parses an action line
+ *
+ * Parses an action line into an action object and inserts it in action list.
+ *
+ * @param s Action line to parse
+ * @param comp List with available actions
+ * @param insert List to insert action in
+ */
+void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
+                                  list<WaAction *> *insert) {
+    char *line, *token, *mtok;
+    int i, detail, mod;
+    WaAction *act_tmp;
+
+    if (! (act_tmp = (WaAction *) malloc(sizeof(WaAction)))) {
+        ERROR << "malloc returned NULL pointer (insufficient memory)" << endl;
+        exit(1);
+    }
+    if (! (line = strdup(s))) {
+        ERROR << "strdup returned NULL pointer (insufficient memory)" << endl;
+        exit(1);
+    }
+    
+    detail = strchr(line, '=') ? 1: 0;
+    mod    = strchr(line, '&') ? 1: 0;
+    token  = strtok(line, ":");
+    token  = strtrim(token);
+    
+    if (! strncasecmp(token, "menu", 4)) {
+        if (! (mtok = strdup(token))) {
+            ERROR << "strdup returned NULL pointer (insufficient memory)" <<
+                endl; exit(1);
+        }
+        for (; *(mtok++) != '(';)
+            if (*mtok == '\0') {
+                WARNING << "missing \"(\" in resource line \"" << s << "\""
+                        << endl;
+                free(act_tmp);
+                free(line);
+                return;
+            }
+        for (i = 0; mtok[i] != ')'; i++)
+            if (mtok[i] == '\0') {
+                WARNING << "missing \")\" in resource line \"" << s << "\"" 
+                        << endl;
+                free(act_tmp);
+                free(line);
+                return;
+            }
+        mtok[i] = '\0';
+        mtok = strtrim(mtok);
+
+        list<WaMenu *>::iterator menu_it = waimea->wamenu_list->begin();
+        for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {
+            if (! strcmp((*menu_it)->name, mtok)) {
+                act_tmp->menu = *menu_it;
+                break;
+            }
+        }
+        if (menu_it == waimea->wamenu_list->end()) {
+            WARNING << "\"" << mtok << "\" unknown menu" << endl;
+            delete act_tmp;
+            free(line);
+            return;
+        }
+        for (i = 0; token[i] != '('; i++);
+        token[i] = '\0';
+    } else
+        act_tmp->menu = NULL;
+    
+    list<StrComp *>::iterator it = comp->begin();
+    for (; it != comp->end(); ++it) {
+        if ((*it)->Comp(token)) {
+            if ((*it)->type & WindowFuncMask)
+                act_tmp->winfunc = (*it)->winfunc;
+            if ((*it)->type & RootFuncMask)
+                act_tmp->rootfunc = (*it)->rootfunc;
+            if ((*it)->type & MenuFuncMask)
+                act_tmp->menufunc = (*it)->menufunc;
+            break;
+        }
+    }
+    if (! *it) {
+        WARNING << "\"" << token << "\" unknown action" << endl;
+        free(act_tmp);
+        free(line);
+        return;
+    }
+    
+    if (detail) token = strtok(NULL, "=");
+    else {
+        if (mod) token = strtok(NULL, "&");
+        else {
+            token += strlen(token) + 1;
+            for (; *token == '\0'; token++);
+        }
+    }
+    
+    token = strtrim(token);
+    
+    it = types->begin();
+    for (; it != types->end(); ++it) {
+        if ((*it)->Comp(token)) {
+            act_tmp->type = (*it)->value;
+            break;
+        }
+    }
+    if (! *it) {
+        WARNING << "\"" << token << "\" unknown type" << endl;
+        free(act_tmp);
+        free(line);
+        return;
+    }
+    
+    act_tmp->detail = 0;
+    if (detail) {
+        if (mod) token = strtok(NULL, "&");
+        else {
+            token += strlen(token) + 1;
+            for (; *token == '\0'; token++);
+        }
+        token = strtrim(token);
+        act_tmp->detail = *token - 29;
+        it = details->begin();
+        for (; it != details->end(); ++it) {
+            if ((*it)->Comp(token)) {
+                act_tmp->detail = (*it)->value;
+                break;
+            }
+        }
+        if (! *it) {
+            WARNING << "\"" << token << "\" unknown detail" << endl;
+            free(act_tmp);
+            free(line);
+            return;
+        }
+    }
+
+    bool negative;
+    act_tmp->mod = act_tmp->nmod = 0;
+    if (mod) {
+        token += strlen(token) + 1;
+        
+        it = mods->begin();
+        for (; *token == '\0'; token++);
+        for (token = strtok(token, "&"); token; token = strtok(NULL, "&")) {
+            token = strtrim(token);
+            negative = False;
+            if (*token == '!') {
+                negative = True;
+                token = strtrim(token + 1);
+            }
+            for (; it != mods->end(); ++it) {
+                if ((*it)->Comp(token)) {
+                    if (negative)
+                        act_tmp->nmod = (*it)->value;
+                    else
+                        act_tmp->mod = (*it)->value;
+                    break;
+                }
+            }
+            if (! *it) {
+                WARNING << "\"" << token << "\" unknown modifier" << endl;
+                free(act_tmp);
+                free(line);
+                return;
+            }
+        }
+    }
+    free(line);
+    insert->push_back(act_tmp);
+}
+
+/**
+ * @fn    ParseMenu(char *name, FILE *file)
+ * @brief Parses a menu
+ *
+ * Parses a menu section of the menu file and creates a menu object for the
+ * menu. If a [begin] statement is found then parsing a menu we make a
+ * recursive function call to this function. This makes it possible to
+ * to define a submenu within a the menu itself.
+ *
+ * @param name Menu name
+ * @param file File descriptor for menu file
+ */
+void ResourceHandler::ParseMenu(char *name, FILE *file) {
+    char *s, line[8192];
+    WaMenu *menu;
+    WaMenuItem *m;
+    int i, type;
+
+    menu = new WaMenu(name);
+    
+    while (fgets(line, 8192, file)) {
+        for (i = 0; line[i] == ' '; i++);
+        if (line[i] == '\n') continue;
+        if (line[i] == '#') continue;
+        if (line[i] == '!') continue;
+
+        if (! (s = strwithin(line, '[', ']'))) {
+            WARNING << "failed to find menu item type in line \"" << line
+                    << "\"" << endl;
+            continue;
+        }
+        if (! strcmp(s, "begin")) {
+            free(s);
+            if ((s = strwithin(line, '(', ')'))) {
+                ParseMenu(s, file);
+                continue;
+            } else {
+                WARNING << "failed to find menu name in line \"" << line <<
+                    "\"" << endl;
+                continue;
+            }
+        }
+        else if (! strcmp(s, "end")) {
+            if (menu->item_list->empty()) {
+                WARNING << "no elements in menu \"" << name << "\"" << endl;
+                free(s);
+                delete menu;
+                return;
+            }
+            break;
+        }
+        else if (! strcmp(s, "title"))
+            type = MenuTitleType;
+        else if (! strcmp(s, "item"))
+            type = MenuItemType;
+        else if (! strcmp(s, "sub"))
+            type = MenuSubType;
+        else {
+            WARNING << "[" << s << "]" << "is not a valid statement" << endl;
+            free(s);
+            continue;
+        }
+        free(s);
+        if (! (s = strwithin(line, '(', ')'))) {
+            WARNING << "failed to parse menu item title from line \"\n" << 
+		    line << "\"" << endl;
+            continue;
+        }
+        m = new WaMenuItem(s);
+        m->type = type;
+        m->func_mask = 0;
+        m->wfunc = NULL;
+        m->rfunc = NULL;
+        m->mfunc = NULL;
+        if ((s = strwithin(line, '{', '}'))) {
+            m->exec = s;
+            m->func_mask |= MenuExecMask;
+        }
+        if ((s = strwithin(line, '<', '>'))) {
+            m->sub = s;
+            m->func_mask |= MenuSubMask;
+        }
+        if ((s = strwithin(line, '"', '"'))) {
+            list<StrComp *>::iterator it = wacts->begin();
+            for (; it != wacts->end(); ++it) {
+                if ((*it)->Comp(s)) {
+                    m->wfunc = (*it)->winfunc;
+                    m->func_mask |= MenuWFuncMask;
+                    break;
+                }
+            }
+            it = racts->begin();
+            for (; it != racts->end(); ++it) {
+                if ((*it)->Comp(s)) {
+                    m->rfunc = (*it)->rootfunc;
+                    m->func_mask |= MenuRFuncMask;
+                    break;
+                }
+            }
+            it = macts->begin();
+            for (; it != macts->end(); ++it) {
+                if ((*it)->Comp(s)) {
+                    m->mfunc = (*it)->menufunc;
+                    m->func_mask |= MenuMFuncMask;
+                    break;
+                }
+            }
+            if (! (m->wfunc || m->rfunc || m->mfunc)) {
+                WARNING << "function \"" << s << "\" not available" << endl;
+                free(s);
+                continue;
+            }
+            free(s);
+        }
+        menu->AddItem(m);
+    }
+    waimea->wamenu_list->push_back(menu);
+}
+
+/**
+ * @fn    StrComp(char *s, ???)
+ * @brief Constructor for StrComp class
+ *
+ * Creates a string comparer object. There is one constructor for each type
+ * of object you can compare a string to. Objects are: int, WwActionFn,
+ * RootActionFn, MenuActionFn.
+ *
+ * @param s String that match object
+ * @param ??? Object that match string
+ */
+StrComp::StrComp(char *s, int v) { str = s; value = v; type = 0; }
+StrComp::StrComp(char *s, WwActionFn a) {
+   str = s; winfunc = a; type = WindowFuncMask; }
+StrComp::StrComp(char *s, RootActionFn ra) {
+   str = s; rootfunc = ra; type = RootFuncMask; }
+StrComp::StrComp(char *s, MenuActionFn ma) {
+   str = s; menufunc = ma; type = MenuFuncMask; }
+
+/**
+ * @fn    Comp(char *s)
+ * @brief Tries to match object with string
+ *
+ * Tries to match string s with object string, if they match we return True
+ * otherwise False.
+ *
+ * @param s String we want to try matching with
+ *
+ * @return True if match, otherwise False
+ */
+bool StrComp::Comp(char *s) {
+    if (! strcasecmp(s, str))
+        return True;    
+    return False;
+}
+
+/**
+ * @fn    strtrim(char *s)
+ * @brief Trims a string
+ *
+ * Removes leading and trailing spaces.
+ *
+ * @param s String we want to trim
+ *
+ * @return Trimmed string
+ */
+char *strtrim(char *s) {
+    for (; *s == ' '; s++);
+    for (; s[strlen(s) - 1] == ' '; s[strlen(s) - 1] = '\0');
+    return s;
+}
+
+/**
+ * @fn    strwithin(char *s, char c1, char c2)
+ * @brief Return string between to characters
+ *
+ * Duplicates and returns the string between c1 and c2 if c1 and c2 was
+ * found. All occurenses of $STRING$ is replaced by environment variable
+ * STRING's value, if environment variable doesn't exist $STRING$ will be
+ * replaced by an empty string. $$ will be converted to a single $.
+ * %c1 an %c2 will be replaced with c1 and c2. %% is replaced with %.
+ *
+ * @param s String to search for c1 and c2 in
+ * @param c1 Starting character
+ * @param c2 Ending character
+ *
+ * @return String within c1 and c2
+ */
+char *strwithin(char *s, char c1, char c2) {
+    int i, n;
+    char *str, *tmp, *env, *env_name;
+    
+    for (i = 0;; i++) {
+        if (s[i] == '\0') break;
+        if (s[i] == c1 && (i == 0 || s[i - 1] != '%')) break;
+    }
+    if (s[i] == '\0') return NULL;
+    
+    for (n = i + 1;; n++) {
+        if (s[n] == '\0') break;
+        if (s[n] == c2 && s[n - 1] != '%') break;
+    }
+    if (s[n] == '\0') return NULL; 
+    s[n] = '\0';
+    if (! (str = strdup(s + i + 1))) {
+        ERROR << "strdup returned NULL pointer (insufficient memory)" <<
+            endl; quit(1);
+    }
+    s[n] = c2;
+    
+    for (i = 0; str[i] != '\0'; i++) {
+        if (str[i] == '%') {
+	    for (n = 1; str[i + n] != '\0'; n++)
+	        str[i + n - 1] = str[i + n];
+	    str[i + n - 1] = '\0';
+        }
+    }
+    for (i = 0;;) {
+        for (; str[i] != '$' && str[i] != '\0'; i++);
+        if (str[i] == '\0')
+            return str;
+        else {
+            str[i] = '\0';
+            env_name = &str[++i];
+            for (; str[i] != '$' && str[i] != '\0'; i++);
+            if (str[i] == '\0') {
+                WARNING << "ending \"$\" not found" << endl;
+                free(str);
+                return NULL;
+            }
+            else {
+                str[i] = '\0';
+                if (strlen(env_name)) {
+                    if ((env = getenv(env_name)) == NULL)
+                        env = "";
+                } else
+                    env = "$";
+                tmp = new char[strlen(str) + strlen(env) +
+                              strlen(&str[i + 1]) + 1];
+                sprintf(tmp, "%s%s%s", str, env, &str[i + 1]);
+                i = strlen(str) + 1;
+                free(str);
+                str = tmp;
+            }
+        }
+    }
+}

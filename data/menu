@@ -1,0 +1,49 @@
+[begin]     (rootmenu)
+  [title]   (Root Menu)
+  [item]    (Xterm)             {xterm}
+  [sub]     (Networking)        <network>
+  [begin]   (network)
+    [title] (Networking)
+    [item]  (Netscape)          {netscape}
+    [item]  (Mozilla)           {mozilla}
+    [item]  (Licq)              {licq}
+    [item]  (Ncftp)             {xterm -e ncftp}
+    [item]  (Telnet)            {xterm -e telnet}
+  [end]
+  [sub]     (Editors)           <edit>
+  [begin]   (edit)
+    [title] (Editors)
+    [item]  (Emacs)             {emacs}
+    [item]  (Vi)                {xterm -e vi}
+  [end]
+  [sub]     (Graphics)          <graphics>
+  [begin]   (graphics)
+    [title] (Graphics)
+    [item]  (The Gimp)          {gimp}
+    [item]  (Xpaint)            {xpaint}
+    [item]  (Xv)                {xv}
+  [end]
+  [sub]     (Multimedia)        <multimedia>
+  [begin]   (multimedia)
+    [title] (Multimedia)
+    [item]  (Mplayer)           {gmplayer} 
+    [item]  (XMMS)              {xmms}
+  [end]
+  [sub]     (Exit)              <exit>
+  [begin]   (exit)
+    [title] (Exit)
+    [item]  (Restart)           "restart"
+    [item]  (Logout %($USER$%)) "exit"
+  [end]
+[end]
+
+[begin]     (window)
+  [title]   (Window Ops)
+  [item]    (Raise)             "raise"
+  [item]    (Lower)             "lower"
+  [item]    (Un-/ Maximize)     "togglemaximize"
+  [item]    (Un-/ Shade)        "toggleshade"
+  [item]    (Un-/ Sticky)       "togglesticky"
+  [item]    (Close)             "close"
+  [item]    (Kill)              "kill"
+[end]
