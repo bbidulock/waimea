@@ -172,6 +172,8 @@ public:
     void ViewportRelativeMove(XEvent *, WaAction *);
     void ViewportFixedMove(XEvent *, WaAction *);
     void GoToDesktop(XEvent *, WaAction *);
+    void NextDesktop(XEvent *, WaAction *);
+    void PreviousDesktop(XEvent *, WaAction *);
 
     inline void MoveViewportLeft(XEvent *, WaAction *) {
         MoveViewport(WestDirection);

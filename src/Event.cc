@@ -407,7 +407,7 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
             mask |= (e->value_mask & CWStackMode)? CWStackMode: 0;
             XConfigureWindow(ww->display, ww->frame->id, mask, &wc);
             if (e->value_mask & CWStackMode) {
-                ww->wascreen->WaLowerWindow((Window) 0);
+                ww->wascreen->WaRaiseWindow((Window) 0);
             }
             ww->net->SetVirtualPos(ww);
             return;

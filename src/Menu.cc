@@ -1996,6 +1996,12 @@ void WaMenuItem::MenuUnmapFocus(XEvent *e, WaAction *wa) {
 void WaMenuItem::GoToDesktop(XEvent *, WaAction *ac) {
     if (ac->param) menu->wascreen->GoToDesktop((unsigned int) atoi(ac->param));
 }
+void WaMenuItem::NextDesktop(XEvent *, WaAction *) {
+    menu->wascreen->NextDesktop(NULL, NULL);
+}
+void WaMenuItem::PreviousDesktop(XEvent *, WaAction *) {
+    menu->wascreen->PreviousDesktop(NULL, NULL);
+}
 void WaMenuItem::Restart(XEvent *e, WaAction *ac) {
     menu->wascreen->Restart(e, ac);
 }

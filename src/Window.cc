@@ -100,7 +100,6 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     net->GetMWMHints(this);
     net->GetWMNormalHints(this);
     net->GetWmPid(this);
-    net->GetDesktop(this);
     
     Gravitate(ApplyGravity);
     InitPosition();
@@ -146,6 +145,9 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     net->GetWmType(this);
     net->GetVirtualPos(this);
     net->GetWmStrut(this);
+    net->GetDesktop(this);
+    net->SetDesktop(this);
+    net->SetDesktopMask(this);
     
     ReparentWin();
     if (! net->GetNetName(this)) net->GetXaName(this);
@@ -421,7 +423,9 @@ void WaWindow::MapWindow(void) {
     }
     if (desktop_mask & (1L << wascreen->current_desktop->number))
         XMapWindow(display, frame->id);
-    else hidden = true;
+    else {
+        hidden = true;
+    }
     mapped = true;
 }
 
@@ -2800,6 +2804,8 @@ void WaWindow::MoveWindowToSmartPlace(XEvent *, WaAction *) {
             for (; it != wascreen->wawindow_list.end() &&
                      (loc_ok == True); it++) {
                 if ((*it != this) && ((*it)->flags.tasklist) &&
+                    ((*it)->desktop_mask &
+                     (1L << wascreen->current_desktop->number)) &&
                     ((((*it)->attrib.x + (*it)->attrib.width) > 0 &&
                       (*it)->attrib.x < wascreen->width) && 
                      (((*it)->attrib.y + (*it)->attrib.height) > 0 &&
@@ -2839,6 +2845,40 @@ void WaWindow::MoveWindowToSmartPlace(XEvent *, WaAction *) {
     }
     else
         Gravitate(ApplyGravity);
+}
+
+/**
+ * @fn    DesktopMask(XEvent *, WaAction *ac)
+ * @brief Set desktop mask
+ *
+ * Sets the mask for in which desktops the window should be a member.
+ *
+ * @param ac WaAction object
+ */
+void WaWindow::DesktopMask(XEvent *, WaAction *ac) {
+    if (ac->param) {
+        if (! strncasecmp("all", ac->param, 3))
+            desktop_mask = (1L << 16) - 1;
+        else {
+            desktop_mask = 0;
+            char *token = strtok(ac->param, " \t");
+            while (token) {
+                int desk = (unsigned int) atoi(token);
+                if (desk < wascreen->config.desktops)
+                    desktop_mask |= (1L << desk);
+                token = strtok(NULL, " \t");
+            }
+        }
+        if (desktop_mask == 0) desktop_mask = (1L << 0);
+        
+        if (desktop_mask & (1L << wascreen->current_desktop->number))
+            Show();
+        else
+            Hide();
+
+        net->SetDesktop(this);
+        net->SetDesktopMask(this);
+    }
 }
 
 /**
@@ -3525,6 +3565,12 @@ void WaWindow::PointerFixedWarp(XEvent *e, WaAction *ac) {
 }
 void WaWindow::GoToDesktop(XEvent *, WaAction *ac) {
     if (ac->param) wascreen->GoToDesktop((unsigned int) atoi(ac->param));
+}
+void WaWindow::NextDesktop(XEvent *, WaAction *) {
+    wascreen->NextDesktop(NULL, NULL);
+}
+void WaWindow::PreviousDesktop(XEvent *, WaAction *) {
+    wascreen->PreviousDesktop(NULL, NULL);
 }
 void WaWindow::Restart(XEvent *e, WaAction *ac) {
     wascreen->Restart(e, ac);

@@ -200,6 +200,9 @@ public:
     void MoveWindowToPointer(XEvent *, WaAction *);
     void MoveWindowToSmartPlace(XEvent *, WaAction *);
     void GoToDesktop(XEvent *, WaAction *);
+    void PreviousDesktop(XEvent *, WaAction *);
+    void NextDesktop(XEvent *, WaAction *);
+    void DesktopMask(XEvent *, WaAction *);
     void JoinDesktop(XEvent *, WaAction *);
     void PartCurrentJoinDesktop(XEvent *, WaAction *);
     void PartDesktop(XEvent *, WaAction *);

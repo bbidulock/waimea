@@ -876,6 +876,10 @@ void WaScreen::UpdateWorkarea(void) {
             if (! (((WaWindow *) wo)->desktop_mask &
                    (1L << current_desktop->number)))
                 break;
+        } else if (wo && wo->type == DockHandlerType) {
+            if (! (((DockappHandler *) wo)->style->desktop_mask &
+                   (1L << current_desktop->number)))
+                break;
         }
             
         if ((*it)->left > current_desktop->workarea.x)
@@ -901,7 +905,8 @@ void WaScreen::UpdateWorkarea(void) {
         
         list<WaWindow *>::iterator wa_it = wawindow_list.begin();
         for (; wa_it != wawindow_list.end(); ++wa_it) {
-            if (! ((*wa_it)->desktop_mask & current_desktop->number)) break;
+            if (! ((*wa_it)->desktop_mask &
+                   (1L << current_desktop->number))) break;
             if ((*wa_it)->flags.max) {
                 (*wa_it)->flags.max = false;
                 res_x = (*wa_it)->restore_max.x;
@@ -1454,6 +1459,10 @@ void WaScreen::GoToDesktop(unsigned int number) {
         if ((unsigned int) (*dit)->number == number) break;
     
     if (dit != desktop_list.end() && *dit != current_desktop) {
+        (*dit)->workarea.x = current_desktop->workarea.x;
+        (*dit)->workarea.y = current_desktop->workarea.y;
+        (*dit)->workarea.width = current_desktop->workarea.width;
+        (*dit)->workarea.height = current_desktop->workarea.height;
         current_desktop = (*dit);
 
         list<WaWindow *>::iterator it = wawindow_list.begin();
@@ -1486,8 +1495,51 @@ void WaScreen::GoToDesktop(unsigned int number) {
             WARNING << "bad desktop id `" << number << "', desktop " <<
                 number << " doesn't exist" << endl;
 }
+
+/** 
+ * @fn    GoToDesktop(XEvent *, WaAction *ac)
+ * @brief Go to desktop
+ *
+ * Sets current desktop to the one specified by action parameter.
+ * 
+ * @param ac WaAction object
+ */
 void WaScreen::GoToDesktop(XEvent *, WaAction *ac) {
     if (ac->param) GoToDesktop((unsigned int) atoi(ac->param));
+}
+
+/** 
+ * @fn    NextDesktop(XEvent *, WaAction *)
+ * @brief Go to next desktop
+ *
+ * Sets current desktop to desktop with ID number current ID + 1. If
+ * current ID + 1 doesn't exist then current desktop is set to desktop with
+ * ID 0.
+ * 
+ * @param ac WaAction object
+ */
+void WaScreen::NextDesktop(XEvent *, WaAction *) {
+    if (current_desktop->number + 1 == config.desktops)
+        GoToDesktop(0);
+    else
+        GoToDesktop(current_desktop->number + 1);
+}
+
+/** 
+ * @fn    PreviousDesktop(XEvent *, WaAction *)
+ * @brief Go to previous desktop
+ *
+ * Sets current desktop to desktop with ID number current ID - 1. If
+ * current ID - 1 is negative then current desktop is set to desktop with
+ * highest desktop number.
+ * 
+ * @param ac WaAction object
+ */
+void WaScreen::PreviousDesktop(XEvent *, WaAction *) {
+        if (current_desktop->number - 1 == -1)
+        GoToDesktop(config.desktops - 1);
+    else
+        GoToDesktop(current_desktop->number - 1);
 }
 
 /**

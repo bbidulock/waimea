@@ -186,6 +186,10 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     wacts.push_back(new StrComp("movetosmartplace",
                                  &WaWindow::MoveWindowToSmartPlace));
     wacts.push_back(new StrComp("gotodesktop", &WaWindow::GoToDesktop));
+    wacts.push_back(new StrComp("nextdesktop", &WaWindow::NextDesktop));
+    wacts.push_back(new StrComp("previousdesktop",
+                                &WaWindow::PreviousDesktop));
+    wacts.push_back(new StrComp("desktopmask", &WaWindow::DesktopMask));
     wacts.push_back(new StrComp("joindesktop", &WaWindow::JoinDesktop));
     wacts.push_back(new StrComp("partdesktop", &WaWindow::PartDesktop));
     wacts.push_back(new StrComp("partcurrentdesktop",
@@ -231,6 +235,9 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     racts.push_back(new StrComp("pointerfixedwarp",
                                  &WaScreen::PointerFixedWarp));
     racts.push_back(new StrComp("gotodesktop", &WaScreen::GoToDesktop));
+    racts.push_back(new StrComp("nextdesktop", &WaScreen::NextDesktop));
+    racts.push_back(new StrComp("previousdesktop",
+                                &WaScreen::PreviousDesktop));
     racts.push_back(new StrComp("nop", &WaScreen::Nop));
     
     macts.push_back(new StrComp("unlink", &WaMenuItem::UnLinkMenu));
@@ -287,6 +294,9 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     macts.push_back(new StrComp("menuunmapfocused",
                                  &WaMenuItem::MenuUnmapFocus));
     macts.push_back(new StrComp("gotodesktop", &WaMenuItem::GoToDesktop));
+    macts.push_back(new StrComp("nextdesktop", &WaMenuItem::NextDesktop));
+    macts.push_back(new StrComp("previousdesktop",
+                                &WaMenuItem::PreviousDesktop));
     macts.push_back(new StrComp("restart", &WaMenuItem::Restart));
     macts.push_back(new StrComp("exit", &WaMenuItem::Exit));
     macts.push_back(new StrComp("nop", &WaMenuItem::Nop));
@@ -2154,6 +2164,7 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
                 (! strncasecmp(token, "gotodesktop", 11)) ||
                 (! strncasecmp(token, "partdesktop", 11)) ||
                 (! strncasecmp(token, "joindesktop", 11)) ||
+                (! strncasecmp(token, "desktopmask", 11)) ||
                 (! strncasecmp(token, "partcurrentjoindesktop", 22)) ) {
                 WARNING "`" << token << "' action must have a parameter" <<
                     endl;
@@ -2177,6 +2188,7 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
              (! strncasecmp(token, "gotodesktop", 11)) ||
              (! strncasecmp(token, "partdesktop", 11)) ||
              (! strncasecmp(token, "joindesktop", 11)) ||
+             (! strncasecmp(token, "desktopmask", 11)) ||
              (! strncasecmp(token, "partcurrentjoindesktop", 22)) ) {
         WARNING "`" << token << "' action must have a parameter" <<
             endl;

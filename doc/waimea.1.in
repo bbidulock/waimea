@@ -1249,6 +1249,20 @@ Sets current desktop to desktop specified by desktop number parameter.
 
 .PP
 .TP
+.B nextdesktop
+Sets current desktop to desktop with number one higher than
+current desktop. Current desktop is set to desktop 0 if no desktop with 
+higher number than current desktop exists.
+
+.PP
+.TP
+.B previousdesktop
+Sets current desktop to desktop with number one lower than
+current desktop. Current desktop is set to desktop with highest number
+if no desktop with lower number than current desktop exists.
+
+.PP
+.TP
 .B exit
 Shutdowns waimea.
 
@@ -1541,6 +1555,14 @@ Moves center of window to mouse pointer position.
 .TP
 .B movetosmartplace
 Moves window to position calculated by Smart Placement algorithm.
+
+.PP
+.TP
+.B desktopmask(Desktop number list)
+Sets desktop mask for window. Parameter should be a whitespace separated
+list of desktop numbers. Window will only appear in desktops specified 
+by this list. To make window appear in all desktops, replace list with 
+the string `All'.
 
 .PP
 .TP
