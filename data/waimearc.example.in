@@ -11,6 +11,8 @@ colorsPerChannel:	4
 cacheMax:		200
 virtualSize:		3x3
 dock0.geometry:         -0+0
+dock0.order:            UNKNOWN
 dock0.direction:        Vertical
+dock0.centered:         True
 dock0.gridSpace:        2
 dock0.stacking:		AlwaysOnTop
