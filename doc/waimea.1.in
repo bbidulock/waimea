@@ -46,7 +46,9 @@ X server to contact
 Use the alternate
 .I CONFIGFILE
 instead of
-.IR ~/.waimearc.
+.IR ~/.waimearc
+and
+.IR @pkgdatadir@/config.
 
 .TP
 .B "--stylefile STYLEFILE"
@@ -90,10 +92,11 @@ When starting,
 .I waimea
 looks for a 
 .I .waimearc 
-resource file in the users home directory. 
-This file should contain configuration options. 
-If file doesn't exist default values for all options are
-used. To force 
+resource file in the users home directory. If file doesn't exist, 
+.I waimea
+falls back to 
+.I @pkgdatadir@/config, 
+the system wide config file. To force 
 .I waimea 
 to read a different configuration file use 
 .I --rcfile
@@ -1018,7 +1021,13 @@ Here is the list of actions common for all window types:
 .B {command line}
 You can specify a command line to execute instead of
 a function. Command line must be within a '{'
-and a '}' character.
+and a '}' character. All special characters need to be 
+escaped (with a `\\') to protect them from expansion. 
+Special characters are:
+.nf
+( ) { } < > [ ] " $
+
+.fi
 
 .PP
 .TP
@@ -1561,7 +1570,7 @@ Here is the list of event modifiers that can used in the modifier mask:
 .B moveresizemask
 
 .PP
-Default action file is @pkgdatadir@/actions/action.sloppy-focus.
+Default action file is @pkgdatadir@/actions/action.
 You can study or edit this action file to grasp how the action system works.
 
 
@@ -1569,20 +1578,23 @@ You can study or edit this action file to grasp how the action system works.
 
 All menus used in the action file must be defined in the menu file.
 .PP
-A menu definition starts with a [start] (menu_name) statement and ends
-with a [end] statement. Remember that a [start] statement must be followed by a
-menu name. Between the [start] and [end] statements a number of
-[item], [title], [sub] and [checkbox=flag] statements should be put. 
-The only thing separating these three menu item types are their 
-looks and action lists. All three of these statements could be 
+A menu definition starts with a [start] tag and ends
+with an [end] tag. Between the [start] and the [end] tag a number of 
+[item], [title], [sub] and [checkbox] tags should be placed.
+The looks and action lists are the only things separating the first three 
+menu item types. All three of these tags could be
 followed by a (string), "string", {string} and <string>.
+A [checkbox] tag is basicly an [item] tag with two states.
 
 .PP
 .I Waimea
-menu system is compatible with 
+menu system is compatible with
 .I blackbox(1)
-menu system so higher level statements as [begin], [exec], [submenu], 
-[nop], [restart] and [exit] are supported.
+menu system so higher level tags as [begin], [exec], [submenu], 
+[nop], [restart] and [exit] are supported. 
+.I blackbox(1) also support [styledir], [reconfig] and [config] tags, 
+these tags are not supported by
+.I Waimea.
 
 .PP
 () = menu item title
@@ -1618,7 +1630,8 @@ e.g.:
 [end]
 
 .fi
-Menu item titles can contain environment variables. e.g.:
+Menu item titles and include filenames can contain environment 
+variables. e.g.:
 .nf
 [item] (Logout $USER) "exit"
 .fi
@@ -1627,17 +1640,13 @@ $USER will be replaced with USER environment variable.
 All special characters need to be escaped (with a `\\') to protect
 them from expansion. Special characters are:
 .nf
-( ) { } < > [ ] $
+( ) { } < > [ ] " $ 
 
 .fi
 
 .PP
-Predefined menu named "__windowlist__" can be used in menu file
-and action file to access the taskswitcher menu.
-
-.PP
-A checkbox item is a item that have two modes and a flag decides which
-mode the item is in. e.g.:
+A checkbox item is a item that have two states and a flag decides which
+state the item is in. e.g.:
 .nf
 
 [checkbox=STICKY] @FALSE (Sticky) "sticky" @TRUE (Sticky) "unsticky"
@@ -1673,6 +1682,20 @@ DECORALL
 .PP
 
 .PP
+[include] tags can be used anywhere in a menu file to include
+the contains of another file. e.g.:
+.nf
+
+[include] (/home/user/.waimea/rootmenu)
+
+.fi
+
+
+.PP
+Predefined menu named "__windowlist__" can be used in menu file
+and action file to access the taskswitcher menu.
+
+.PP
 Default menu file is @pkgdatadir@/menu.
 You can study or edit this menu file to grasp how the menu system works.
 
@@ -1691,11 +1714,16 @@ When no other display was given on the command line,
 will start on the display specified by this variable.
 
 
-
 .SH FILES
 .TP
 .B ~/.waimearc
 User configuration file. See
+.I "CONFIG FILE"
+section for further details.
+
+.TP
+.B @pkgdatadir@/config
+The system wide config file. See
 .I "CONFIG FILE"
 section for further details.
 

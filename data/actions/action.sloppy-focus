@@ -1,3 +1,8 @@
+DEF globalKeyBindings {
+   TaskSwitcher               : KeyPress = Tab & Mod1Mask,
+   MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+}
+
 DEF defaultAllWindows {
    Raise                  : ButtonPress = Button1 & Mod1Mask,
    StartOpaqueMove        : ButtonPress = Button1 & Mod1Mask,
@@ -59,23 +64,21 @@ window.passiveclient {
 }
 window.activeclient {
    defaultAllWindows,
-   ToggleShade                : KeyPress = F1 & Mod1Mask,
-   ToggleMaximize             : KeyPress = F2 & Mod1Mask,
-   Raise                      : KeyPress = F2 & Mod1Mask,
-   MenuRemapFocused(window)   : KeyPress = F3 & Mod1Mask,
-   Close                      : KeyPress = F4 & Mod1Mask,
-   Kill                       : KeyPress = F10 & Mod1Mask,
-   TaskSwitcher               : KeyPress = Tab & Mod1Mask,
-   MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+   ToggleShade              : KeyPress = F1 & Mod1Mask,
+   ToggleMaximize           : KeyPress = F2 & Mod1Mask,
+   Raise                    : KeyPress = F2 & Mod1Mask,
+   MenuRemapFocused(window) : KeyPress = F3 & Mod1Mask,
+   Close                    : KeyPress = F4 & Mod1Mask,
+   Kill                     : KeyPress = F10 & Mod1Mask,
+   globalKeyBindings
 }
 
 root {
-   MenuRemap(rootmenu)        : ButtonPress = Button3,
-   MenuUnmap(rootmenu)        : ButtonPress = Button1,
-   StartViewportMove          : ButtonPress = Button2,
-   EndMoveResize              : ButtonRelease = Button2 & MoveResizeMask,
-   TaskSwitcher               : KeyPress = Tab & Mod1Mask,
-   MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+   MenuRemap(rootmenu) : ButtonPress = Button3,
+   MenuUnmap(rootmenu) : ButtonPress = Button1,
+   StartViewportMove   : ButtonPress = Button2,
+   EndMoveResize       : ButtonRelease = Button2 & MoveResizeMask,
+   globalKeyBindings
 }
 
 westedge { ViewportLeft : EnterNotify }

@@ -93,11 +93,6 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
                             rh->colors_per_channel, rh->cache_max);
     ic->installRootColormap();
 
-#ifdef XRENDER
-    net->GetXRootPMapId(this);
-    ic->setXRootPMapId((xrootpmap_id)? true: false);
-#endif // XRENDER
-
     rh->LoadStyle(this);
     waimea->wascreen = this;
     rh->LoadActions();
@@ -128,6 +123,11 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     workarea->width = width;
     workarea->height = height;
     net->SetWorkarea(this);
+
+#ifdef XRENDER
+    net->GetXRootPMapId(this);
+    ic->setXRootPMapId((xrootpmap_id)? true: false);
+#endif // XRENDER    
 
     docks = new list<DockappHandler *>;
     list<DockStyle *>::iterator dit = waimea->rh->dockstyles->begin();

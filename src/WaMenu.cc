@@ -1706,6 +1706,24 @@ void WaMenuItem::PointerRelativeWarp(XEvent *e, WaAction *ac) {
 void WaMenuItem::PointerFixedWarp(XEvent *e, WaAction *ac) {
        menu->wascreen->PointerFixedWarp(e, ac);
 }
+void WaMenuItem::MenuMap(XEvent *e, WaAction *ac) {
+    menu->wascreen->MenuMap(e, ac, false);
+}
+void WaMenuItem::MenuMapFocused(XEvent *e, WaAction *ac) {
+    menu->wascreen->MenuMap(e, ac, true);
+}
+void WaMenuItem::MenuRemap(XEvent *e, WaAction *ac) {
+    menu->wascreen->MenuRemap(e, ac, false);
+}
+void WaMenuItem::MenuRemapFocused(XEvent *e, WaAction *ac) {
+    menu->wascreen->MenuRemap(e, ac, true);
+}
+void WaMenuItem::MenuUnmap(XEvent *e, WaAction *wa) {
+    menu->wascreen->MenuUnmap(e, wa, false);
+}
+void WaMenuItem::MenuUnmapFocus(XEvent *e, WaAction *wa) {
+    menu->wascreen->MenuUnmap(e, wa, true);
+}
 void WaMenuItem::Restart(XEvent *e, WaAction *ac) {
     menu->wascreen->Restart(e, ac);
 }

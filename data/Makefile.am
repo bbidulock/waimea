@@ -1,8 +1,8 @@
 SUBDIRS = actions styles backgrounds
-CLEANFILES = waimearc.example
-pkgdata_DATA = menu
+CLEANFILES = config
+pkgdata_DATA = menu config
 
-all-local: waimearc.example
+all-local: config
 
-waimearc.example: waimearc.example.in
-	@regex_cmd@ -e "s,@pkgdatadir@,$(pkgdatadir)," waimearc.example.in > waimearc.example
+config: config.in
+	@regex_cmd@ -e "s,@pkgdatadir@,$(pkgdatadir)," config.in > config

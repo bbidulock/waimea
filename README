@@ -61,7 +61,7 @@ CONFIGURATION
 
    Copy  the example  configuration file  to  '.waimearc' in 
    your homedir.
-   cp WAIMEA_DATA_INSTALL_DIR/waimearc.example ~/.waimearc
+   cp WAIMEA_DATA_INSTALL_DIR/config ~/.waimearc
 
    Edit '.waimearc'. 
    Set the styleFile option  to the full  path of the  style 

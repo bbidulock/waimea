@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libgen.h>
 #include <X11/Xlib.h>
 
 #ifdef PIXMAP
@@ -70,9 +71,9 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     wacts->push_back(new StrComp("startresizeleft", &WaWindow::ResizeLeft));
     wacts->push_back(new StrComp("startopaquemove", &WaWindow::MoveOpaque));
     wacts->push_back(new StrComp("startopaqueresizeright",
-                             &WaWindow::ResizeRightOpaque));
+                                 &WaWindow::ResizeRightOpaque));
     wacts->push_back(new StrComp("startopaqueresizeleft",
-                              &WaWindow::ResizeLeftOpaque));
+                                 &WaWindow::ResizeLeftOpaque));
     wacts->push_back(new StrComp("endmoveresize", &WaWindow::EndMoveResize));
     wacts->push_back(new StrComp("close", &WaWindow::Close));
     wacts->push_back(new StrComp("kill", &WaWindow::Kill));
@@ -230,6 +231,15 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaMenuItem::PointerRelativeWarp));
     macts->push_back(new StrComp("pointerfixedwarp",
                                  &WaMenuItem::PointerFixedWarp));
+    macts->push_back(new StrComp("menumap", &WaMenuItem::MenuMap));
+    macts->push_back(new StrComp("menuremap", &WaMenuItem::MenuRemap));
+    macts->push_back(new StrComp("menumapfocused",
+                                 &WaMenuItem::MenuMapFocused));
+    macts->push_back(new StrComp("menuremapfocused",
+                                 &WaMenuItem::MenuRemapFocused));
+    macts->push_back(new StrComp("menuunmap", &WaMenuItem::MenuUnmap));
+    macts->push_back(new StrComp("menuunmapfocused",
+                                 &WaMenuItem::MenuUnmapFocus));
     macts->push_back(new StrComp("restart", &WaMenuItem::Restart));
     macts->push_back(new StrComp("exit", &WaMenuItem::Exit));
     macts->push_back(new StrComp("nop", &WaMenuItem::Nop));
@@ -355,9 +365,14 @@ void ResourceHandler::LoadConfig(void) {
     char *value_type;
     
     database = (XrmDatabase) 0;
-    if (! (database = XrmGetFileDatabase(rc_file)))
+    if (! (database = XrmGetFileDatabase(rc_file))) {
         if (rc_forced) WARNING << "can't open rcfile \"" << rc_file <<
                            "\" for reading" << endl;
+        else
+           if (! (database = XrmGetFileDatabase(DEFAULTRCFILE)))
+              WARNING << "can't open system default rcfile \"" << rc_file <<
+                  "\" for reading" << endl;
+    }
 
     if (! style_forced)
         if (XrmGetResource(database, "styleFile", "StyleFile",
@@ -381,7 +396,7 @@ void ResourceHandler::LoadConfig(void) {
         }
     
     if (XrmGetResource(database, "virtualSize", "ViriualSize",
-                     &value_type, &value)) {
+                       &value_type, &value)) {
         if (sscanf(value.addr, "%ux%u", &virtual_x, &virtual_y) != 2) {
             virtual_x = virtual_y = 3;
         }
@@ -404,7 +419,7 @@ void ResourceHandler::LoadConfig(void) {
         colors_per_channel = 4;
     
     if (XrmGetResource(database, "cacheMax", "CacheMax",
-                     &value_type, &value)) {
+                       &value_type, &value)) {
         if (sscanf(value.addr, "%lu", &cache_max) != 1)
             cache_max = 200;
     } else
@@ -462,7 +477,7 @@ void ResourceHandler::LoadConfig(void) {
         sprintf(rc_class, "Dock%d.Geometry", dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
             dockstyle->geometry = XParseGeometry(value.addr, &dockstyle->x,
-                                                &dockstyle->y, &dummy, &dummy);
+                                                 &dockstyle->y, &dummy, &dummy);
             d_exists = true;
         }
         
@@ -1089,58 +1104,13 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
  */
 void ResourceHandler::LoadMenus(void) {
     FILE *file;
-    char *s, line[1024];
-    int i;
-    WaMenu *menu;
-    WaMenuItem *m;
 
-    linenr = 0;
     if (! (file = fopen(menu_file, "r"))) {
         WARNING << "can't open menufile \"" << menu_file << 
-		"\" for reading" << endl;
+            "\" for reading" << endl;
         return;
     }
-    while (fgets(line, 1024, file)) {
-        linenr++;
-        for (i = 0; line[i] == ' ' || line[i] == '\t'; i++);
-        if (line[i] == '\n') continue;
-        if (line[i] == '#') continue;
-        if (line[i] == '!') continue;
-        
-        if ((s = strwithin(line, '[', ']'))) {
-            if (! strcasecmp("start", s)) {
-                delete [] s;
-                if ((s = strwithin(line, '(', ')')))
-                    ParseMenu(new WaMenu(s), file);
-                else
-                    WARNING << "failed to find menu name at line " <<
-                        linenr << endl;
-            }
-            else if (! strcasecmp("begin", s)) {
-                delete [] s;
-                if ((s = strwithin(line, '(', ')'))) {
-                    menu = new WaMenu(s);
-                    m = new WaMenuItem(s);
-                    m->type = MenuTitleType;
-                    menu->AddItem(m);
-                    ParseMenu(menu, file);
-                } else {
-                    delete [] s;
-                    WARNING << "failed to find menu name at line " <<
-                        linenr << endl;
-                }
-            } else {
-                delete [] s;
-                WARNING << "missing [start] or [begin] statement at line " <<
-                    linenr << endl;
-            }
-        }
-        else {
-            delete [] s;
-            WARNING << "missing [start] or [begin] statement at line " <<
-                linenr << endl;
-        }
-    }
+    while (! feof(file)) ParseMenu(NULL, file);
     fclose(file);
 }
 
@@ -1527,7 +1497,7 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
                            &value)) {
             if (strstr(value.addr, "/")) {
                 if (! (image = imlib_load_image(value.addr)))
-                WARNING << "failed loading image \"" << value.addr << "\"\n";
+                    WARNING << "failed loading image \"" << value.addr << "\"\n";
             }
             else {
                 sprintf(pixmap_path, "%s/%s", style_file, value.addr);
@@ -1809,14 +1779,14 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         token[i] = '\0';
     }
     else if ((! strncasecmp(token, "menu", 4)) ||
-          (! strncasecmp(token, "pointer", 7)) ||
-          (! strncasecmp(token, "viewportrelative", 16)) ||
-          (! strncasecmp(token, "viewportfixed", 13)) ) {
-          WARNING "\"" << token << "\" action must have a parameter" <<
-              endl;
-          delete act_tmp;
-          delete [] line;
-          return;                                                                   }
+             (! strncasecmp(token, "pointer", 7)) ||
+             (! strncasecmp(token, "viewportrelative", 16)) ||
+             (! strncasecmp(token, "viewportfixed", 13)) ) {
+        WARNING "\"" << token << "\" action must have a parameter" <<
+            endl;
+        delete act_tmp;
+        delete [] line;
+        return;                                                                   }
     delete [] tmp_par;
     
     it = comp->begin();
@@ -1939,8 +1909,8 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
 }
 
 /**
- * @fn    ParseMenu(WaMenu *menu, FILE *file)
- * @brief Parses a menu
+ * @fn    ParseMenus(WaMenu *menu, FILE *file)
+ * @brief Parses a menu file
  *
  * Parses a menu section of the menu file and creates a menu object for the
  * menu. If a [start] or [begin] statement is found when parsing a menu, we
@@ -1968,46 +1938,89 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         cb = 0;
         
         if (! (s = strwithin(line, '[', ']'))) {
-            WARNING << "failed to find menu item type at line " << 
-                linenr << endl;
+            WARNING << basename(menu_file) << ":" << linenr << 
+                " missing tag" << endl;
             continue;
+        }
+        if (! strcasecmp(s, "include")) {
+            FILE *include_file;
+            char *tmp_mf;
+            int tmp_linenr;
+
+            delete [] s;
+            if ((s = strwithin(line, '(', ')', true))) {
+                if (! (include_file = fopen(s, "r"))) { 
+                    WARNING << "can't open menufile \"" << s <<
+                        "\" for reading" << endl;
+                    delete [] s;
+                    continue;
+                }
+                tmp_mf = menu_file;
+                tmp_linenr = linenr;
+                menu_file = s;
+                while (! feof(include_file)) ParseMenu(menu, include_file);
+                menu_file = tmp_mf;
+                linenr = tmp_linenr;
+                delete [] s;
+                fclose(include_file);                
+            } else {
+                WARNING << "(" << basename(menu_file) << ":" << linenr <<
+                    "): missing menufile name" << endl;
+            }            
+            continue;
+        }
+        if ((strcasecmp(s, "start") && strcasecmp(s, "begin"))) {
+            if (menu == NULL) {
+                WARNING << "(" << basename(menu_file) << ":" << linenr << 
+                    "): bad tag, expected [start], [begin] or [include]" << endl;
+                continue;
+            }
         }
         if (! strcasecmp(s, "start")) {
             delete [] s;
             if ((s = strwithin(line, '(', ')', true))) {                
                 tmp_menu = new WaMenu(wastrdup(s));                
-                ParseMenu(tmp_menu, file);
+                if (menu) ParseMenu(tmp_menu, file);
+                else menu = tmp_menu;
             } else
-                WARNING << "failed to find menu name at line " <<
-                    linenr << endl;
+                WARNING << "(" << basename(menu_file) << ":" << linenr << 
+                    "): missing menu name" << endl;
             continue;
         }
         else if ((! strcasecmp(s, "submenu")) || (! strcasecmp(s, "begin"))) {
             delete [] s;
             if ((s = strwithin(line, '(', ')', true))) {
-                m = new WaMenuItem(s);
-                m->type = MenuSubType;
-                m->func_mask |= MenuSubMask;
-                m->func_mask1 |= MenuSubMask;
-                m->sub = m->sub1 = wastrdup(s);
-                menu->AddItem(m);
+                if (menu) {
+                    m = new WaMenuItem(s);
+                    m->type = MenuSubType;
+                    m->func_mask |= MenuSubMask;
+                    m->func_mask1 |= MenuSubMask;
+                    m->sub = m->sub1 = wastrdup(s);
+                    menu->AddItem(m);
+                }
                 tmp_menu = new WaMenu(wastrdup(s));
                 m = new WaMenuItem(wastrdup(s));
                 m->type = MenuTitleType;
                 tmp_menu->AddItem(m);
-                ParseMenu(tmp_menu, file);
+                if (menu) ParseMenu(tmp_menu, file);
+                else menu = tmp_menu;
             } else
-                WARNING << "failed to find menu name at line " <<
-                    linenr << endl;
+                WARNING << "(" << basename(menu_file) << ":" << linenr << 
+                    "): missing menu name" << endl;
             continue;
         }
         else if (! strcasecmp(s, "restart")) {
             delete [] s;
             if ((s = strwithin(line, '(', ')', true)))
                 m = new WaMenuItem(s);
-            else
+            else                
                 m = new WaMenuItem(wastrdup(""));
-            m->type = MenuItemType;
+            
+            if ((s = strwithin(line, '{', '}'))) {
+                m->param1 = m->param = wastrdup(s);
+                delete [] s;
+            }            
+            m->type = MenuItemType;            
             m->func_mask = MenuRFuncMask;
             m->rfunc = &WaScreen::Restart;
             menu->AddItem(m);
@@ -2113,24 +2126,24 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                 cb = AABCBoxType;
             }
             else {
-                WARNING << "at line " << linenr << ": '"<< s + 9 << "'" <<
-                    " unknown checkbox" << endl;
+                WARNING << "(" << basename(menu_file) << ":" << linenr << 
+                    "): '"<< s + 9 << "' unknown checkbox" << endl;
                 delete [] s;
                 continue;
             }
             for (i = 0; strncasecmp(&line[i], "@TRUE", 5) &&
                      line[i + 5] != '\0'; i++);
             if (line[i + 5] == '\0') {
-                WARNING << "at line " << linenr << ": No '@TRUE' linepart" <<
-                    " for checkbox item" << endl;
+                WARNING << "(" << basename(menu_file) << ":" << linenr << 
+                    "): No '@TRUE' linepart for checkbox item" << endl;
                 continue;
             }
             line2 = &line[i + 5];
             for (i = 0; strncasecmp(&line[i], "@FALSE", 6) &&
                      line[i + 6] != '\0'; i++);
             if (line[i + 6] == '\0') {
-                WARNING << "at line " << linenr << ": No '@FALSE' linepart" <<
-                    " for checkbox item" << endl;
+                WARNING << "(" << basename(menu_file) << ":" << linenr << 
+                    "): No '@FALSE' linepart for checkbox item" << endl;
                 continue;
             }
             line1 = &line[i + 6];
@@ -2154,8 +2167,8 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             type = MenuSubType;
         }
         else {
-            WARNING << "at line " << linenr << ": [" << s << "]" <<
-                " invalid statement" << endl;
+            WARNING << "(" << basename(menu_file) << ":" << linenr << 
+                "): bad tag [" << s << "]" << endl;
             delete [] s;
             continue;
         }
@@ -2187,7 +2200,8 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                 s[i] = '\0';
                 for (i = 0; par[i] != ')' && par[i] != '\0'; i++);
                 if (par[i] == '\0') {
-                    WARNING << "missing \")\" at line " << linenr << endl;
+                    WARNING << "(" << basename(menu_file) << ":" << linenr << 
+                        "): missing ')'" << endl;
                     delete [] tmp_par;
                     continue;
                 }
@@ -2232,8 +2246,8 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             }
             delete [] s;
             if (! (m->wfunc || m->rfunc || m->mfunc)) {
-                WARNING << "at line " << linenr << ": function \"" << s <<
-                    "\" not available" << endl;
+                WARNING << "(" << basename(menu_file) << ":" << linenr << 
+                    "): function \"" << s << "\" not available" << endl;
                 continue;
             }
         }
@@ -2259,7 +2273,8 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                     s[i] = '\0';
                     for (i = 0; par[i] != ')' && par[i] != '\0'; i++);
                     if (par[i] == '\0') {
-                        WARNING << "missing \")\" at line " << linenr << endl;
+                        WARNING << "(" << basename(menu_file) << ":" << 
+                            linenr << "): missing ')'" << endl;
                         delete [] tmp_par;
                         continue;
                     }
@@ -2300,16 +2315,17 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                     }
                 }
                 if (! (m->wfunc2 || m->rfunc2 || m->mfunc2)) {
-                    WARNING << "at line " << linenr << ": function \"" << s <<
-                        "\" not available" << endl;
-                    delete [] s;
+                    WARNING << "(" << basename(menu_file) << ":" << linenr <<
+                        "): function \"" << s << "\" not available" << endl;                         delete [] s;
                     continue;
                 }
             }
         }
         menu->AddItem(m);
     }
-    WARNING << "at line " << linenr << ": missing [end] statement" << endl;
+    if (menu)
+        WARNING << "(" << basename(menu_file) << ":" << linenr << "): " <<
+            "missing [end] statement" << endl;
 }
 
 /**
@@ -2325,11 +2341,11 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
  */
 StrComp::StrComp(char *s, unsigned long v) { str = s; value = v; type = 0; }
 StrComp::StrComp(char *s, WwActionFn a) {
-   str = s; winfunc = a; type = WindowFuncMask; }
+    str = s; winfunc = a; type = WindowFuncMask; }
 StrComp::StrComp(char *s, RootActionFn ra) {
-   str = s; rootfunc = ra; type = RootFuncMask; }
+    str = s; rootfunc = ra; type = RootFuncMask; }
 StrComp::StrComp(char *s, MenuActionFn ma) {
-   str = s; menufunc = ma; type = MenuFuncMask; }
+    str = s; menufunc = ma; type = MenuFuncMask; }
 
 /**
  * @fn    Comp(char *s)
@@ -2408,22 +2424,22 @@ char *strwithin(char *s, char c1, char c2, bool eval_env) {
         i = 0;
         for (; str[i] != '\0'; i++) {
             if (str[i] == '\\') {
-                 if (str[i + 1] != '\0') i++;
+                if (str[i + 1] != '\0') i++;
             }
             else if (str[i] == '$' && IS_ENV_CHAR(str[i + 1])) {
-                 str[i] = '\0';
-                 env_name = &str[++i];
-                 for (; IS_ENV_CHAR(str[i]); i++);
-                 tmp_char = str[i];
-                 str[i] = '\0';
-                 if ((env = getenv(env_name)) == NULL) env = "";
-                 str[i] = tmp_char;
-                 tmp = new char[strlen(str) + strlen(env) +
-                                strlen(&str[i]) + 1];
-                 sprintf(tmp, "%s%s%s", str, env, &str[i]);
-                 i = strlen(str) + strlen(env);
-                 delete [] str;
-                 str = tmp;
+                str[i] = '\0';
+                env_name = &str[++i];
+                for (; IS_ENV_CHAR(str[i]); i++);
+                tmp_char = str[i];
+                str[i] = '\0';
+                if ((env = getenv(env_name)) == NULL) env = "";
+                str[i] = tmp_char;
+                tmp = new char[strlen(str) + strlen(env) +
+                              strlen(&str[i]) + 1];
+                sprintf(tmp, "%s%s%s", str, env, &str[i]);
+                i = strlen(str) + strlen(env);
+                delete [] str;
+                str = tmp;
             }
         }
     }
@@ -2431,6 +2447,7 @@ char *strwithin(char *s, char c1, char c2, bool eval_env) {
         if (str[i] == '\\' && 
             (str[i + 1] == '$' ||
              str[i + 1] == '\\' ||
+             str[i + 1] == '"' ||
              str[i + 1] == '(' ||
              str[i + 1] == ')' ||
              str[i + 1] == '[' ||
@@ -2439,9 +2456,9 @@ char *strwithin(char *s, char c1, char c2, bool eval_env) {
              str[i + 1] == '}' ||
              str[i + 1] == '<' ||
              str[i + 1] == '>')) {
-	         for (n = 1; str[i + n] != '\0'; n++)
-	             str[i + n - 1] = str[i + n];
-	         str[i + n - 1] = '\0';
+            for (n = 1; str[i + n] != '\0'; n++)
+                str[i + n - 1] = str[i + n];
+            str[i + n - 1] = '\0';
         }
     }
     return str;

@@ -1,37 +1,34 @@
-DEF pointerWarpDef {
-   PointerWarp(-100+0) : KeyPress = Left & Mod1Mask,
-   PointerWarp(+100+0)  : KeyPress = Right & Mod1Mask,
-   PointerWarp(+0-100) : KeyPress = Up & Mod1Mask,
-   PointerWarp(+0+100)  : KeyPress = Down & Mod1Mask
+DEF globalKeyBindings {
+   TaskSwitcher                : KeyPress = Tab & Mod1Mask,
+   MenuRemapFocused(rootmenu)  : KeyPress = Escape & ControlMask,
+   PointerRelativeWarp(-100+0) : KeyPress = Left & Mod1Mask,
+   PointerRelativeWarp(+100+0) : KeyPress = Right & Mod1Mask,
+   PointerRelativeWarp(+0-100) : KeyPress = Up & Mod1Mask,
+   PointerRelativeWarp(+0+100) : KeyPress = Down & Mod1Mask
 }
 
 window.frame { Focus : EnterNotify }
 window.passiveclient {
-   pointerWarpDef,
    Raise         : MapRequest,
    StartMove     : MapRequest & ControlMask,
    Focus         : MapRequest & ControlMask,
    EndMoveResize : KeyRelease = Alt_L & MoveResizeMask
 }
 window.activeclient {
-   pointerWarpDef,
-   ToggleShade                : KeyPress = F1 & Mod1Mask,
-   ToggleMaximize             : KeyPress = F2 & Mod1Mask,
-   Raise                      : KeyPress = F2 & Mod1Mask,
-   MenuRemapFocused(window)   : KeyPress = F3 & Mod1Mask,
-   Close                      : KeyPress = F4 & Mod1Mask,
-   Kill                       : KeyPress = F10 & Mod1Mask,
-   TaskSwitcher               : KeyPress = Tab & Mod1Mask,
-   MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask,
-   StartOpaqueMove            : KeyPress = F5 & Mod1Mask,
-   StartOpaqueResizeRight     : KeyPress = F6 & Mod1Mask,
-   EndMoveResize              : KeyRelease = Alt_L & MoveResizeMask
+   ToggleShade              : KeyPress = F1 & Mod1Mask,
+   ToggleMaximize           : KeyPress = F2 & Mod1Mask,
+   Raise                    : KeyPress = F2 & Mod1Mask,
+   MenuRemapFocused(window) : KeyPress = F3 & Mod1Mask,
+   Close                    : KeyPress = F4 & Mod1Mask,
+   Kill                     : KeyPress = F10 & Mod1Mask,
+   TaskSwitcher             : KeyPress = Tab & Mod1Mask,
+   StartOpaqueMove          : KeyPress = F5 & Mod1Mask,
+   StartOpaqueResizeRight   : KeyPress = F6 & Mod1Mask,
+   EndMoveResize            : KeyRelease = Alt_L & MoveResizeMask,
+   globalKeyBindings
 }
 
-root {
-   TaskSwitcher               : KeyPress = Tab & Mod1Mask,
-   MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
-}
+root { globalKeyBindings }
 
 westedge { ViewportLeft : EnterNotify }
 

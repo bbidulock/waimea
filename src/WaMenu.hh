@@ -160,6 +160,12 @@ public:
     void PreviousItem(XEvent *, WaAction *);
     void PointerRelativeWarp(XEvent *, WaAction *);
     void PointerFixedWarp(XEvent *, WaAction *);
+    void MenuMap(XEvent *, WaAction *);
+    void MenuMapFocused(XEvent *, WaAction *);
+    void MenuRemap(XEvent *, WaAction *);
+    void MenuRemapFocused(XEvent *, WaAction *);
+    void MenuUnmap(XEvent *, WaAction *);
+    void MenuUnmapFocus(XEvent *, WaAction *);
     void Restart(XEvent *, WaAction *);
     void Exit(XEvent *, WaAction *);
     inline void Nop(XEvent *, WaAction *) {}
