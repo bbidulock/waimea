@@ -97,7 +97,11 @@ if test x$enableval = "xyes"; then
       use_shape="yes"
       SHAPE="-DSHAPE"; Xext_lib="-lXext",
       AC_MSG_RESULT([no])
-    )
+      AC_MSG_RESULT([** WARNING: X11/extensions/shape.h is missing])
+      AC_MSG_RESULT([** WARNING: Disabled Xshape extension support])
+    ),
+    AC_MSG_RESULT([** WARNING: Could not find XShapeCombineShape in -lXshape])
+    AC_MSG_RESULT([** WARNING: Disabled Xshape extension support])
   )
 else
   AC_MSG_RESULT([no])
@@ -116,7 +120,7 @@ AC_ARG_ENABLE(
 : ${enableval="yes"}
 if test x$enableval = "xyes"; then
    AC_MSG_RESULT([yes])
-   AC_CHECK_LIB(Xinerama, XineramaQueryExtension,
+   AC_CHECK_LIB(Xinerama, XineramaQueryScreens,
      AC_MSG_CHECKING([for X11/extensions/Xinerama.h])
      AC_TRY_LINK(
 #include <X11/Xlib.h>
@@ -126,7 +130,11 @@ if test x$enableval = "xyes"; then
       use_xinerama="yes"
       XINERAMA="-DXINERAMA"; Xinerama_lib="-lXinerama",
       AC_MSG_RESULT([no])
-    )
+      AC_MSG_RESULT([** WARNING: X11/extensions/Xinerama.h is missing])
+      AC_MSG_RESULT([** WARNING: Disabled Xinerama extension support])
+    ),
+    AC_MSG_RESULT([** WARNING: Could not find XineramaQueryScreens in -lXinerama])
+    AC_MSG_RESULT([** WARNING: Disabled Xinerama extension support])
   )
 else
   AC_MSG_RESULT([no])
@@ -134,36 +142,6 @@ fi
 AC_SUBST(XINERAMA)
 
 LIBS="$LIBS $Xinerama_lib"
-
-dnl Check for Xrandr extension support and proper library files.
-RANDR=""
-enableval="yes"
-AC_MSG_CHECKING([whether to build support for the Xrandr extension])
-AC_ARG_ENABLE(
-  randr, [  --enable-randr          enable support for the Xrandr extension [default=yes]])
-
-: ${enableval="yes"}
-if test x$enableval = "xyes"; then
-   AC_MSG_RESULT([yes])
-   AC_CHECK_LIB(Xrandr, XRRQueryExtension,
-     AC_MSG_CHECKING([for X11/extensions/Xrandr.h])
-     AC_TRY_LINK(
-#include <X11/Xlib.h>
-#include <X11/extensions/Xrandr.h>
-, XRRScreenSize foo,
-      AC_MSG_RESULT([yes])
-      use_randr="yes"
-      RANDR="-DRANDR"; Xrandr_lib="-lXrandr",
-      AC_MSG_RESULT([no])
-    )
-  )
-else
-  AC_MSG_RESULT([no])
-fi
-AC_SUBST(RANDR)
-
-LIBS="$LIBS $Xrandr_lib"
-
 
 dnl Checks for Xrender extension support
 RENDER=""
@@ -197,6 +175,44 @@ fi
 AC_SUBST(RENDER)
 
 LIBS="$LIBS $XRender_lib"
+
+dnl Check for Xrandr extension support and proper library files.
+RANDR=""
+enableval="yes"
+AC_MSG_CHECKING([whether to build support for the Xrandr extension])
+AC_ARG_ENABLE(
+  randr, [  --enable-randr          enable support for the Xrandr extension [default=yes]])
+
+: ${enableval="yes"}
+if test x$enableval = "xyes"; then
+  if test x$have_xrender = "xtrue" ; then
+     AC_MSG_RESULT([yes])
+     AC_CHECK_LIB(Xrandr, XRRQueryExtension,
+       AC_MSG_CHECKING([for X11/extensions/Xrandr.h])
+       AC_TRY_LINK(
+#include <X11/Xlib.h>
+#include <X11/extensions/Xrandr.h>
+, XRRScreenSize foo,
+         AC_MSG_RESULT([yes])
+         use_randr="yes"
+         RANDR="-DRANDR"; Xrandr_lib="-lXrandr",
+         AC_MSG_RESULT([no])
+         AC_MSG_RESULT([** WARNING: X11/extensions/Xrandr.h is missing])
+         AC_MSG_RESULT([** WARNING: Disabled Xrandr extension support]))
+       ,
+       AC_MSG_RESULT([** WARNING: Could not find XRRQueryExtension in -lXrandr])
+       AC_MSG_RESULT([** WARNING: Disabled Xrandr extension support]))
+  else
+      AC_MSG_RESULT([no])
+      AC_MSG_RESULT([** WARNING: Requires Xrender extension support])
+      AC_MSG_RESULT([** WARNING: Disabled Xrandr extension support])
+  fi
+else
+  AC_MSG_RESULT([no])
+fi
+AC_SUBST(RANDR)
+
+LIBS="$LIBS $Xrandr_lib"
 
 dnl Checks for Xft library support
 enableval="yes"
@@ -268,6 +284,8 @@ if test x$enableval = "xyes"; then
      fi
    else
       AC_MSG_RESULT([no])
+      AC_MSG_RESULT([** WARNING: Requires Xrender extension support])
+      AC_MSG_RESULT([** WARNING: Disabled Xft library support])
    fi
 else
   AC_MSG_RESULT([no])

@@ -1199,21 +1199,22 @@ void WaWindow::Raise(XEvent *, WaAction *) {
     if (! flags.alwaysontop && ! flags.alwaysatbottom) {
         wascreen->wa_list_stacking.remove(this);
         wascreen->wa_list_stacking.push_front(this);
-        wascreen->WaRaiseWindow(frame->id);
-        net->SetClientListStacking(wascreen);
-    }
-    if (! transients.empty()) {
-        list<Window>::iterator it = transients.begin();
-        for (;it != transients.end(); ++it) {
-            map<Window, WindowObject *>::iterator hit;
-            if ((hit = waimea->window_table.find(*it)) !=
-                waimea->window_table.end()) {
-                if (((*hit).second)->type == WindowType) {
-                    ((WaWindow *) (*hit).second)->Raise(NULL, NULL);
+        if (! transients.empty()) {
+            list<Window>::iterator it = transients.begin();
+            for (;it != transients.end(); ++it) {
+                WaWindow *ww = (WaWindow *) waimea->FindWin(*it, WindowType);
+                if (ww) {
+                    wascreen->wa_list_stacking.remove(ww);
+                    wascreen->wa_list_stacking.push_front(ww);
                 }
-            } else
-                transients.erase(it);
+                else {
+                    transients.erase(it);
+                    it = transients.begin();
+                }
+            }
         }
+        wascreen->WaLowerWindow((Window) 0);
+        net->SetClientListStacking(wascreen);
     }
 }
 
