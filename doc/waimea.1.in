@@ -755,6 +755,13 @@ Sets focus to the window that was focused before the currently focused
 window.
 
 .PP
+.TP
+.B nop
+Does nothing. But will when used as non-pass-through action on client 
+window grab the event from the client.
+
+
+.PP
 Here is the list of additional actions for window.* windows:
 
 .PP

@@ -156,6 +156,7 @@ public:
     void NextTask(XEvent *, WaAction *);
     void NextItem(XEvent *, WaAction *);
     void PreviousItem(XEvent *, WaAction *);
+    inline void Nop(XEvent *, WaAction *) {}
     
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);
     void UpdateCBox(void);

@@ -189,6 +189,7 @@ public:
     }
     void PreviousTask(XEvent *, WaAction *);
     void NextTask(XEvent *, WaAction *);
+    inline void Nop(XEvent *, WaAction *) {}
     
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);
 
