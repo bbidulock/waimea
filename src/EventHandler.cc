@@ -513,6 +513,9 @@ void EventHandler::EvClientMessage(XEvent *e) {
     else if (e->xclient.message_type == waimea->net->net_restart) {
         restart(NULL);
     }
+    else if (e->xclient.message_type == waimea->net->net_shutdown) {
+        quit(EXIT_SUCCESS);
+    }
 }
 
 /**

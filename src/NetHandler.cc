@@ -84,6 +84,8 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_WM_NAME", False);
     net_restart =
         XInternAtom(display, "_NET_RESTART", False);
+    net_shutdown =
+        XInternAtom(display, "_NET_SHUTDOWN", False);
     
     xa_xdndaware = XInternAtom(display, "XdndAware", False);
     xa_xdndenter = XInternAtom(display, "XdndEnter", False);
@@ -393,7 +395,7 @@ void NetHandler::SetWmState(WaWindow *ww) {
  * @param ws WaScreen object
  */
 void NetHandler::SetSupported(WaScreen *ws) {
-    CARD32 data[20];
+    CARD32 data[22];
 
     data[0]  = net_state;
     data[1]  = net_state_sticky;
@@ -416,8 +418,10 @@ void NetHandler::SetSupported(WaScreen *ws) {
     data[17] = net_state_aab;
     data[18] = net_maximized_restore;
     data[19] = net_virtual_pos;
+    data[20] = net_restart;
+    data[21] = net_shutdown;
     XChangeProperty(display, ws->id, net_supported, XA_ATOM, 32,
-                    PropModeReplace, (unsigned char *) &data, 20);
+                    PropModeReplace, (unsigned char *) &data, 22);
 }
 
 /**
@@ -536,6 +540,32 @@ void NetHandler::GetClientListStacking(WaScreen *ws) {
 void NetHandler::SetActiveWindow(WaScreen *ws, Window win) {
     XChangeProperty(display, ws->id, net_active_window, XA_WINDOW, 32,
                     PropModeReplace, (unsigned char *) &win, 1);
+}
+
+/**
+ * @fn    GetActiveWindow(WaScreen *ws)
+ * @brief Reads _NET_ACTIVE_CLIENT hint
+ *
+ * Gives window with same ID as stored in _NET_ACTIVE_CLIENT hint keyboard
+ * focus.
+ *
+ * @param ws WaScreen object
+ */
+void NetHandler::GetActiveWindow(WaScreen *ws) {
+    int *data;
+    hash_map<Window, WindowObject *>::iterator it;
+    if (XGetWindowProperty(display, ws->id, net_active_window, 0L, 1L, 
+                           False, XA_WINDOW, &real_type, &real_format, 
+                           &items_read, &items_left, 
+                           (unsigned char **) &data) == Success && 
+        items_read) {
+        if (((it = waimea->window_table->find(*data)) !=
+             waimea->window_table->end()) &&
+            (((*it).second)->type == WindowType)) {
+            ((WaWindow *) (*it).second)->Focus(False);
+        }
+        XFree(data);
+    }
 }
 
 /**
@@ -740,4 +770,20 @@ void NetHandler::wXDNDMakeAwareness(Window window) {
  */
 void NetHandler::wXDNDClearAwareness(Window window) {
     XDeleteProperty (waimea->display, window, xa_xdndaware);
+}
+
+/**
+ * @fn    DeleteSupported(WaScreen *ws)
+ * @brief Deletes supported hints
+ *
+ * Deletes all hints set on the root window that we don't have any use
+ * of next time Waimea starts.
+ *
+ * @param ws WaScreen object
+ */
+void NetHandler::DeleteSupported(WaScreen *ws) {
+    XDeleteProperty(display, ws->id, net_desktop_geometry);
+    XDeleteProperty(display, ws->id, net_workarea);
+    XDeleteProperty(display, ws->id, net_supported_wm_check);
+    XDeleteProperty(display, ws->id, net_supported);
 }

@@ -40,7 +40,6 @@ WindowObject::WindowObject(Window win_id, int win_type) {
 
 Waimea *waimea;
 char **argv;
-hash_map<Window, WindowObject *> *windows;
 char *errfunc;
 
 /**
@@ -71,7 +70,7 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     signal(SIGHUP, signalhandler);
     signal(SIGCHLD, signalhandler);
     
-    windows = window_table = new hash_map<Window, WindowObject *>;
+    window_table = new hash_map<Window, WindowObject *>;
     always_on_top_list = new list<Window>;
     always_at_bottom_list = new list<Window>;
     wawindow_list = new list<WaWindow *>;
@@ -321,7 +320,8 @@ int xerrorhandler(Display *d, XErrorEvent *e) {
     XGetErrorDatabaseText(d, "XlibMessage", "ResourceID", "%d", buff, 128);
     cerr << "  ";
     fprintf(stderr, buff, e->resourceid);
-    if (((it = windows->find(e->resourceid)) != waimea->window_table->end()) &&
+    if (((it = waimea->window_table->find(e->resourceid)) !=
+         waimea->window_table->end()) &&
         (((*it).second)->type == WindowType))
         cerr << " (" << ((WaWindow *) (*it).second)->name << ")";
     cerr << endl;

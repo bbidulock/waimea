@@ -146,6 +146,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     net->GetClientListStacking(this);
     net->SetClientList(this);
     net->SetClientListStacking(this);
+    net->GetActiveWindow(this);
 }
 
 /**
@@ -209,7 +210,8 @@ WaScreen::~WaScreen(void) {
     XFreeGC(display, mstyle.cfh_text_gc);
     XFreeGC(display, mstyle.cf_text_gc);
 #endif // XFT
-    
+
+    net->DeleteSupported(this);
     XDestroyWindow(display, wm_check);
     waimea->window_table->erase(id);
 }

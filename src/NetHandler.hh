@@ -61,6 +61,7 @@ public:
     void SetClientListStacking(WaScreen *);
     void GetClientListStacking(WaScreen *);
     void SetActiveWindow(WaScreen *, Window);
+    void GetActiveWindow(WaScreen *);
     void GetDesktopViewPort(WaScreen *);
     void SetDesktopViewPort(WaScreen *);
     void SetDesktopGeometry(WaScreen *);
@@ -68,6 +69,7 @@ public:
     void wXDNDMakeAwareness(Window);
     void wXDNDClearAwareness(Window);
     void SetWorkarea(WaScreen *);
+    void DeleteSupported(WaScreen *);
     
     Waimea *waimea;
     Display *display;
@@ -83,7 +85,7 @@ public:
         net_state_aab, net_maximized_restore, net_virtual_pos,
         net_desktop_viewport, net_desktop_geometry, net_wm_strut,
         net_workarea, xa_xdndaware, xa_xdndenter, xa_xdndleave,
-        net_wm_name, net_restart;
+        net_wm_name, net_restart, net_shutdown;
 
 private:
     XEvent event;
