@@ -187,7 +187,7 @@ public:
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
     
     char *name;
-    Bool has_focus, want_focus, mapped, dontsend, deleted, dock;
+    Bool has_focus, want_focus, mapped, dontsend, deleted;
     Display *display;
     Waimea *waimea;
     WaScreen *wascreen;

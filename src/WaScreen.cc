@@ -98,20 +98,31 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     dock = new DockappHandler(this);
     
     WaWindow *newwin;
+    XWMHints *wm_hints;
+    wm_hints = XAllocWMHints();
     XQueryTree(display, id, &ro, &pa, &children, &nchild);
     for (i = 0; i < (int) nchild; ++i) {
         XGetWindowAttributes(display, children[i], &attr);
         if ((! attr.override_redirect) && (attr.map_state == IsViewable)) {
-            newwin = new WaWindow(children[i], this);
-            hash_map<Window, WindowObject *>::iterator it;
-            if ((it = waimea->window_table->find(children[i]))
-                != waimea->window_table->end()) {
-                if (((*it).second)->type == WindowType) {
-                    newwin->net->SetState(newwin, NormalState);
-                }
-            }
+            if ((wm_hints = XGetWMHints(display, children[i])))
+                if (wm_hints->flags & StateHint)
+                    if (wm_hints->initial_state == WithdrawnState) {
+                        new Dockapp(children[i], dock);
+                        dock->Update();
+                    }
+                    else {
+                        newwin = new WaWindow(children[i], this);
+                        hash_map<Window, WindowObject *>::iterator it;
+                        if ((it = waimea->window_table->find(children[i]))
+                            != waimea->window_table->end()) {
+                            if (((*it).second)->type == WindowType) {
+                                newwin->net->SetState(newwin, NormalState);
+                            }
+                        }
+                    }
         }
     }
+    XFree(wm_hints);
     XFree(children);
 }
 

@@ -176,10 +176,9 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
     if (wmhints) {
       if ((wmhints->flags & IconWindowHint) &&
           (wmhints->icon_window != None)) {
+          XMapWindow(display, client_id);
           XMoveWindow(display, client_id, dh->wascreen->width + 10,
                       dh->wascreen->height + 10);
-          XMapWindow(display, client_id);
-          
           icon_id = wmhints->icon_window;
           id = icon_id;
       } else {
@@ -200,11 +199,7 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
             width = height = 64;
         
         XSetWindowBorderWidth(display, id, 0);
-        XSelectInput(display, dh->id, NoEventMask);
-        XSelectInput(display, id, NoEventMask);
         XReparentWindow(display, id, dh->id, dh->width, dh->height);
-        XChangeSaveSet(display, id, SetModeInsert);
-        XSelectInput(display, dh->id, SubstructureRedirectMask);
         XSelectInput(display, id, StructureNotifyMask | SubstructureNotifyMask);
         XMapWindow(display, id);
     } else {
@@ -225,14 +220,14 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
  * from the window_table hash_map and dockapp list.
  */
 Dockapp::~Dockapp(void) {
+    dh->dockapp_list->remove(this);
+    dh->waimea->window_table->erase(id);
     XGrabServer(display);
-    if ((! deleted) && validateclient(client_id)) {
+    if (validateclient(id)) {
+        if (icon_id) XUnmapWindow(display, id);
         XMoveWindow(display, client_id, dh->map_x + x, dh->map_y + y);
         XReparentWindow(display, id, dh->wascreen->id,
                         dh->map_x + x, dh->map_y + y);
-        XChangeSaveSet(display, id, SetModeDelete);
     }
     XUngrabServer(display);
-    dh->dockapp_list->remove(this);
-    dh->waimea->window_table->erase(id);
 }

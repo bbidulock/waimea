@@ -54,24 +54,17 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     attrib.width  = init_attrib.width;
     attrib.height = init_attrib.height;
     
-    want_focus = mapped = dontsend = deleted = dock = False;
+    want_focus = mapped = dontsend = deleted = False;
     
 #ifdef SHAPE
     shaped = False;
 #endif //SHAPE
-    
+
     border_w = title_w = handle_w = 0;
     has_focus = True;
     flags.sticky = flags.shaded = flags.max_v = flags.max_h = False;
 
     net->GetWMHints(this);
-    if (state == WithdrawnState) {
-        new Dockapp(id, wascreen->dock);
-        wascreen->dock->Update();
-        deleted = dock = True;
-        delete this;
-        return;
-    }
     net->GetMWMHints(this);
     net->GetWMNormalHints(this);
     net->GetVirtualPos(this);
@@ -162,7 +155,7 @@ WaWindow::~WaWindow(void) {
         XDestroyWindow(display, o_south);
     }
     XFree(name);
-    if (! dock) waimea->window_table->erase(id);
+    waimea->window_table->erase(id);
     waimea->wawindow_list->remove(this);
 }
 

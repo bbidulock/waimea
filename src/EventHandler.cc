@@ -81,7 +81,7 @@ XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
         XNextEvent(waimea->display, event);
         
         if (return_mask->find(event->type) != return_mask->end()) return event;
-        
+
         switch (event->type) {
             case Expose:
                 EvExpose(&event->xexpose); break;
@@ -337,6 +337,7 @@ void EventHandler::EvColormap(XColormapEvent *e) {
  */
 void EventHandler::EvMapRequest(XMapRequestEvent *e) {
     XWindowAttributes attr;
+    XWMHints *wm_hints;
     
     hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(e->window)) !=
@@ -347,13 +348,24 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
         }
     } 
     else {
+        wm_hints = XAllocWMHints();
         XGrabServer(e->display);
         if (validateclient(e->window)) {
             XGetWindowAttributes(e->display, e->window, &attr);
-            if (! attr.override_redirect) 
-                new WaWindow(e->window, waimea->wascreen);
+            if (! attr.override_redirect) {
+                if ((wm_hints = XGetWMHints(e->display, e->window)))
+                    if (wm_hints->flags & StateHint)
+                        if (wm_hints->initial_state == WithdrawnState) {
+                            new Dockapp(e->window, waimea->wascreen->dock);
+                            waimea->wascreen->dock->Update();
+                        }
+                        else {
+                            new WaWindow(e->window, waimea->wascreen);
+                        }
+            }
         }
         XUngrabServer(e->display);
+        XFree(wm_hints);
     }
 }
 
