@@ -140,11 +140,22 @@ public:
     void MoveOpaque(XEvent *, WaAction *);
     void EndMoveResize(XEvent *, WaAction *);
     void Lower(XEvent *, WaAction *);
-    inline void Focus(XEvent *, WaAction *) { Focus(); }
+    inline void Focus(XEvent *, WaAction *) {
+        if (! in_window) return;
+        Focus();
+    }
     inline void UnmapSubmenus(XEvent *, WaAction *) {
-        menu->UnmapSubmenus(false); }
-    inline void UnmapTree(XEvent *, WaAction *) { menu->UnmapTree(); }
-    inline void Raise(XEvent *, WaAction *) { menu->Raise(); }
+        if (! in_window) return;
+        menu->UnmapSubmenus(false);
+    }
+    inline void UnmapTree(XEvent *, WaAction *) {
+        if (! in_window) return;
+        menu->UnmapTree();
+    }
+    inline void Raise(XEvent *, WaAction *) {
+        if (! in_window) return;
+        menu->Raise();
+    }
     void ViewportMove(XEvent *e, WaAction *);
     void MoveViewportLeft(XEvent *, WaAction *);
     void MoveViewportRight(XEvent *, WaAction *);
@@ -177,7 +188,7 @@ public:
     
     int func_mask, func_mask1, func_mask2, height, width, dy, realheight,
                    cb, cb_y, cb_width, cb_width1, cb_width2;
-    bool hilited, move_resize;
+    bool hilited, move_resize, in_window;
     char *label, *exec, *param, *sub;
     char *label1, *exec1, *param1, *sub1;
     char *label2, *exec2, *param2, *sub2;

@@ -960,6 +960,7 @@ void WaMenuItem::DeHilite(void) {
  * @param bool True if we should focus root item
  */
 void WaMenuItem::UnmapMenu(XEvent *, WaAction *, bool focus) {
+    if (! in_window) return;
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     menu->Unmap(focus);
 }
@@ -975,7 +976,8 @@ void WaMenuItem::UnmapMenu(XEvent *, WaAction *, bool focus) {
  */
 void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus) {
     int skip;
-    
+
+    if (! in_window) return;
     if ((! (func_mask & MenuSubMask)) || submenu->mapped) return;
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     
@@ -1009,8 +1011,9 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus) {
  * @param bool True if we should focus first item in submenu
  */
 void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
-    int skip;    
+    int skip;
 
+    if (! in_window) return;
     if (! (func_mask & MenuSubMask)) return;
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     
@@ -1042,6 +1045,7 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
  * functions applied somewhere in the old menu tree will not unmap this menu. 
  */
 void WaMenuItem::UnLinkMenu(XEvent *, WaAction *) {
+    if (! in_window) return;
     menu->root_menu = NULL;
 }
 
@@ -1053,6 +1057,7 @@ void WaMenuItem::UnLinkMenu(XEvent *, WaAction *) {
  */
 void WaMenuItem::Exec(XEvent *, WaAction *) {
     if (cb) UpdateCBox();
+    if (! in_window) return;
     if (! (func_mask & MenuExecMask)) return;
 
     waexec(exec, menu->wascreen->displaystring);
@@ -1074,13 +1079,12 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
     Window func_win;
     char *tmp_param;
 
+    if (! in_window) return;
     if (cb) UpdateCBox();
-
     if (param) {
         tmp_param = ac->param;
         ac->param = param;
     }
-    
     if (wf) func_win = wf;
     else func_win = menu->wf;
     if ((func_mask & MenuWFuncMask) &&
@@ -1107,6 +1111,7 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
  * Lowers the menu frame to the bottom of the display stack.
  */
 void WaMenuItem::Lower(XEvent *, WaAction *) {
+    if (! in_window) return;
     menu->waimea->WaLowerWindow(menu->frame);
 }
 
@@ -1432,7 +1437,7 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     Window w;
     unsigned int ui;
     int xp, yp, i;
-    bool in_window = true;
+    in_window = true;
 
     if (e->type == ButtonPress || e->type == ButtonRelease ||
         e->type == DoubleClick) {
@@ -1449,15 +1454,8 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
         if (eventmatch(*it, ed)) {
             if ((*it)->exec)
                 waexec((*it)->exec, menu->wascreen->displaystring);
-            else {
-                if (! in_window) {
-                    if ((*it)->menufunc == &WaMenuItem::EndMoveResize)
-                        ((*this).*((*it)->menufunc))(e, *it);
-                    else return;
-                }
-                else
-                    ((*this).*((*it)->menufunc))(e, *it);
-            }
+            else 
+                ((*this).*((*it)->menufunc))(e, *it);
         }
     }
     if (ed->type == EnterNotify) {
