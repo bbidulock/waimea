@@ -75,7 +75,7 @@ private:
     Waimea *waimea;
     ResourceHandler *rh;
     Window last_click_win;
-    int last_button;
+    unsigned int last_button;
     struct timeval last_click;
 };
 

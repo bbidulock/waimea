@@ -1193,12 +1193,14 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus, bool only) {
     x = menu->x + menu->width + menu->wascreen->mstyle.border_width;
     y = menu->y + dy - skip;
     diff = (y + submenu->height + menu->wascreen->mstyle.border_width * 2) -
-        menu->wascreen->height;
+        (menu->wascreen->workarea->height + menu->wascreen->workarea->y);
     if (diff > 0) y -= diff;
     if (y < 0) y = 0;
     if ((x + submenu->width + menu->wascreen->mstyle.border_width * 2) >
-        (unsigned int) menu->wascreen->width)
+        (unsigned int) (menu->wascreen->workarea->width +
+                        menu->wascreen->workarea->x))
         x = menu->x - submenu->width - menu->wascreen->mstyle.border_width;
+
     submenu->Map(x, y);
     if (focus) submenu->FocusFirst();
 }
@@ -1249,11 +1251,12 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
     x = menu->x + menu->width + menu->wascreen->mstyle.border_width;
     y = menu->y + dy - skip;
     diff = (y + submenu->height + menu->wascreen->mstyle.border_width * 2) -
-        menu->wascreen->height;
+        (menu->wascreen->workarea->height + menu->wascreen->workarea->y);
     if (diff > 0) y -= diff;
     if (y < 0) y = 0;
     if ((x + submenu->width + menu->wascreen->mstyle.border_width * 2) >
-        (unsigned int) menu->wascreen->width)
+        (unsigned int) (menu->wascreen->workarea->width +
+                        menu->wascreen->workarea->x))
         x = menu->x - submenu->width - menu->wascreen->mstyle.border_width;
     menu->ignore = true;
     submenu->ReMap(x, y);

@@ -37,6 +37,10 @@ typedef struct {
     CARD32 decorations;
 } MwmHints;
 
+#define _NET_WM_STATE_REMOVE 0
+#define _NET_WM_STATE_ADD    1
+#define _NET_WM_STATE_TOGGLE 2
+
 #include "Waimea.hh"
 
 class NetHandler {
@@ -97,7 +101,8 @@ public:
         net_wm_window_type_dock, net_wm_window_type_toolbar,
         net_wm_window_type_menu, net_wm_window_type_splash,
         net_wm_window_type_dialog, net_wm_window_type_utility,
-        net_wm_window_type_normal, net_current_desktop, net_number_of_desktops;
+        net_wm_window_type_normal, net_current_desktop,
+        net_number_of_desktops, net_close_window;
     
 #ifdef XRENDER
     Atom xrootpmap_id;

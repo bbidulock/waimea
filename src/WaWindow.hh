@@ -188,8 +188,8 @@ public:
     void AcceptConfigRequestToggle(XEvent *, WaAction *);
     void PointerRelativeWarp(XEvent *, WaAction *);
     void PointerFixedWarp(XEvent *, WaAction *);
-    inline void RaiseFocus(XEvent *e, WaAction *ac) {
-        Raise(e, ac);
+    inline void RaiseFocus(XEvent *, WaAction *) {
+        Raise(NULL, NULL);
         Focus(true);
     }
     void MoveResize(XEvent *, WaAction *);

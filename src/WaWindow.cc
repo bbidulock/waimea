@@ -51,13 +51,26 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     wm_strut = NULL;
     move_resize = false;
 
-    XGetWindowAttributes(display, id, &init_attrib);
+    XGrabServer(display);
+    if (validateclient(id))
+        XGetWindowAttributes(display, id, &init_attrib);
+    else deleted = true;
+    XUngrabServer(display);
+    
     attrib.colormap = init_attrib.colormap;
     size.win_gravity = init_attrib.win_gravity;
     attrib.x = init_attrib.x;
     attrib.y = init_attrib.y;
     attrib.width  = init_attrib.width;
     attrib.height = init_attrib.height;
+    if (attrib.x == 0) {
+        if (wascreen->workarea->x > attrib.x)
+            attrib.x = wascreen->workarea->x;
+    }
+    if (attrib.y == 0) {
+        if (wascreen->workarea->y > attrib.y)
+            attrib.y = wascreen->workarea->y;
+    }
     
     want_focus = mapped = dontsend = deleted = ign_config_req = false;
 
@@ -149,8 +162,6 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
         wascreen->wa_list_stacking.push_back(this);
 
     if (deleted) delete this;
-    net->SetClientList(wascreen);
-    net->SetClientListStacking(wascreen);
 }
 
 /**
@@ -233,9 +244,6 @@ WaWindow::~WaWindow(void) {
     }
     
     delete frame;
-
-    net->SetClientList(wascreen);
-    net->SetClientListStacking(wascreen);
 }
 
 /**
@@ -791,8 +799,11 @@ void WaWindow::SendConfig(void) {
         ce.height = attrib.height;
 
     XGrabServer(display);
-    if (validateclient(id)) 
+    if (validateclient(id)) { 
         XSendEvent(display, id, true, NoEventMask, (XEvent *)&ce);
+        XSendEvent(display, wascreen->id, false,
+                   StructureNotifyMask, (XEvent *)&ce);
+    }
     else DELETED;
     XUngrabServer(display);
 }
@@ -1838,18 +1849,15 @@ void WaWindow::UnMaximize(XEvent *, WaAction *) {
 }
 
 /**
- * @fn    ToggleMaximize(XEvent *e, WaAction *ac)
+ * @fn    ToggleMaximize(XEvent *, WaAction *)
  * @brief Maximizes or unmaximize window
  *
  * If window isn't maximized this function maximizes it and if it is already
  * maximized then function will unmaximized window.
- *
- * @param e XEvent causing function call
- * @param ac WaAction object
  */
-void WaWindow::ToggleMaximize(XEvent *e, WaAction *ac) {
-    if (! flags.max) Maximize(e, ac);
-    else UnMaximize(e, ac);
+void WaWindow::ToggleMaximize(XEvent *, WaAction *) {
+    if (! flags.max) Maximize(NULL, NULL);
+    else UnMaximize(NULL, NULL);
 }
 
 /**
@@ -1948,10 +1956,11 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
             exp += (*it)->ExpandAll(this);
         if (exp) menu->Build(wascreen);
         if ((y + menu->height + wascreen->mstyle.border_width * 2) > 
-            (unsigned int) wascreen->height)
+            (unsigned int) (wascreen->workarea->height +
+                            wascreen->workarea->y))
             y -= (menu->height + wascreen->mstyle.border_width * 2);
         if ((x + menu->width + wascreen->mstyle.border_width * 2) > 
-            (unsigned int) wascreen->width)
+            (unsigned int) (wascreen->workarea->width + wascreen->workarea->x))
             x -= (menu->width + wascreen->mstyle.border_width * 2);
         menu->Map(x, y);
         if (focus) menu->FocusFirst();
@@ -1991,10 +2000,11 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
             exp += (*it)->ExpandAll(this);
         if (exp) menu->Build(wascreen);
         if ((y + menu->height + wascreen->mstyle.border_width * 2) > 
-            (unsigned int) wascreen->height)
+            (unsigned int) (wascreen->workarea->height +
+                            wascreen->workarea->y))
             y -= (menu->height + wascreen->mstyle.border_width * 2);
         if ((x + menu->width + wascreen->mstyle.border_width * 2) > 
-            (unsigned int) wascreen->width)
+            (unsigned int) (wascreen->workarea->width + wascreen->workarea->x))
             x -= (menu->width + wascreen->mstyle.border_width * 2);
         menu->ignore = true;
         menu->ReMap(x, y);
@@ -2068,18 +2078,15 @@ void WaWindow::UnShade(XEvent *, WaAction *) {
 }
 
 /**
- * @fn    ToggleShade(XEvent *e, WaAction *ac)
+ * @fn    ToggleShade(XEvent *, WaAction *)
  * @brief Shades window or unshades it
  *
  * If window isn't shaded this function will shade it and if it is already
  * shaded function unshades it.
- *
- * @param e XEvent causing function call
- * @param ac WaAction object
  */
-void WaWindow::ToggleShade(XEvent *e, WaAction *ac) {
-    if (flags.shaded) UnShade(e, ac);
-    else Shade(e, ac);
+void WaWindow::ToggleShade(XEvent *, WaAction *) {
+    if (flags.shaded) UnShade(NULL, NULL);
+    else Shade(NULL, NULL);
 }
 
 /**
@@ -2153,35 +2160,29 @@ void WaWindow::TaskSwitcher(XEvent *, WaAction *) {
 }
 
 /**
- * @fn    PreviousTask(XEvent *e, WaAction *ac)
+ * @fn    PreviousTask(XEvent *, WaAction *)
  * @brief Switches to previous task
  *
  * Switches to the previous focused window.
- *
- * @param e X event that have occurred
- * @param ed Event details
  */
-void WaWindow::PreviousTask(XEvent *e, WaAction *ac) {
+void WaWindow::PreviousTask(XEvent *, WaAction *) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
     list<WaWindow *>::iterator it = wascreen->wawindow_list.begin();
     it++;
-    (*it)->Raise(e, ac);
-    (*it)->FocusVis(e, ac);
+    (*it)->Raise(NULL, NULL);
+    (*it)->FocusVis(NULL, NULL);
 }
 
 /**
- * @fn    NextTask(XEvent *e, WaAction *ac)
+ * @fn    NextTask(XEvent *, WaAction *)
  * @brief Switches to next task
  *
  * Switches to the window that haven't had focus for longest time.
- *
- * @param e X event that have occurred
- * @param ed Event details
  */
-void WaWindow::NextTask(XEvent *e, WaAction *ac) {
+void WaWindow::NextTask(XEvent *, WaAction *) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
-    wascreen->wawindow_list.back()->Raise(e, ac);
-    wascreen->wawindow_list.back()->FocusVis(e, ac);
+    wascreen->wawindow_list.back()->Raise(NULL, NULL);
+    wascreen->wawindow_list.back()->FocusVis(NULL, NULL);
 }
 
 /**
@@ -2397,45 +2398,36 @@ void WaWindow::DecorAllOff(XEvent *, WaAction *) {
 }
 
 /**
- * @fn    DecorTitleToggle(XEvent *e, WaAction *ac)
+ * @fn    DecorTitleToggle(XEvent *, WaAction *)
  * @brief Toggle title decoration
  *
  * Toggle titlebar decorations for the window.
- *
- * @param e XEvent causing function call
- * @param ac WaAction object
  */
-void WaWindow::DecorTitleToggle(XEvent *e, WaAction *ac) {
-    if (flags.title) DecorTitleOff(e, ac);
-    else DecorTitleOn(e, ac);
+void WaWindow::DecorTitleToggle(XEvent *, WaAction *) {
+    if (flags.title) DecorTitleOff(NULL, NULL);
+    else DecorTitleOn(NULL, NULL);
 }
 
 /**
- * @fn    DecorHandleToggle(XEvent *e, WaAction *ac)
+ * @fn    DecorHandleToggle(XEvent *, WaAction *)
  * @brief Toggle handle decoration
  *
  * Toggle handlebar decorations for the window.
- *
- * @param e XEvent causing function call
- * @param ac WaAction object
  */
-void WaWindow::DecorHandleToggle(XEvent *e, WaAction *ac) {
-    if (flags.handle) DecorHandleOff(e, ac);
-    else DecorHandleOn(e, ac);
+void WaWindow::DecorHandleToggle(XEvent *, WaAction *) {
+    if (flags.handle) DecorHandleOff(NULL, NULL);
+    else DecorHandleOn(NULL, NULL);
 }
 
 /**
- * @fn    DecorBorderToggle(XEvent *e, WaAction *ac)
+ * @fn    DecorBorderToggle(XEvent *, WaAction *)
  * @brief Toggle border decoration
  *
  * Toggle border decorations for the window.
- *
- * @param e XEvent causing function call
- * @param ac WaAction object
  */
-void WaWindow::DecorBorderToggle(XEvent *e, WaAction *ac) {
-    if (flags.border) DecorBorderOff(e, ac);
-    else DecorBorderOn(e, ac);
+void WaWindow::DecorBorderToggle(XEvent *, WaAction *) {
+    if (flags.border) DecorBorderOff(NULL, NULL);
+    else DecorBorderOn(NULL, NULL);
 }
 
 /**
@@ -2546,13 +2538,10 @@ void WaWindow::AlwaysatbottomOff(XEvent *, WaAction *) {
  *
  * If window is always on top we removed it from always on top list, or if
  * window isn't always on top we add it to always on top list.
- *
- * @param e XEvent causing function call
- * @param ac WaAction object
  */
-void WaWindow::AlwaysontopToggle(XEvent *e, WaAction *ac) {
-    if (flags.alwaysontop) AlwaysontopOff(e, ac);
-    else AlwaysontopOn(e, ac);
+void WaWindow::AlwaysontopToggle(XEvent *, WaAction *) {
+    if (flags.alwaysontop) AlwaysontopOff(NULL, NULL);
+    else AlwaysontopOn(NULL, NULL);
 }
 
 /**
@@ -2561,13 +2550,10 @@ void WaWindow::AlwaysontopToggle(XEvent *e, WaAction *ac) {
  *
  * If window is always at bottom we removed it from always at bottom list,
  * or if window isn't always at bottom we add it to always at bottom list.
- *
- * @param e XEvent causing function call
- * @param ac WaAction object
  */
-void WaWindow::AlwaysatbottomToggle(XEvent *e, WaAction *ac) {
-    if (flags.alwaysatbottom) AlwaysatbottomOff(e, ac);
-    else AlwaysatbottomOn(e, ac);
+void WaWindow::AlwaysatbottomToggle(XEvent *, WaAction *) {
+    if (flags.alwaysatbottom) AlwaysatbottomOff(NULL, NULL);
+    else AlwaysatbottomOn(NULL, NULL);
 }
 
 

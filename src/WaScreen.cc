@@ -65,7 +65,6 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     Window ro, pa, *children;
     int eventmask, i;
     unsigned int nchild;
-    XWindowAttributes attr;
     XSetWindowAttributes attrib_set;
     
     display = d;
@@ -192,33 +191,42 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     for (; mit != wamenu_list.end(); ++mit)
     	(*mit)->Build(this);
     
-    WaWindow *newwin;
-    XWMHints *wm_hints;
-    wm_hints = XAllocWMHints();
+    XWindowAttributes attr;
     XQueryTree(display, id, &ro, &pa, &children, &nchild);
     for (i = 0; i < (int) nchild; ++i) {
-        XGetWindowAttributes(display, children[i], &attr);
-        if ((! attr.override_redirect) && (attr.map_state == IsViewable)) {
-            if ((wm_hints = XGetWMHints(display, children[i])) &&
-                (wm_hints->flags & StateHint) &&
+        bool status = false;
+        XGrabServer(display);
+        if (validateclient(id)) {
+            XGetWindowAttributes(display, children[i], &attr);
+            status = true;
+        }
+        XUngrabServer(display);
+        if (status && (! attr.override_redirect) &&
+            (attr.map_state == IsViewable)) {
+            XWMHints *wm_hints = NULL;
+            XGrabServer(display);
+            if (validateclient(id)) {
+                wm_hints = XGetWMHints(display, children[i]);
+            }
+            XUngrabServer(display);
+            if ((wm_hints) && (wm_hints->flags & StateHint) &&
                 (wm_hints->initial_state == WithdrawnState)) {
                 AddDockapp(children[i]);
             }
             else if ((waimea->window_table.find(children[i]))
                      == waimea->window_table.end()) {
-                newwin = new WaWindow(children[i], this);
+                WaWindow *newwin = new WaWindow(children[i], this);
                 if (waimea->FindWin(children[i], WindowType))
                     newwin->net->SetState(newwin, NormalState);
             }
+            if (wm_hints) XFree(wm_hints);
         }
     }
-    XFree(wm_hints);
     XFree(children);
     net->GetClientListStacking(this);
     net->SetClientList(this);
     net->SetClientListStacking(this);
     net->GetActiveWindow(this);
-    WaRaiseWindow((Window) 0);
 
     actionlist = &config.rootacts;
 }
@@ -231,8 +239,6 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
  */
 WaScreen::~WaScreen(void) {
     XSelectInput(display, id, NoEventMask);
-    net->SetClientList(this);
-    net->SetClientListStacking(this);
     net->DeleteSupported(this);
     XDestroyWindow(display, wm_check);
 
@@ -1113,6 +1119,8 @@ void WaScreen::MoveViewportTo(int x, int y) {
     list<WaWindow *>::iterator it = wawindow_list.begin();
     for (; it != wawindow_list.end(); ++it) {
         if (! (*it)->flags.sticky) {
+            int old_x = (*it)->attrib.x;
+            int old_y = (*it)->attrib.y;
             (*it)->attrib.x = (*it)->attrib.x + x_move;
             (*it)->attrib.y = (*it)->attrib.y + y_move;
             
@@ -1122,11 +1130,16 @@ void WaScreen::MoveViewportTo(int x, int y) {
                  (*it)->attrib.y < height))
                 (*it)->RedrawWindow();
             else {
-                (*it)->dontsend = true;
-                (*it)->RedrawWindow();
-                (*it)->dontsend = false;
-                net->SetVirtualPos(*it);
-            }   
+                if (((old_x + (*it)->attrib.width) > 0 && old_x < width) && 
+                    ((old_y + (*it)->attrib.height) > 0 && old_y < height))
+                    (*it)->RedrawWindow();
+                else {
+                    (*it)->dontsend = true;
+                    (*it)->RedrawWindow();
+                    (*it)->dontsend = false;
+                }
+            }
+            net->SetVirtualPos(*it);
         }
     }
     list<WaMenu *>::iterator it2 = wamenu_list.begin();
@@ -1356,9 +1369,10 @@ void WaScreen::MenuMap(XEvent *, WaAction *ac, bool focus) {
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
         if ((y + menu->height + mstyle.border_width * 2) >
-            (unsigned int) height)
+            (unsigned int) (workarea->height + workarea->y))
            y -= (menu->height + mstyle.border_width * 2);
-        if ((x + menu->width + mstyle.border_width * 2) > (unsigned int) width)
+        if ((x + menu->width + mstyle.border_width * 2) >
+            (unsigned int) (workarea->width + workarea->x))
             x -= (menu->width + mstyle.border_width * 2);
         menu->Map(x, y);
         if (focus) menu->FocusFirst();
@@ -1392,10 +1406,11 @@ void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
         if ((y + menu->height + mstyle.border_width * 2) >
-            (unsigned int) height)
-            y -= (menu->height + mstyle.border_width * 2);
-        if ((x + menu->width + mstyle.border_width * 2) > (unsigned int) width)
-            x -= (menu->width + mstyle.border_width * 2);                
+            (unsigned int) (workarea->height + workarea->y))
+           y -= (menu->height + mstyle.border_width * 2);
+        if ((x + menu->width + mstyle.border_width * 2) >
+            (unsigned int) (workarea->width + workarea->x))
+            x -= (menu->width + mstyle.border_width * 2);
         menu->ignore = true;
         menu->ReMap(x, y);
         menu->ignore = false;
