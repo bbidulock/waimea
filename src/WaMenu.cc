@@ -689,11 +689,13 @@ WaMenuItem::~WaMenuItem(void) {
     menu->item_list->remove(this);
         
 #ifdef XFT
-    XftDrawDestroy(xftdraw);
+    if (xftdraw) XftDrawDestroy(xftdraw);
 #endif // XFT
     
-    XDestroyWindow(menu->display, id);
-    menu->waimea->window_table->erase(id);
+    if (id) {
+       XDestroyWindow(menu->display, id);
+       menu->waimea->window_table->erase(id);
+    }
 }
 
 /**

@@ -997,7 +997,7 @@ void ResourceHandler::LoadMenus(void) {
     }
     while (fgets(line, 1024, file)) {
         linenr++;
-        for (i = 0; line[i] == ' '; i++);
+        for (i = 0; line[i] == ' ' || line[i] == '\t'; i++);
         if (line[i] == '\n') continue;
         if (line[i] == '#') continue;
         if (line[i] == '!') continue;
@@ -1780,10 +1780,12 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
     int i, type, cb;
     WaMenu *tmp_menu;
     list<StrComp *>::iterator it;
+
+    WARNING << "newmenu: " << menu->name << endl;
     
     while (fgets(line, 8192, file)) {
         linenr++;
-        for (i = 0; line[i] == ' '; i++);
+        for (i = 0; line[i] == ' ' || line[i] == '\t'; i++);
         if (line[i] == '\n') continue;
         if (line[i] == '#') continue;
         if (line[i] == '!') continue;
@@ -1797,9 +1799,9 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         if (! strcasecmp(s, "start")) {
             delete [] s;
-            if ((s = strwithin(line, '(', ')'))) {
-                menu = new WaMenu(s);
-                ParseMenu(menu, file);
+            if ((s = strwithin(line, '(', ')'))) {                
+                tmp_menu = new WaMenu(wastrdup(s));                
+                ParseMenu(tmp_menu, file);
             } else
                 WARNING << "failed to find menu name at line " <<
                     linenr << endl;

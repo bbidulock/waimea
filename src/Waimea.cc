@@ -55,10 +55,8 @@ Waimea::Waimea(char **av, struct waoptions *options) {
 
     action.sa_handler = signalhandler;
     action.sa_mask = sigset_t();
-    action.sa_flags = SA_NOCLDSTOP | SA_NODEFER;
+    action.sa_flags = SA_NOCLDSTOP | SA_NODEFER; 
 
-    sigaction(SIGSEGV, &action, NULL);
-    sigaction(SIGFPE, &action, NULL);
     sigaction(SIGTERM, &action, NULL);
     sigaction(SIGINT, &action, NULL);
     sigaction(SIGCHLD, &action, NULL);
