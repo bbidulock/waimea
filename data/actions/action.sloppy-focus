@@ -158,15 +158,25 @@ n/^desktop_window$/.activeclient {
 n/^desktop_window$/.frame {}
 
 n/^panel_window$/.passiveclient {
-  *Focus : ButtonPress = Button1
+   *Focus : ButtonPress = Button1
 }
 
-n/^panel_window$/.activeclient {}
+n/^panel_window$/.activeclient {
+   globalKeyBindings,
+   EndMoveResize : ButtonRelease = Button1 & MoveResizeMask,
+   EndMoveResize : ButtonRelease = Button3 & MoveResizeMask
+}
 
 n/^panel_window$/.frame {}
 
-n/^kicker$/.passiveclient {}
+n/^kicker$/.passiveclient {
+   *Focus : ButtonPress = Button1
+}
 
-n/^kicker$/.activeclient {}
+n/^kicker$/.activeclient {
+   globalKeyBindings,
+   EndMoveResize : ButtonRelease = Button1 & MoveResizeMask,
+   EndMoveResize : ButtonRelease = Button3 & MoveResizeMask
+}
 
 n/^kicker$/.frame {}

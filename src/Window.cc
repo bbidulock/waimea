@@ -515,7 +515,11 @@ void WaWindow::UpdateAllAttributes(void) {
                               (*bit)->attrib.y, (*bit)->attrib.width,
                               (*bit)->attrib.height);
         }
-        DrawTitlebar();
+        title->Render();
+        label->Render();
+        bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            (*bit)->Render();
     }
     if (flags.handle) {
         handle->attrib.x = 25;
@@ -546,7 +550,9 @@ void WaWindow::UpdateAllAttributes(void) {
         XMoveResizeWindow(display, grip_r->id, grip_r->attrib.x,
                           grip_r->attrib.y, grip_r->attrib.width,
                           grip_r->attrib.height);
-        DrawHandlebar();
+        handle->Render();
+        grip_r->Render();
+        grip_l->Render();
     }
 
     XGrabServer(display);
@@ -1206,7 +1212,8 @@ void WaWindow::Raise(XEvent *, WaAction *) {
                 if (((*hit).second)->type == WindowType) {
                     ((WaWindow *) (*hit).second)->Raise(NULL, NULL);
                 }
-            }
+            } else
+                transients.erase(it);
         }
     }
 }
@@ -1272,17 +1279,6 @@ void WaWindow::Focus(bool vis) {
             XSetInputFocus(display, id, RevertToPointerRoot, CurrentTime);
         } else DELETED;
         XUngrabServer(display);
-        if (transient_for) {
-            map<Window, WindowObject *>::iterator hit;
-            if ((hit = waimea->window_table.find(transient_for)) !=
-                waimea->window_table.end()) {
-                if (((*hit).second)->type == WindowType) {
-                    ((WaWindow *) (*hit).second)->transients.remove(id);
-                    ((WaWindow *)
-                     (*hit).second)->transients.push_front(id);
-                }
-            }
-        }
     } else
         want_focus = true;
 }
@@ -1394,6 +1390,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                     XUngrabKeyboard(display, CurrentTime);
                     XUngrabPointer(display, CurrentTime);
                     waimea->eh->move_resize = EndMoveResizeType;
+                    move_resize = false;
                     return;
                 }
                 waimea->eh->EvUnmapDestroy(&event);
@@ -1536,6 +1533,7 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                     XUngrabKeyboard(display, CurrentTime);
                     XUngrabPointer(display, CurrentTime);
                     waimea->eh->move_resize = EndMoveResizeType;
+                    dontsend = move_resize = false;
                     return;
                 }
                 waimea->eh->EvUnmapDestroy(&event);
@@ -1716,6 +1714,7 @@ void WaWindow::Resize(XEvent *e, int how) {
                     XUngrabKeyboard(display, CurrentTime);
                     XUngrabPointer(display, CurrentTime);
                     waimea->eh->move_resize = EndMoveResizeType;
+                    move_resize = false;
                     return;
                 }
                 waimea->eh->EvUnmapDestroy(&event);
@@ -1875,6 +1874,7 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                     XUngrabKeyboard(display, CurrentTime);
                     XUngrabPointer(display, CurrentTime);
                     waimea->eh->move_resize = EndMoveResizeType;
+                    dontsend = move_resize = false;
                     return;
                 }
                 waimea->eh->EvUnmapDestroy(&event);
