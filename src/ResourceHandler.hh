@@ -67,7 +67,7 @@ struct _WaAction {
 typedef struct {
     WaColor border_color;
     WaTexture texture;
-    int border_width;
+    unsigned int border_width;
 } DockholderStyle;
 
 struct _DockStyle {

@@ -81,7 +81,7 @@ typedef struct {
     XFontStruct *font;
 #endif // XFT
     int justify, y_pos;
-    int handle_width, border_width, title_height;
+    unsigned int handle_width, border_width, title_height;
 } WindowStyle;
 
 typedef struct {
@@ -102,7 +102,7 @@ typedef struct {
     XFontStruct *f_font, *t_font, *b_font, *ct_font, *cf_font;
 #endif // XFT
     int f_justify, t_justify, f_y_pos, t_y_pos, b_y_pos, ct_y_pos, cf_y_pos;
-    int border_width, title_height, item_height;
+    unsigned int border_width, title_height, item_height;
 } MenuStyle;
 
 class WaScreen : public WindowObject {

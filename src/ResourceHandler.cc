@@ -1055,7 +1055,6 @@ void ResourceHandler::LoadActions(void) {
     int ret;
     char *buffer = new char[8192];
     char *buffer2 = new char[8192];
-    char tmp_ch;
     char *str;
     WaActionExtList *ext_list;
     list<Define *> *defs = new list<Define *>;

@@ -306,6 +306,10 @@ void WaMenu::Build(WaScreen *screen) {
 
     XClearWindow(display, frame);
 
+    attrib_set.event_mask = ButtonPressMask | ButtonReleaseMask |
+        EnterWindowMask | LeaveWindowMask | KeyPressMask |
+        KeyReleaseMask | ExposureMask ;
+
     int y, x, bw;
     it = item_list->begin();
     for (y = 0, lasttype = 0; it != item_list->end(); ++it) {
@@ -393,10 +397,6 @@ void WaMenu::Render(void) {
 void WaMenu::Map(int mx, int my) {
     if (tasksw && item_list->size() < 2) return;
     if (mapped) return;
-
-    int mask = ButtonPressMask | ButtonReleaseMask |
-        EnterWindowMask | LeaveWindowMask | PointerMotionMask | 
-        ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask;
     
     x = mx;
     y = my;
@@ -411,10 +411,6 @@ void WaMenu::Map(int mx, int my) {
     Render();
 #endif // XRENDER
     
-    list<WaMenuItem *>::iterator it = item_list->begin();
-    for (; it != item_list->end(); ++it) {
-        XSelectInput(display, (*it)->id, mask);
-    }
     XUngrabPointer(display, CurrentTime);
 }
 
@@ -430,10 +426,6 @@ void WaMenu::Map(int mx, int my) {
  */
 void WaMenu::ReMap(int mx, int my) {
     if (tasksw && item_list->size() < 2) return;
-
-    int mask = ButtonPressMask | ButtonReleaseMask |
-        EnterWindowMask | LeaveWindowMask | PointerMotionMask | 
-        ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask;
     
     if (mapped) Move(mx - x, my - y);
     x = mx;
@@ -449,10 +441,6 @@ void WaMenu::ReMap(int mx, int my) {
     Render();
 #endif // XRENDER
     
-    list<WaMenuItem *>::iterator it = item_list->begin();
-    for (; it != item_list->end(); ++it) {
-        XSelectInput(display, (*it)->id, mask);
-    }
     XUngrabPointer(display, CurrentTime);
 }
 
@@ -498,7 +486,6 @@ void WaMenu::Unmap(bool focus) {
 
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
-        XSelectInput(display, (*it)->id, NoEventMask);
         if ((*it)->hilited) {
             if ((*it)->func_mask & MenuSubMask) {
                 if (! (*it)->submenu->mapped)
@@ -973,6 +960,7 @@ void WaMenuItem::DeHilite(void) {
  * @param bool True if we should focus root item
  */
 void WaMenuItem::UnmapMenu(XEvent *, WaAction *, bool focus) {
+    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     menu->Unmap(focus);
 }
 
@@ -1452,7 +1440,6 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
         if (xp < 0 || yp < 0 || xp > menu->width || yp > height)
             in_window = false;
     }
-                        
    
     if (menu->waimea->eh->move_resize != EndMoveResizeType)
         ed->mod |= MoveResizeMask;
