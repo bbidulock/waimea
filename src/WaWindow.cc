@@ -531,7 +531,8 @@ void WaWindow::RedrawWindow(void) {
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
         
 #ifdef XFT
-        if (title_w && true) DrawTitlebar();
+        if (title_w) DrawTitlebar();
+        if (handle_w) DrawHandlebar();
 #endif // XFT
 
     }
@@ -813,6 +814,9 @@ void WaWindow::DrawOutline(int x, int y, int width, int height) {
 void WaWindow::DrawTitlebar(void) {
     title->Render();
     label->Render();
+    button_min->Render();
+    button_c->Render();
+    button_max->Render();
     title->Draw();
     label->Draw();
     button_min->Draw();
@@ -828,6 +832,8 @@ void WaWindow::DrawTitlebar(void) {
  */
 void WaWindow::DrawHandlebar(void) {
     handle->Render();
+    grip_r->Render();
+    grip_l->Render();
     handle->Draw();
     grip_r->Draw();
     grip_l->Draw();
@@ -2591,8 +2597,8 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
         case MButtonType:
             f_pixmap = wascreen->fbutton;
             u_pixmap = wascreen->ubutton;
-            f_texture = &wascreen->wstyle.h_focus;
-            u_texture = &wascreen->wstyle.h_unfocus;
+            f_texture = &wascreen->wstyle.b_focus;
+            u_texture = &wascreen->wstyle.b_unfocus;
             attrib_set.event_mask |= ExposureMask;
             break;
         case LGripType:
@@ -2671,31 +2677,46 @@ void WaChildWindow::Render(void) {
         else pix_alloc_u = true;
     }
 #endif // XFT
-
-    int static_pix = false;
+    
     switch (type) {
         case CButtonType:
         case IButtonType:
         case MButtonType:
-            if (pressed) *pixmap = wascreen->pbutton;
-            else *pixmap = (wa->has_focus)? wascreen->fbutton: wascreen->ubutton;
-            static_pix = true;
+#ifdef XFT
+            if (texture->getOpacity())
+                *pixmap = ic->xrender((pressed) ? wascreen->pbutton :
+                                      ((wa->has_focus)? wascreen->fbutton:
+                                       wascreen->ubutton),
+                                      attrib.width, attrib.height,
+                                      texture, wascreen->xrootpmap_id, pos_x,
+                                      pos_y, *pixmap);
+            else
+#endif // XFT
+                *pixmap = (pressed)? wascreen->pbutton :
+                    ((wa->has_focus)? wascreen->fbutton: wascreen->ubutton);
             break;
         case LGripType:
         case RGripType:
-            *pixmap = (wa->has_focus)? wascreen->fgrip: wascreen->ugrip;
-            static_pix = true;
+#ifdef XFT
+            if (texture->getOpacity())
+                *pixmap = ic->xrender((wa->has_focus)? wascreen->fgrip:
+                                      wascreen->ugrip,
+                                      attrib.width, attrib.height,
+                                      texture, wascreen->xrootpmap_id, pos_x,
+                                      pos_y, *pixmap);
+            else
+#endif // XFT
+                *pixmap = (wa->has_focus)? wascreen->fgrip: wascreen->ugrip;
             break;
             
     }
-    if (texture->getTexture() == (WaImage_Flat | WaImage_Solid) || static_pix) {
-        if (! static_pix) *pixmap = None;
-#ifdef XFT        
-        if (texture->getOpacity()) {
-            *pixmap = ic->xrender(*pixmap, attrib.width, attrib.height, texture,
-                                  wascreen->xrootpmap_id, pos_x, pos_y,
-                                  *pixmap);
-        }
+    if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
+        *pixmap = None;
+#ifdef XFT
+        if (texture->getOpacity())
+            *pixmap = ic->xrender(None, attrib.width, attrib.height,
+                                  texture, wascreen->xrootpmap_id, pos_x,
+                                  pos_y, *pixmap);
 #endif // XFT
         
     } else
@@ -2707,6 +2728,11 @@ void WaChildWindow::Render(void) {
 #endif // XFT                                 
                                   
                                   );
+
+    if (*pixmap)
+        XSetWindowBackgroundPixmap(display, id, *pixmap);
+    else
+        XSetWindowBackground(display, id, texture->getColor()->getPixel());
 }
 
 /**
@@ -2716,14 +2742,6 @@ void WaChildWindow::Render(void) {
  * Sets background pixmap and redraws foreground.
  */
 void WaChildWindow::Draw(void) {
-    WaTexture *texture = (wa->has_focus)? f_texture: u_texture;
-    Pixmap pixmap = (wa->has_focus)? f_pixmap: u_pixmap;
-    
-    if (pixmap)
-        XSetWindowBackgroundPixmap(display, id, pixmap);
-    else
-        XSetWindowBackground(display, id, texture->getColor()->getPixel());
-
     XClearWindow(display, id);
     switch (type) {
         case LabelType:
@@ -2786,7 +2804,7 @@ void WaChildWindow::Draw(void) {
             break;
         case MButtonType:
             gc = (wa->has_focus)? &wascreen->wstyle.b_pic_focus_gc:
-                  &wascreen->wstyle.b_pic_unfocus_gc;
+                &wascreen->wstyle.b_pic_unfocus_gc;
             if (pressed) gc = &wascreen->wstyle.b_pic_pressed_gc;
             if (wa->flags.max) {
                 int w = (2*(wa->title_w - 8))/3;
