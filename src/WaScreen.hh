@@ -117,7 +117,7 @@ public:
     virtual ~WaScreen(void);
 
     void MoveViewportTo(int, int);
-    void MoveViewport(int, bool);
+    void MoveViewport(int);
     void ScrollViewport(int, bool, WaAction *);
     void MenuMap(XEvent *, WaAction *, bool);
     void MenuRemap(XEvent *, WaAction *, bool);
@@ -151,55 +151,22 @@ public:
     void TaskSwitcher(XEvent *, WaAction *);
     void PreviousTask(XEvent *, WaAction *);
     void NextTask(XEvent *, WaAction *);
-    void PointerWarp(XEvent *, WaAction *);
+    void PointerRelativeWarp(XEvent *, WaAction *);
+    void PointerFixedWarp(XEvent *, WaAction *);
+    void ViewportRelativeMove(XEvent *, WaAction *);
+    void ViewportFixedMove(XEvent *, WaAction *);
 
     inline void MoveViewportLeft(XEvent *, WaAction *) {
-        MoveViewport(WestDirection, true);
+        MoveViewport(WestDirection);
     }
     inline void MoveViewportRight(XEvent *, WaAction *) {
-        MoveViewport(EastDirection, true);
+        MoveViewport(EastDirection);
     }
     inline void MoveViewportUp(XEvent *, WaAction *) {
-        MoveViewport(NorthDirection, true);
+        MoveViewport(NorthDirection);
     }
     inline void MoveViewportDown(XEvent *, WaAction *) {
-        MoveViewport(SouthDirection, true);
-    }
-    inline void ScrollViewportLeft(XEvent *, WaAction *ac) {
-        ScrollViewport(WestDirection, true, ac);
-    }
-    inline void ScrollViewportRight(XEvent *, WaAction *ac) {
-        ScrollViewport(EastDirection, true, ac);
-    }
-    inline void ScrollViewportUp(XEvent *, WaAction *ac) {
-        ScrollViewport(NorthDirection, true, ac);
-    }
-    inline void ScrollViewportDown(XEvent *, WaAction *ac) {
-        ScrollViewport(SouthDirection, true, ac);
-    }
-    inline void MoveViewportLeftNoWarp(XEvent *, WaAction *) {
-        MoveViewport(WestDirection, false);
-    }
-    inline void MoveViewportRightNoWarp(XEvent *, WaAction *) {
-        MoveViewport(EastDirection, false);
-    }
-    inline void MoveViewportUpNoWarp(XEvent *, WaAction *) {
-        MoveViewport(NorthDirection, false);
-    }
-    inline void MoveViewportDownNoWarp(XEvent *, WaAction *) {
-        MoveViewport(SouthDirection, false);
-    }
-    inline void ScrollViewportLeftNoWarp(XEvent *, WaAction *ac) {
-        ScrollViewport(WestDirection, false, ac);
-    }
-    inline void ScrollViewportRightNoWarp(XEvent *, WaAction *ac) {
-        ScrollViewport(EastDirection, false, ac);
-    }
-    inline void ScrollViewportUpNoWarp(XEvent *, WaAction *ac) {
-        ScrollViewport(NorthDirection, false, ac);
-    }
-    inline void ScrollViewportDownNoWarp(XEvent *, WaAction *ac) {
-        ScrollViewport(SouthDirection, false, ac);
+        MoveViewport(SouthDirection);
     }
     inline void Nop(XEvent *, WaAction *) {}
     

@@ -1682,56 +1682,29 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
 void WaMenuItem::ViewportMove(XEvent *e, WaAction *wa) {
     menu->wascreen->ViewportMove(e, wa);
 }
+void WaMenuItem::ViewportRelativeMove(XEvent *e, WaAction *wa) {
+       menu->wascreen->ViewportRelativeMove(e, wa);
+}
+void WaMenuItem::ViewportFixedMove(XEvent *e, WaAction *wa) {
+       menu->wascreen->ViewportFixedMove(e, wa);
+}
 void WaMenuItem::MoveViewportLeft(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(WestDirection, true);
+    menu->wascreen->MoveViewport(WestDirection);
 }
 void WaMenuItem::MoveViewportRight(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(EastDirection, true);
+    menu->wascreen->MoveViewport(EastDirection);
 }
 void WaMenuItem::MoveViewportUp(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(NorthDirection, true);
+    menu->wascreen->MoveViewport(NorthDirection);
 }
 void WaMenuItem::MoveViewportDown(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(SouthDirection, true);
+    menu->wascreen->MoveViewport(SouthDirection);
 }
-void WaMenuItem::ScrollViewportLeft(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(WestDirection, true, ac);
+void WaMenuItem::PointerRelativeWarp(XEvent *e, WaAction *ac) {
+    menu->wascreen->PointerRelativeWarp(e, ac);
 }
-void WaMenuItem::ScrollViewportRight(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(EastDirection, true, ac);
-}
-void WaMenuItem::ScrollViewportUp(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(NorthDirection, true, ac);
-}
-void WaMenuItem::ScrollViewportDown(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(SouthDirection, true, ac);
-}
-void WaMenuItem::MoveViewportLeftNoWarp(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(WestDirection, false);
-}
-void WaMenuItem::MoveViewportRightNoWarp(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(EastDirection, false);
-}
-void WaMenuItem::MoveViewportUpNoWarp(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(NorthDirection, false);
-}
-void WaMenuItem::MoveViewportDownNoWarp(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(SouthDirection, false);
-}
-void WaMenuItem::ScrollViewportLeftNoWarp(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(WestDirection, false, ac);
-}
-void WaMenuItem::ScrollViewportRightNoWarp(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(EastDirection, false, ac);
-}
-void WaMenuItem::ScrollViewportUpNoWarp(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(NorthDirection, false, ac);
-}
-void WaMenuItem::ScrollViewportDownNoWarp(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(SouthDirection, false, ac);
-}
-void WaMenuItem::PointerWarp(XEvent *e, WaAction *ac) {
-    menu->wascreen->PointerWarp(e, ac);
+void WaMenuItem::PointerFixedWarp(XEvent *e, WaAction *ac) {
+       menu->wascreen->PointerFixedWarp(e, ac);
 }
 void WaMenuItem::Restart(XEvent *e, WaAction *ac) {
     menu->wascreen->Restart(e, ac);

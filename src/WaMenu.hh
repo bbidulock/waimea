@@ -146,29 +146,20 @@ public:
         if (! in_window) return;
         menu->Raise();
     }
-    void ViewportMove(XEvent *e, WaAction *);
+    void ViewportMove(XEvent *, WaAction *);
+    void ViewportRelativeMove(XEvent *, WaAction *);
+    void ViewportFixedMove(XEvent *, WaAction *);
     void MoveViewportLeft(XEvent *, WaAction *);
     void MoveViewportRight(XEvent *, WaAction *);
     void MoveViewportUp(XEvent *, WaAction *);
     void MoveViewportDown(XEvent *, WaAction *);
-    void ScrollViewportLeft(XEvent *, WaAction *);
-    void ScrollViewportRight(XEvent *, WaAction *);
-    void ScrollViewportUp(XEvent *, WaAction *);
-    void ScrollViewportDown(XEvent *, WaAction *);
-    void MoveViewportLeftNoWarp(XEvent *, WaAction *);
-    void MoveViewportRightNoWarp(XEvent *, WaAction *);
-    void MoveViewportUpNoWarp(XEvent *, WaAction *);
-    void MoveViewportDownNoWarp(XEvent *, WaAction *);
-    void ScrollViewportLeftNoWarp(XEvent *, WaAction *);
-    void ScrollViewportRightNoWarp(XEvent *, WaAction *);
-    void ScrollViewportUpNoWarp(XEvent *, WaAction *);
-    void ScrollViewportDownNoWarp(XEvent *, WaAction *);
     void TaskSwitcher(XEvent *, WaAction *);
     void PreviousTask(XEvent *, WaAction *);
     void NextTask(XEvent *, WaAction *);
     void NextItem(XEvent *, WaAction *);
     void PreviousItem(XEvent *, WaAction *);
-    void PointerWarp(XEvent *, WaAction *);
+    void PointerRelativeWarp(XEvent *, WaAction *);
+    void PointerFixedWarp(XEvent *, WaAction *);
     void Restart(XEvent *, WaAction *);
     void Exit(XEvent *, WaAction *);
     inline void Nop(XEvent *, WaAction *) {}

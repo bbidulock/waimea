@@ -747,10 +747,9 @@ void WaScreen::MoveViewportTo(int x, int y) {
  * Direction can be one of WestDirection, EastDirection, NorthDirection and
  * SouthDirection.
  *
- * @param warp True if we should warp pointer
  * @param direction Direction to move viewport
  */
-void WaScreen::MoveViewport(int direction, bool warp) {
+void WaScreen::MoveViewport(int direction) {
     int vd;
     
     switch (direction) {
@@ -758,8 +757,7 @@ void WaScreen::MoveViewport(int direction, bool warp) {
             if (v_x > 0) {
                 if ((v_x - width) < 0) vd = v_x;
                 else vd = width;
-                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, 
-				       vd - 4, 0);
+                XWarpPointer(display, None, None, 0, 0, 0, 0, vd - 4, 0);
                 MoveViewportTo(v_x - vd, v_y);
             }
             break;
@@ -767,8 +765,7 @@ void WaScreen::MoveViewport(int direction, bool warp) {
             if (v_x < v_xmax) {
                 if ((v_x + width) > v_xmax) vd = v_xmax - v_x;
                 else vd = width;
-                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0,
-                                       4 - vd, 0);
+                XWarpPointer(display, None, None, 0, 0, 0, 0, 4 - vd, 0);
                 MoveViewportTo(v_x + vd, v_y);
             }
             break;
@@ -776,8 +773,7 @@ void WaScreen::MoveViewport(int direction, bool warp) {
             if (v_y > 0) {
                 if ((v_y - height) < 0) vd = v_y;
                 else vd = height;
-                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0,
-                                       0, vd - 4);
+                XWarpPointer(display, None, None, 0, 0, 0, 0, 0, vd - 4);
                 MoveViewportTo(v_x, v_y - vd);
             }
             break;
@@ -785,72 +781,51 @@ void WaScreen::MoveViewport(int direction, bool warp) {
             if (v_y < v_ymax) {
                 if ((v_y + height) > v_ymax) vd = v_ymax - v_y;
                 else vd = height;
-                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0,
-                                       0, 4 - vd);
+                XWarpPointer(display, None, None, 0, 0, 0, 0, 0, 4 - vd);
                 MoveViewportTo(v_x, v_y + vd);
             }
     }
 }
 
-/**
- * @fn    ScrollViewport(int direction)
- * @brief Scroll viewport
+/** 
+ * @fn    ViewportFixedMove(XEvent *, WaAction *ac)
+ * @brief Fixed viewport move
  *
- * Scrolls viewport a number of pixels in direction specified by direction
- * parameter. Direction can be one of WestDirection, EastDirection,
- * NorthDirection and SouthDirection. The 'param' variable in 'ac' decides
- * how many pixels we should scroll. If 'param' has no value we scroll the
- * default value of 30 pixels.
+ * Parses the action parameter as an X offset string. The X and Y
+ * offset values defines the fixed pixel position to move the
+ * viewport to.
  *
- * @param direction Direction to move viewport
- * @param warp True if we should warp pointer
- * @param ac Action causing function call
- */
-void WaScreen::ScrollViewport(int direction, bool warp, WaAction *ac) {
-    int vd;
-    int scroll = 30;
+ * @param ac WaAction object
+ */ 
+void WaScreen::ViewportFixedMove(XEvent *, WaAction *ac) {
+   int x, y, mask; 
+   unsigned int w = 0, h = 0;
+                            
+   if (! ac->param) return;
+                
+   mask = XParseGeometry(ac->param, &x, &y, &w, &h);
+   if (mask & XNegative) x = v_xmax + x;
+   if (mask & YNegative) y = v_ymax + y;
+   MoveViewportTo(x, y); 
+}
 
-    if (ac->param) scroll = atoi(ac->param);
-    if (scroll > v_xmax) scroll = v_xmax;
-    if (scroll < 2) scroll = 2;
-    
-    switch (direction) {
-        case WestDirection:
-            if (v_x > 0) {
-                if ((v_x - scroll) < 0) vd = v_x;
-                else vd = scroll;
-                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, vd,
-                                       0);
-                MoveViewportTo(v_x - vd, v_y);
-            }
-            break;
-        case EastDirection:
-            if (v_x < v_xmax) {
-                if ((v_x + scroll) > v_xmax) vd = v_xmax - v_x;
-                else vd = scroll;
-                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, -vd,
-                                       0);
-                MoveViewportTo(v_x + vd, v_y);
-            }
-            break;
-        case NorthDirection:
-            if (v_y > 0) {
-                if ((v_y - scroll) < 0) vd = v_y;
-                else vd = scroll;
-                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, 0,
-                                       vd);
-                MoveViewportTo(v_x, v_y - vd);
-            }
-            break;
-        case SouthDirection:
-            if (v_y < v_ymax) {
-                if ((v_y + scroll) > v_ymax) vd = v_ymax - v_y;
-                else vd = scroll;
-                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, 0,
-                                       -vd);
-                MoveViewportTo(v_x, v_y + vd);
-            }
-    }
+/**
+ * @fn    ViewportRelativeMove(XEvent *, WaAction *ac)
+ * @brief Relative viewport move
+ *
+ * Parses the action parameter as an X offset string. The X and Y
+ * offset values defines the number of pixels to move the viewport.
+ *
+ * @param ac WaAction object
+ */
+void WaScreen::ViewportRelativeMove(XEvent *, WaAction *ac) {
+   int x, y, mask;
+   unsigned int w = 0, h = 0;
+                  
+   if (! ac->param) return;
+   
+   mask = XParseGeometry(ac->param, &x, &y, &w, &h);
+   MoveViewportTo(v_x + x, v_y + y);
 }
 
 /**
@@ -1083,7 +1058,7 @@ void WaScreen::TaskSwitcher(XEvent *, WaAction *) {
  * Switches to the previous focused window.
  *
  * @param e X event that have occurred
- * @param ed Event details
+ * @param ac WaAction object
  */
 void WaScreen::PreviousTask(XEvent *e, WaAction *ac) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
@@ -1100,7 +1075,7 @@ void WaScreen::PreviousTask(XEvent *e, WaAction *ac) {
  * Switches to the window that haven't had focus for longest time.
  *
  * @param e X event that have occurred
- * @param ed Event details
+ * @param ac WaAction object
  */
 void WaScreen::NextTask(XEvent *e, WaAction *ac) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
@@ -1109,33 +1084,45 @@ void WaScreen::NextTask(XEvent *e, WaAction *ac) {
 }
 
 /**
- * @fn    PointerWarp(XEvent *e, WaAction *ac)
- * @brief Warp mouse pointer
+ * @fn    PointerFixedWarp(XEvent *e, WaAction *ac)
+ * @brief Warps pointer to fixed position
  *
- * Parses the action parameter as an X geometry string. If width is given and
- * not zero, warp in X dimension is fixed, otherwise warp is relative to the
- * current positon. If height is given and not zero, warp in Y dimension is
- * fixed, otherwise warp is relative to the current positon. The X and Y
- * offsets are the number of pixels to warp.
+ * Parses the action parameter as an X offset string. The X and Y
+ * offset values defines the fixed pixel position to warp the 
+ * pointer to.
  *
- * @param e X event that have occurred
- * @param ed Event details
+ * @param ac WaAction object
  */
-void WaScreen::PointerWarp(XEvent *e, WaAction *ac) {
+void WaScreen::PointerFixedWarp(XEvent *, WaAction *ac) {
     int x, y, mask, i, o_x, o_y;
-    unsigned int ui, w = 0, h = 0;
+    unsigned int ui, w, h;
     Window dw;
     
     mask = XParseGeometry(ac->param, &x, &y, &w, &h);
-    if (mask & (WidthValue | HeightValue)) {
-        XQueryPointer(display, id, &dw, &dw, &o_x, &o_y, &i, &i, &ui);
-        
-        if (w) x = x - o_x;
-        if (h) y = y - o_y;
-    }
+    if (mask & XNegative) x = width + x;
+    if (mask & YNegative) y = height + y;
+    XQueryPointer(display, id, &dw, &dw, &o_x, &o_y, &i, &i, &ui);
+    x = x - o_x;
+    y = y - o_y;
     XWarpPointer(display, None, None, 0, 0, 0, 0, x, y);
 }
 
+/** 
+ * @fn    PointerRelativeWarp(XEvent *e, WaAction *ac)
+ * @brief Relative pointer warp
+ *
+ * Parses the action parameter as an X offset string. The X and Y
+ * offset values defines the number of pixels to warp the pointer.
+ * 
+ * @param ac WaAction object
+ */
+void WaScreen::PointerRelativeWarp(XEvent *, WaAction *ac) {
+   int x, y, mask, i, o_x, o_y;
+   unsigned int w, h;
+                    
+   mask = XParseGeometry(ac->param, &x, &y, &w, &h);
+   XWarpPointer(display, None, None, 0, 0, 0, 0, x, y);
+} 
 
 /**
  * @fn    EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts)

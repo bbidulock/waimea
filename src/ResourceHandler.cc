@@ -100,30 +100,10 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaWindow::MoveViewportRight));
     wacts->push_back(new StrComp("viewportup", &WaWindow::MoveViewportUp));
     wacts->push_back(new StrComp("viewportdown", &WaWindow::MoveViewportDown));
-    wacts->push_back(new StrComp("scrollviewportleft",
-                                 &WaWindow::ScrollViewportLeft));
-    wacts->push_back(new StrComp("scrollviewportright",
-                                 &WaWindow::ScrollViewportRight));
-    wacts->push_back(new StrComp("scrollviewportup",
-                                 &WaWindow::ScrollViewportUp));
-    wacts->push_back(new StrComp("scrollviewportdown",
-                                 &WaWindow::ScrollViewportDown));
-    wacts->push_back(new StrComp("viewportleftnowarp",
-                                 &WaWindow::MoveViewportLeftNoWarp));
-    wacts->push_back(new StrComp("viewportrightnowarp",
-                                 &WaWindow::MoveViewportRightNoWarp));
-    wacts->push_back(new StrComp("viewportupnowarp",
-                                 &WaWindow::MoveViewportUpNoWarp));
-    wacts->push_back(new StrComp("viewportdownnowarp",
-                                 &WaWindow::MoveViewportDownNoWarp));
-    wacts->push_back(new StrComp("scrollviewportleftnowarp",
-                                 &WaWindow::ScrollViewportLeftNoWarp));
-    wacts->push_back(new StrComp("scrollviewportrightnowarp",
-                                 &WaWindow::ScrollViewportRightNoWarp));
-    wacts->push_back(new StrComp("scrollviewportupnowarp",
-                                 &WaWindow::ScrollViewportUpNoWarp));
-    wacts->push_back(new StrComp("scrollviewportdownnowarp",
-                                 &WaWindow::ScrollViewportDownNoWarp));
+    wacts->push_back(new StrComp("viewportrelativemove", 
+                                 &WaWindow::ViewportRelativeMove));
+    wacts->push_back(new StrComp("viewportfixedmove", 
+                                 &WaWindow::ViewportFixedMove));
     wacts->push_back(new StrComp("startviewportmove",
                                  &WaWindow::ViewportMove));
     wacts->push_back(new StrComp("taskswitcher", &WaWindow::TaskSwitcher));
@@ -162,7 +142,10 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaWindow::AcceptConfigRequestOff));
     wacts->push_back(new StrComp("acceptconfigrequesttoggle",
                                  &WaWindow::AcceptConfigRequestToggle));
-    wacts->push_back(new StrComp("pointerwarp", &WaWindow::PointerWarp));
+    wacts->push_back(new StrComp("pointerrelativewarp",
+                                 &WaWindow::PointerRelativeWarp));
+    wacts->push_back(new StrComp("pointerfixedwarp",
+                                 &WaWindow::PointerFixedWarp));
     wacts->push_back(new StrComp("moveresize", &WaWindow::MoveResize));
     wacts->push_back(new StrComp("moveresizevirtual",
                                  &WaWindow::MoveResizeVirtual));
@@ -189,37 +172,20 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaScreen::MoveViewportRight));
     racts->push_back(new StrComp("viewportup", &WaScreen::MoveViewportUp));
     racts->push_back(new StrComp("viewportdown", &WaScreen::MoveViewportDown));
-    racts->push_back(new StrComp("scrollviewportleft",
-                                 &WaScreen::ScrollViewportLeft));
-    racts->push_back(new StrComp("scrollviewportright",
-                                 &WaScreen::ScrollViewportRight));
-    racts->push_back(new StrComp("scrollviewportup",
-                                 &WaScreen::ScrollViewportUp));
-    racts->push_back(new StrComp("scrollviewportdown",
-                                 &WaScreen::ScrollViewportDown));
+    racts->push_back(new StrComp("viewportrelativemove", 
+                                 &WaScreen::ViewportRelativeMove));
+    racts->push_back(new StrComp("viewportfixedmove", 
+                                 &WaScreen::ViewportFixedMove));
     racts->push_back(new StrComp("startviewportmove",
                                  &WaScreen::ViewportMove));
     racts->push_back(new StrComp("endmoveresize", &WaScreen::EndMoveResize));
-    racts->push_back(new StrComp("viewportleftnowarp",
-                                 &WaScreen::MoveViewportLeftNoWarp));
-    racts->push_back(new StrComp("viewportrightnowarp",
-                                 &WaScreen::MoveViewportRightNoWarp));
-    racts->push_back(new StrComp("viewportupnowarp",
-                                 &WaScreen::MoveViewportUpNoWarp));
-    racts->push_back(new StrComp("viewportdownnowarp",
-                                 &WaScreen::MoveViewportDownNoWarp));
-    racts->push_back(new StrComp("scrollviewportleftnowarp",
-                                 &WaScreen::ScrollViewportLeftNoWarp));
-    racts->push_back(new StrComp("scrollviewportrightnowarp",
-                                 &WaScreen::ScrollViewportRightNoWarp));
-    racts->push_back(new StrComp("scrollviewportupnowarp",
-                                 &WaScreen::ScrollViewportUpNoWarp));
-    racts->push_back(new StrComp("scrollviewportdownnowarp",
-                                 &WaScreen::ScrollViewportDownNoWarp));
     racts->push_back(new StrComp("taskswitcher", &WaScreen::TaskSwitcher));
     racts->push_back(new StrComp("previoustask", &WaScreen::PreviousTask));
     racts->push_back(new StrComp("nexttask", &WaScreen::NextTask));
-    racts->push_back(new StrComp("pointerwarp", &WaScreen::PointerWarp));
+    racts->push_back(new StrComp("pointerrelativewarp", 
+                                 &WaScreen::PointerRelativeWarp));
+    racts->push_back(new StrComp("pointerfixedwarp",
+                                 &WaScreen::PointerFixedWarp));
     racts->push_back(new StrComp("nop", &WaScreen::Nop));
     
     macts = new list<StrComp *>;
@@ -249,30 +215,10 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     macts->push_back(new StrComp("viewportup", &WaMenuItem::MoveViewportUp));
     macts->push_back(new StrComp("viewportdown",
                                  &WaMenuItem::MoveViewportDown));
-    macts->push_back(new StrComp("scrollviewportleft",
-                                 &WaMenuItem::ScrollViewportLeft));
-    macts->push_back(new StrComp("scrollviewportright",
-                                 &WaMenuItem::ScrollViewportRight));
-    macts->push_back(new StrComp("scrollviewportup",
-                                 &WaMenuItem::ScrollViewportUp));
-    macts->push_back(new StrComp("scrollviewportdown",
-                                 &WaMenuItem::ScrollViewportDown));
-    macts->push_back(new StrComp("viewportleftnowarp",
-                                 &WaMenuItem::MoveViewportLeftNoWarp));
-    macts->push_back(new StrComp("viewportrightnowarp",
-                                 &WaMenuItem::MoveViewportRightNoWarp));
-    macts->push_back(new StrComp("viewportupnowarp",
-                                 &WaMenuItem::MoveViewportUpNoWarp));
-    macts->push_back(new StrComp("viewportdownnowarp",
-                                 &WaMenuItem::MoveViewportDownNoWarp));
-    macts->push_back(new StrComp("scrollviewportleftnowarp",
-                                 &WaMenuItem::ScrollViewportLeftNoWarp));
-    macts->push_back(new StrComp("scrollviewportrightnowarp",
-                                 &WaMenuItem::ScrollViewportRightNoWarp));
-    macts->push_back(new StrComp("scrollviewportupnowarp",
-                                 &WaMenuItem::ScrollViewportUpNoWarp));
-    macts->push_back(new StrComp("scrollviewportdownnowarp",
-                                 &WaMenuItem::ScrollViewportDownNoWarp));
+    macts->push_back(new StrComp("viewportrelativemove", 
+                                 &WaMenuItem::ViewportRelativeMove));
+    macts->push_back(new StrComp("viewportfixedmove", 
+                                 &WaMenuItem::ViewportFixedMove));
     macts->push_back(new StrComp("startviewportmove",
                                  &WaMenuItem::ViewportMove));
     macts->push_back(new StrComp("taskswitcher", &WaMenuItem::TaskSwitcher));
@@ -280,7 +226,10 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     macts->push_back(new StrComp("nexttask", &WaMenuItem::NextTask));
     macts->push_back(new StrComp("nextitem", &WaMenuItem::NextItem));
     macts->push_back(new StrComp("previousitem", &WaMenuItem::PreviousItem));
-    macts->push_back(new StrComp("pointerwarp", &WaMenuItem::PointerWarp));
+    macts->push_back(new StrComp("pointerrelativewarp", 
+                                 &WaMenuItem::PointerRelativeWarp));
+    macts->push_back(new StrComp("pointerfixedwarp",
+                                 &WaMenuItem::PointerFixedWarp));
     macts->push_back(new StrComp("restart", &WaMenuItem::Restart));
     macts->push_back(new StrComp("exit", &WaMenuItem::Exit));
     macts->push_back(new StrComp("nop", &WaMenuItem::Nop));
@@ -1841,9 +1790,12 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                 return;
             }
         if (*par == '\0' || *par == ')') {
-            if (! strncasecmp(token, "menu", 4)) {
-                WARNING "\"" << token << "\" action must have a menu as" <<
-                    " parameter" << endl;
+            if ((! strncasecmp(token, "menu", 4)) ||
+                (! strncasecmp(token, "pointer", 7)) ||
+                (! strncasecmp(token, "viewportrelative", 16)) ||
+                (! strncasecmp(token, "viewportfixed", 13)) ) {
+                WARNING "\"" << token << "\" action must have a parameter" <<
+                    endl;
                 delete act_tmp;
                 delete [] line;
                 return;
@@ -1856,13 +1808,15 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         for (i = 0; token[i] != '('; i++);
         token[i] = '\0';
     }
-    else if (! strncasecmp(token, "menu", 4)) {
-        WARNING "\"" << token << "\" action must have a menu as" <<
-            " parameter" << endl;
-        delete act_tmp;
-        delete [] line;
-        return;
-    }
+    else if ((! strncasecmp(token, "menu", 4)) ||
+          (! strncasecmp(token, "pointer", 7)) ||
+          (! strncasecmp(token, "viewportrelative", 16)) ||
+          (! strncasecmp(token, "viewportfixed", 13)) ) {
+          WARNING "\"" << token << "\" action must have a parameter" <<
+              endl;
+          delete act_tmp;
+          delete [] line;
+          return;                                                                   }
     delete [] tmp_par;
     
     it = comp->begin();
@@ -2020,7 +1974,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         if (! strcasecmp(s, "start")) {
             delete [] s;
-            if ((s = strwithin(line, '(', ')'))) {                
+            if ((s = strwithin(line, '(', ')', true))) {                
                 tmp_menu = new WaMenu(wastrdup(s));                
                 ParseMenu(tmp_menu, file);
             } else
@@ -2030,7 +1984,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         else if ((! strcasecmp(s, "submenu")) || (! strcasecmp(s, "begin"))) {
             delete [] s;
-            if ((s = strwithin(line, '(', ')'))) {
+            if ((s = strwithin(line, '(', ')', true))) {
                 m = new WaMenuItem(s);
                 m->type = MenuSubType;
                 m->func_mask |= MenuSubMask;
@@ -2049,7 +2003,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         else if (! strcasecmp(s, "restart")) {
             delete [] s;
-            if ((s = strwithin(line, '(', ')')))
+            if ((s = strwithin(line, '(', ')', true)))
                 m = new WaMenuItem(s);
             else
                 m = new WaMenuItem(wastrdup(""));
@@ -2061,7 +2015,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         else if (! strcasecmp(s, "exit")) {
             delete [] s;
-            if ((s = strwithin(line, '(', ')')))
+            if ((s = strwithin(line, '(', ')', true)))
                 m = new WaMenuItem(s);
             else
                 m = new WaMenuItem(wastrdup(""));
@@ -2073,7 +2027,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         else if (! strcasecmp(s, "exec")) {
             delete [] s;
-            if ((s = strwithin(line, '(', ')')))
+            if ((s = strwithin(line, '(', ')', true)))
                 m = new WaMenuItem(s);
             else
                 m = new WaMenuItem(wastrdup(""));
@@ -2093,7 +2047,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         else if (! strcasecmp(s, "nop")) {
             delete [] s;
-            if ((s = strwithin(line, '(', ')')))
+            if ((s = strwithin(line, '(', ')', true)))
                 m = new WaMenuItem(s);
             else
                 m = new WaMenuItem(wastrdup(""));
@@ -2206,7 +2160,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         if (! cb) line1 = line;
-        if (! (s = strwithin(line1, '(', ')')))
+        if (! (s = strwithin(line1, '(', ')', true)))
             s = wastrdup("");
         m = new WaMenuItem(s);
         m->label1 = m->label;
@@ -2285,7 +2239,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         
         if (cb) {
-            if (! (s = strwithin(line2, '(', ')')))
+            if (! (s = strwithin(line2, '(', ')', true)))
                 s = wastrdup("");
             m->label2 = s;
             if ((s = strwithin(line2, '{', '}'))) {
@@ -2415,75 +2369,80 @@ char *strtrim(char *s) {
 }
 
 /**
- * @fn    strwithin(char *s, char c1, char c2)
+ * @fn    strwithin(char *s, char c1, char c2, bool eval_env)
  * @brief Return string between to characters
  *
  * Duplicates and returns the string between c1 and c2 if c1 and c2 was
- * found. All occurenses of $STRING$ is replaced by environment variable
- * STRING's value, if environment variable doesn't exist $STRING$ will be
- * replaced by an empty string. $$ will be converted to a single $.
- * %c1 an %c2 will be replaced with c1 and c2. %% is replaced with %.
+ * found. Possible environment variables are evaluated if eval_env
+ * parameter is true. All special character sequences are replaced
+ * with real characters.
  *
  * @param s String to search for c1 and c2 in
  * @param c1 Starting character
  * @param c2 Ending character
+ * @param eval_env True if environment variables should be evaluated
  *
  * @return String within c1 and c2
  */
-char *strwithin(char *s, char c1, char c2) {
-    int i, n;
+char *strwithin(char *s, char c1, char c2, bool eval_env) {
+    int i, n, tmp_char;
     char *str, *tmp, *env, *env_name;
     
     for (i = 0;; i++) {
         if (s[i] == '\0') break;
-        if (s[i] == c1 && (i == 0 || s[i - 1] != '%')) break;
+        if (s[i] == c1 && (i == 0 || s[i - 1] != '\\')) break;
     }
     if (s[i] == '\0') return NULL;
     
     for (n = i + 1;; n++) {
         if (s[n] == '\0') break;
-        if (s[n] == c2 && s[n - 1] != '%') break;
+        if (s[n] == c2 && s[n - 1] != '\\') break;
     }
     if (s[n] == '\0') return NULL; 
-    s[n] = '\0';
-
-    str = wastrdup(s + i + 1);
     
+    s[n] = '\0';
+    str = wastrdup(s + i + 1);
     s[n] = c2;
+    
+    if (eval_env) {
+        i = 0;
+        for (; str[i] != '\0'; i++) {
+            if (str[i] == '\\') {
+                 if (str[i + 1] != '\0') i++;
+            }
+            else if (str[i] == '$' && IS_ENV_CHAR(str[i + 1])) {
+                 str[i] = '\0';
+                 env_name = &str[++i];
+                 for (; IS_ENV_CHAR(str[i]); i++);
+                 tmp_char = str[i];
+                 str[i] = '\0';
+                 if ((env = getenv(env_name)) == NULL) env = "";
+                 str[i] = tmp_char;
+                 tmp = new char[strlen(str) + strlen(env) +
+                                strlen(&str[i]) + 1];
+                 sprintf(tmp, "%s%s%s", str, env, &str[i]);
+                 i = strlen(str) + strlen(env);
+                 delete [] str;
+                 str = tmp;
+            }
+        }
+    }
     for (i = 0; str[i] != '\0'; i++) {
-        if (str[i] == '%') {
-	    for (n = 1; str[i + n] != '\0'; n++)
-	        str[i + n - 1] = str[i + n];
-	    str[i + n - 1] = '\0';
+        if (str[i] == '\\' && 
+            (str[i + 1] == '$' ||
+             str[i + 1] == '\\' ||
+             str[i + 1] == '(' ||
+             str[i + 1] == ')' ||
+             str[i + 1] == '[' ||
+             str[i + 1] == ']' ||
+             str[i + 1] == '{' ||
+             str[i + 1] == '}' ||
+             str[i + 1] == '<' ||
+             str[i + 1] == '>')) {
+	         for (n = 1; str[i + n] != '\0'; n++)
+	             str[i + n - 1] = str[i + n];
+	         str[i + n - 1] = '\0';
         }
     }
-    for (i = 0;;) {
-        for (; str[i] != '$' && str[i] != '\0'; i++);
-        if (str[i] == '\0')
-            return str;
-        else {
-            str[i] = '\0';
-            env_name = &str[++i];
-            for (; str[i] != '$' && str[i] != '\0'; i++);
-            if (str[i] == '\0') {
-                WARNING << "ending \"$\" not found" << endl;
-                delete [] str;
-                return NULL;
-            }
-            else {
-                str[i] = '\0';
-                if (strlen(env_name)) {
-                    if ((env = getenv(env_name)) == NULL)
-                        env = "";
-                } else
-                    env = "$";
-                tmp = new char[strlen(str) + strlen(env) +
-                              strlen(&str[i + 1]) + 1];
-                sprintf(tmp, "%s%s%s", str, env, &str[i + 1]);
-                i = strlen(str) + 1;
-                delete [] str;
-                str = tmp;
-            }
-        }
-    }
+    return str;
 }

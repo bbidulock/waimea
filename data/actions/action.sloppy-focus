@@ -66,11 +66,7 @@ window.activeclient {
    Close                      : KeyPress = F4 & Mod1Mask,
    Kill                       : KeyPress = F10 & Mod1Mask,
    TaskSwitcher               : KeyPress = Tab & Mod1Mask,
-   MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask,
-   ViewportLeftNoWarp         : KeyPress = Left & ControlMask & Mod1Mask,
-   ViewportRightNoWarp        : KeyPress = Right & ControlMask & Mod1Mask,
-   ViewportUpNoWarp           : KeyPress = Up & ControlMask & Mod1Mask,
-   ViewportDownNoWarp         : KeyPress = Down & ControlMask & Mod1Mask
+   MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
 }
 
 root {
@@ -82,31 +78,19 @@ root {
    MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
 }
 
-westedge {
-   ViewportLeft           : EnterNotify & !ControlMask,
-   ScrollViewportLeft(25) : EnterNotify & ControlMask
-}
+westedge { ViewportLeft : EnterNotify }
 
-eastedge {
-   ViewportRight           : EnterNotify & !ControlMask,
-   ScrollViewportRight(25) : EnterNotify & ControlMask
-}
-
-northedge {
-   ViewportUp           : EnterNotify & !ControlMask,
-   ScrollViewportUp(20) : EnterNotify & ControlMask
-}
-
-southedge {
-   ViewportDown           : EnterNotify & !ControlMask,
-   ScrollViewportDown(20) : EnterNotify & ControlMask
-}
+eastedge { ViewportRight : EnterNotify }
+ 
+northedge { ViewportUp : EnterNotify }
+ 
+southedge { ViewportDown : EnterNotify }
 
 DEF allMenuWindows {
-   Raise              : ButtonPress = Button1 & Mod1Mask,
-   StartOpaqueMove    : ButtonPress = Button1 & Mod1Mask,
-   UnLink             : ButtonPress = Button1 & Mod1Mask,
-   EndMoveResize      : ButtonRelease = Button1 & MoveResizeMask
+   Raise           : ButtonPress = Button1 & Mod1Mask,
+   StartOpaqueMove : ButtonPress = Button1 & Mod1Mask,
+   UnLink          : ButtonPress = Button1 & Mod1Mask,
+   EndMoveResize   : ButtonRelease = Button1 & MoveResizeMask
 }
 
 DEF allMenuItems {

@@ -16,6 +16,7 @@
 #define __ResourceHandler_hh
 
 #include <stdio.h>
+#include <ctype.h>
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
 
@@ -60,6 +61,8 @@ typedef struct _ButtonStyle ButtonStyle;
         delete list->back(); \
         list-> pop_back(); \
     }
+
+#define IS_ENV_CHAR(ch) (isalnum(ch) || ch == '_')
 
 struct _WaAction {
     WwActionFn winfunc;
@@ -225,6 +228,6 @@ public:
 };
 
 char *strtrim(char *);
-char *strwithin(char *, char, char);
+char *strwithin(char *, char, char, bool = false);
 
 #endif // __ResourceHandler_hh

@@ -3085,56 +3085,29 @@ void WaChildWindow::Draw(void) {
 void WaWindow::ViewportMove(XEvent *e, WaAction *wa) {
     wascreen->ViewportMove(e, wa);
 }
+void WaWindow::ViewportRelativeMove(XEvent *e, WaAction *wa) {
+       wascreen->ViewportRelativeMove(e, wa);
+}
+void WaWindow::ViewportFixedMove(XEvent *e, WaAction *wa) {
+       wascreen->ViewportFixedMove(e, wa);
+}
 void WaWindow::MoveViewportLeft(XEvent *, WaAction *) {
-    wascreen->MoveViewport(WestDirection, true);
+    wascreen->MoveViewport(WestDirection);
 }
 void WaWindow::MoveViewportRight(XEvent *, WaAction *) {
-    wascreen->MoveViewport(EastDirection, true);
+    wascreen->MoveViewport(EastDirection);
 }
 void WaWindow::MoveViewportUp(XEvent *, WaAction *) {
-    wascreen->MoveViewport(NorthDirection, true);
+    wascreen->MoveViewport(NorthDirection);
 }
 void WaWindow::MoveViewportDown(XEvent *, WaAction *) {
-    wascreen->MoveViewport(SouthDirection, true);
+    wascreen->MoveViewport(SouthDirection);
 }
-void WaWindow::ScrollViewportLeft(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(WestDirection, true, ac);
+void WaWindow::PointerRelativeWarp(XEvent *e, WaAction *ac) {
+    wascreen->PointerRelativeWarp(e, ac);
 }
-void WaWindow::ScrollViewportRight(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(EastDirection, true, ac);
-}
-void WaWindow::ScrollViewportUp(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(NorthDirection, true, ac);
-}
-void WaWindow::ScrollViewportDown(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(SouthDirection, true, ac);
-}
-void WaWindow::MoveViewportLeftNoWarp(XEvent *, WaAction *) {
-    wascreen->MoveViewport(WestDirection, false);
-}
-void WaWindow::MoveViewportRightNoWarp(XEvent *, WaAction *) {
-    wascreen->MoveViewport(EastDirection, false);
-}
-void WaWindow::MoveViewportUpNoWarp(XEvent *, WaAction *) {
-    wascreen->MoveViewport(NorthDirection, false);
-}
-void WaWindow::MoveViewportDownNoWarp(XEvent *, WaAction *) {
-    wascreen->MoveViewport(SouthDirection, false);
-}
-void WaWindow::ScrollViewportLeftNoWarp(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(WestDirection, false, ac);
-}
-void WaWindow::ScrollViewportRightNoWarp(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(EastDirection, false, ac);
-}
-void WaWindow::ScrollViewportUpNoWarp(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(NorthDirection, false, ac);
-}
-void WaWindow::ScrollViewportDownNoWarp(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(SouthDirection, false, ac);
-}
-void WaWindow::PointerWarp(XEvent *e, WaAction *ac) {
-    wascreen->PointerWarp(e, ac);
+void WaWindow::PointerFixedWarp(XEvent *e, WaAction *ac) {
+       wascreen->PointerFixedWarp(e, ac);
 }
 void WaWindow::Restart(XEvent *e, WaAction *ac) {
     wascreen->Restart(e, ac);

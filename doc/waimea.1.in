@@ -207,7 +207,7 @@ or not.
 
 .TP
 .B dock[num].geometry:     OffsetString
-Define dockapp holder position, X11 offset string of form:
+Define dockapp holder position, X offset string of form:
 [{+-}<xoffset>{+-}<yoffset>]. See 
 .BR X(1).
 
@@ -1033,42 +1033,30 @@ Set input focus to the event window.
 .B viewportup
 .br
 .B viewportdown
-.br
-.B viewportleftnowarp
-.br
-.B viewportrightnowarp
-.br
-.B viewportupnowarp
-.br
-.B viewportdownnowarp
 .RS
-Moves viewport one screen width. 
-.I Actions 
-ending with nowarp moves viewport without mouse warping.
+Moves viewport one screen width and warps the pointer one screen width
+in the opposite direction.
 .RE
 
 .PP
-.B scrollviewportleft[(pixels)]
-.br
-.B scrollviewportright[(pixels)]
-.br
-.B scrollviewportup[(pixels)]
-.br
-.B scrollviewportdown[(pixels)]
-.br
-.B scrollviewportleftnowarp[(pixels)]
-.br
-.B scrollviewportrightnowarp[(pixels)]
-.br
-.B scrollviewportupnowarp[(pixels)]
-.br
-.B scrollviewportdownnowarp[(pixels)]
-.RS
-Scrolls viewport the number of pixels given as parameter. If no pixel
-parameter is given a pixel value of 30 is used.
-.I Actions 
-ending with nowarp scrolls viewport without mouse warping.
-.RE
+.TP
+.B viewportrelativemove(OffsetString)
+Moves viewport relative to its current position. MUST have an X offset 
+string as parameter:
+[{+-}<xoffset>{+-}<yoffset>] See
+.BR X(1).
+The xoffset and yoffset values defines the number of pixels to move the
+viewport.
+
+.PP
+.TP
+.B viewportfixedmove(OffsetString)
+Moves viewport to a fixed position. MUST have an X offset 
+string as parameter:
+[{+-}<xoffset>{+-}<yoffset>] See 
+.BR X(1).
+The xoffset and yoffset values defines the new viewport position.
+{+-} signs defines viewport gravity.
 
 .PP
 .TP
@@ -1096,15 +1084,24 @@ Sets focus to the window that was focused before the currently focused
 window.
 
 .PP
-.TP
-.B pointerwarp(X11 geometry string)
-Warps mouse pointer. MUST have an X11 geometry string as parameter:
-[<width>{xX}<height>][{+-}<xoffset>{+-}<yoffset>] See
+.TP 
+.B pointerrelativewarp(OffsetString)
+Warps pointer relative to its current position. MUST have an X offset
+string as parameter:
+[{+-}<xoffset>{+-}<yoffset>] See
 .BR X(1).
-If width is given and not zero, warp in X dimension is fixed, otherwise 
-warp is relative to the current positon. If height is given and not 
-zero, warp in Y dimension is fixed, otherwise warp is relative to the 
-current positon. The X and Y offsets are the number of pixels to warp.
+The xoffset and yoffset values defines the number of pixels to warp the
+pointer.
+
+.PP
+.TP
+.B pointerfixedmove(OffsetString)
+Warp pointer to a fixed position. MUST have an X offset
+string as parameter:
+[{+-}<xoffset>{+-}<yoffset>] See  
+.BR X(1).
+The xoffset and yoffset values defines the new pointer position.
+{+-} signs defines pointer gravity.
 
 .PP
 .TP
@@ -1621,19 +1618,18 @@ e.g.:
 [end]
 
 .fi
-If you want to use (,),{,},<,>,[,] characters within the strings use
-%(, %) and so on. %% is converted to single %.
-
-.PP
-It is also possible to have environment variables inserted into the 
-strings. All strings within $ characters is looked up as environment
-variables. e.g.:
+Menu item titles can contain environment variables. e.g.:
 .nf
+[item] (Logout $USER) "exit"
+.fi
+$USER will be replaced with USER environment variable.
 
-[item] (Logout $USER$) "exit"
+All special characters need to be escaped (with a `\\') to protect
+them from expansion. Special characters are:
+.nf
+( ) { } < > [ ] $
 
 .fi
-$USER$ will be replaced with USER environment variable.
 
 .PP
 Predefined menu named "__windowlist__" can be used in menu file
