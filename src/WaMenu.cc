@@ -1256,6 +1256,17 @@ void WaMenuItem::PreviousItem(XEvent *e, WaAction *ac) {
  * @param acts List with actions to match event with
  */
 void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
+    Window w;
+    unsigned int ui;
+    int xp, yp, i;
+
+    if (ed->type == ButtonPress || ed->type == ButtonRelease ||
+        ed->type == DoubleClick) {
+        XQueryPointer(menu->display, id, &w, &w, &i, &i, &xp, &yp, &ui);
+        if (xp < 0 || yp < 0 || xp > width || yp > height)
+            return;
+    }   
+    
     list<WaAction *>::iterator it = acts->begin();
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
