@@ -30,6 +30,7 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
     wascreen = scrn;
     waimea = wascreen->waimea;
     display = waimea->display;
+    background = (Pixmap) 0;
     x = 0;
     y = 0;
     if (style->geometry & XValue ||
@@ -230,13 +231,24 @@ void DockappHandler::Update(void) {
     XResizeWindow(display, id, width, height);
     XMoveWindow(display, id, map_x, map_y);
     XMapWindow(display, id);
+    Render();
+    wascreen->UpdateWorkarea();
+}
 
+/**
+ * @fn    Render(void)
+ * @brief Render background
+ *
+ * Renders background for dockapp holder.
+ */
+void DockappHandler::Render(void) {
     WaTexture *texture = &style->style.texture;
     
 #ifdef XRENDER
-    if (texture->getOpacity())
+    if (texture->getOpacity()) {
         background = XCreatePixmap(display, wascreen->id, width,
                                    height, wascreen->screen_depth);
+    }
 #endif // XRENDER
     
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
@@ -271,8 +283,6 @@ void DockappHandler::Update(void) {
 #ifdef XRENDER    
     if (texture->getOpacity()) XFreePixmap(display, background);
 #endif // XRENDER
-    
-    wascreen->UpdateWorkarea();
 }
     
 /**

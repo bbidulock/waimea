@@ -531,18 +531,8 @@ void WaWindow::RedrawWindow(void) {
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
         
 #ifdef XRENDER
-        if ((attrib.x + attrib.width) > 0 && attrib.x < wascreen->width) {
-            
-            if (handle_w &&
-                (attrib.y + attrib.height + border_w + handle_w) > 0 &&
-                (attrib.y + attrib.height + border_w) < wascreen->height)
-                DrawHandlebar();
-            
-            if (title_w &&
-                (attrib.y - border_w) > 0 &&
-                (attrib.y - border_w - title_w) < wascreen->height)
-                DrawTitlebar();
-        }
+        DrawTitlebar();
+        DrawHandlebar();
 #endif // XRENDER
 
     }
@@ -822,16 +812,21 @@ void WaWindow::DrawOutline(int x, int y, int width, int height) {
  * Renders titlebar pixmaps and draws titlebar foreground.
  */
 void WaWindow::DrawTitlebar(void) {
-    title->Render();
-    label->Render();
-    button_min->Render();
-    button_c->Render();
-    button_max->Render();
-    title->Draw();
-    label->Draw();
-    button_min->Draw();
-    button_c->Draw();
-    button_max->Draw();
+    if (title_w &&
+        ((attrib.x + attrib.width) > 0 && attrib.x < wascreen->width) &&
+        ((attrib.y - border_w) > 0 &&
+         (attrib.y - border_w - title_w) < wascreen->height)) {
+        title->Render();
+        label->Render();
+        button_min->Render();
+        button_c->Render();
+        button_max->Render();
+        title->Draw();
+        label->Draw();
+        button_min->Draw();
+        button_c->Draw();
+        button_max->Draw();
+    }
 }
 
 /**
@@ -841,12 +836,17 @@ void WaWindow::DrawTitlebar(void) {
  * Renders handlebar pixmaps and draws handlebar foreground
  */
 void WaWindow::DrawHandlebar(void) {
-    handle->Render();
-    grip_r->Render();
-    grip_l->Render();
-    handle->Draw();
-    grip_r->Draw();
-    grip_l->Draw();
+    if (handle_w &&
+        ((attrib.x + attrib.width) > 0 && attrib.x < wascreen->width) &&
+        (attrib.y + attrib.height + border_w + handle_w) > 0 &&
+        (attrib.y + attrib.height + border_w) < wascreen->height) {
+        handle->Render();
+        grip_r->Render();
+        grip_l->Render();
+        handle->Draw();
+        grip_r->Draw();
+        grip_l->Draw();
+    }
 }
 
 /**
@@ -2677,10 +2677,10 @@ WaChildWindow::~WaChildWindow(void) {
 void WaChildWindow::Render(void) {
     WaTexture *texture = (wa->has_focus)? f_texture: u_texture;
     Pixmap *pixmap = (wa->has_focus)? &f_pixmap: &u_pixmap;
-    int pos_x = wa->attrib.x + attrib.x;
-    int pos_y = wa->attrib.y - wa->title_w - wa->border_w + attrib.y;
 
 #ifdef XRENDER
+    int pos_x = wa->attrib.x + attrib.x;
+    int pos_y = wa->attrib.y - wa->title_w - wa->border_w + attrib.y;        
     if (texture->getOpacity()) {
         if (pix_alloc_f) XFreePixmap(display, f_pixmap);
         if (pix_alloc_u) XFreePixmap(display, u_pixmap);

@@ -26,7 +26,7 @@ public:
     virtual ~DockappHandler(void);
 
     void Update(void);
-    void DrawFg(void);
+    void Render(void);
     
     Display *display;
     Waimea *waimea;

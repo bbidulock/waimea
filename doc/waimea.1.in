@@ -425,7 +425,7 @@ Texure type, opacity level, colors and pixmap used for focused window textures.
 .B window.*.unfocus.color:     Color
 .br
 .B window.*.unfocus.colorTo:     Color
-.RS
+.br
 .B window.*.unfocus.pixmap:     Pixmap
 .RS
 Texure type, opacity level and colors used for unfocused window textures.
@@ -449,9 +449,8 @@ Color used for unfocused window label font.
 .B menu.*.color:     Color 
 .br
 .B menu.*.colorTo:     Color
-.RS
+.br
 .B menu.*.pixmap:     Pixmap
-.RS
 .RS
 Texure type, opacity level and colors used for menu textures.
 .RE
@@ -575,7 +574,7 @@ frame menu title height is set by the height of the font.
 .B dockappholder.dock[ID].frame.color:     Color
 .br
 .B dockappholder.dock[ID].frame.colorTo:     Color
-.RS
+.br
 .B dockappholder.dock[ID].frame.pixmap:     Pixmap
 .RS
 Texure type, opacity level and colors used for dockappholder 'dock[ID]'s frame 

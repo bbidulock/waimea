@@ -299,6 +299,7 @@ public:
     Pixmap xrender(Pixmap, unsigned int, unsigned int, WaTexture *,
                    Pixmap = None, unsigned int = 0, unsigned int = 0,
                    Pixmap = None);
+    void setXRootPMapId(bool);
 #endif // XRENDER
     
 };

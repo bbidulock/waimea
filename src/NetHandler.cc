@@ -856,5 +856,7 @@ void NetHandler::GetXRootPMapId(WaScreen *ws) {
         ws->xrootpmap_id = (Pixmap) (*data);
         XFree(data);
     }
+    else
+        ws->xrootpmap_id = (Pixmap) 0;
 }
 #endif // XRENDER

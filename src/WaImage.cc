@@ -39,8 +39,6 @@ typedef unsigned int u_int32_t;
 
 #include "WaImage.hh"
 
-Pixmap *rootpix = NULL;
-
 static unsigned long bsqrt(unsigned long x) {
     if (x <= 0) return 0;
     if (x == 1) return 1;
@@ -56,10 +54,13 @@ static unsigned long bsqrt(unsigned long x) {
 }
 
 #ifdef XRENDER
-int WaTexture::getOpacity(void) {
-    if (rootpix && *rootpix)
-        return opacity;
 
+bool have_root_pmap = true;
+
+int WaTexture::getOpacity(void) {
+    if (have_root_pmap)
+        return opacity;
+    
     return 0;
 }
 
@@ -1799,8 +1800,7 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
     screen_depth  = scrn->screen_depth;
     window        = scrn->id;
     colormap      = scrn->colormap;
-    visual        = scrn->visual;
-    rootpix       = &scrn->xrootpmap_id;
+    visual        = scrn->visual;    
     
     setDither(_dither);
     setColorsPerChannel(_cpc);
@@ -2471,5 +2471,7 @@ Pixmap WaImageControl::xrender(Pixmap p, unsigned int width,
     XRenderFreePicture(display, dest_pict);
     return dest;
 }
+
+void WaImageControl::setXRootPMapId(bool hrp) { have_root_pmap = hrp; }
 
 #endif // XRENDER

@@ -61,11 +61,6 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     imlib_context_set_drawable(id);
     imlib_context_set_anti_alias(1);    
 #endif // PIXMAP
-
-#ifdef XRENDER
-    xrootpmap_id = (Pixmap) 0;
-    net->GetXRootPMapId(this);
-#endif // XRENDER
     
     eventmask = SubstructureRedirectMask | StructureNotifyMask |
         PropertyChangeMask | ColormapChangeMask | KeyPressMask |
@@ -90,10 +85,15 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     sprintf(displaystring + strlen(displaystring) - 1, "%d", screen_number);
 	
     v_x = v_y = 0;
-    
+
     ic = new WaImageControl(display, this, rh->image_dither,
                             rh->colors_per_channel, rh->cache_max);
     ic->installRootColormap();
+
+#ifdef XRENDER
+    net->GetXRootPMapId(this);
+    ic->setXRootPMapId((xrootpmap_id)? true: false);
+#endif // XRENDER
 
     rh->LoadStyle(this);
 
@@ -129,7 +129,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     for (; dit != waimea->rh->dockstyles->end(); ++dit) {
         docks->push_back(new DockappHandler(this, *dit));
     }
-        
+    
     WaWindow *newwin;
     XWMHints *wm_hints;
     wm_hints = XAllocWMHints();
@@ -658,7 +658,8 @@ void WaScreen::ScrollViewport(int direction, bool warp, WaAction *ac) {
             if (v_x > 0) {
                 if ((v_x - scroll) < 0) vd = v_x;
                 else vd = scroll;
-                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, vd, 0);
+                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, vd,
+                                       0);
                 MoveViewportTo(v_x - vd, v_y);
             }
             break;
@@ -666,7 +667,8 @@ void WaScreen::ScrollViewport(int direction, bool warp, WaAction *ac) {
             if (v_x < v_xmax) {
                 if ((v_x + scroll) > v_xmax) vd = v_xmax - v_x;
                 else vd = scroll;
-                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, -vd, 0);
+                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, -vd,
+                                       0);
                 MoveViewportTo(v_x + vd, v_y);
             }
             break;
@@ -674,7 +676,8 @@ void WaScreen::ScrollViewport(int direction, bool warp, WaAction *ac) {
             if (v_y > 0) {
                 if ((v_y - scroll) < 0) vd = v_y;
                 else vd = scroll;
-                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, 0, vd);
+                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, 0,
+                                       vd);
                 MoveViewportTo(v_x, v_y - vd);
             }
             break;
@@ -682,7 +685,8 @@ void WaScreen::ScrollViewport(int direction, bool warp, WaAction *ac) {
             if (v_y < v_ymax) {
                 if ((v_y + scroll) > v_ymax) vd = v_ymax - v_y;
                 else vd = scroll;
-                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, 0, -vd);
+                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, 0,
+                                       -vd);
                 MoveViewportTo(v_x, v_y + vd);
             }
     }

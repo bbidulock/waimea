@@ -142,7 +142,8 @@ void Waimea::WaRaiseWindow(Window win) {
     bool in_list = false;
     
     if (always_on_top_list->size()) {
-        Window *stack = new Window[always_on_top_list->size() + ((win)? 1: 0)];
+        Window *stack = new Window[always_on_top_list->size() +
+                                  ((win)? 1: 0)];
 
         list<Window>::iterator it = always_on_top_list->begin();
         for (i = 0; it != always_on_top_list->end(); ++it) {

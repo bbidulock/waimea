@@ -88,7 +88,9 @@ public:
     void Gravitate(int);
     void ButtonPressed(int);
     void UpdateGrabs(void);
-    bool IncSizeCheck(int, int, int *, int *);    
+    bool IncSizeCheck(int, int, int *, int *);
+    void DrawTitlebar(void);
+    void DrawHandlebar(void);
     void FocusWin(void);
     void UnFocusWin(void);
     void Focus(bool);
@@ -232,8 +234,6 @@ private:
     void DrawOutline(int, int, int, int);
     void Resize(XEvent *, int);
     void ResizeOpaque(XEvent *, int);
-    void DrawTitlebar(void);
-    void DrawHandlebar(void);
     
     list <WaAction *> *GetActionList(list<WaActionExtList *> *);
     

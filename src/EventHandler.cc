@@ -260,8 +260,29 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
                 XUngrabServer(e->display);
             }
         }
-    } else if (e->atom == waimea->wascreen->net->xrootpmap_id)
+    }
+#ifdef XRENDER
+    else if (e->atom == waimea->wascreen->net->xrootpmap_id) {
         waimea->wascreen->net->GetXRootPMapId(waimea->wascreen);
+        waimea->wascreen->ic->setXRootPMapId(
+            (waimea->wascreen->xrootpmap_id)? true: false);
+
+        list<DockappHandler *>::iterator dock_it =
+            waimea->wascreen->docks->begin();
+        for (; dock_it != waimea->wascreen->docks->end(); ++dock_it)
+            (*dock_it)->Render();
+        list<WaWindow *>::iterator win_it = waimea->wawindow_list->begin();
+        for (; win_it != waimea->wawindow_list->end(); ++win_it) {
+            (*win_it)->DrawTitlebar();
+            (*win_it)->DrawHandlebar();
+        }
+        list<WaMenu *>::iterator menu_it = waimea->wamenu_list->begin();
+        for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {
+            if ((*menu_it)->mapped) (*menu_it)->Render();
+        }
+    }
+#endif // XRENDER
+    
 }
 
 /**
