@@ -24,6 +24,8 @@
 !
 ! == Normal Window ==
 !
+window.frame.1: Focus : EnterNotify
+!
 window.client.active.1:  ToggleShade                : KeyPress = F1 & Mod1Mask
 window.client.active.2:  ToggleMaximize             : KeyPress = F2 & Mod1Mask
 window.client.active.3:  Raise                      : KeyPress = F2 & Mod1Mask
@@ -86,11 +88,12 @@ menu.checkbox.4:  NextItem     : KeyPress = Down
 menu.checkbox.5:  PreviousItem : KeyPress = Up
 menu.checkbox.6:  UnmapSubs    : KeyPress = Left
 menu.checkbox.7:  UnmapFocused : KeyPress = Left
-menu.checkbox.8:  Exec         : KeyPress = Return
-menu.checkbox.9:  Func         : KeyPress = Return
-menu.checkbox.10: Exec         : KeyPress = space
-menu.checkbox.11: Func         : KeyPress = space
-menu.checkbox.12: UnmapTree    : KeyPress = Escape
+menu.checkbox.8:  UnmapTree    : KeyPress = Return
+menu.checkbox.9:  Exec         : KeyPress = Return
+menu.checkbox.10: Func         : KeyPress = Return
+menu.checkbox.11: Exec         : KeyPress = space
+menu.checkbox.12: Func         : KeyPress = space
+menu.checkbox.13: UnmapTree    : KeyPress = Escape
 !
 menu.sub.3:  NextItem        : KeyPress = Tab
 menu.sub.4:  NextItem        : KeyPress = Down

@@ -3,17 +3,17 @@
 !
 [start] (rootmenu)
   [title] (Root Menu)
-  [item] (Xterm)        {xterm}
+  [item]  (Xterm)     {xterm}
 
   [submenu] (Editors)
-    [item] (Emacs)     {emacs}
-    [item] (Vi)        {xterm -e vi}
+    [item] (Emacs) {emacs}
+    [item] (Vi)    {xterm -e vi}
   [end]
 
   [submenu] (Graphics)
-    [item]  (The Gimp) {gimp}
-    [item]  (Xpaint)   {xpaint}
-    [item]  (Xv)       {xv}
+    [item] (The Gimp) {gimp}
+    [item] (Xpaint)   {xpaint}
+    [item] (Xv)       {xv}
   [end]
 
   [submenu] (Multimedia)
@@ -23,18 +23,15 @@
   [end]
 
   [submenu] (Networking)
-    [item] (Netscape)  {netscape}
-    [item] (Mozilla)   {mozilla}
-    [item] (Licq)      {licq}
-    [item] (Ncftp)     {xterm -e ncftp} 
-    [item] (Telnet)    {xterm -e telnet}
+    [item] (Netscape) {netscape}
+    [item] (Mozilla)  {mozilla}
+    [item] (Licq)     {licq}
+    [item] (Ncftp)    {xterm -e ncftp} 
+    [item] (Telnet)   {xterm -e telnet}
   [end]
   
   [restart] (Restart)
-  ! Equivalent to [item] (Restart) "restart"
-  
   [exit]    (Exit)
-  ! equivalent to [item] (Exit) "exit"
 [end]
 
 !
@@ -51,8 +48,8 @@
   [checkbox=DECORHANDLE]    @FALSE (Handlebar)        "decorhandleon"    @TRUE (Handlebar)        "decorhandleoff"
   [checkbox=DECORBORDER]    @FALSE (Border)           "decorborderon"    @TRUE (Border)           "decorborderoff"
   [checkbox=DECORALL]       @FALSE (All Decorations)  "decorallon"       @TRUE (All Decorations)  "decoralloff"
-  [item]  (Raise)         "raise"
-  [item]  (Lower)         "lower"
-  [item]  (Kill Client)   "kill"
-  [item]  (Close)         "close"
+  [item]  (Raise)       "raise"
+  [item]  (Lower)       "lower"
+  [item]  (Kill Client) "kill"
+  [item]  (Close)       "close"
 [end]
