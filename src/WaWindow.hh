@@ -259,7 +259,6 @@ public:
     WaImageControl *ic;
     WaWindowAttributes attrib;    
     WaTexture *f_texture, *u_texture;
-    Pixmap f_pixmap, u_pixmap;
     bool pressed;
 
 #ifdef XRENDER

@@ -2580,7 +2580,6 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
     display = wa->display;
     ic = wascreen->ic;
 
-    f_pixmap = u_pixmap = None;
     pressed = false;
     int create_mask = CWOverrideRedirect | CWBorderPixel | CWEventMask |
         CWColormap;
@@ -2621,23 +2620,17 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
         case CButtonType:
         case IButtonType:
         case MButtonType:
-            f_pixmap = wascreen->fbutton;
-            u_pixmap = wascreen->ubutton;
             f_texture = &wascreen->wstyle.b_focus;
             u_texture = &wascreen->wstyle.b_unfocus;
             attrib_set.event_mask |= ExposureMask;
             break;
         case LGripType:
-            f_pixmap = wascreen->fgrip;
-            u_pixmap = wascreen->ugrip;
             f_texture = &wascreen->wstyle.g_focus;
             u_texture = &wascreen->wstyle.g_unfocus;
             create_mask |= CWCursor;
             attrib_set.cursor = wa->waimea->resizeleft_cursor;
             break;
         case RGripType:
-            f_pixmap = wascreen->fgrip;
-            u_pixmap = wascreen->ugrip;
             f_texture = &wascreen->wstyle.g_focus;
             u_texture = &wascreen->wstyle.g_unfocus;
             create_mask |= CWCursor;
@@ -2647,11 +2640,7 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
     id = XCreateWindow(display, parent, attrib.x, attrib.y,
                        attrib.width, attrib.height, 0, CopyFromParent,
                        CopyFromParent, CopyFromParent, create_mask,
-                       &attrib_set);
-    
-#ifdef XRENDER
-    pix_alloc_f = pix_alloc_u = false;
-#endif // XRENDER    
+                       &attrib_set);    
 
 #ifdef XFT
     if (type == LabelType)
@@ -2666,15 +2655,9 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
  * @fn    ~WaChildWindow()
  * @brief Destructor for WaChildWindow class
  *
- * Frees any allocated pixmaps, destroys the window and removes it from the
- * window_table hash_map.
+ * Destroys the window and removes it from the window_table hash_map.
  */
 WaChildWindow::~WaChildWindow(void) {
-
-#ifdef XRENDER    
-    if (pix_alloc_f) XFreePixmap(display, f_pixmap);
-    if (pix_alloc_u) XFreePixmap(display, u_pixmap);
-#endif // XRENDER
     
 #ifdef XFT
     if (type == LabelType) XftDrawDestroy(xftdraw);
@@ -2691,20 +2674,16 @@ WaChildWindow::~WaChildWindow(void) {
  * Renders WaChildWindow background pixmap for the current window state.
  */
 void WaChildWindow::Render(void) {
+    bool done = false;
     WaTexture *texture = (wa->has_focus)? f_texture: u_texture;
-    Pixmap *pixmap = (wa->has_focus)? &f_pixmap: &u_pixmap;
+    Pixmap pixmap;
 
 #ifdef XRENDER
     int pos_x = wa->attrib.x + attrib.x;
-    int pos_y = wa->attrib.y - wa->title_w - wa->border_w + attrib.y;        
+    int pos_y = wa->attrib.y - wa->title_w - wa->border_w + attrib.y;
     if (texture->getOpacity()) {
-        if (pix_alloc_f) XFreePixmap(display, f_pixmap);
-        if (pix_alloc_u) XFreePixmap(display, u_pixmap);
-        pix_alloc_f = pix_alloc_u = false;
-        *pixmap = XCreatePixmap(display, wascreen->id, attrib.width,
-                                attrib.height, wascreen->screen_depth);
-        if (wa->has_focus) pix_alloc_f = true;
-        else pix_alloc_u = true;
+        pixmap = XCreatePixmap(display, wascreen->id, attrib.width,
+                               attrib.height, wascreen->screen_depth);
     }
 #endif // XRENDER
     
@@ -2712,58 +2691,67 @@ void WaChildWindow::Render(void) {
         case CButtonType:
         case IButtonType:
         case MButtonType:
+            done = true;
 #ifdef XRENDER
             if (texture->getOpacity())
-                *pixmap = ic->xrender((pressed) ? wascreen->pbutton :
+                pixmap = ic->xrender((pressed) ? wascreen->pbutton :
                                       ((wa->has_focus)? wascreen->fbutton:
                                        wascreen->ubutton),
                                       attrib.width, attrib.height,
                                       texture, wascreen->xrootpmap_id, pos_x,
-                                      pos_y, *pixmap);
+                                      pos_y, pixmap);
             else
 #endif // XRENDER
-                *pixmap = (pressed)? wascreen->pbutton :
+                pixmap = (pressed)? wascreen->pbutton :
                     ((wa->has_focus)? wascreen->fbutton: wascreen->ubutton);
             break;
         case LGripType:
         case RGripType:
+            done = true;
 #ifdef XRENDER
             if (texture->getOpacity())
-                *pixmap = ic->xrender((wa->has_focus)? wascreen->fgrip:
+                pixmap = ic->xrender((wa->has_focus)? wascreen->fgrip:
                                       wascreen->ugrip,
                                       attrib.width, attrib.height,
                                       texture, wascreen->xrootpmap_id, pos_x,
-                                      pos_y, *pixmap);
+                                      pos_y, pixmap);
             else
 #endif // XRENDER
-                *pixmap = (wa->has_focus)? wascreen->fgrip: wascreen->ugrip;
+                pixmap = (wa->has_focus)? wascreen->fgrip: wascreen->ugrip;
             break;
             
     }
-    if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
-        *pixmap = None;
+    if (! done) {
+        if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
+            pixmap = None;
 #ifdef XRENDER
-        if (texture->getOpacity())
-            *pixmap = ic->xrender(None, attrib.width, attrib.height,
-                                  texture, wascreen->xrootpmap_id, pos_x,
-                                  pos_y, *pixmap);
+            if (texture->getOpacity())
+                pixmap = ic->xrender(None, attrib.width, attrib.height,
+                                      texture, wascreen->xrootpmap_id, pos_x,
+                                      pos_y, pixmap);
 #endif // XRENDER
-        
-    } else
-        *pixmap = ic->renderImage(attrib.width,
-                                  attrib.height, texture
-                                  
+            
+        } else
+            pixmap = ic->renderImage(attrib.width,
+                                      attrib.height, texture
+                                      
 #ifdef XRENDER
-                                  , wascreen->xrootpmap_id, pos_x, pos_y,
-                                  *pixmap
+                                      , wascreen->xrootpmap_id, pos_x, pos_y,
+                                      pixmap
 #endif // XRENDER                                 
-                                  
-                                  );
+                                      
+                                      );
+    }
 
-    if (*pixmap)
-        XSetWindowBackgroundPixmap(display, id, *pixmap);
+    if (pixmap)
+        XSetWindowBackgroundPixmap(display, id, pixmap);
     else
         XSetWindowBackground(display, id, texture->getColor()->getPixel());
+
+#ifdef XRENDER
+    if (texture->getOpacity()) XFreePixmap(display, pixmap);
+#endif // XRENDER
+            
 }
 
 /**
