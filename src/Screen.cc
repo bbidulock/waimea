@@ -213,7 +213,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     for (i = 0; i < (int) nchild; ++i) {
         bool status = false;
         XGrabServer(display);
-        if (validateclient(id)) {
+        if (validatedrawable(id)) {
             XGetWindowAttributes(display, children[i], &attr);
             status = true;
         }
@@ -222,7 +222,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
             (attr.map_state == IsViewable)) {
             XWMHints *wm_hints = NULL;
             XGrabServer(display);
-            if (validateclient(id)) {
+            if (validatedrawable(id)) {
                 wm_hints = XGetWMHints(display, children[i]);
             }
             XUngrabServer(display);
@@ -423,7 +423,7 @@ void WaScreen::WaRaiseWindow(Window win) {
     } else
         if (win) {
             XGrabServer(display);
-            if (validateclient(win))
+            if (validatedrawable(win))
                 XRaiseWindow(display, win);
             XUngrabServer(display);
         }
@@ -882,20 +882,24 @@ void WaScreen::UpdateWorkarea(void) {
     current_desktop->workarea.x = current_desktop->workarea.y = 0;
     current_desktop->workarea.width = width;
     current_desktop->workarea.height = height;
+
     list<WMstrut *>::iterator it = strut_list.begin();
     for (; it != strut_list.end(); ++it) {
         WindowObject *wo = waimea->FindWin((*it)->window,
                                            WindowType | DockHandlerType);
-        if (wo && wo->type == WindowType) {
-            if (! (((WaWindow *) wo)->desktop_mask &
-                   (1L << current_desktop->number)))
-                break;
-        } else if (wo && wo->type == DockHandlerType) {
-            if (! (((DockappHandler *) wo)->style->desktop_mask &
-                   (1L << current_desktop->number)))
-                break;
-        }
-            
+        if (wo) {
+            if (wo->type == WindowType) {
+                if (! (((WaWindow *) wo)->desktop_mask &
+                       (1L << current_desktop->number)))
+                    continue;
+            } else if (wo->type == DockHandlerType) {
+                if (! (((DockappHandler *) wo)->style->desktop_mask &
+                       (1L << current_desktop->number)))
+                    continue;
+            }
+        } else
+            continue;
+        
         if ((*it)->left > current_desktop->workarea.x)
             current_desktop->workarea.x = (*it)->left;
         if ((*it)->top > current_desktop->workarea.y)

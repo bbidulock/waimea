@@ -188,7 +188,7 @@ public:
     
 };
 
-bool validateclient(Window);
+bool validatedrawable(Drawable, unsigned int * = NULL, unsigned int * = NULL);
 const bool validateclient_mapped(Window);
 void wawarning(char *, ...);
 void waerror(char *, ...);

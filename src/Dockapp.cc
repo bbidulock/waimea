@@ -198,7 +198,7 @@ void DockappHandler::Update(void) {
     it = dockapp_list->begin();
     XGrabServer(display);
     for (; it != dockapp_list->end(); ++it) {
-        if (validateclient((*it)->id)) {
+        if (validatedrawable((*it)->id)) {
             switch (style->direction) {
                 case VerticalDock:
                     dock_y = height;
@@ -355,7 +355,7 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
         id = client_id;
     }    
     XGrabServer(display);
-    if (validateclient(id)) {
+    if (validatedrawable(id)) {
         if (XGetWindowAttributes(display, id, &attrib)) {
             width = attrib.width;
             height = attrib.height;
@@ -389,7 +389,7 @@ Dockapp::~Dockapp(void) {
     dh->waimea->window_table.erase(id);
     if (! deleted) {
         XGrabServer(display);
-        if (validateclient(id)) {
+        if (validatedrawable(id)) {
             if (icon_id) XUnmapWindow(display, id);
             XReparentWindow(display, id, dh->wascreen->id,
                             dh->map_x + x, dh->map_y + y);

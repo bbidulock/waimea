@@ -152,15 +152,16 @@ menu.sub {
 
 n/^desktop_window$/.passiveclient {
    MenuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
+   StartViewportMove    : ButtonPress = Button2 & !Control_L,
    *MenuUnmap(rootmenu) : ButtonPress = Button1,
    Focus                : ButtonPress = Button1,
-   StartViewportMove    : ButtonPress = Button2,
    EndMoveResize        : ButtonRelease = Button2 & MoveResizeMask
 }
 
 n/^desktop_window$/.activeclient {
    globalKeyBindings,
    MenuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
+   StartViewportMove    : ButtonPress = Button2 & !Control_L,
    *MenuUnmap(rootmenu) : ButtonPress = Button1
 }
 
@@ -177,6 +178,23 @@ n/^panel_window$/.activeclient {
 }
 
 n/^panel_window$/.frame {}
+
+n/^KDE Desktop$/.passiveclient {
+   MenuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
+   StartViewportMove    : ButtonPress = Button2 & !Control_L,
+   *MenuUnmap(rootmenu) : ButtonPress = Button1,
+   Focus                : ButtonPress = Button1,
+   EndMoveResize        : ButtonRelease = Button2 & MoveResizeMask
+}
+
+n/^KDE Desktop$/.activeclient {
+   globalKeyBindings,
+   MenuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
+   StartViewportMove    : ButtonPress = Button2 & !Control_L,
+   *MenuUnmap(rootmenu) : ButtonPress = Button1
+}
+
+n/^KDE Desktop$/.frame {}
 
 n/^kicker$/.passiveclient {
    *Focus : ButtonPress = Button1

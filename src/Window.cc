@@ -57,7 +57,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     name = __m_wastrdup("");
 
     XGrabServer(display);
-    if (validateclient(id))
+    if (validatedrawable(id))
         XGetWindowAttributes(display, id, &init_attrib);
     else deleted = true;
     XUngrabServer(display);
@@ -203,7 +203,7 @@ WaWindow::~WaWindow(void) {
     }
     
     XGrabServer(display);
-    if (validateclient(id) && validateclient_mapped(id)) {
+    if (validatedrawable(id) && validateclient_mapped(id)) {
         XRemoveFromSaveSet(display, id);
         Gravitate(RemoveGravity);
         if (flags.shaded) attrib.height = restore_shade;
@@ -395,7 +395,7 @@ void WaWindow::InitPosition(void) {
  */
 void WaWindow::MapWindow(void) {
     XGrabServer(display);
-    if (validateclient(id)) {
+    if (validatedrawable(id)) {
         XMapWindow(display, id);
         RedrawWindow();
     } else DELETED;
@@ -549,7 +549,7 @@ void WaWindow::UpdateAllAttributes(void) {
     }
 
     XGrabServer(display);
-    if (validateclient(id)) {
+    if (validatedrawable(id)) {
         if (flags.title) XMoveWindow(display, id, 0, title_w + border_w);
         else XMoveWindow(display, id, 0, title_w);
     } else DELETED;
@@ -713,7 +713,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
             wascreen->UpdateCheckboxes(MaxCBoxType);
         }
         XGrabServer(display);
-        if (validateclient(id)) {    
+        if (validatedrawable(id)) {    
             if (flags.shaded)
                 XResizeWindow(display, id, attrib.width, restore_shade);
             else
@@ -756,7 +756,7 @@ void WaWindow::ReparentWin(void) {
     XSetWindowAttributes attrib_set;
     
     XGrabServer(display);
-    if (validateclient(id)) {
+    if (validatedrawable(id)) {
         XSelectInput(display, id, NoEventMask);
         XSetWindowBorderWidth(display, id, 0);
         XReparentWindow(display, id, frame->id, 0, title_w + border_w);
@@ -830,7 +830,7 @@ void WaWindow::Shape(void) {
         
     if (shaped) {
         XGrabServer(display);
-        if (validateclient(id)) {
+        if (validatedrawable(id)) {
             XShapeCombineShape(display, frame->id, ShapeBounding,
                                border_w, title_w + border_w, id,
                                ShapeBounding, ShapeSet);
@@ -885,10 +885,10 @@ void WaWindow::SendConfig(void) {
         ce.height = attrib.height;
 
     XGrabServer(display);
-    if (validateclient(id)) { 
-        XSendEvent(display, id, true, NoEventMask, (XEvent *)&ce);
-        XSendEvent(display, wascreen->id, false,
-                   StructureNotifyMask, (XEvent *)&ce);
+    if (validatedrawable(id)) {
+        XSendEvent(display, id, false, StructureNotifyMask, (XEvent *) &ce);
+        XSendEvent(display, wascreen->id, false, StructureNotifyMask,
+                   (XEvent *) &ce);
     }
     else DELETED;
     XUngrabServer(display);
@@ -1343,7 +1343,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
     }
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
-    if (validateclient(id)) {
+    if (validatedrawable(id)) {
         if (XGrabPointer(display, (mapped && !hidden) ? id: wascreen->id, true,
                          ButtonReleaseMask | ButtonPressMask |
                          PointerMotionMask | EnterWindowMask |
@@ -1491,7 +1491,7 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
     dontsend = true;
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
-    if (validateclient(id)) {
+    if (validatedrawable(id)) {
         if (XGrabPointer(display, (mapped && !hidden) ? id: wascreen->id, true,
                          ButtonReleaseMask | ButtonPressMask |
                          PointerMotionMask | EnterWindowMask |
@@ -1647,7 +1647,7 @@ void WaWindow::Resize(XEvent *e, int how) {
     }    
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
-    if (validateclient(id)) {
+    if (validatedrawable(id)) {
         if (XGrabPointer(display, (mapped && !hidden) ? id: wascreen->id, true,
                          ButtonReleaseMask | ButtonPressMask |
                          PointerMotionMask | EnterWindowMask |
@@ -1820,7 +1820,7 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
     
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
-    if (validateclient(id)) {
+    if (validatedrawable(id)) {
         if (XGrabPointer(display, (mapped && !hidden) ? id: wascreen->id, true,
                          ButtonReleaseMask | ButtonPressMask |
                          PointerMotionMask | EnterWindowMask |
@@ -2080,7 +2080,7 @@ void WaWindow::Close(XEvent *, WaAction *) {
     ev.xclient.data.l[1] = CurrentTime;
 
     XGrabServer(display);
-    if (validateclient(id))
+    if (validatedrawable(id))
         XSendEvent(display, id, false, NoEventMask, &ev);
     else DELETED;
     XUngrabServer(display);
@@ -2096,7 +2096,7 @@ void WaWindow::Close(XEvent *, WaAction *) {
  */
 void WaWindow::Kill(XEvent *, WaAction *) {
     XGrabServer(display);
-    if (validateclient(id))
+    if (validatedrawable(id))
         XKillClient(display, id);
     else DELETED;
     XUngrabServer(display);
@@ -2119,7 +2119,7 @@ void WaWindow::CloseKill(XEvent *e, WaAction *ac) {
     Atom del_atom = XInternAtom(display, "WM_DELETE_WINDOW", false);
 
     XGrabServer(display);
-    if (validateclient(id)) {
+    if (validatedrawable(id)) {
         if (XGetWMProtocols(display, id, &protocols, &n)) {
             for (i = 0; i < n; i++) if (protocols[i] == del_atom) close = true;
             XFree(protocols);

@@ -1010,7 +1010,7 @@ void WaMenuItem::Draw(Drawable drawable, bool frame, int y) {
     int org_y = y;
 
 #ifdef RENDER
-    if (menu->render_if_opacity && ! texture->getOpacity()) return;
+    if (menu->render_if_opacity && !texture->getOpacity() && !frame) return;
 #endif // RENDER
         
     WaFont *wafont = (hilited && !frame)? &menu->wascreen->mstyle.wa_fh_font:

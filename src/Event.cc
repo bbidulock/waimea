@@ -444,14 +444,14 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
             XGrabServer(e->display);
             if (e->value_mask & CWWidth) da->width = e->width; 
             if (e->value_mask & CWHeight) da->height = e->height; 
-            if (validateclient(da->id))
+            if (validatedrawable(da->id))
                 XConfigureWindow(e->display, da->id, e->value_mask, &wc);
             XUngrabServer(e->display);
             da->dh->Update();
         }
     }
     XGrabServer(e->display);
-    if (validateclient(e->window))
+    if (validatedrawable(e->window))
         XConfigureWindow(e->display, e->window, e->value_mask, &wc);
     XUngrabServer(e->display);
 }

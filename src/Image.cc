@@ -2521,11 +2521,31 @@ Pixmap WaImageControl::xrender(Pixmap p, unsigned int width,
         return p;
 
     XSync(wascreen->display, false);
-    
-    GC gc = DefaultGC(display, screen_number);
-    XCopyArea(display, parent, dest, gc, src_x, src_y, width,
-              height,  0, 0);
 
+    GC gc;
+    unsigned int w, h;
+    if (! validatedrawable(parent, &w, &h)) {
+        setXRootPMapId(false);
+        gc = DefaultGC(display, screen_number);
+        XCopyArea(display, p, dest, gc, 0, 0, width, height, 0, 0);
+        XSync(wascreen->display, false);
+        XSync(wascreen->pdisplay, false);
+        return p;
+    }
+
+    if (w < wascreen->width || h < wascreen->height) {
+        gc = XCreateGC(display, wascreen->id, 0, NULL);
+        XSetTile(display, gc, parent);
+        XSetTSOrigin(display, gc, w - (src_x % w), h - (src_y % h));
+        XSetFillStyle(display, gc, FillTiled);
+        XFillRectangle(display, dest, gc, 0, 0, width, height);
+        XFreeGC(display, gc);
+    } else {
+        gc = DefaultGC(display, screen_number);
+        XCopyArea(display, parent, dest, gc, src_x, src_y, width,
+                  height, 0, 0);
+    }
+    
     if (texture->getOpacity() == 255) {
         XSync(wascreen->display, false);
         XSync(wascreen->pdisplay, false);

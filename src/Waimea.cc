@@ -198,24 +198,31 @@ WindowObject *Waimea::FindWin(Window id, int mask) {
 
 
 /**
- * @fn    validateclient(Window id)
- * @brief Validates if a window exists
+ * @fn    validatedrawable(Drawable d, unsigned int *w, unsigned int *h)
+ * @brief Validates if a drawable exists
  *
- * Tries to get current window attribute for the window. The window is valid
+ * Tries to get geometry for the drawable. The drawable is valid
  * if no XError is generated.
  *
- * @param id Resource ID used for window validation
+ * @param d Resource ID used for drawable validation
+ * @param w Return the drawable's width
+ * @param h Return the drawable's height
  *
- * @return True if window is valid, otherwise false
+ * @return True if drawable is valid, otherwise false
  */
-bool validateclient(Window id) {
-    int ret;
-    XWindowAttributes attr;
+bool validatedrawable(Drawable d, unsigned int *w, unsigned int *h) {
+    int ret, _d;
+    unsigned int _ud;
+    Window _wd;
     
     XSync(waimea->display, false);
     errors = 0;
     hush = 1;
-    XGetWindowAttributes(waimea->display, id, &attr);
+    if (w == NULL)
+        XGetGeometry(waimea->display, d, &_wd, &_d, &_d, &_ud, &_ud, &_ud,
+                     &_ud);
+    else
+        XGetGeometry(waimea->display, d, &_wd, &_d, &_d, w, h, &_ud, &_ud);
     XSync(waimea->display, false);
     hush = 0;
     ret = ( errors == 0 );
@@ -240,7 +247,7 @@ const bool validateclient_mapped(Window id) {
     XFlush(waimea->display);
     
     XEvent e;
-    if (validateclient(id)) {
+    if (validatedrawable((Drawable) id)) {
         if (XCheckTypedWindowEvent(waimea->display, id, UnmapNotify, &e)) {
             XPutBackEvent(waimea->display, &e);
             return false;
