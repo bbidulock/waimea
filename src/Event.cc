@@ -574,10 +574,11 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                 ww->label->Draw();
         }
     }
-    else if (e->xclient.message_type == waimea->net->net_state) {
+    else if (e->xclient.message_type == waimea->net->net_wm_desktop) {
         if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
                                                WindowType))) {
-            if ((unsigned int) e->xclient.data.l[0] == 0xffffffff) {
+            if ((unsigned int) e->xclient.data.l[0] == 0xffffffff ||
+                (unsigned int) e->xclient.data.l[0] == 0xfffffffe) {
                 ww->desktop_mask = (1L << 16) - 1;
                 ww->Show();
                 ww->net->SetDesktop(ww);
@@ -585,11 +586,29 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
             }
             else if ((unsigned int) e->xclient.data.l[0] <
                 ww->wascreen->config.desktops) {
-                ww->desktop_mask |=
+                ww->desktop_mask =
                     (1L << (unsigned int) e->xclient.data.l[0]);
                 if (ww->desktop_mask &
                     (1L << ww->wascreen->current_desktop->number))
                     ww->Show();
+                else
+                    ww->Hide();
+                ww->net->SetDesktop(ww);
+                ww->net->SetDesktopMask(ww);
+            }
+        }
+    }
+    else if (e->xclient.message_type == waimea->net->net_wm_desktop_mask) {
+        if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
+                                               WindowType))) {
+            if ((unsigned int) e->xclient.data.l[0] <
+                ((1L << ww->wascreen->config.desktops) - 1)) {
+                ww->desktop_mask = e->xclient.data.l[0];
+                if (ww->desktop_mask &
+                    (1L << ww->wascreen->current_desktop->number))
+                    ww->Show();
+                else
+                    ww->Hide();
                 ww->net->SetDesktop(ww);
                 ww->net->SetDesktopMask(ww);
             }
