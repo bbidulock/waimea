@@ -217,7 +217,13 @@ void DockappHandler::Update(void) {
             wm_strut->top = map_y + wascreen->wstyle.border_width * 2 + height;
             wm_strut->right = wm_strut->left = 0;
         }
-    
+
+    if (style->centered) {
+        switch (style->direction) {
+            case VerticalDock: map_y = wascreen->height / 2 - height / 2; break;
+            case HorizontalDock: map_x = wascreen->width / 2 - width / 2; break;
+        }
+    }
     XMoveWindow(display, id, map_x, map_y);
     XMapWindow(display, id);
     wascreen->UpdateWorkarea();
