@@ -91,6 +91,8 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_RESTART", false);
     net_shutdown =
         XInternAtom(display, "_NET_SHUTDOWN", false);
+    net_wm_pid =
+        XInternAtom(display, "_NET_WM_PID", false);
 
 #ifdef XRENDER
     xrootpmap_id =
@@ -129,12 +131,43 @@ NetHandler::~NetHandler(void) {
  * @param ww WaWindow object
  */
 void NetHandler::GetWMHints(WaWindow *ww) {
+    XTextProperty text_prop;
+    char **list, *tmp_name;
+    int num, status;
+    
     ww->state = NormalState;
     XGrabServer(display);
-    if (validateclient(ww->id))
+    if (validateclient(ww->id)) {
+        if (XFetchName(ww->display, ww->id, &tmp_name)) {
+            ww->name = wastrdup(tmp_name);
+            XFree(tmp_name);
+        } else
+            ww->name = wastrdup("");
         if ((wm_hints = XGetWMHints(display, ww->id)))
             if (wm_hints->flags & StateHint)
                 ww->state = wm_hints->initial_state;
+        ww->classhint = XAllocClassHint();
+        XGetClassHint(ww->display, ww->id, ww->classhint);
+        if (XGetWMClientMachine(ww->display, ww->id, &text_prop)) {
+            if (XTextPropertyToStringList(&text_prop, &list, &num)) {
+                XFree(text_prop.value);
+                ww->host = wastrdup(*list);
+                XFreeStringList(list);
+            }
+        }
+        num = 0;
+        if (XGetCommand(ww->display, ww->id, &list, &num)) {
+            int len = 0;
+            int i;
+            for (i = 0; i < num; i++)
+                len += strlen(list[i]) + 3;
+            ww->cmd = new char[len + 1];
+            ww->cmd[0] = '\0';
+            for (i = 0; i < num; i++)
+                sprintf(ww->cmd, "%s \"%s\"", ww->cmd, list[i]);
+            XFreeStringList(list);
+        }
+    }
     XUngrabServer(display);
 }
 
@@ -740,6 +773,30 @@ void NetHandler::GetWmStrut(WaWindow *ww) {
             ww->wascreen->strut_list->push_back(wm_strut);
             ww->wascreen->UpdateWorkarea();
         }
+        XFree(data);
+    }
+}
+
+/**
+ * @fn    GetWmPid(WaWindow *ww)
+ * @brief Reads _NET_WM_PID hint
+ *
+ * Reads windows _NET_WM_PID hint and stores it in WaWindows pid variable.
+ *
+ * @param ww WaWindow object
+ */
+void NetHandler::GetWmPid(WaWindow *ww) {
+    char tmp[32];
+    CARD32 *data;
+    
+    if (XGetWindowProperty(ww->display, ww->id, net_wm_pid, 0L, 1L, 
+                           false, XA_CARDINAL, &real_type,
+                           &real_format, &items_read, &items_left, 
+                           (unsigned char **) &data) == Success && 
+        items_read) {
+        sprintf(tmp, "%d" , *data);
+        ww->pid = new char[strlen(tmp) + 1];
+        sprintf(ww->pid, "%s" , tmp);
         XFree(data);
     }
 }

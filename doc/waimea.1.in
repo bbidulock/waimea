@@ -1679,16 +1679,47 @@ the contains of another file. e.g.:
 .fi
 
 
-.B Environment Variables
+.B Environment Variables And Window Info Expansion
 .br
-Menu item titles and include filenames can contain environment 
-variables. e.g.:
+Menu item titles include filenames and submenu references can 
+contain environment variables. e.g.:
 .nf
 [item] (Logout $USER) "exit"
 .fi
-$USER will be replaced with USER environment variable. All special 
-characters need to be escaped (with a `\\') to protect them from 
-expansion. Special characters are:
+$USER will be replaced with USER environment variable. 
+.PP
+Menu mapped by event occuring on a window.* window can contain
+special window info character sequences. These character sequences
+are expanded with the current window info when menu is mapped. e.g.:
+.nf
+
+[item] (win name: \\n)
+
+.fi
+Will be expanded to:
+.nf
+
+[item] (win name: windowname)
+
+.fi
+Where windowname is the actual class name of the window.
+.br
+These are the character sequences that
+.I waimea recognizes:
+.nf
+
+"\\l" Window class
+"\\n" Window class name
+"\\h" Host name for window owner
+"\\c" Command line that started window owner
+"\\p" PID of window owner
+
+.fi
+If some window info isn't known for a window, the character sequence
+used for expanding this info will be replaced with an empty string.
+.PP
+All special characters need to be escaped (with a `\\') to protect 
+them from expansion. Special characters are:
 .nf
 ( ) { } < > [ ] " $ 
 

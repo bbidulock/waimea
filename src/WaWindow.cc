@@ -40,7 +40,6 @@
 WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     WindowObject(win_id, WindowType) {
     XWindowAttributes init_attrib;
-    char *tmp_name;
 
     id = win_id;
     wascreen = scrn;
@@ -51,11 +50,6 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     net = waimea->net;
     wm_strut = NULL;
     move_resize = false;
-
-    if (XFetchName(display, id, &tmp_name)) {
-        name = wastrdup(tmp_name);
-        XFree(tmp_name);
-    } else name = wastrdup("");
     
     XGetWindowAttributes(display, id, &init_attrib);
     attrib.colormap = init_attrib.colormap;
@@ -79,18 +73,20 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     frameacts = awinacts = pwinacts = titleacts = labelacts = handleacts =
         lgacts = rgacts = NULL;
     transient_for = (Window) 0;
+    cmd = host = pid = NULL;
     
     int i;
     bacts = new list<WaAction *>*[wascreen->wstyle.b_num];
     for (i = 0; i < wascreen->wstyle.b_num; i++)
         bacts[i] = NULL;
 
-    SetActionLists();
-    
     net->GetWMHints(this);
     net->GetMWMHints(this);
     net->GetWMNormalHints(this);
     net->GetVirtualPos(this);
+    net->GetWmPid(this);
+    
+    SetActionLists();
     
     CreateOutlineWindows();
     
@@ -193,7 +189,6 @@ WaWindow::~WaWindow(void) {
 
         XReparentWindow(display, id, wascreen->id, attrib.x, attrib.y);
     }
-    XSync(display, false);
     XUngrabServer(display);     
 
     list<WaChildWindow *>::iterator bit = buttons.begin();
@@ -206,6 +201,8 @@ WaWindow::~WaWindow(void) {
     delete label;
     delete title;
     delete frame;
+
+    XSync(display, false);
     
     waimea->always_on_top_list->remove(o_west);
     waimea->always_on_top_list->remove(o_east);
@@ -215,7 +212,13 @@ WaWindow::~WaWindow(void) {
     XDestroyWindow(display, o_east);
     XDestroyWindow(display, o_north);
     XDestroyWindow(display, o_south);
+    
     delete [] name;
+    if (cmd) delete [] cmd;
+    if (host) delete [] host;
+    if (pid) delete [] pid;
+    if (classhint->res_name) XFree(classhint->res_name);
+    if (classhint->res_class) XFree(classhint->res_class);
 
     waimea->wawindow_list->remove(this);
     waimea->wawindow_list_map_order->remove(this);
@@ -242,19 +245,14 @@ WaWindow::~WaWindow(void) {
  * @param e List with WaActionExtLists to try to match with
  */
 list <WaAction *> *WaWindow::GetActionList(list<WaActionExtList *> *e) {
-    XClassHint *c_hint;
-    
-    c_hint = XAllocClassHint();
     list<WaActionExtList *>::iterator it;
-    if (XGetClassHint(display, id, c_hint)) {
-        for (it = e->begin(); it != e->end(); ++it) {
-            if ((*it)->name && ! strcmp(c_hint->res_name, (*it)->name))
-                return &((*it)->list);
-            else if ((*it)->cl && ! strcmp(c_hint->res_class, (*it)->cl))
-                return &((*it)->list);
-            else if ((*it)->title && ! strcmp(name, (*it)->title))
-                return &((*it)->list);
-        }
+    for (it = e->begin(); it != e->end(); ++it) {
+        if ((*it)->name && ! strcmp(classhint->res_name, (*it)->name))
+            return &((*it)->list);
+        else if ((*it)->cl && ! strcmp(classhint->res_class, (*it)->cl))
+            return &((*it)->list);
+        else if ((*it)->title && ! strcmp(name, (*it)->title))
+            return &((*it)->list);
     }
     return NULL;
 }
@@ -1910,7 +1908,7 @@ void WaWindow::CloseKill(XEvent *e, WaAction *ac) {
  */
 void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
     Window w;
-    int i, rx, ry;
+    int i, rx, ry, mx, my, diff, exp;
     unsigned int ui;
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
@@ -1921,8 +1919,22 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
         if (menu->tasksw) waimea->taskswitch->Build(wascreen);
         menu->wf = id;
         menu->ftype = MenuWFuncMask;
-        menu->Map(rx - (menu->width / 2),
-                  ry - (menu->item_list->front()->height / 2));
+        list<WaMenuItem *>::iterator it = menu->item_list->begin();
+        for (exp = 0; it != menu->item_list->end(); ++it)
+            exp += (*it)->ExpandAll(this);
+        if (exp) menu->Build(wascreen);
+        mx = rx - (menu->width / 2);
+        my = ry - (menu->item_list->front()->height / 2);
+        diff = (my + menu->height + wascreen->mstyle.border_width * 2) -
+            wascreen->height;
+        if (diff > 0) my -= diff;
+        if (my < 0) my = 0;
+        if ((mx + menu->width + wascreen->mstyle.border_width * 2) >
+            wascreen->width)
+            mx = wascreen->width - menu->width -
+                wascreen->mstyle.border_width * 2;
+        if (mx < 0) mx = 0;
+        menu->Map(mx, my);
         if (focus) menu->FocusFirst();
     }
 }
@@ -1940,7 +1952,7 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
  */
 void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     Window w;
-    int i, rx, ry;
+    int i, rx, ry, mx, my, diff, exp;
     unsigned int ui;
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
@@ -1955,8 +1967,24 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
         if (menu->tasksw) waimea->taskswitch->Build(wascreen);
         menu->wf = id;
         menu->ftype = MenuWFuncMask;
-        menu->ReMap(rx - (menu->width / 2),
-                    ry - (menu->item_list->front()->height / 2));
+        list<WaMenuItem *>::iterator it = menu->item_list->begin();
+        for (exp = 0; it != menu->item_list->end(); ++it)
+            exp += (*it)->ExpandAll(this);
+        if (exp) menu->Build(wascreen);
+        mx = rx - (menu->width / 2);
+        my = ry - (menu->item_list->front()->height / 2);
+        diff = (my + menu->height + wascreen->mstyle.border_width * 2) -
+            wascreen->height;
+        if (diff > 0) my -= diff;
+        if (my < 0) my = 0;
+        if ((mx + menu->width + wascreen->mstyle.border_width * 2) >
+            wascreen->width)
+            mx = wascreen->width - menu->width -
+                wascreen->mstyle.border_width * 2;
+        if (mx < 0) mx = 0;
+        menu->ignore = true;
+        menu->ReMap(mx, my);
+        menu->ignore = false;
         if (focus) menu->FocusFirst();
     }
 }
@@ -2406,8 +2434,9 @@ void WaWindow::DecorBorderToggle(XEvent *e, WaAction *ac) {
 void WaWindow::AlwaysontopOn(XEvent *, WaAction *) {
     flags.alwaysontop = true;
     flags.alwaysatbottom = false;
-    waimea->always_at_bottom_list->remove(frame->id);
-    waimea->always_on_top_list->push_back(frame->id);
+    waimea->wawindow_list_stacking->remove(this);
+    waimea->wawindow_list_stacking_aab->remove(this);
+    waimea->wawindow_list_stacking_aot->push_back(this);
     waimea->WaRaiseWindow(0);
     net->SetWmState(this);
     if (title_w) {
@@ -2419,9 +2448,6 @@ void WaWindow::AlwaysontopOn(XEvent *, WaAction *) {
     }
     waimea->UpdateCheckboxes(AOTCBoxType);
     waimea->UpdateCheckboxes(AABCBoxType);
-    waimea->wawindow_list_stacking->remove(this);
-    waimea->wawindow_list_stacking_aab->remove(this);
-    waimea->wawindow_list_stacking_aot->push_back(this);
     net->SetClientListStacking(wascreen);
 }
 
@@ -2435,8 +2461,9 @@ void WaWindow::AlwaysontopOn(XEvent *, WaAction *) {
 void WaWindow::AlwaysatbottomOn(XEvent *, WaAction *) {
     flags.alwaysontop = false;
     flags.alwaysatbottom = true;
-    waimea->always_on_top_list->remove(frame->id);
-    waimea->always_at_bottom_list->push_back(frame->id);
+    waimea->wawindow_list_stacking->remove(this);
+    waimea->wawindow_list_stacking_aot->remove(this);
+    waimea->wawindow_list_stacking_aab->push_back(this);
     waimea->WaLowerWindow(0);
     net->SetWmState(this);
     if (title_w) {
@@ -2448,9 +2475,6 @@ void WaWindow::AlwaysatbottomOn(XEvent *, WaAction *) {
     }
     waimea->UpdateCheckboxes(AOTCBoxType);
     waimea->UpdateCheckboxes(AABCBoxType);
-    waimea->wawindow_list_stacking->remove(this);
-    waimea->wawindow_list_stacking_aot->remove(this);
-    waimea->wawindow_list_stacking_aab->push_back(this);
     net->SetClientListStacking(wascreen);
 }
 
@@ -2462,7 +2486,8 @@ void WaWindow::AlwaysatbottomOn(XEvent *, WaAction *) {
  */
 void WaWindow::AlwaysontopOff(XEvent *, WaAction *) {
     flags.alwaysontop = false;
-    waimea->always_on_top_list->remove(frame->id);
+    waimea->wawindow_list_stacking_aot->remove(this);
+    waimea->wawindow_list_stacking->push_front(this);
     waimea->WaRaiseWindow(0);
     net->SetWmState(this);
     if (title_w) {
@@ -2472,8 +2497,6 @@ void WaWindow::AlwaysontopOff(XEvent *, WaAction *) {
                 (*bit)->Render();
     }
     waimea->UpdateCheckboxes(AOTCBoxType);
-    waimea->wawindow_list_stacking_aot->remove(this);
-    waimea->wawindow_list_stacking->push_front(this);
     net->SetClientListStacking(wascreen);
 }
 
@@ -2485,7 +2508,8 @@ void WaWindow::AlwaysontopOff(XEvent *, WaAction *) {
  */
 void WaWindow::AlwaysatbottomOff(XEvent *, WaAction *) {
     flags.alwaysatbottom = false;
-    waimea->always_at_bottom_list->remove(frame->id);
+    waimea->wawindow_list_stacking_aab->remove(this);
+    waimea->wawindow_list_stacking->push_back(this);
     waimea->WaLowerWindow(0);
     net->SetWmState(this);
     if (title_w) {
@@ -2495,8 +2519,6 @@ void WaWindow::AlwaysatbottomOff(XEvent *, WaAction *) {
                 (*bit)->Render();
     }
     waimea->UpdateCheckboxes(AABCBoxType);
-    waimea->wawindow_list_stacking_aab->remove(this);
-    waimea->wawindow_list_stacking->push_back(this);
     net->SetClientListStacking(wascreen);
 }
 

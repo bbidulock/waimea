@@ -164,6 +164,8 @@ public:
     list<WaWindow *> *wawindow_list_stacking_aot;
     list<WaWindow *> *wawindow_list_stacking_aab;
     list<WaMenu *> *wamenu_list;
+    list<WaMenu *> *wamenu_list_stacking_aot;
+    list<WaMenu *> *wamenu_list_stacking_aab;
 };
 
 bool validateclient(Window);
@@ -178,5 +180,6 @@ char *wastrdup(char *);
 void restart(char *);
 void quit(int);
 char **commandline_to_argv(char *, char **);
+char *expand(char *, WaWindow *);
 
 #endif // __Waimea_hh

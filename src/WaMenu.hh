@@ -175,6 +175,7 @@ public:
     
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);
     void UpdateCBox(void);
+    int ExpandAll(WaWindow *);
     
     int func_mask, func_mask1, func_mask2, height, width, dy, realheight,
                            cb, cb_y, cb_width, cb_width1, cb_width2;
@@ -182,6 +183,7 @@ public:
     char *label, *exec, *param, *sub;
     char *label1, *exec1, *param1, *sub1;
     char *label2, *exec2, *param2, *sub2;
+    char *e_label, *e_label1, *e_label2, *e_sub, *e_sub1, *e_sub2;
     char *cbox;
     WwActionFn wfunc, wfunc1, wfunc2;
     MenuActionFn mfunc, mfunc1, mfunc2;

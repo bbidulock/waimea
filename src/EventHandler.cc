@@ -131,6 +131,7 @@ void EventHandler::HandleEvent(XEvent *event) {
         case UnmapNotify:
             if(event->xunmap.event != event->xunmap.window) return;
         case DestroyNotify:
+        case ReparentNotify:
             EvUnmapDestroy(event); break;
         case FocusOut:
         case FocusIn:
@@ -494,14 +495,15 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
 
 /**
  * @fn    EvUnmapDestroy(XEvent *e)
- * @brief UnmapEvent and DestroyEvent handler
+ * @brief UnmapEvent, DestroyEvent and ReparentEvent handler
  *
- * We receive this event then a window has been unmapped or destroyed->
- * If we can find a WaWindow for this window then the delete that WaWindow.
- * If we couldn't find a WaWindow we check if the windows is a dockapp window
- * and if it is, we update the dockapp handler holding the dockapp.
+ * We receive this event then a window has been unmapped, destroyed or 
+ * reparented. If we can find a WaWindow for this window then the delete that
+ * WaWindow. If we couldn't find a WaWindow we check if the windows is a 
+ * dockapp window and if it is, we update the dockapp handler holding the 
+ * dockapp.
  *
- * @param e	The UnmapEvent
+ * @param e	The XEvent
  */
 void EventHandler::EvUnmapDestroy(XEvent *e) {
     DockappHandler *dh;
@@ -509,7 +511,9 @@ void EventHandler::EvUnmapDestroy(XEvent *e) {
     map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find((e->type == UnmapNotify)?
                                          e->xunmap.window:
-                                         e->xdestroywindow.window))
+                                         (e->type == DestroyNotify)?
+                                         e->xdestroywindow.window:
+                                         e->xreparent.window))
         != waimea->window_table->end()) {
         if (((*it).second)->type == WindowType) {
             if (e->type == DestroyNotify)

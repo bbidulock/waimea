@@ -98,6 +98,8 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     wawindow_list_stacking_aot = new list<WaWindow *>;
     wawindow_list_stacking_aab = new list<WaWindow *>;
     wamenu_list = new list<WaMenu *>;
+    wamenu_list_stacking_aot = new list<WaMenu *>;
+    wamenu_list_stacking_aab = new list<WaMenu *>;
     
     session_cursor = XCreateFontCursor(display, XC_left_ptr);
     move_cursor = XCreateFontCursor(display, XC_fleur);
@@ -168,14 +170,27 @@ void Waimea::WaRaiseWindow(Window win) {
     int i;
     bool in_list = false;
     
-    if (always_on_top_list->size()) {
+    if (always_on_top_list->size() || wawindow_list_stacking_aot->size() ||
+        wamenu_list_stacking_aot->size()) {
         Window *stack = new Window[always_on_top_list->size() +
-                                   ((win)? 1: 0)];
-
+                                  wawindow_list_stacking_aot->size() +
+                                  wamenu_list_stacking_aot->size() +
+                                  ((win)? 1: 0)];
+        
         list<Window>::iterator it = always_on_top_list->begin();
         for (i = 0; it != always_on_top_list->end(); ++it) {
             if (*it == win) in_list = true;
             stack[i++] = *it;
+        }
+        list<WaMenu *>::iterator mit = wamenu_list_stacking_aot->begin();
+        for (; mit != wamenu_list_stacking_aot->end(); ++mit) {
+            if ((*mit)->frame == win) in_list = true;
+            stack[i++] = (*mit)->frame;
+        }
+        list<WaWindow *>::iterator wit = wawindow_list_stacking_aot->begin();
+        for (; wit != wawindow_list_stacking_aot->end(); ++wit) {
+            if ((*wit)->frame->id == win) in_list = true;
+            stack[i++] = (*wit)->frame->id;
         }
         if (win && ! in_list) stack[i++] = win;
         
@@ -207,16 +222,31 @@ void Waimea::WaLowerWindow(Window win) {
     int i;
     bool in_list = false;
     
-    if (always_at_bottom_list->size()) {
+    if (always_at_bottom_list->size() || wawindow_list_stacking_aab->size()) {
         Window *stack = new Window[always_at_bottom_list->size() +
-                                   ((win)? 1: 0)];
+                                  wawindow_list_stacking_aab->size() +
+                                  ((win)? 1: 0)];
         i = 0;
         if (win) stack[i++] = win;
-                
+        
         list<Window>::reverse_iterator it = always_at_bottom_list->rbegin();
         for (; it != always_at_bottom_list->rend(); ++it) {
+            if (*it == win) in_list = true;
             stack[i++] = *it;
         }
+        list<WaMenu *>::reverse_iterator mit =
+            wamenu_list_stacking_aab->rbegin();
+        for (; mit != wamenu_list_stacking_aab->rend(); ++mit) {
+            if ((*mit)->frame == win) in_list = true;
+            stack[i++] = (*mit)->frame;
+        }
+        list<WaWindow *>::reverse_iterator wit =
+            wawindow_list_stacking_aab->rbegin();
+        for (; wit != wawindow_list_stacking_aab->rend(); ++wit) {
+            if ((*wit)->frame->id == win) in_list = true;
+            stack[i++] = (*wit)->frame->id;
+        }
+        
         if (in_list) {
             XLowerWindow(display, stack[1]);
             XRestackWindows(display, stack + 1, i - 1);
@@ -613,4 +643,71 @@ char **commandline_to_argv(char *s, char **tmp_argv) {
     }
     tmp_argv[i] = NULL;
     return tmp_argv;
+}
+
+/**
+ * @fn    expand(char *org, WaWindow *w)
+ * @brief Window info expansion
+ *
+ * Expands a special window info characters in a string. Special info
+ * characters are:
+ * '\p' replaced with _NET_WM_PID hint for window
+ * '\c' replaced with WM_COMMAND hint for window
+ * '\n' replaced with name part of windows WM_CLASS hint
+ *
+ * @param org Original string used as source for expansion
+ * @param w WaWindow to get expansion info from
+ *
+ * @return Expanded version of original string, or NULL if no expansion have
+ *         been made.
+ */
+char *expand(char *org, WaWindow *w) {
+    int i;
+    char *insert, *expanded, *tmp, t;
+    bool cont, found = false;
+
+    if (! org) return NULL;
+
+    expanded = org;
+    for (i = 0; expanded[i] != '\0';) {
+        cont = false;
+        for (; expanded[i] != '\0' && expanded[i] != '\\'; i++);
+        if (expanded[i] == '\0') break;
+        switch (expanded[i + 1]) {
+            case 'p':
+                if (w->pid) insert = w->pid;
+                else insert = "";
+                break;
+            case 'c':
+                if (w->cmd) insert = w->cmd;
+                else insert = "";
+                break;
+            case 'h':
+                if (w->host) insert = w->host;
+                else insert = "";
+                break;
+            case 'n':
+                if (w->classhint->res_name) insert = w->classhint->res_name;
+                else insert = "";
+                break;
+            case 'l':
+                if (w->classhint->res_class) insert = w->classhint->res_class;
+                else insert = "";
+                break;
+            default:
+                cont = true;
+        }
+        if (cont) continue;
+        int ilen = strlen(insert);
+        tmp = new char[strlen(expanded) + ilen + 1];
+        expanded[i] = '\0';
+        sprintf(tmp, "%s%s%s", expanded, insert, &expanded[i + 2]);
+        if (found) delete [] expanded;
+        else expanded[i] = '\\';
+        expanded = tmp;
+        found = true;
+        i += ilen;
+    }
+    if (found) return expanded;
+    else return NULL;
 }

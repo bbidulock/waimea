@@ -2572,14 +2572,14 @@ char *param_eval(char *action, char *param, WaScreen *wascreen) {
                 tmp = new char[strlen(p) + 5];
                 p[i] = '\0';
                 sprintf(tmp, "%s%d%s", p, wascreen->width, &p[i + 1]);
-                delete p;
+                delete [] p;
                 p = tmp;
             }
             else if (p[i] == 'H' || p[i] == 'h') {
                 tmp = new char[strlen(p) + 5];
                 p[i] = '\0';
                 sprintf(tmp, "%s%d%s", p, wascreen->height, &p[i + 1]);
-                delete p;
+                delete [] p;
                 p = tmp;
             }
         }

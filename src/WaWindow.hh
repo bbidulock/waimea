@@ -197,7 +197,7 @@ public:
 
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
     
-    char *name;
+    char *name, *cmd, *host, *pid;
     bool has_focus, want_focus, mapped, dontsend, deleted, ign_config_req;
     Display *display;
     Waimea *waimea;
@@ -211,11 +211,10 @@ public:
     NetHandler *net;
     WMstrut *wm_strut;
     Window transient_for;
+    XClassHint *classhint;
     list<Window> transients;
-    
     list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
         *handleacts, *lgacts, *rgacts;
-
     list<WaAction *> **bacts;
     
 private:
