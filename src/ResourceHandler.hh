@@ -74,7 +74,7 @@ public:
     unsigned int virtual_x;
     unsigned int virtual_y;
     int colors_per_channel;
-    long unsigned int cache_max;
+    long unsigned int cache_max, double_click;
     Bool image_dither, rc_forced, style_forced, action_forced, menu_forced;
     
     list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,

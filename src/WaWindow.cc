@@ -562,7 +562,8 @@ void WaWindow::UpdateGrabs(void) {
         else tmp_list = waimea->rh->pwinacts;
         it = tmp_list->begin();
         for (; it != tmp_list->end(); ++it) {
-            if ((*it)->type == ButtonPress || (*it)->type == ButtonRelease) {
+            if ((*it)->type == ButtonPress || (*it)->type == ButtonRelease ||
+                (*it)->type == DoubleClick) {
                 XGrabButton(display, (*it)->detail ? (*it)->detail: AnyButton,
                             (*it)->mod, id, True, ButtonPressMask |
                             ButtonReleaseMask | ButtonMotionMask,
@@ -2021,6 +2022,7 @@ void WaWindow::UnShade(XEvent *, WaAction *) {
         attrib.height = restore_shade;
         RedrawWindow();
         flags.shaded = False;
+        SendConfig();
         net->SetWmState(this);
         waimea->UpdateCheckboxes(ShadeCBoxType);
     }

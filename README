@@ -75,6 +75,10 @@ CONFIG FILE
         imageDither
        		True or False
 
+	doubleClickInterval
+		Between 0-1000, double click interval in milliseconds. Default
+		is 300.
+
         virtualSize
                 Virtual desktop size. Ex. '3x3' will set the virtual desktop 
                 size to three times screen height in virtual height and three
@@ -156,18 +160,19 @@ STYLES
         menu.borderWidth
                 Border width of all menus, By default 2.
 
-        titleWidth
-                Forces title width to a number of pixels. By default the title 
-                width is set by the height of the font.
+        window.title.height
+                Forces title title to a number of pixels. By default the title 
+                height is set by the height of the font.
 
         *.xftFont
                 This option can be used for all items that the .font option 
-                can be used for, plus the new menu.bullet item. If Waimea is 
-                compiled with xft support then it will use font specified by 
-                this option instead of the one specified by .font. By default
-                Waimea uses the font specified by .font option. If neither 
-                options are specified, Waimea uses 'fixed' font for standard X
-		core fonts and 'arial' for Xft font.
+                can be used for, plus the new menu.bullet, menu.checkbox.false
+		and menu.checkbox.true items. If Waimea is compiled with 
+		xft support then it will use font specified by this option 
+		instead of the one specified by .font. By default Waimea 
+		uses the font specified by .font option. If neither options 
+		are specified, Waimea uses 'fixed' font for standard X core 
+		fonts and 'arial' for Xft font.
 
         *.xftSize
 		This should be a floating point number between 2.0 and 100.0
@@ -361,6 +366,7 @@ ACTIONS
         List of event types:
                 buttonpress
                 buttonrelease
+		doubleclick
 		keypress
 		keyrelease
                 enternotify

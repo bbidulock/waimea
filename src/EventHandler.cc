@@ -27,7 +27,7 @@
 EventHandler::EventHandler(Waimea *wa) {
     waimea = wa;
     rh = waimea->rh;
-    focused = 0;
+    focused = last_click_win = (Window) 0;
     
     moveresize_return_mask = new hash_set<int>;
     moveresize_return_mask->insert(MotionNotify);
@@ -74,6 +74,7 @@ EventHandler::~EventHandler(void) {
 XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
     Window w;
     int i, rx, ry;
+    struct timeb click_time;
 
     XEvent *event = new XEvent;
     
@@ -109,8 +110,39 @@ XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
                 EvAct(event, event->xkey.window);
                 break;
             case ButtonPress:
+                ed.type = ButtonPress;
+                if (last_click_win == event->xbutton.window) {
+                    ftime(&click_time);
+                    if (click_time.time <= last_click.time + 1) {
+                        if (click_time.time == last_click.time &&
+                            (click_time.millitm - last_click.millitm) <
+                            waimea->rh->double_click) {
+                            ed.type = DoubleClick;
+                            last_click_win = (Window) 0;
+                        }
+                        else if ((1000 - last_click.millitm) +
+                                 click_time.millitm < waimea->rh->double_click) {
+                            ed.type = DoubleClick;
+                            last_click_win = (Window) 0;
+                        }
+                        else {
+                            last_click_win = event->xbutton.window;
+                            last_click.time = click_time.time;
+                            last_click.millitm = click_time.millitm;
+                        }
+                    }
+                    else {
+                        last_click_win = event->xbutton.window;
+                        last_click.time = click_time.time;
+                        last_click.millitm = click_time.millitm;
+                    }
+                }
+                else {
+                    last_click_win = event->xbutton.window;
+                    ftime(&last_click);
+                }
             case ButtonRelease:
-                ed.type = event->type;
+                if (event->type == ButtonRelease) ed.type = ButtonRelease;
                 ed.mod = event->xbutton.state;
                 ed.detail = event->xbutton.button;
                 EvAct(event, event->xbutton.window);

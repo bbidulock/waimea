@@ -257,6 +257,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     types->push_back(new StrComp("keyrelease", KeyRelease));
     types->push_back(new StrComp("buttonpress", ButtonPress));
     types->push_back(new StrComp("buttonrelease", ButtonRelease));
+    types->push_back(new StrComp("doubleclick", DoubleClick));
     types->push_back(new StrComp("enternotify", EnterNotify));
     types->push_back(new StrComp("leavenotify", LeaveNotify));
     types->push_back(new StrComp("maprequest", MapRequest));
@@ -405,7 +406,16 @@ void ResourceHandler::LoadConfig(void) {
         else
             image_dither = False;
     } else
-        image_dither = True;    
+        image_dither = True;
+    
+    if (XrmGetResource(database, "doubleClickInterval",
+                       "DoubleClickInterval", &value_type, &value)) {
+        if (sscanf(value.addr, "%lu", &double_click) != 1)
+            double_click = 300;
+    } else
+        double_click = 300;
+
+    if (double_click > 999) double_click = 999;
 
     unsigned int dummy;
     char *token;
@@ -1345,7 +1355,8 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                     act_tmp->detail = XKeysymToKeycode(display, keysym);
             }
         } else if (act_tmp->type == ButtonPress ||
-                   act_tmp->type == ButtonRelease) {
+                   act_tmp->type == ButtonRelease ||
+                   act_tmp->type == DoubleClick) {
             it = bdetails->begin();
             for (; it != bdetails->end(); ++it) {
                 if ((*it)->Comp(token)) {

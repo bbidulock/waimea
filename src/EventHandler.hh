@@ -15,6 +15,7 @@
 #ifndef __EventHandler_hh
 #define __EventHandler_hh
 
+#include <sys/timeb.h>
 #include <X11/Xlib.h>
 #include <hash_set>
 
@@ -28,6 +29,8 @@ typedef struct _EventDetail EventDetail;
 struct _EventDetail {
     unsigned int type, mod, detail;
 };
+
+#define DoubleClick 36
 
 class EventHandler {
 public:
@@ -53,7 +56,8 @@ private:
     
     Waimea *waimea;
     ResourceHandler *rh;
-    Window focused;
+    Window focused, last_click_win;
+    struct timeb last_click;
 };
 
 Bool eventmatch(WaAction *, EventDetail *);

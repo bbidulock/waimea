@@ -13,6 +13,7 @@
 !                Alt + right mouse button click anywhere in window
 ! 
 ! Right mouse button click on titlebar brings up menu named 'window'.
+! Double click on titlebar toggles shading.
 ! Right mouse button click on root window brings up menu named 'rootmenu'.
 ! Holding control down on maprequest event, activates non-opaque moving.
 ! Menu submenus are mapped on menu item enter event.
@@ -49,18 +50,20 @@ window.frame.9: MoveOpaque : ButtonPress = Button1 & !Mod1Mask
 window.title.5:  Raise             : ButtonPress = Button1 & !Mod1Mask
 window.title.6:  Focus             : ButtonPress = Button1 & !Mod1Mask
 window.title.7:  Lower             : ButtonPress = Button2 & !Mod1Mask
-window.title.8:  MoveOpaque        : ButtonPress = Button1 & !Mod1Mask
-window.title.9:  MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
-window.title.10: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
-window.title.11: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
+window.title.8:  ToggleShade       : DoubleClick = Button1 & !Mod1Mask
+window.title.9:  MoveOpaque        : ButtonPress = Button1 & !Mod1Mask
+window.title.10: MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
+window.title.11: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
+window.title.12: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
 !
 window.label.5:  Raise             : ButtonPress = Button1 & !Mod1Mask
 window.label.6:  Focus             : ButtonPress = Button1 & !Mod1Mask
 window.label.7:  Lower             : ButtonPress = Button2 & !Mod1Mask
-window.label.8:  MoveOpaque        : ButtonPress = Button1 & !Mod1Mask
-window.label.9:  MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
-window.label.10: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
-window.label.11: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
+window.label.8:  ToggleShade       : DoubleClick = Button1 & !Mod1Mask
+window.label.9:  MoveOpaque        : ButtonPress = Button1 & !Mod1Mask
+window.label.10: MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
+window.label.11: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
+window.label.12: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
 !
 window.handle.5:  Raise             : ButtonPress = Button1 & !Mod1Mask
 window.handle.6:  Focus             : ButtonPress = Button1 & !Mod1Mask
