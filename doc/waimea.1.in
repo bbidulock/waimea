@@ -373,7 +373,7 @@ Here are the keys
 .I waimea 
 understands together with the kind of value they can contain. 
 The '*' in the window keys can be one of:
-.I title, label, button, button.pressed, button.hilite, handle 
+.I title, label, button, button.pressed, handle 
 or 
 .I grip.
 The '*' in the menu keys can be one of:
@@ -456,11 +456,6 @@ Color used for unfocused window button symbols.
 .TP 
 .B window.button.pressed.picColor:    Color
 Color used for pressed button symbols.
-
-.PP
-.TP 
-.B window.button.hilite.picColor:    Color
-Color used for hilited button symbols.
 
 .PP
 .TP 

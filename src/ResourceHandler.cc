@@ -777,9 +777,9 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
                       "Window.Button.Unfocus.PicColor",
                       &wstyle->b_pic_unfocus, WhitePixel(display, screen),
                       ic);
-    ReadDatabaseColor("window.button.hilite.picColor",
-                      "Window.Button.Hilite.PicColor",
-                      &wstyle->b_pic_hilite, wstyle->b_pic_focus.getPixel(),
+    ReadDatabaseColor("window.button.pressed.picColor",
+                      "Window.Button.Pressed.PicColor",
+                      &wstyle->b_pic_pressed, wstyle->b_pic_focus.getPixel(),
                       ic);
     
     if (XrmGetResource(database, "window.justify", "Window.Justify",

@@ -86,6 +86,10 @@ public:
     Window wf;
     WaScreen *rf;
     WaMenuItem *mf;
+    
+#ifdef XFT
+    Pixmap pixmap;
+#endif // XFT
   
 private:
     int f_height, t_height, s_height;
@@ -97,6 +101,7 @@ public:
     virtual ~WaMenuItem(void);
 
     void DrawFg(void);
+    void Draw(void);
     
     void Hilite(void);
     void DeHilite(void);
@@ -183,6 +188,7 @@ public:
 #ifdef XFT        
     XftDraw *xftdraw;
     XftFont *cbox_xft_font;
+    Pixmap pixmap;
 #else // !XFT
     GC *cbox_gc;
 #endif // XFT

@@ -52,6 +52,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     net = waimea->net;
     rh = wa->rh;
     focus = true;
+    xrootpmap_id = (Pixmap) 0;
 
 #ifdef PIXMAP
     imlib_context_set_display(display);
@@ -59,8 +60,10 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     imlib_context_set_visual(visual);
     imlib_context_set_mask(0);
     imlib_context_set_drawable(id);
-    imlib_context_set_anti_alias(1);
+    imlib_context_set_anti_alias(1);    
 #endif // PIXMAP
+
+    net->GetXRootPMapId(this);
     
     eventmask = SubstructureRedirectMask | StructureNotifyMask |
         PropertyChangeMask | ColormapChangeMask | KeyPressMask |
@@ -187,7 +190,6 @@ WaScreen::~WaScreen(void) {
 
     XFreeGC(display, wstyle.b_pic_focus_gc);
     XFreeGC(display, wstyle.b_pic_unfocus_gc);
-    XFreeGC(display, wstyle.b_pic_hilite_gc);
     
 #ifdef XFT
     delete [] wstyle.xftfontname;
@@ -370,9 +372,9 @@ void WaScreen::CreateColors(void) {
     
     gcv.foreground = wstyle.b_pic_unfocus.getPixel();
     wstyle.b_pic_unfocus_gc = XCreateGC(display, id, GCForeground, &gcv);
-    
-    gcv.foreground = wstyle.b_pic_hilite.getPixel();
-    wstyle.b_pic_hilite_gc = XCreateGC(display, id, GCForeground, &gcv);
+
+    gcv.foreground = wstyle.b_pic_pressed.getPixel();
+    wstyle.b_pic_pressed_gc = XCreateGC(display, id, GCForeground, &gcv);
     
 #ifdef XFT
     wstyle.xftfcolor = wstyle.l_text_focus.getXftColor();

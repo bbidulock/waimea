@@ -2095,19 +2095,25 @@ Pixmap WaImageControl::searchCache(unsigned int width, unsigned int height,
 
 
 Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
-                                  WaTexture *texture) {
-    if (texture->getTexture() & WaImage_ParentRelative) return ParentRelative;
+                                   WaTexture *texture, Pixmap parent,
+                                   unsigned int src_x, unsigned int src_y,
+                                   Pixmap dest) {
+  if (texture->getTexture() & WaImage_ParentRelative) return ParentRelative;
     
     Pixmap pixmap = searchCache(width, height, texture->getTexture(),
                                 texture->getColor(), texture->getColorTo());
-    if (pixmap) return pixmap;
+    if (pixmap)
+      return xrender(pixmap, width, height, texture, parent, src_x, src_y,
+                     dest);
 
     WaImage image(this, width, height);
     pixmap = image.render(texture);
 
 #ifdef PIXMAP        
-    if (texture->getTexture() & (WaImage_Pixmap | WaImage_Tile))
-        return pixmap;
+    if (texture->getTexture() & WaImage_Pixmap) {
+        return xrender(pixmap, width, height, texture,
+                       parent, src_x, src_y, dest);
+    }
 #endif // PIXMAP
 
     if (pixmap) {
@@ -2129,8 +2135,9 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
         
         if ((unsigned) cache->size() > cache_max)
             timeout();
-        
-        return pixmap;
+
+        return xrender(pixmap, width, height, texture,
+                         parent, src_x, src_y, dest);
     }
     return None;
 }
@@ -2390,33 +2397,35 @@ void WaImageControl::timeout(void) {
 }
 
 #ifdef XFT
-void WaImageControl::XRenderRedraw(Window win, Pixmap p, int width, int height,
-                                   WaTexture *texture, int src_x, int src_y) {
+Pixmap WaImageControl::xrender(Pixmap p, unsigned int width,
+                               unsigned int height, WaTexture *texture,
+                               Pixmap parent, unsigned int src_x,
+                               unsigned int src_y,
+                               Pixmap dest) {
     Picture src_pict, dest_pict;
     XRenderPictFormat *format;
-
-    if (! texture->getOpacity()) return;
     
-    if (texture->getOpacity() < 255 && p != ParentRelative) {
-        format = XRenderFindVisualFormat(display, visual);
-        if (p == None)
-            src_pict = texture->getSolidPicture();
-        else
-            src_pict = XRenderCreatePicture(display, (Drawable) p, format, 0,
-                                            0);
-        dest_pict = XRenderCreatePicture(display, (Drawable) win, format, 0,
-                                         0);
-        XSetWindowBackgroundPixmap(display, win, ParentRelative);
-        XClearWindow(display, win);
-        XRenderComposite(display, PictOpOver, src_pict,
-                         texture->getAlphaPicture(), dest_pict, src_x, src_y,
-                         0, 0, 0, 0, width, height);
-        if (p != None) XRenderFreePicture(display, src_pict);
-        XRenderFreePicture(display, dest_pict);
-    }
-    else {
-        XSetWindowBackgroundPixmap(display, win, ParentRelative);
-        XClearWindow(display, win);
-    }
+    if ((! texture->getOpacity()) || parent == None || dest == None)
+      return p;
+
+    GC gc = DefaultGC(display, screen_number);
+    XCopyArea(display, parent, dest, gc, src_x, src_y, width,
+              height,  0, 0);
+
+    if (texture->getOpacity() == 255) return dest;
+
+    format = XRenderFindVisualFormat(display, visual);
+    if (p == None)
+        src_pict = texture->getSolidPicture();
+    else
+        src_pict = XRenderCreatePicture(display, (Drawable) p, format, 0, 0);
+    dest_pict = XRenderCreatePicture(display, (Drawable) dest, format, 0, 0);
+    XRenderComposite(display, PictOpOver, src_pict,
+                     texture->getAlphaPicture(), dest_pict, 0, 0, 0, 0, 0, 0,
+                     width, height);
+    if (p != None) XRenderFreePicture(display, src_pict);
+    XRenderFreePicture(display, dest_pict);
+    return dest;
 }
+
 #endif // XFT

@@ -253,14 +253,15 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
                     if (XFetchName(ww->display, ww->id, &tmp_name)) {
                         delete [] ww->name;
                         ww->name = wastrdup(tmp_name);                        
-                        if (ww->title_w) ww->DrawLabelFg();
+                        if (ww->title_w) ww->label->Draw();
                         XFree(tmp_name);
                     }
                 }
                 XUngrabServer(e->display);
             }
         }
-    }
+    } else if (e->atom == waimea->wascreen->net->xrootpmap_id)
+        waimea->wascreen->net->GetXRootPMapId(waimea->wascreen);
 }
 
 /**
@@ -279,33 +280,16 @@ void EventHandler::EvExpose(XExposeEvent *e) {
         waimea->window_table->end()) {
         switch (((*it).second)->type) {
             case LabelType:
-                (((WaChildWindow *) (*it).second)->wa)->DrawLabelFg(); break;
+                (((WaChildWindow *) (*it).second)->wa)->label->Draw(); break;
             case CButtonType:
-                (((WaChildWindow *) (*it).second)->wa)->DrawCloseButtonFg();
+                (((WaChildWindow *) (*it).second)->wa)->button_c->Draw();
                 break;
             case IButtonType:
-                (((WaChildWindow *) (*it).second)->wa)->DrawIconifyButtonFg();
+                (((WaChildWindow *) (*it).second)->wa)->button_min->Draw();
                 break;
             case MButtonType:
-                (((WaChildWindow *) (*it).second)->wa)->DrawMaxButtonFg();
-                break;
-                
-#ifdef XFT
-            case TitleType:
-                (((WaChildWindow *) (*it).second)->wa)->DrawTitleFg(); break;
-            case HandleType:
-                (((WaChildWindow *) (*it).second)->wa)->DrawHandleFg(); break;
-            case LGripType:
-                (((WaChildWindow *) (*it).second)->wa)->DrawLeftGripFg();
-                break;
-            case RGripType:
-                (((WaChildWindow *) (*it).second)->wa)->DrawRightGripFg();
-                break;
-            case DockHandlerType:
-                ((DockappHandler *) (*it).second)->DrawFg();
-                break;
-#endif // XFT
-                
+                (((WaChildWindow *) (*it).second)->wa)->button_max->Draw();
+                break;                
             case MenuTitleType:
             case MenuItemType:
             case MenuSubType:

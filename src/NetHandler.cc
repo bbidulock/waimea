@@ -87,6 +87,8 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_RESTART", false);
     net_shutdown =
         XInternAtom(display, "_NET_SHUTDOWN", false);
+    xrootpmap_id =
+        XInternAtom(display, "_XROOTPMAP_ID", false);
     
     xa_xdndaware = XInternAtom(display, "XdndAware", false);
     xa_xdndenter = XInternAtom(display, "XdndEnter", false);
@@ -822,4 +824,26 @@ void NetHandler::DeleteSupported(WaScreen *ws) {
     XDeleteProperty(display, ws->id, net_workarea);
     XDeleteProperty(display, ws->id, net_supported_wm_check);
     XDeleteProperty(display, ws->id, net_supported);
+}
+
+/**
+ * @fn    GetXRootPMapId(WaScreen *ws)
+ * @brief Reads XROOTPMAPID hint
+ *
+ * Reads XROOTPMAPID hint, which if it exist is the pixmap ID for the root
+ * window.
+ *
+ * @param ws WaScreen object
+ */
+void NetHandler::GetXRootPMapId(WaScreen *ws) {
+    CARD32 *data;
+    
+    if (XGetWindowProperty(display, ws->id, xrootpmap_id, 0L, 1L, 
+                           false, XA_PIXMAP, &real_type,
+                           &real_format, &items_read, &items_left, 
+                           (unsigned char **) &data) == Success && 
+        items_read) { 
+        ws->xrootpmap_id = (Pixmap) (*data);
+        XFree(data);
+    }
 }

@@ -40,6 +40,10 @@ WaMenu::WaMenu(char *n) {
     wf = (Window) 0;
     rf = NULL;
     mf = NULL;
+
+#ifdef XFT
+    pixmap = None;
+#endif // XFT
     
     item_list = new list<WaMenuItem *>;
 }
@@ -62,6 +66,11 @@ WaMenu::~WaMenu(void) {
         XDestroyWindow(display, o_east);
         XDestroyWindow(display, o_north);
         XDestroyWindow(display, o_south);
+
+#ifdef XFT
+        if (pixmap != None) XFreePixmap(display, pixmap);
+#endif // XFT
+
     }
     delete [] name;
 }
@@ -243,14 +252,20 @@ void WaMenu::Build(WaScreen *screen) {
         }
         lasttype = (*it)->type;
     }
-    
     if (width > (wascreen->width / 2)) width = wascreen->width / 2;
+    
     WaTexture *texture = &wascreen->mstyle.back_frame;
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         pbackframe = None;
         backframe_pixel = texture->getColor()->getPixel();
     } else
         pbackframe = ic->renderImage(width, height, texture);
+    
+#ifdef XFT
+    if (texture->getOpacity())
+        pixmap = XCreatePixmap(display, wascreen->id, width,
+                               height, wascreen->screen_depth);
+#endif // XFT
     
     texture = &wascreen->mstyle.title;
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
@@ -285,19 +300,11 @@ void WaMenu::Build(WaScreen *screen) {
             waimea->always_at_bottom_list->push_back(frame);
     } else XResizeWindow(display, frame, width, height);
 
-#ifdef XFT
-    if (! wascreen->mstyle.back_frame.getOpacity()) {
-#endif // XFT    
+    if (pbackframe)
+        XSetWindowBackgroundPixmap(display, frame, pbackframe);
+    else
+        XSetWindowBackground(display, frame, backframe_pixel);
 
-        if (pbackframe)
-            XSetWindowBackgroundPixmap(display, frame, pbackframe);
-        else
-            XSetWindowBackground(display, frame, backframe_pixel);
-
-#ifdef XFT
-    }
-#endif // XFT
-    
     XClearWindow(display, frame);
 
     int y, x, bw;
@@ -323,18 +330,20 @@ void WaMenu::Build(WaScreen *screen) {
         (*it)->xftdraw = XftDrawCreate(display, (Drawable) (*it)->id,
                                        wascreen->visual,
                                        wascreen->colormap);
+        (*it)->pixmap = XCreatePixmap(display, wascreen->id, width,
+                                      (*it)->height, wascreen->screen_depth);
 #endif // XFT
+        
         if ((*it)->type == MenuTitleType) {
             (*it)->texture = &wascreen->mstyle.title;
             if (ptitle)
-                XSetWindowBackgroundPixmap(display, (*it)->id,
-                                           ptitle);
+                XSetWindowBackgroundPixmap(display, (*it)->id, ptitle);
             else
-                XSetWindowBackground(display, (*it)->id,
-                                     title_pixel);
+                XSetWindowBackground(display, (*it)->id, title_pixel);
         } else {
             (*it)->texture = &wascreen->mstyle.back_frame;
             XSetWindowBackgroundPixmap(display, (*it)->id, ParentRelative);
+            XClearWindow(display, (*it)->id);
         }
         
         lasttype = (*it)->type;
@@ -365,11 +374,31 @@ void WaMenu::Map(int mx, int my) {
     mapped = true;
     has_focus = false;
     XMoveWindow(display, frame, x, y);
+
+#ifdef XFT
+    WaTexture *texture = &wascreen->mstyle.back_frame;
+    if (texture->getOpacity()) {
+        pixmap = wascreen->ic->xrender(pbackframe, width, height, texture,
+                                       wascreen->xrootpmap_id, x,
+                                       y, pixmap);
+        XSetWindowBackgroundPixmap(display, frame, pixmap);
+        XClearWindow(display, frame);
+    }
+#endif // XFT
+    
     XMapSubwindows(display, frame);
     XMapWindow(display, frame);
     waimea->WaRaiseWindow(frame);
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
+
+#ifdef XFT
+        if ((*it)->texture->getOpacity()) {
+            (*it)->Draw();
+            (*it)->DrawFg();
+        }
+#endif // XFT
+
         (*it)->DrawFg();
         XSelectInput(display, (*it)->id, mask);
     }
@@ -399,11 +428,30 @@ void WaMenu::ReMap(int mx, int my) {
     mapped = true;
     has_focus = false;
     XMoveWindow(display, frame, x, y);
+
+#ifdef XFT
+    WaTexture *texture = &wascreen->mstyle.back_frame;
+    if (texture->getOpacity()) {
+        pixmap = wascreen->ic->xrender(pbackframe, width, height, texture,
+                                       wascreen->xrootpmap_id, x,
+                                       y, pixmap);
+        XSetWindowBackgroundPixmap(display, frame, pixmap);
+        XClearWindow(display, frame);
+    }
+#endif // XFT
+    
     XMapSubwindows(display, frame);
     XMapWindow(display, frame);
     waimea->WaRaiseWindow(frame);
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
+
+#ifdef XFT
+        if ((*it)->texture->getOpacity()) {
+            (*it)->Draw();
+        }
+#endif // XFT
+
         (*it)->DrawFg();
         XSelectInput(display, (*it)->id, mask);
     }
@@ -420,6 +468,18 @@ void WaMenu::ReMap(int mx, int my) {
  * @param dy Move in y coordinate relative to old position
  */
 void WaMenu::Move(int dx, int dy) {
+
+#ifdef XFT
+    WaTexture *texture = &wascreen->mstyle.back_frame;
+    if (texture->getOpacity()) {
+        pixmap = wascreen->ic->xrender(pbackframe, width, height, texture,
+                                       wascreen->xrootpmap_id, x,
+                                       y, pixmap);
+        XSetWindowBackgroundPixmap(display, frame, pixmap);
+        XClearWindow(display, frame);
+    }
+#endif // XFT
+
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
         if (((*it)->func_mask & MenuSubMask) && (*it)->submenu->root_menu &&
@@ -428,7 +488,10 @@ void WaMenu::Move(int dx, int dy) {
         }
         
 #ifdef XFT
-        if ((*it)->texture->getOpacity()) (*it)->DrawFg();
+        if ((*it)->texture->getOpacity()) {
+            (*it)->Draw();
+            (*it)->DrawFg();
+        }
 #endif // XFT
         
     }
@@ -665,6 +728,7 @@ WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     
 #ifdef XFT
     xftdraw = (Drawable) 0;
+    pixmap = None;
 #endif // XFT
     
 }
@@ -690,6 +754,7 @@ WaMenuItem::~WaMenuItem(void) {
         
 #ifdef XFT
     if (xftdraw) XftDrawDestroy(xftdraw);
+    if (pixmap != None) XFreePixmap(menu->display, pixmap);
 #endif // XFT
     
     if (id) {
@@ -707,6 +772,8 @@ WaMenuItem::~WaMenuItem(void) {
 void WaMenuItem::DrawFg(void) {
     int x, y, justify;
 
+    XClearWindow(menu->display, id);
+    
 #ifdef XFT
     cbox_xft_font = menu->wascreen->mstyle.cf_xftfont;
 #else // ! XFT
@@ -763,37 +830,13 @@ void WaMenuItem::DrawFg(void) {
         font = menu->wascreen->mstyle.t_xftfont;
         xftcolor = menu->wascreen->mstyle.t_xftcolor;
         y = menu->wascreen->mstyle.t_y_pos;
-        if (! texture->getOpacity())
-            XClearWindow(menu->display, id);
-        menu->ic->XRenderRedraw(id, menu->ptitle, menu->width, height,
-                                texture);
     } else {
         font = menu->wascreen->mstyle.f_xftfont;
         y = menu->wascreen->mstyle.f_y_pos;
         if (hilited) {
             xftcolor = menu->wascreen->mstyle.fh_xftcolor;
-
-            if (menu->philite == ParentRelative) {
-                if (! menu->wascreen->mstyle.back_frame.getOpacity())
-                    XClearWindow(menu->display, id);
-                menu->ic->XRenderRedraw(id, menu->pbackframe, menu->width,
-                                        height,
-                                        &menu->wascreen->mstyle.back_frame,
-                                        0, dy);
-            }
-            else {
-                if (! texture->getOpacity())
-                    XClearWindow(menu->display, id);
-                menu->ic->XRenderRedraw(id, menu->philite, menu->width, height,
-                                        texture);
-            }
-        } else {
+        } else
             xftcolor = menu->wascreen->mstyle.f_xftcolor;
-            if (! texture->getOpacity())
-                XClearWindow(menu->display, id);
-            menu->ic->XRenderRedraw(id, menu->pbackframe, menu->width, height,
-                                    texture, 0, dy);
-        }
     }
     XftDrawString8(xftdraw, xftcolor, font, x, y, (unsigned char *) label,
                    strlen(label));
@@ -825,7 +868,6 @@ void WaMenuItem::DrawFg(void) {
         }
         y = menu->wascreen->mstyle.f_y_pos;
     }
-    XClearWindow(menu->display, id);
     XDrawString(menu->display, (Drawable) id, *gc, x, y, label,
                 strlen(label));
     if (type == MenuSubType) {
@@ -844,6 +886,32 @@ void WaMenuItem::DrawFg(void) {
     
 }
 
+#ifdef XFT
+/**
+ * @fn    Draw(void)
+ * @brief Draw transparent effect
+ *
+ * Draws transperancy background and redraws foreground.
+ */
+void WaMenuItem::Draw(void) {
+    if (! texture->getOpacity()) return;
+    if (type == MenuTitleType) {
+        pixmap = menu->wascreen->ic->xrender(menu->ptitle, menu->width, height,
+                                             texture,
+                                             menu->wascreen->xrootpmap_id,
+                                             menu->x, menu->y + dy, pixmap);
+        XSetWindowBackgroundPixmap(menu->display, id, pixmap);
+    }
+    else {
+        pixmap = menu->wascreen->ic->xrender(menu->philite, menu->width, height,
+                                             texture,
+                                             menu->wascreen->xrootpmap_id,
+                                             menu->x, menu->y + dy, pixmap);
+        XSetWindowBackgroundPixmap(menu->display, id, pixmap);
+    }
+}
+#endif // XFT
+    
 /**
  * @fn    Hilite(void)
  * @brief Hilite menu item
@@ -864,7 +932,8 @@ void WaMenuItem::Hilite(void) {
     texture = &menu->wascreen->mstyle.hilite;
 
 #ifdef XFT
-    if (! texture->getOpacity()) {
+    if (texture->getOpacity()) Draw();
+    else {
 #endif // XFT
     
         if (menu->philite)
@@ -890,12 +959,8 @@ void WaMenuItem::DeHilite(void) {
     if (type == MenuTitleType) return;
     hilited = false;
     texture = &menu->wascreen->mstyle.back_frame;
-
-#ifdef XFT
-    if (! texture->getOpacity())
-#endif // XFT
-        
-        XSetWindowBackgroundPixmap(menu->display, id, ParentRelative);
+    
+    XSetWindowBackgroundPixmap(menu->display, id, ParentRelative);
     
     DrawFg();
 }
@@ -1136,7 +1201,6 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
                 maprequest_list->push_front(&event); break;
             case ButtonPress:
             case ButtonRelease:
-                WARNING << "butt" << endl;
                 event.xbutton.window = id;
             case KeyPress:
             case KeyRelease:
@@ -1250,8 +1314,7 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
  * Ends menu moving process.
  */
 void WaMenuItem::EndMoveResize(XEvent *, WaAction *) {
-    menu->waimea->eh->move_resize = EndMoveResizeType;
-    WARNING << "butt" << endl;    
+    menu->waimea->eh->move_resize = EndMoveResizeType;   
 }
 
 /**

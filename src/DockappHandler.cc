@@ -53,7 +53,7 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
     attrib_set.colormap = wascreen->colormap;
     attrib_set.override_redirect = true;
     attrib_set.event_mask = SubstructureRedirectMask | ButtonPressMask |
-        EnterWindowMask | LeaveWindowMask | ExposureMask;
+        EnterWindowMask | LeaveWindowMask;
     
     id = XCreateWindow(display, wascreen->id, 0, 0,
                        1, 1, style->style.border_width,
@@ -230,36 +230,50 @@ void DockappHandler::Update(void) {
     XResizeWindow(display, id, width, height);
     XMoveWindow(display, id, map_x, map_y);
     XMapWindow(display, id);
+
     WaTexture *texture = &style->style.texture;
+    
+#ifdef XFT
+    if (texture->getOpacity())
+        background = XCreatePixmap(display, wascreen->id, width,
+                                   height, wascreen->screen_depth);
+#endif // XFT
+    
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         background = None;
         background_pixel = texture->getColor()->getPixel();
+#ifdef XFT        
+        if (texture->getOpacity()) {
+            background = wascreen->ic->xrender(None, width, height, texture,
+                                               wascreen->xrootpmap_id, map_x,
+                                               map_y, background);
+            XSetWindowBackgroundPixmap(display, id, background);
+        } else
+            XSetWindowBackground(display, id, background_pixel);
+#else // ! XFT
         XSetWindowBackground(display, id, background_pixel);
+#endif // XFT
+        
     } else {
-        background = wascreen->ic->renderImage(width, height, texture);
+        background = wascreen->ic->renderImage(width, height, texture,
+
+#ifdef XFT
+                                               wascreen->xrootpmap_id, map_x,
+                                               map_y, background
+#endif // XFT
+                                               
+                                               );
+        
         XSetWindowBackgroundPixmap(display, id, background);
     }
     XClearWindow(display, id);
     
 #ifdef XFT    
-    DrawFg();
+    if (texture->getOpacity()) XFreePixmap(display, background);
 #endif // XFT
     
     wascreen->UpdateWorkarea();
 }
-
-#ifdef XFT
-/**
- * @fn    DrawFg(void)
- * @brief Draws dockapp holder foreground
- * 
- * Redraws dockapp holder foreground. 
- */
-void DockappHandler::DrawFg(void) {
-    wascreen->ic->XRenderRedraw(id, background, width, height,
-                                &style->style.texture); 
-}
-#endif // XFT
     
 /**
  * @fn    Dockapp(Window win, DockappHandler *dhand)

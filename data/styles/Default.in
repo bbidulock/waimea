@@ -45,8 +45,6 @@ window.button.pressed:           sunken gradient vertical
   window.button.pressed.color:   #8090c0
   window.button.pressed.colorTo: #405070
 
-window.button.hilite.picColor: #ffffff
-
 window.handle.focus:           flat gradient crossdiagonal
   window.handle.focus.color:   #90b098
   window.handle.focus.colorTo: #506058

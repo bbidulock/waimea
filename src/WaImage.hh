@@ -265,7 +265,9 @@ public:
     unsigned long getColor(const char *, unsigned char *, unsigned char *,
                            unsigned char *);
     unsigned long getSqrt(unsigned int);
-    Pixmap renderImage(unsigned int, unsigned int, WaTexture *);
+    Pixmap renderImage(unsigned int, unsigned int, WaTexture *,
+                       Pixmap = None, unsigned int = 0, unsigned int = 0,
+                       Pixmap = None);
     void installRootColormap(void);
     void removeImage(Pixmap);
     void getColorTables(unsigned char **, unsigned char **, unsigned char **,
@@ -281,8 +283,9 @@ public:
     virtual void timeout(void);
     
 #ifdef XFT
-    void XRenderRedraw(Window, Pixmap, int, int, WaTexture *, int = 0,
-                       int = 0);
+    Pixmap xrender(Pixmap, unsigned int, unsigned int, WaTexture *,
+                   Pixmap = None, unsigned int = 0, unsigned int = 0,
+                   Pixmap = None);
 #endif // XFT
     
 };

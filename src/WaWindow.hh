@@ -246,45 +246,14 @@ private:
     void DrawOutline(int, int, int, int);
     void Resize(XEvent *, int);
     void ResizeOpaque(XEvent *, int);
-    void RenderLabel(void);
-    void RenderTitle(void);
-    void RenderHandle(void);
-    void DrawIconifyButton(void);
-    void DrawCloseButton(void);
-    void DrawMaxButton(void);
-    void DrawLabel(void);
-    void DrawHandle(void);
-    void DrawLeftGrip(void);
-    void DrawRightGrip(void);
-    void DrawTitle(void);
-    inline void DrawTitlebar(void) { DrawTitle(); 
-                                     DrawLabel();
-                                     DrawIconifyButton();
-                                     DrawCloseButton();
-                                     DrawMaxButton(); }
-    inline void DrawHandlebar(void) { DrawHandle();
-                                      DrawLeftGrip();
-                                      DrawRightGrip(); }
+    void DrawTitlebar(void);
+    void DrawHandlebar(void);
+    
     list <WaAction *> *GetActionList(list<WaActionExtList *> *);
     
     WaImageControl *ic;
     Window o_west, o_north, o_south, o_east;
     bool o_mapped, move_resize;
-    Pixmap ftitle, fhandle, flabel;
-    Pixmap utitle, uhandle, ulabel;
-    Pixmap *ptitle, *phandle, *plabel, *pgrip, *pbutton;
-    GC *b_cpic_gc, *b_ipic_gc, *b_mpic_gc;
-    unsigned long ftitle_pixel, fhandle_pixel, flabel_pixel;
-    unsigned long utitle_pixel, uhandle_pixel, ulabel_pixel;
-    unsigned long *title_pixel, *handle_pixel, *label_pixel, *grip_pixel,
-        *button_pixel;
-    
-#ifdef XFT
-    XftDraw *xftdraw;
-    XftColor *xftcolor;
-#else // ! XFT
-    GC *l_text_gc;
-#endif // XFT
     
 #ifdef SHAPE
     bool shaped;
@@ -295,9 +264,23 @@ class WaChildWindow : public WindowObject {
 public:
     WaChildWindow(WaWindow *, Window, int);
     virtual ~WaChildWindow(void);
-    
-    WaWindowAttributes attrib;
+
+    Display *display;
     WaWindow *wa;
+    WaScreen *wascreen;
+    WaImageControl *ic;
+    WaWindowAttributes attrib;    
+    WaTexture *f_texture, *u_texture;
+    Pixmap f_pixmap, u_pixmap;
+    bool pressed;
+
+#ifdef XFT
+    bool pix_alloc_f, pix_alloc_u;
+    XftDraw *xftdraw;
+#endif // XFT
+
+    void Render(void);
+    void Draw(void);
 };
 
 #endif // __WaWindow_hh

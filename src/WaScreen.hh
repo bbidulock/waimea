@@ -61,10 +61,10 @@ typedef void (WaScreen::*RootActionFn)(XEvent *, WaAction *);
 
 typedef struct {
     WaColor l_text_focus, l_text_unfocus, b_pic_focus, b_pic_unfocus,
-        b_pic_hilite, border_color, outline_color;
+        b_pic_pressed, border_color, outline_color;
     WaTexture t_focus, t_unfocus, l_focus, l_unfocus, h_focus, h_unfocus,
         b_focus, b_unfocus, b_pressed, g_focus, g_unfocus;
-    GC b_pic_focus_gc, b_pic_unfocus_gc, b_pic_hilite_gc;
+    GC b_pic_focus_gc, b_pic_unfocus_gc, b_pic_pressed_gc;
 
     char *fontname;
 #ifdef XFT
@@ -206,7 +206,7 @@ public:
     WindowStyle wstyle;
     MenuStyle mstyle;
 
-    Pixmap fbutton, ubutton, pbutton, fgrip, ugrip;
+    Pixmap fbutton, ubutton, pbutton, fgrip, ugrip, xrootpmap_id;
     unsigned long fbutton_pixel, ubutton_pixel, pbutton_pixel, fgrip_pixel,
         ugrip_pixel;
     char displaystring[1024];

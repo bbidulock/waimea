@@ -266,7 +266,8 @@ WaMenu *Waimea::GetMenuNamed(char *menu) {
 bool validateclient(Window id) {
     int ret;
     XWindowAttributes attr;
-
+    
+    XSync(waimea->display, False);
     errors = 0;
     hush = 1;
     XGetWindowAttributes(waimea->display, id, &attr);
