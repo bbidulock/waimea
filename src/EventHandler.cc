@@ -272,11 +272,11 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
         list<DockappHandler *>::iterator dock_it =
             waimea->wascreen->docks->begin();
         for (; dock_it != waimea->wascreen->docks->end(); ++dock_it)
-            (*dock_it)->Render();
+            if ((*dock_it)->dockapp_list->size()) (*dock_it)->Render();
         list<WaWindow *>::iterator win_it = waimea->wawindow_list->begin();
         for (; win_it != waimea->wawindow_list->end(); ++win_it) {
-            (*win_it)->DrawTitlebar();
-            (*win_it)->DrawHandlebar();
+            if ((*win_it)->title_w) (*win_it)->DrawTitlebar();
+            if ((*win_it)->handle_w) (*win_it)->DrawHandlebar();
         }
         list<WaMenu *>::iterator menu_it = waimea->wamenu_list->begin();
         for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {

@@ -31,8 +31,8 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
     waimea = wascreen->waimea;
     display = waimea->display;
     background = (Pixmap) 0;
-    x = 0;
-    y = 0;
+    x = 1;
+    y = 1;
     if (style->geometry & XValue ||
         style->geometry & YValue) {
         if (style->geometry & XValue) {
@@ -108,12 +108,7 @@ DockappHandler::~DockappHandler(void) {
  */
 void DockappHandler::Update(void) {
     int dock_x = style->gridspace;
-    int dock_y = style->gridspace;
-    
-    map_x = x;
-    map_y = y;
-    width = style->gridspace;
-    height = style->gridspace;
+    int dock_y = style->gridspace;    
     
     if (dockapp_list->empty()) {
         if (! style->inworkspace) {
@@ -126,6 +121,10 @@ void DockappHandler::Update(void) {
         XUnmapWindow(display, id);
         return;
     }
+    map_x = x;
+    map_y = y;
+    width = style->gridspace;
+    height = style->gridspace;
 
     list<Dockapp *>::reverse_iterator d_it;
     list<Dockapp *> *tmp_list = new list<Dockapp *>;
