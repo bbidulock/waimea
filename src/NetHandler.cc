@@ -529,40 +529,74 @@ void NetHandler::GetClientListStacking(WaScreen *ws) {
 }
 
 /**
- * @fn    SetActiveWindow(WaScreen *ws, Window win)
+ * @fn    SetActiveWindow(WaScreen *ws, WaWindow *ww)
  * @brief Writes _NET_ACTIVE_CLIENT hint
  *
- * Updates _NET_ACTIVE_CLIENT hint to the currently active window.
+ * Updates _NET_ACTIVE_CLIENT hint to the current list of last active
+ * windows. The currently active window at the front.
  *
- * @param win Window to set as active
  * @param ws WaScreen object
+ * @param ww WaWindow that was set active or NULL if root window.
  */
-void NetHandler::SetActiveWindow(WaScreen *ws, Window win) {
+void NetHandler::SetActiveWindow(WaScreen *ws, WaWindow *ww) {
+    CARD32 data[1024];
+    list<WaWindow *>::iterator it;
+    int i = 0;
+    
+    if (ww) {
+        ws->focus = False;
+        waimea->wawindow_list->remove(ww);
+        waimea->wawindow_list->push_front(ww);
+    } else {
+        ws->focus = True;
+        data[i++] = None;
+    }
+
+    it = waimea->wawindow_list->begin();
+    for (; it != waimea->wawindow_list->end(); ++it)
+        data[i++] = (*it)->id;
+    
     XChangeProperty(display, ws->id, net_active_window, XA_WINDOW, 32,
-                    PropModeReplace, (unsigned char *) &win, 1);
+                    PropModeReplace, (unsigned char *) &data, i);
 }
 
 /**
  * @fn    GetActiveWindow(WaScreen *ws)
  * @brief Reads _NET_ACTIVE_CLIENT hint
  *
- * Gives window with same ID as stored in _NET_ACTIVE_CLIENT hint keyboard
- * focus.
+ * Sorts active window list after _NET_ACTIVE_CLIENT hint and sets input
+ * focus to first window in _NET_ACTIVE_CLIENT list.
  *
  * @param ws WaScreen object
  */
 void NetHandler::GetActiveWindow(WaScreen *ws) {
-    int *data;
+    XEvent *e;
+    WaAction *ac;
+    WaWindow *ww;
+    CARD32 *data;
     hash_map<Window, WindowObject *>::iterator it;
-    if (XGetWindowProperty(display, ws->id, net_active_window, 0L, 1L, 
+    int i;
+    
+    if (XGetWindowProperty(display, ws->id, net_active_window, 0L,
+                           waimea->wawindow_list->size(), 
                            False, XA_WINDOW, &real_type, &real_format, 
                            &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
         items_read) {
-        if (((it = waimea->window_table->find(*data)) !=
-             waimea->window_table->end()) &&
-            (((*it).second)->type == WindowType)) {
-            ((WaWindow *) (*it).second)->Focus(False);
+        for (i = items_read - 1; i >= 0; i--) {
+            if (i == 0 && data[0] == None) {
+                ws->Focus(e, ac);
+                break;
+            }
+            if (((it = waimea->window_table->find(data[i])) !=
+                 waimea->window_table->end()) &&
+                (((*it).second)->type == WindowType)) {
+                ww = ((WaWindow *) (*it).second);
+                waimea->wawindow_list->remove(ww);
+                waimea->wawindow_list->push_front(ww);
+                if (i == 0)
+                    ww->Focus(False);
+            }
         }
         XFree(data);
     }

@@ -297,7 +297,7 @@ void EventHandler::EvFocus(XFocusChangeEvent *e) {
     WaWindow *ww = NULL;
 
     hash_map<Window, WindowObject *>::iterator it;
-    if (e->type == FocusIn)
+    if (e->type == FocusIn) {
         if ((it = waimea->window_table->find(e->window)) !=
             waimea->window_table->end()) {
             if (((*it).second)->type == WindowType)
@@ -307,16 +307,18 @@ void EventHandler::EvFocus(XFocusChangeEvent *e) {
                 if (((*it).second)->type == WindowType) {
                     ((WaWindow *) (*it).second)->UnFocusWin();
                     ((WaWindow *) (*it).second)->UpdateGrabs();
-                    waimea->net->SetActiveWindow(waimea->wascreen, None);
                 }
             if (ww) {
                 ww->FocusWin();
                 ww->UpdateGrabs();
-                ww->net->SetActiveWindow(ww->wascreen, ww->id);
+                ww->net->SetActiveWindow(ww->wascreen, ww);
                 
             }
             focused = e->window;
         }
+        if (e->window == waimea->wascreen->id)
+            waimea->net->SetActiveWindow(waimea->wascreen, NULL);
+    }
 }
 
 /**

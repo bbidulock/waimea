@@ -60,7 +60,7 @@ public:
     void SetClientList(WaScreen *);
     void SetClientListStacking(WaScreen *);
     void GetClientListStacking(WaScreen *);
-    void SetActiveWindow(WaScreen *, Window);
+    void SetActiveWindow(WaScreen *, WaWindow *);
     void GetActiveWindow(WaScreen *);
     void GetDesktopViewPort(WaScreen *);
     void SetDesktopViewPort(WaScreen *);
