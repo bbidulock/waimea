@@ -71,9 +71,9 @@ EventHandler::EventHandler(Waimea *wa) {
  * Deletes return mask lists
  */
 EventHandler::~EventHandler(void) {
-    HASHDEL(empty_return_mask);
-    HASHDEL(moveresize_return_mask);
-    HASHDEL(menu_viewport_move_return_mask);
+    MAPPTRCLEAR(empty_return_mask);
+    MAPPTRCLEAR(moveresize_return_mask);
+    MAPPTRCLEAR(menu_viewport_move_return_mask);
 }
 
 /**
@@ -159,13 +159,13 @@ void EventHandler::HandleEvent(XEvent *event) {
                     if (click_time.tv_sec == last_click.tv_sec &&
                         (unsigned long) 
                         (click_time.tv_usec - last_click.tv_usec) <
-                        waimea->rh->double_click * 1000) {
+                        waimea->double_click * 1000) {
                         ed->type = DoubleClick;
                         last_click_win = (Window) 0;
                     }
                     else if ((1000000 - last_click.tv_usec) +
                              (unsigned long) click_time.tv_usec <
-                             waimea->rh->double_click * 1000) {
+                             waimea->double_click * 1000) {
                         ed->type = DoubleClick;
                         last_click_win = (Window) 0;
                     }
@@ -196,9 +196,8 @@ void EventHandler::HandleEvent(XEvent *event) {
         case MapRequest:
             EvMapRequest(&event->xmaprequest);
             ed->type = event->type;
-            XQueryPointer(waimea->wascreen->display,
-                          waimea->wascreen->id, &w, &w, &rx, &ry, &i, &i,
-                          &(ed->mod));
+            XQueryPointer(waimea->display, event->xmaprequest.parent,
+                          &w, &w, &rx, &ry, &i, &i, &(ed->mod));
             ed->detail = 0;
             event->xbutton.x_root = rx;
             event->xbutton.y_root = ry;
@@ -210,14 +209,11 @@ void EventHandler::HandleEvent(XEvent *event) {
             
 #ifdef SHAPE
         default:                
-            if (event->type == waimea->wascreen->shape_event) {
-                map<Window, WindowObject *>::iterator it;
-                if ((it = waimea->window_table->find(event->xany.window)) !=
-                    waimea->window_table->end()) {
-                    if (((*it).second)->type == WindowType)
-                        if (((WaWindow *) (*it).second)->wascreen->shape)
-                            ((WaWindow *) (*it).second)->Shape();
-                }
+            if (event->type == waimea->shape_event) {
+                WaWindow *ww = (WaWindow *)
+                    waimea->FindWin(event->xany.window, WindowType);
+                if (ww && waimea->shape)
+                    ww->Shape();
             }
 #endif // SHAPE
             
@@ -240,65 +236,59 @@ void EventHandler::HandleEvent(XEvent *event) {
  */
 void EventHandler::EvProperty(XPropertyEvent *e) {
     WaWindow *ww;
-    map<Window, WindowObject *>::iterator it;
     char *tmp_name;
+    char *__m_wastrdup_tmp;
 
     if (e->state == PropertyDelete) {
-        if (e->atom == waimea->wascreen->net->net_wm_strut) {
-            list<WMstrut *>::iterator s_it =
-                waimea->wascreen->strut_list->begin();
-            for (; s_it != waimea->wascreen->strut_list->end(); ++s_it) {
-                if ((*s_it)->window == e->window) {
-                    waimea->wascreen->strut_list->remove(*s_it);
-                    free(*s_it);
-                    waimea->wascreen->UpdateWorkarea();
-                }
-            }
-        }
-    } else if (e->atom == waimea->wascreen->net->net_wm_strut) {
-        if ((it = waimea->window_table->find(e->window)) !=
-            waimea->window_table->end()) {
-            if (((*it).second)->type == WindowType) {
-                waimea->wascreen->net->GetWmStrut((WaWindow *) (*it).second);
-            }
-        }
-    } else if (e->atom == XA_WM_NAME) {
-        if ((it = waimea->window_table->find(e->window)) !=
-            waimea->window_table->end()) {
-            if (((*it).second)->type == WindowType) {
-                ww = (WaWindow *) (*it).second;
-                XGrabServer(e->display);
-                if (validateclient(ww->id)) {
-                    if (XFetchName(ww->display, ww->id, &tmp_name)) {
-                        delete [] ww->name;
-                        ww->name = wastrdup(tmp_name);
-                        ww->SetActionLists();
-                        if (ww->title_w) ww->label->Draw();
-                        XFree(tmp_name);
+        if (e->atom == waimea->net->net_wm_strut) {
+            if ((ww = (WaWindow *) waimea->FindWin(e->window, WindowType))) {
+                list<WMstrut *>::iterator s_it =
+                    ww->wascreen->strut_list.begin();
+                for (; s_it != ww->wascreen->strut_list.end(); ++s_it) {
+                    if ((*s_it)->window == e->window) {
+                        ww->wascreen->strut_list.remove(*s_it);
+                        free(*s_it);
+                        ww->wascreen->UpdateWorkarea();
                     }
                 }
-                XUngrabServer(e->display);
             }
+        }
+    } else if (e->atom == waimea->net->net_wm_strut) {
+        if ((ww = (WaWindow *) waimea->FindWin(e->window, WindowType)))
+            waimea->net->GetWmStrut(ww);
+    } else if (e->atom == XA_WM_NAME) {
+        if ((ww = (WaWindow *) waimea->FindWin(e->window, WindowType))) {
+            XGrabServer(e->display);
+            if (validateclient(ww->id)) {
+                if (XFetchName(ww->display, ww->id, &tmp_name)) {
+                    delete [] ww->name;
+                    ww->name = __m_wastrdup(tmp_name);
+                    ww->SetActionLists();
+                    if (ww->title_w) ww->label->Draw();
+                    XFree(tmp_name);
+                }
+            }
+            XUngrabServer(e->display);
         }
     }
 #ifdef XRENDER
-    else if (e->atom == waimea->wascreen->net->xrootpmap_id) {
-        waimea->wascreen->net->GetXRootPMapId(waimea->wascreen);
-        waimea->wascreen->ic->setXRootPMapId(
-            (waimea->wascreen->xrootpmap_id)? true: false);
-
-        list<DockappHandler *>::iterator dock_it =
-            waimea->wascreen->docks->begin();
-        for (; dock_it != waimea->wascreen->docks->end(); ++dock_it)
-            if ((*dock_it)->dockapp_list->size()) (*dock_it)->Render();
-        list<WaWindow *>::iterator win_it = waimea->wawindow_list->begin();
-        for (; win_it != waimea->wawindow_list->end(); ++win_it) {
-            if ((*win_it)->title_w) (*win_it)->DrawTitlebar();
-            if ((*win_it)->handle_w) (*win_it)->DrawHandlebar();
-        }
-        list<WaMenu *>::iterator menu_it = waimea->wamenu_list->begin();
-        for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {
-            if ((*menu_it)->mapped) (*menu_it)->Render();
+    else if (e->atom == waimea->net->xrootpmap_id) {
+        if (WaScreen *ws = (WaScreen *) waimea->FindWin(e->window, RootType)) {
+            waimea->net->GetXRootPMapId(ws);
+            ws->ic->setXRootPMapId((ws->xrootpmap_id)? true: false);
+            
+            list<DockappHandler *>::iterator dock_it = ws->docks.begin();
+            for (; dock_it != ws->docks.end(); ++dock_it)
+                if ((*dock_it)->dockapp_list->size()) (*dock_it)->Render();
+            list<WaWindow *>::iterator win_it = ws->wawindow_list.begin();
+            for (; win_it != ws->wawindow_list.end(); ++win_it) {
+                if ((*win_it)->title_w) (*win_it)->DrawTitlebar();
+                if ((*win_it)->handle_w) (*win_it)->DrawHandlebar();
+            }
+            list<WaMenu *>::iterator menu_it = ws->wamenu_list.begin();
+            for (; menu_it != ws->wamenu_list.end(); ++menu_it) {
+                if ((*menu_it)->mapped) (*menu_it)->Render();
+            }
         }
     }
 #endif // XRENDER
@@ -316,21 +306,20 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
  * @param e	The ExposeEvent
  */
 void EventHandler::EvExpose(XExposeEvent *e) {
-    map<Window, WindowObject *>::iterator it;
-    if ((it = waimea->window_table->find(e->window)) !=
-        waimea->window_table->end()) {
-        switch (((*it).second)->type) {
+    if (WindowObject *wo = waimea->FindWin(e->window, LabelType | ButtonType |
+                                           MenuTitleType | MenuItemType |
+                                           MenuSubType | MenuCBItemType))
+        switch (wo->type) {
             case LabelType:
-                ((WaChildWindow *) (*it).second)->Draw(); break;
+                ((WaChildWindow *) wo)->Draw(); break;
             case ButtonType:
-                ((WaChildWindow *) (*it).second)->Draw(); break;
+                ((WaChildWindow *) wo)->Draw(); break;
             case MenuTitleType:
             case MenuItemType:
             case MenuSubType:
             case MenuCBItemType:
-                ((WaMenuItem *) (*it).second)->DrawFg();
+                ((WaMenuItem *) wo)->DrawFg();
         }
-    }
 }
 
 /**
@@ -345,30 +334,31 @@ void EventHandler::EvExpose(XExposeEvent *e) {
  * @param e	The FocusChangeEvent
  */
 void EventHandler::EvFocus(XFocusChangeEvent *e) {
-    WaWindow *ww = NULL;
+    WaWindow *ww = NULL, *ww2;
 
-    map<Window, WindowObject *>::iterator it;
     if (e->type == FocusIn && e->window != focused) {
-        if ((it = waimea->window_table->find(e->window)) !=
-            waimea->window_table->end()) {
-            if (((*it).second)->type == WindowType)
-                ww = (WaWindow *) ((*it).second);
-            if ((it = waimea->window_table->find(focused)) !=
-                waimea->window_table->end())
-                if (((*it).second)->type == WindowType) {
-                    ((WaWindow *) (*it).second)->UnFocusWin();
-                    ((WaWindow *) (*it).second)->UpdateGrabs();
-                }
-            if (ww) {
-                ww->FocusWin();
-                ww->UpdateGrabs();
-                ww->net->SetActiveWindow(ww->wascreen, ww);
-            }
-            focused = e->window;
+        ww = (WaWindow *) waimea->FindWin(e->window, WindowType);
+        if ((ww2 = (WaWindow *) waimea->FindWin(focused, WindowType))) {
+            ww2->actionlist =
+                ww2->GetActionList(&ww2->wascreen->config.ext_pwinacts);
+            if (! ww2->actionlist)
+                ww2->actionlist = &ww2->wascreen->config.pwinacts;
+            ww2->UpdateGrabs();
+            ww2->UnFocusWin();
         }
-        if (e->window == waimea->wascreen->id)
-            waimea->net->SetActiveWindow(waimea->wascreen, NULL);
+        if (ww) {
+            ww->actionlist =
+                ww->GetActionList(&ww->wascreen->config.ext_awinacts);
+            if (! ww->actionlist)
+                ww->actionlist = &ww->wascreen->config.awinacts;
+            ww->UpdateGrabs();
+            ww->FocusWin();
+            ww->net->SetActiveWindow(ww->wascreen, ww);
+        }
+        focused = e->window;
     }
+    if (WaScreen *ws = (WaScreen *) waimea->FindWin(e->window, RootType))
+        waimea->net->SetActiveWindow(ws, NULL);
 }
 
 /**
@@ -385,6 +375,7 @@ void EventHandler::EvFocus(XFocusChangeEvent *e) {
  * @param e	The ConfigureRequestEvent
  */
 void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
+    WindowObject *wo;
     WaWindow *ww;
     Dockapp *da;
     XWindowChanges wc;
@@ -397,12 +388,10 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
     wc.sibling = e->above;
     wc.stack_mode = e->detail;
     wc.border_width = e->border_width;
-    
-    map<Window, WindowObject *>::iterator it;
-    if ((it = waimea->window_table->find(e->window)) !=
-        waimea->window_table->end()) {
-        if (((*it).second)->type == WindowType) {
-            ww = (WaWindow *) (*it).second;
+
+    if ((wo = waimea->FindWin(e->window, WindowType | DockAppType))) {
+        if (wo->type == WindowType) {
+            ww = (WaWindow *) wo;
             waimea->net->GetWMNormalHints(ww);
             if (ww->ign_config_req) return;
             ww->Gravitate(RemoveGravity);
@@ -419,14 +408,14 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
             mask |= (e->value_mask & CWStackMode)? CWStackMode: 0;
             XConfigureWindow(ww->display, ww->frame->id, mask, &wc);
             if (e->value_mask & CWStackMode) {
-                waimea->WaRaiseWindow((Window) 0);
-                waimea->WaLowerWindow((Window) 0);
+                ww->wascreen->WaRaiseWindow((Window) 0);
+                ww->wascreen->WaLowerWindow((Window) 0);
             }
             ww->net->SetVirtualPos(ww);
             return;
         }
-        else if (((*it).second)->type == DockAppType) {
-            da = (Dockapp *) (*it).second;
+        else if (wo->type == DockAppType) {
+            da = (Dockapp *) wo;
             XGrabServer(e->display);
             if (e->value_mask & CWWidth) da->width = e->width; 
             if (e->value_mask & CWHeight) da->height = e->height; 
@@ -440,7 +429,6 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
     if (validateclient(e->window))
         XConfigureWindow(e->display, e->window, e->value_mask, &wc);
     XUngrabServer(e->display);
-    if (e->value_mask & CWStackMode) waimea->WaRaiseWindow((Window) 0);
 }
 
 /**
@@ -469,25 +457,21 @@ void EventHandler::EvColormap(XColormapEvent *e) {
 void EventHandler::EvMapRequest(XMapRequestEvent *e) {
     XWindowAttributes attr;
     XWMHints *wm_hints;
-    
-    map<Window, WindowObject *>::iterator it;
-    if ((it = waimea->window_table->find(e->window)) !=
-        waimea->window_table->end()) {
-        if (((*it).second)->type == WindowType) {
-            ((WaWindow *) (*it).second)->net->SetState(
-                ((WaWindow *) (*it).second), NormalState);
-        }
-    } 
-    else {
+
+    if (WaWindow *ww = (WaWindow *) waimea->FindWin(e->window, WindowType)) {
+        ww->net->SetState(ww, NormalState);
+    }
+    else if (WaScreen *ws =
+             (WaScreen *) waimea->FindWin(e->parent, RootType)) {
         wm_hints = XAllocWMHints();
         XGetWindowAttributes(e->display, e->window, &attr);
         if (! attr.override_redirect) {
             if ((wm_hints = XGetWMHints(e->display, e->window)) &&
                 (wm_hints->flags & StateHint) &&
                 (wm_hints->initial_state == WithdrawnState)) {
-                waimea->wascreen->AddDockapp(e->window);
-            }
-            else new WaWindow(e->window, waimea->wascreen);
+                ws->AddDockapp(e->window);
+            } else
+                new WaWindow(e->window, ws);
         }
         XFree(wm_hints);
     }
@@ -507,26 +491,27 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
  */
 void EventHandler::EvUnmapDestroy(XEvent *e) {
     DockappHandler *dh;
-    
-    map<Window, WindowObject *>::iterator it;
-    if ((it = waimea->window_table->find((e->type == UnmapNotify)?
-                                         e->xunmap.window:
-                                         (e->type == DestroyNotify)?
-                                         e->xdestroywindow.window:
-                                         e->xreparent.window))
-        != waimea->window_table->end()) {
-        if (((*it).second)->type == WindowType) {
+    WindowObject *wo;
+
+    if ((wo = waimea->FindWin((e->type == UnmapNotify)?
+                             e->xunmap.window:
+                             (e->type == DestroyNotify)?
+                             e->xdestroywindow.window:
+                             e->xreparent.window,
+                             WindowType | DockAppType))) {
+        if (wo->type == WindowType) {
+            WaScreen *ws = ((WaWindow *) wo)->wascreen;
             if (e->type == DestroyNotify)
-                ((WaWindow *) (*it).second)->deleted = true;
-            delete ((WaWindow *) (*it).second);
-            if (! waimea->wawindow_list->empty())
-                waimea->wawindow_list->front()->Focus(false);
+                ((WaWindow *) wo)->deleted = true;
+            delete ((WaWindow *) wo);
+            if (! ws->wawindow_list.empty())
+                ws->wawindow_list.front()->Focus(false);
         }
-        else if (((*it).second)->type == DockAppType) {
+        else if (wo->type == DockAppType) {
             if (e->type == DestroyNotify)
-                ((Dockapp *) (*it).second)->deleted = true;
-            dh = ((Dockapp *) (*it).second)->dh;
-            delete ((Dockapp *) (*it).second);
+                ((Dockapp *) wo)->deleted = true;
+            dh = ((Dockapp *) wo)->dh;
+            delete ((Dockapp *) wo);
             dh->Update();
         }
     }
@@ -554,9 +539,15 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
             e->type = LeaveNotify;
             ed->type = LeaveNotify;
         }
-        XQueryPointer(waimea->wascreen->display,
-                      waimea->wascreen->id, &w, &w, &rx, &ry, &i, &i,
-                      &(ed->mod));
+
+        if (WaScreen *ws = (WaScreen *) waimea->FindWin(e->xclient.window,
+                                                        RootType)) {
+            XQueryPointer(ws->display, ws->id, &w, &w, &rx, &ry, &i, &i,
+                          &(ed->mod));
+        } else {
+            rx = 0;
+            ry = 0;
+        }
         ed->detail = 0;
         e->xcrossing.x_root = rx;
         e->xcrossing.y_root = ry;
@@ -564,8 +555,9 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
         EvAct(e, e->xclient.window, ed);
     }
     else if (e->xclient.message_type == waimea->net->net_desktop_viewport) {
-        waimea->wascreen->MoveViewportTo(e->xclient.data.l[0],
-                                         e->xclient.data.l[1]);
+        if (WaScreen *ws = (WaScreen *) waimea->FindWin(e->xclient.window,
+                                                        RootType))
+            ws->MoveViewportTo(e->xclient.data.l[0], e->xclient.data.l[1]);
     }
     else if (e->xclient.message_type == waimea->net->net_restart) {
         restart(NULL);
@@ -593,83 +585,47 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
     WaWindow *wa;
 
     map<Window, WindowObject *>::iterator it;
-    if ((it = waimea->window_table->find(win)) !=
-        waimea->window_table->end()) {
+    if ((it = waimea->window_table.find(win)) !=
+        waimea->window_table.end()) {
         wo = (*it).second;
 
         waimea->timer->ValidateInterrupts(e);
         
         switch (wo->type) {
-            case FrameType:
-                wa = ((WaChildWindow *) wo)->wa;
-                if (wa->frameacts) wa->EvAct(e, ed, wa->frameacts, wo->type);
-                else wa->EvAct(e, ed, rh->frameacts, wo->type);
-                break;
             case WindowType:
                 wa = (WaWindow *) wo;
-                if (wa->has_focus) {
-                    if (wa->awinacts) wa->EvAct(e, ed, wa->awinacts,
-                                                wo->type);
-                    else wa->EvAct(e, ed, rh->awinacts, wo->type);
-                }
-                else {
-                    if (wa->pwinacts) wa->EvAct(e, ed, wa->pwinacts,
-                                                wo->type);
-                    else wa->EvAct(e, ed, rh->pwinacts, wo->type);
-                } 
+                wa->EvAct(e, ed, wo->actionlist, wo->type);
                 break;
+            case FrameType:
             case TitleType:
-                wa = ((WaChildWindow *) wo)->wa;
-                if (wa->titleacts) wa->EvAct(e, ed, wa->titleacts, wo->type);
-                else wa->EvAct(e, ed, rh->titleacts, wo->type);
-                break;
             case LabelType:
-                wa = ((WaChildWindow *) wo)->wa;
-                if (wa->labelacts) wa->EvAct(e, ed, wa->labelacts, wo->type);
-                else wa->EvAct(e, ed, rh->labelacts, wo->type);
-                break;
             case HandleType:
-                wa = ((WaChildWindow *) wo)->wa;
-                if (wa->handleacts) wa->EvAct(e, ed, wa->handleacts,
-                                              wo->type);
-                else wa->EvAct(e, ed, rh->handleacts, wo->type);
-                break;
             case LGripType:
-                wa = ((WaChildWindow *) wo)->wa;
-                if (wa->lgacts) wa->EvAct(e, ed, wa->lgacts, wo->type);
-                else wa->EvAct(e, ed, rh->lgacts, wo->type);
-                break;
             case RGripType:
                 wa = ((WaChildWindow *) wo)->wa;
-                if (wa->rgacts) wa->EvAct(e, ed, wa->rgacts, wo->type);
-                else wa->EvAct(e, ed, rh->rgacts, wo->type);
+                wa->EvAct(e, ed, wo->actionlist, wo->type);
                 break;
             case ButtonType: {
                 wa = ((WaChildWindow *) wo)->wa;
-                int id = ((WaChildWindow *) wo)->bstyle->id;
-                if (wa->bacts[id]) wa->EvAct(e, ed, wa->bacts[id], wo->type);
-                else wa->EvAct(e, ed, rh->bacts[id], wo->type);
+                wa->EvAct(e, ed, wo->actionlist, wo->type);
                 if (ed->type == ButtonPress)
                     wa->ButtonPressed((WaChildWindow *) wo);
             } break;
             case MenuTitleType:
-                ((WaMenuItem *) wo)->EvAct(e, ed, rh->mtacts); break;
             case MenuItemType:
-                ((WaMenuItem *) wo)->EvAct(e, ed, rh->miacts); break;
             case MenuCBItemType:
-                ((WaMenuItem *) wo)->EvAct(e, ed, rh->mcbacts); break;
             case MenuSubType:
-                ((WaMenuItem *) wo)->EvAct(e, ed, rh->msacts); break;
+                ((WaMenuItem *) wo)->EvAct(e, ed, wo->actionlist);
+                break;
             case WEdgeType:
-                (((ScreenEdge *) wo)->wa)->EvAct(e, ed, rh->weacts); break;
             case EEdgeType:
-                (((ScreenEdge *) wo)->wa)->EvAct(e, ed, rh->eeacts); break;
             case NEdgeType:
-                (((ScreenEdge *) wo)->wa)->EvAct(e, ed, rh->neacts); break;
             case SEdgeType:
-                (((ScreenEdge *) wo)->wa)->EvAct(e, ed, rh->seacts); break;
+                (((ScreenEdge *) wo)->wa)->EvAct(e, ed, wo->actionlist);
+                break;
             case RootType:
-                ((WaScreen *) wo)->EvAct(e, ed, rh->rootacts); break;
+                ((WaScreen *) wo)->EvAct(e, ed, wo->actionlist);
+                break;
         }    
     }
 }

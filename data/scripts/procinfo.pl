@@ -6,7 +6,8 @@ my $offset = 0;
 my $proc_dir = "/proc";
 my $pid = 0;
 my $host = "";
-my $user = $ENV{USER};
+my $user = "";
+$user = $ENV{USER};
 chomp(my $hostname = qx(hostname));
 my $forcepid = 0;
 my $file = 0;
@@ -18,8 +19,8 @@ if ($forcepid) {
     if ($hostname eq $host && $pid) {
         pid_info();
     } else {
-       print "[title] (Process Info)\n";
-       print "[item] (Process info for this window could not be retrived)\n";
+       print "[title] (process info)\n";
+       print "[item] (process info for this window could not be retrived)\n";
     }
 } else {
    if ($pid) {
@@ -33,11 +34,11 @@ sub list_proc {
 #    my $cmdline = 0;
     my $proc_name = 0;
     my $i = $offset;
-    my $owner = 0;
+    my $owner = "";
     my $printed = 0;
     my @output;
 
-    print "[title] (Process List)\n";
+    print "[title] (process list)\n";
 
     opendir(DIR, $proc_dir) || die "can't opendir $proc_dir: $!";
     @proc_list = grep { (/^[^\.].*/ || /^\.\..*/) && /^\d+$/} readdir(DIR);
@@ -56,8 +57,9 @@ sub list_proc {
 	    }
 	}
 	close FILE;
-
-	if ($user eq 'all' || $user eq 'ALL' || $owner eq $user) {
+	
+	if (($user && ($user eq 'all' || $user eq 'ALL')) ||
+	    ($owner && $user && ($owner eq $user))) {
 	    if ($printed < $list_length) {
 		push @output, "[sub] ($pid - $proc_name) <!$script_location -pid $proc_list[$i]>\n";
 	    }
@@ -150,28 +152,28 @@ sub pid_info {
 
     print "[title] ($pid - $name)\n";
     
-    print "[sub] (State \\\($state\\\)) <state_sub>\n";
+    print "[sub] (state \\\($state\\\)) <state_sub>\n";
     print "[start] (state_sub)\n";
-    print "  [title] (Set State)\n";
-    print "  [item] (Stop) {kill -SIGSTOP $pid}\n";
-    print "  [item] (Continue) {kill -SIGCONT $pid}\n";
+    print "  [title] (set state)\n";
+    print "  [item] (stop) {kill -SIGSTOP $pid}\n";
+    print "  [item] (continue) {kill -SIGCONT $pid}\n";
     print "[end]\n";        
             
-    print "[sub] (Memory \\\($msize\\\)) <mem_sub>\n";
+    print "[sub] (memory \\\($msize\\\)) <mem_sub>\n";
     print "[start] (mem_sub)\n";
-    print "  [title] (Memory Usage)\n";
-    print "  [item] (Size: $msize)\n";
-    print "  [item] (Lck: $mlck)\n";
-    print "  [item] (RSS: $mrss)\n";
-    print "  [item] (Data: $mdata)\n";
-    print "  [item] (Stk: $mstk)\n";
-    print "  [item] (Exe: $mexe)\n";
-    print "  [item] (Lib: $mlib)\n";
+    print "  [title] (memory usage)\n";
+    print "  [item] (size: $msize)\n";
+    print "  [item] (lck: $mlck)\n";
+    print "  [item] (rss: $mrss)\n";
+    print "  [item] (data: $mdata)\n";
+    print "  [item] (stk: $mstk)\n";
+    print "  [item] (exe: $mexe)\n";
+    print "  [item] (lib: $mlib)\n";
     print "[end]\n";
     
-    print "[sub] (Priority \\\($priority\\\)) <prio>\n";
+    print "[sub] (priority \\\($priority\\\)) <prio>\n";
     print "[start] (prio)\n";
-    print "  [title] (Set Priority)\n";
+    print "  [title] (set priority)\n";
     print "  [item] (increase by 1) {renice +1 $pid}\n";
     print "  [item] (0 \\\(base\\\)) {renice 0 $pid}\n";
     print "  [item] (5) {renice 5 $pid}\n";
@@ -180,15 +182,15 @@ sub pid_info {
     print "  [item] (20 \\\(Idle\\\)) {renice 20 $pid}\n";
     print "[end]\n";
 
-    print "[submenu] (Send Signal)\n";
-    print "  [item] (Send SIGHUP) {kill -HUP $pid}\n";
-    print "  [item] (Send SIGINT) {kill -INT $pid}\n";
-    print "  [item] (Send SIGKILL) {kill -KILL $pid}\n";
+    print "[submenu] (send signal)\n";
+    print "  [item] (send sighup) {kill -HUP $pid}\n";
+    print "  [item] (send sigint) {kill -INT $pid}\n";
+    print "  [item] (send sigkill) {kill -KILL $pid}\n";
     print "[end]\n";
 
     if ($cmdline ne "") {
-        print "[item] (Restart) {kill $pid && $cmdline}\n";
-        print "[item] (Spawn New) {$cmdline}\n";    
+        print "[item] (restart) {kill $pid && $cmdline}\n";
+        print "[item] (spawn new) {$cmdline}\n";    
     }
 }
 
@@ -326,7 +328,7 @@ sub print_sub {
 
 sub pid_err {
     print "[title] ($pid)\n";
-    print "[item] (No process with PID $pid on this host)\n";
+    print "[item] (no process with pid $pid on this host)\n";
     exit;
 }
                                

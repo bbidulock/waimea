@@ -164,13 +164,18 @@ Pixmap WaImage::render(WaTexture *texture) {
 Pixmap WaImage::render_pixmap(WaTexture *texture) {
     Pixmap pixmap, mask;
 
+    imlib_context_push(*texture->getContext());
+    imlib_context_set_mask(0);
+    
     imlib_context_set_image(texture->getPixmap());
+
     if (texture->getTexture() & WaImage_Tile)
         imlib_render_pixmaps_for_whole_image(&pixmap, &mask);
     else 
         imlib_render_pixmaps_for_whole_image_at_size(&pixmap, &mask, width,
-                                                     height); 
-    return pixmap;   
+                                                     height);
+    imlib_context_pop();
+    return pixmap;
 }
 #endif // PIXMAP
 
@@ -1843,10 +1848,11 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
                                int _cpc, unsigned long cmax) {
     display       = dpy;
     screen_number = scrn->screen_number;
-    screen_depth  = scrn->screen_depth;
-    window        = scrn->id;
-    colormap      = scrn->colormap;
-    visual        = scrn->visual;    
+    screen_depth  = DefaultDepth(display, screen_number);
+    window        = RootWindow(display, screen_number);
+    colormap      = DefaultColormap(display, screen_number);
+    visual        = DefaultVisual(display, screen_number);
+    wascreen      = scrn;
     
     setDither(_dither);
     setColorsPerChannel(_cpc);
@@ -2136,9 +2142,9 @@ WaImageControl::~WaImageControl(void) {
             XFreePixmap(display, tmp->pixmap);
             cache->pop_front();
             delete tmp;
-        }    
-        delete cache;
+        }
     }
+    delete cache;
 }
 
 

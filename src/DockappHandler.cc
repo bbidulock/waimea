@@ -52,24 +52,24 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
     height = 0;
 
     dockapp_list = new list<Dockapp *>;
-    
+
     attrib_set.background_pixel = None;
     attrib_set.border_pixel = style->style.border_color.getPixel();
     attrib_set.colormap = wascreen->colormap;
     attrib_set.override_redirect = true;
     attrib_set.event_mask = SubstructureRedirectMask | ButtonPressMask |
         EnterWindowMask | LeaveWindowMask;
-    
-    id = XCreateWindow(display, wascreen->id, 0, 0,
-                       1, 1, style->style.border_width,
-                       wascreen->screen_number, CopyFromParent,
-                       wascreen->visual, CWOverrideRedirect | CWBackPixel |
-                       CWEventMask | CWColormap | CWBorderPixel, &attrib_set);
+
+    id = XCreateWindow(display, wascreen->id, 0, 0, 1, 1,
+                       style->style.border_width, wascreen->screen_depth,
+                       CopyFromParent, wascreen->visual, CWOverrideRedirect |
+                       CWBackPixel | CWEventMask | CWColormap | CWBorderPixel,
+                       &attrib_set);
 
     if (style->stacking == AlwaysOnTop)
-        waimea->always_on_top_list->push_back(id);
+        wascreen->always_on_top_list.push_back(id);
     else
-        waimea->always_at_bottom_list->push_back(id);
+        wascreen->always_at_bottom_list.push_back(id);
 
     if (! style->inworkspace) {
         wm_strut = new WMstrut;
@@ -78,9 +78,9 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
         wm_strut->right = 0;
         wm_strut->top = 0;
         wm_strut->bottom = 0;
-        wascreen->strut_list->push_back(wm_strut);
+        wascreen->strut_list.push_back(wm_strut);
     }
-    waimea->window_table->insert(make_pair(id, this));
+    waimea->window_table.insert(make_pair(id, this));
 }
 
 /**
@@ -91,16 +91,18 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
  */
 DockappHandler::~DockappHandler(void) {
     if (style->stacking == AlwaysOnTop)
-        waimea->always_on_top_list->remove(id);
+        wascreen->always_on_top_list.remove(id);
     else
-        waimea->always_at_bottom_list->remove(id);
-    LISTCLEAR2(dockapp_list);
+        wascreen->always_at_bottom_list.remove(id);
+    LISTPTRDELITEMS(dockapp_list);
     XDestroyWindow(display, id);
     if (! style->inworkspace) {
-        wascreen->strut_list->remove(wm_strut);
+        wascreen->strut_list.remove(wm_strut);
         delete wm_strut;
     }
-    waimea->window_table->erase(id);
+    waimea->window_table.erase(id);
+
+    delete dockapp_list;
 }
 
 
@@ -249,11 +251,14 @@ void DockappHandler::Render(void) {
     
 #ifdef XRENDER
     if (texture->getOpacity()) {
-        background = XCreatePixmap(display, wascreen->id, width,
+        background = XCreatePixmap(wascreen->pdisplay, wascreen->id, width,
                                    height, wascreen->screen_depth);
     }
 #endif // XRENDER
     
+    XFlush(display);
+    XFlush(wascreen->pdisplay);
+    XSync(display, false); 
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         background = None;
         background_pixel = texture->getColor()->getPixel();
@@ -266,6 +271,8 @@ void DockappHandler::Render(void) {
                                                map_y +
                                                style->style.border_width,
                                                background);
+            XSync(display, false);
+            XSync(wascreen->pdisplay, false);
             XSetWindowBackgroundPixmap(display, id, background);
         } else
             XSetWindowBackground(display, id, background_pixel);
@@ -286,13 +293,14 @@ void DockappHandler::Render(void) {
 #endif // XRENDER
                                                
                                                );
-        
+        XSync(display, false);
+        XSync(wascreen->pdisplay, false);
         XSetWindowBackgroundPixmap(display, id, background);
     }
     XClearWindow(display, id);
     
 #ifdef XRENDER    
-    if (texture->getOpacity()) XFreePixmap(display, background);
+    if (texture->getOpacity()) XFreePixmap(wascreen->pdisplay, background);
 #endif // XRENDER
 }
     
@@ -346,7 +354,7 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
         return;
     }
     XUngrabServer(display);
-    dh->waimea->window_table->insert(make_pair(id, this));
+    dh->waimea->window_table.insert(make_pair(id, this));
     dh->dockapp_list->push_back(this);
 }
 
@@ -359,7 +367,7 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
  */
 Dockapp::~Dockapp(void) {
     dh->dockapp_list->remove(this);
-    dh->waimea->window_table->erase(id);
+    dh->waimea->window_table.erase(id);
     if (! deleted) {
         XGrabServer(display);
         if (validateclient(id)) {

@@ -29,15 +29,13 @@ class WaChildWindow;
 typedef struct _WaAction WaAction;
 typedef void (WaWindow::*WwActionFn)(XEvent *, WaAction *);
 
-#include "Waimea.hh"
-#include "WaScreen.hh"
+#include "EventHandler.hh"
 #include "NetHandler.hh"
 
 #define ApplyGravity   1
 #define RemoveGravity -1
 
 typedef struct {
-    WaMenuItem *wmi;
     int max_width;
     int max_height;
     int min_width;
@@ -78,6 +76,7 @@ public:
 
     void MapWindow(void);
     void UpdateAllAttributes(void);
+    list <WaAction *> *GetActionList(list<WaActionExtList *> *);
     void SetActionLists(void);
     void RedrawWindow(void);
     void SendConfig(void);
@@ -220,17 +219,15 @@ public:
 private:
     void ReparentWin(void);
     void InitPosition(void);
-    void CreateOutlineWindows(void);
-    void ToggleOutline(void);
+    void CreateOutline(void);
+    void DestroyOutline(void);
     void DrawOutline(int, int, int, int);
     void Resize(XEvent *, int);
     void ResizeOpaque(XEvent *, int);
     
-    list <WaAction *> *GetActionList(list<WaActionExtList *> *);
-    
     WaImageControl *ic;
     Window o_west, o_north, o_south, o_east;
-    bool o_mapped, move_resize;
+    bool move_resize;
     
 #ifdef SHAPE
     bool shaped;
@@ -247,7 +244,7 @@ public:
     WaWindow *wa;
     WaScreen *wascreen;
     WaImageControl *ic;
-    WaWindowAttributes attrib;    
+    WaWindowAttributes attrib;
     WaTexture *f_texture, *u_texture;
     bool pressed;
     ButtonStyle *bstyle;

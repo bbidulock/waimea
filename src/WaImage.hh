@@ -95,6 +95,7 @@ private:
 
 #ifdef PIXMAP
     Imlib_Image pixmap;
+    Imlib_Context *imlib_context;
 #endif // PIXMAP
 
 public:
@@ -130,6 +131,10 @@ public:
 #ifdef PIXMAP
     inline void setPixmap(Imlib_Image p) { pixmap = p; }
     inline Imlib_Image getPixmap(void) { return pixmap; }
+    inline void setContext(Imlib_Context *context) {
+      imlib_context = context;
+    }
+    inline Imlib_Context *getContext(void) { return imlib_context; }
 #endif // PIXMAP
 
 };
@@ -236,8 +241,10 @@ class WaImageControl {
 private:
     bool dither;
     Display *display;
+    WaScreen *wascreen;
     Visual *visual;
     Colormap colormap;
+    
     
     XColor *colors;
     Window window;
@@ -271,7 +278,9 @@ public:
     inline Display *getDisplay(void) { return display; }
     inline const bool &doDither(void) { return dither; }
     inline int getScreen(void) { return screen_number; }
+    inline WaScreen *getWaScreen(void) { return wascreen; }
     inline Visual *getVisual(void) { return visual; }
+    inline Colormap getColormap(void) { return colormap; }
     inline const Window &getDrawable(void) const { return window; }
     inline const int &getBitsPerPixel(void) const { return bits_per_pixel; }
     inline const int &getDepth(void) const { return screen_depth; }

@@ -65,14 +65,16 @@ using std::endl;
  * lists for actions.
  */
 ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
+    char *__m_wastrdup_tmp;
+    
     waimea = wa;
     display = waimea->display;
     
     homedir = getenv("HOME");
 
-    style_file = wastrdup((char *) DEFAULTSTYLE);
-    action_file = wastrdup((char *) DEFAULTACTION);
-    menu_file = wastrdup((char *) DEFAULTMENU);
+    style_file = __m_wastrdup((char *) DEFAULTSTYLE);
+    action_file = __m_wastrdup((char *) DEFAULTACTION);
+    menu_file = __m_wastrdup((char *) DEFAULTMENU);
     rc_forced = style_forced = action_forced = menu_forced = false;
     if (options->rcfile) {
         rc_file = options->rcfile;
@@ -94,247 +96,220 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
         menu_forced = true;
     }
 
-    wacts = new list<StrComp *>;
-    wacts->push_back(new StrComp("raise", &WaWindow::Raise));
-    wacts->push_back(new StrComp("lower", &WaWindow::Lower));
-    wacts->push_back(new StrComp("focus", &WaWindow::Focus));
-    wacts->push_back(new StrComp("startmove", &WaWindow::Move));
-    wacts->push_back(new StrComp("startresizeright", &WaWindow::ResizeRight));
-    wacts->push_back(new StrComp("startresizeleft", &WaWindow::ResizeLeft));
-    wacts->push_back(new StrComp("startopaquemove", &WaWindow::MoveOpaque));
-    wacts->push_back(new StrComp("startopaqueresizeright",
+    wacts.push_back(new StrComp("raise", &WaWindow::Raise));
+    wacts.push_back(new StrComp("lower", &WaWindow::Lower));
+    wacts.push_back(new StrComp("focus", &WaWindow::Focus));
+    wacts.push_back(new StrComp("startmove", &WaWindow::Move));
+    wacts.push_back(new StrComp("startresizeright", &WaWindow::ResizeRight));
+    wacts.push_back(new StrComp("startresizeleft", &WaWindow::ResizeLeft));
+    wacts.push_back(new StrComp("startopaquemove", &WaWindow::MoveOpaque));
+    wacts.push_back(new StrComp("startopaqueresizeright",
                                  &WaWindow::ResizeRightOpaque));
-    wacts->push_back(new StrComp("startopaqueresizeleft",
+    wacts.push_back(new StrComp("startopaqueresizeleft",
                                  &WaWindow::ResizeLeftOpaque));
-    wacts->push_back(new StrComp("endmoveresize", &WaWindow::EndMoveResize));
-    wacts->push_back(new StrComp("close", &WaWindow::Close));
-    wacts->push_back(new StrComp("kill", &WaWindow::Kill));
-    wacts->push_back(new StrComp("closekill", &WaWindow::CloseKill));    
-    wacts->push_back(new StrComp("menumap", &WaWindow::MenuMap));
-    wacts->push_back(new StrComp("menuremap", &WaWindow::MenuRemap));
-    wacts->push_back(new StrComp("menumapfocused",
+    wacts.push_back(new StrComp("endmoveresize", &WaWindow::EndMoveResize));
+    wacts.push_back(new StrComp("close", &WaWindow::Close));
+    wacts.push_back(new StrComp("kill", &WaWindow::Kill));
+    wacts.push_back(new StrComp("closekill", &WaWindow::CloseKill));    
+    wacts.push_back(new StrComp("menumap", &WaWindow::MenuMap));
+    wacts.push_back(new StrComp("menuremap", &WaWindow::MenuRemap));
+    wacts.push_back(new StrComp("menumapfocused",
                                  &WaWindow::MenuMapFocused));
-    wacts->push_back(new StrComp("menuremapfocused",
+    wacts.push_back(new StrComp("menuremapfocused",
                                  &WaWindow::MenuRemapFocused));
-    wacts->push_back(new StrComp("menuunmap", &WaWindow::MenuUnmap));
-    wacts->push_back(new StrComp("menuunmapfocused",
+    wacts.push_back(new StrComp("menuunmap", &WaWindow::MenuUnmap));
+    wacts.push_back(new StrComp("menuunmapfocused",
                                  &WaWindow::MenuUnmapFocus));
-    wacts->push_back(new StrComp("shade", &WaWindow::Shade));
-    wacts->push_back(new StrComp("unshade", &WaWindow::UnShade));
-    wacts->push_back(new StrComp("toggleshade", &WaWindow::ToggleShade));
-    wacts->push_back(new StrComp("maximize", &WaWindow::Maximize));
-    wacts->push_back(new StrComp("unmaximize", &WaWindow::UnMaximize));
-    wacts->push_back(new StrComp("togglemaximize", &WaWindow::ToggleMaximize));
-    wacts->push_back(new StrComp("sticky", &WaWindow::Sticky));
-    wacts->push_back(new StrComp("unsticky", &WaWindow::UnSticky));
-    wacts->push_back(new StrComp("togglesticky", &WaWindow::ToggleSticky));
-    wacts->push_back(new StrComp("viewportleft", &WaWindow::MoveViewportLeft));
-    wacts->push_back(new StrComp("viewportright",
+    wacts.push_back(new StrComp("shade", &WaWindow::Shade));
+    wacts.push_back(new StrComp("unshade", &WaWindow::UnShade));
+    wacts.push_back(new StrComp("toggleshade", &WaWindow::ToggleShade));
+    wacts.push_back(new StrComp("maximize", &WaWindow::Maximize));
+    wacts.push_back(new StrComp("unmaximize", &WaWindow::UnMaximize));
+    wacts.push_back(new StrComp("togglemaximize", &WaWindow::ToggleMaximize));
+    wacts.push_back(new StrComp("sticky", &WaWindow::Sticky));
+    wacts.push_back(new StrComp("unsticky", &WaWindow::UnSticky));
+    wacts.push_back(new StrComp("togglesticky", &WaWindow::ToggleSticky));
+    wacts.push_back(new StrComp("viewportleft", &WaWindow::MoveViewportLeft));
+    wacts.push_back(new StrComp("viewportright",
                                  &WaWindow::MoveViewportRight));
-    wacts->push_back(new StrComp("viewportup", &WaWindow::MoveViewportUp));
-    wacts->push_back(new StrComp("viewportdown", &WaWindow::MoveViewportDown));
-    wacts->push_back(new StrComp("viewportrelativemove", 
+    wacts.push_back(new StrComp("viewportup", &WaWindow::MoveViewportUp));
+    wacts.push_back(new StrComp("viewportdown", &WaWindow::MoveViewportDown));
+    wacts.push_back(new StrComp("viewportrelativemove", 
                                  &WaWindow::ViewportRelativeMove));
-    wacts->push_back(new StrComp("viewportfixedmove", 
+    wacts.push_back(new StrComp("viewportfixedmove", 
                                  &WaWindow::ViewportFixedMove));
-    wacts->push_back(new StrComp("startviewportmove",
+    wacts.push_back(new StrComp("startviewportmove",
                                  &WaWindow::ViewportMove));
-    wacts->push_back(new StrComp("taskswitcher", &WaWindow::TaskSwitcher));
-    wacts->push_back(new StrComp("previoustask", &WaWindow::PreviousTask));
-    wacts->push_back(new StrComp("nexttask", &WaWindow::NextTask));
-    wacts->push_back(new StrComp("raisefocus", &WaWindow::RaiseFocus));
-    wacts->push_back(new StrComp("decortitleon", &WaWindow::DecorTitleOn));
-    wacts->push_back(new StrComp("decorhandleon", &WaWindow::DecorHandleOn));
-    wacts->push_back(new StrComp("decorborderon", &WaWindow::DecorBorderOn));
-    wacts->push_back(new StrComp("decorallon", &WaWindow::DecorAllOn));
-    wacts->push_back(new StrComp("decortitleoff", &WaWindow::DecorTitleOff));
-    wacts->push_back(new StrComp("decorhandleoff", &WaWindow::DecorHandleOff));
-    wacts->push_back(new StrComp("decorborderoff", &WaWindow::DecorBorderOff));
-    wacts->push_back(new StrComp("decoralloff", &WaWindow::DecorAllOff));
-    wacts->push_back(new StrComp("decortitletoggle",
+    wacts.push_back(new StrComp("taskswitcher", &WaWindow::TaskSwitcher));
+    wacts.push_back(new StrComp("previoustask", &WaWindow::PreviousTask));
+    wacts.push_back(new StrComp("nexttask", &WaWindow::NextTask));
+    wacts.push_back(new StrComp("raisefocus", &WaWindow::RaiseFocus));
+    wacts.push_back(new StrComp("decortitleon", &WaWindow::DecorTitleOn));
+    wacts.push_back(new StrComp("decorhandleon", &WaWindow::DecorHandleOn));
+    wacts.push_back(new StrComp("decorborderon", &WaWindow::DecorBorderOn));
+    wacts.push_back(new StrComp("decorallon", &WaWindow::DecorAllOn));
+    wacts.push_back(new StrComp("decortitleoff", &WaWindow::DecorTitleOff));
+    wacts.push_back(new StrComp("decorhandleoff", &WaWindow::DecorHandleOff));
+    wacts.push_back(new StrComp("decorborderoff", &WaWindow::DecorBorderOff));
+    wacts.push_back(new StrComp("decoralloff", &WaWindow::DecorAllOff));
+    wacts.push_back(new StrComp("decortitletoggle",
                                  &WaWindow::DecorTitleToggle));
-    wacts->push_back(new StrComp("decorhandletoggle",
+    wacts.push_back(new StrComp("decorhandletoggle",
                                  &WaWindow::DecorHandleToggle));
-    wacts->push_back(new StrComp("decorbordertoggle",
+    wacts.push_back(new StrComp("decorbordertoggle",
                                  &WaWindow::DecorBorderToggle));
-    wacts->push_back(new StrComp("alwaysontopon",
+    wacts.push_back(new StrComp("alwaysontopon",
                                  &WaWindow::AlwaysontopOn));
-    wacts->push_back(new StrComp("alwaysatbottomon",
+    wacts.push_back(new StrComp("alwaysatbottomon",
                                  &WaWindow::AlwaysatbottomOn));
-    wacts->push_back(new StrComp("alwaysontopoff",
+    wacts.push_back(new StrComp("alwaysontopoff",
                                  &WaWindow::AlwaysontopOff));
-    wacts->push_back(new StrComp("alwaysatbottomoff",
+    wacts.push_back(new StrComp("alwaysatbottomoff",
                                  &WaWindow::AlwaysatbottomOff));
-    wacts->push_back(new StrComp("alwaysontoptoggle",
+    wacts.push_back(new StrComp("alwaysontoptoggle",
                                  &WaWindow::AlwaysontopToggle));
-    wacts->push_back(new StrComp("alwaysatbottomtoggle",
+    wacts.push_back(new StrComp("alwaysatbottomtoggle",
                                  &WaWindow::AlwaysatbottomToggle));
-    wacts->push_back(new StrComp("acceptconfigrequeston",
+    wacts.push_back(new StrComp("acceptconfigrequeston",
                                  &WaWindow::AcceptConfigRequestOn));
-    wacts->push_back(new StrComp("acceptconfigrequestoff",
+    wacts.push_back(new StrComp("acceptconfigrequestoff",
                                  &WaWindow::AcceptConfigRequestOff));
-    wacts->push_back(new StrComp("acceptconfigrequesttoggle",
+    wacts.push_back(new StrComp("acceptconfigrequesttoggle",
                                  &WaWindow::AcceptConfigRequestToggle));
-    wacts->push_back(new StrComp("pointerrelativewarp",
+    wacts.push_back(new StrComp("pointerrelativewarp",
                                  &WaWindow::PointerRelativeWarp));
-    wacts->push_back(new StrComp("pointerfixedwarp",
+    wacts.push_back(new StrComp("pointerfixedwarp",
                                  &WaWindow::PointerFixedWarp));
-    wacts->push_back(new StrComp("moveresize", &WaWindow::MoveResize));
-    wacts->push_back(new StrComp("moveresizevirtual",
+    wacts.push_back(new StrComp("moveresize", &WaWindow::MoveResize));
+    wacts.push_back(new StrComp("moveresizevirtual",
                                  &WaWindow::MoveResizeVirtual));
-    wacts->push_back(new StrComp("movetopointer",
+    wacts.push_back(new StrComp("movetopointer",
                                  &WaWindow::MoveWindowToPointer));
-    wacts->push_back(new StrComp("restart", &WaWindow::Restart));
-    wacts->push_back(new StrComp("exit", &WaWindow::Exit));
-    wacts->push_back(new StrComp("nop", &WaWindow::Nop));
+    wacts.push_back(new StrComp("restart", &WaWindow::Restart));
+    wacts.push_back(new StrComp("exit", &WaWindow::Exit));
+    wacts.push_back(new StrComp("nop", &WaWindow::Nop));
     
-    racts = new list<StrComp *>;
-    racts->push_back(new StrComp("focus", &WaScreen::Focus));
-    racts->push_back(new StrComp("menumap", &WaScreen::MenuMap));
-    racts->push_back(new StrComp("menuremap", &WaScreen::MenuRemap));
-    racts->push_back(new StrComp("menumapfocused", &WaScreen::MenuMapFocused));
-    racts->push_back(new StrComp("menuremapfocused",
+    racts.push_back(new StrComp("focus", &WaScreen::Focus));
+    racts.push_back(new StrComp("menumap", &WaScreen::MenuMap));
+    racts.push_back(new StrComp("menuremap", &WaScreen::MenuRemap));
+    racts.push_back(new StrComp("menumapfocused", &WaScreen::MenuMapFocused));
+    racts.push_back(new StrComp("menuremapfocused",
                                  &WaScreen::MenuRemapFocused));
-    racts->push_back(new StrComp("menuunmap", &WaScreen::MenuUnmap));
-    racts->push_back(new StrComp("menuunmapfocused",
+    racts.push_back(new StrComp("menuunmap", &WaScreen::MenuUnmap));
+    racts.push_back(new StrComp("menuunmapfocused",
                                  &WaScreen::MenuUnmapFocus));
-    racts->push_back(new StrComp("restart", &WaScreen::Restart));
-    racts->push_back(new StrComp("exit", &WaScreen::Exit));
-    racts->push_back(new StrComp("viewportleft", &WaScreen::MoveViewportLeft));
-    racts->push_back(new StrComp("viewportright",
+    racts.push_back(new StrComp("restart", &WaScreen::Restart));
+    racts.push_back(new StrComp("exit", &WaScreen::Exit));
+    racts.push_back(new StrComp("viewportleft", &WaScreen::MoveViewportLeft));
+    racts.push_back(new StrComp("viewportright",
                                  &WaScreen::MoveViewportRight));
-    racts->push_back(new StrComp("viewportup", &WaScreen::MoveViewportUp));
-    racts->push_back(new StrComp("viewportdown", &WaScreen::MoveViewportDown));
-    racts->push_back(new StrComp("viewportrelativemove", 
+    racts.push_back(new StrComp("viewportup", &WaScreen::MoveViewportUp));
+    racts.push_back(new StrComp("viewportdown", &WaScreen::MoveViewportDown));
+    racts.push_back(new StrComp("viewportrelativemove", 
                                  &WaScreen::ViewportRelativeMove));
-    racts->push_back(new StrComp("viewportfixedmove", 
+    racts.push_back(new StrComp("viewportfixedmove", 
                                  &WaScreen::ViewportFixedMove));
-    racts->push_back(new StrComp("startviewportmove",
+    racts.push_back(new StrComp("startviewportmove",
                                  &WaScreen::ViewportMove));
-    racts->push_back(new StrComp("endmoveresize", &WaScreen::EndMoveResize));
-    racts->push_back(new StrComp("taskswitcher", &WaScreen::TaskSwitcher));
-    racts->push_back(new StrComp("previoustask", &WaScreen::PreviousTask));
-    racts->push_back(new StrComp("nexttask", &WaScreen::NextTask));
-    racts->push_back(new StrComp("pointerrelativewarp", 
+    racts.push_back(new StrComp("endmoveresize", &WaScreen::EndMoveResize));
+    racts.push_back(new StrComp("taskswitcher", &WaScreen::TaskSwitcher));
+    racts.push_back(new StrComp("previoustask", &WaScreen::PreviousTask));
+    racts.push_back(new StrComp("nexttask", &WaScreen::NextTask));
+    racts.push_back(new StrComp("pointerrelativewarp", 
                                  &WaScreen::PointerRelativeWarp));
-    racts->push_back(new StrComp("pointerfixedwarp",
+    racts.push_back(new StrComp("pointerfixedwarp",
                                  &WaScreen::PointerFixedWarp));
-    racts->push_back(new StrComp("nop", &WaScreen::Nop));
+    racts.push_back(new StrComp("nop", &WaScreen::Nop));
     
-    macts = new list<StrComp *>;
-    macts->push_back(new StrComp("unlink", &WaMenuItem::UnLinkMenu));
-    macts->push_back(new StrComp("mapsub", &WaMenuItem::MapSubmenu));
-    macts->push_back(new StrComp("mapsubonly", &WaMenuItem::MapSubmenuOnly));
-    macts->push_back(new StrComp("remapsub", &WaMenuItem::RemapSubmenu));
-    macts->push_back(new StrComp("mapsubfocused",
+    macts.push_back(new StrComp("unlink", &WaMenuItem::UnLinkMenu));
+    macts.push_back(new StrComp("mapsub", &WaMenuItem::MapSubmenu));
+    macts.push_back(new StrComp("mapsubonly", &WaMenuItem::MapSubmenuOnly));
+    macts.push_back(new StrComp("remapsub", &WaMenuItem::RemapSubmenu));
+    macts.push_back(new StrComp("mapsubfocused",
                                  &WaMenuItem::MapSubmenuFocused));
-    macts->push_back(new StrComp("mapsubfocusedonly",
+    macts.push_back(new StrComp("mapsubfocusedonly",
                                  &WaMenuItem::MapSubmenuFocusedOnly));
-    macts->push_back(new StrComp("remapsubfocused",
+    macts.push_back(new StrComp("remapsubfocused",
                                  &WaMenuItem::RemapSubmenuFocused));
-    macts->push_back(new StrComp("unmap", &WaMenuItem::UnmapMenu));
-    macts->push_back(new StrComp("unmapfocused", &WaMenuItem::UnmapMenuFocus));
-    macts->push_back(new StrComp("unmapsubs", &WaMenuItem::UnmapSubmenus));
-    macts->push_back(new StrComp("unmaptree", &WaMenuItem::UnmapTree));
-    macts->push_back(new StrComp("exec", &WaMenuItem::Exec));
-    macts->push_back(new StrComp("func", &WaMenuItem::Func));
-    macts->push_back(new StrComp("raise", &WaMenuItem::Raise));
-    macts->push_back(new StrComp("focus", &WaMenuItem::Focus));
-    macts->push_back(new StrComp("lower", &WaMenuItem::Lower));
-    macts->push_back(new StrComp("startmove", &WaMenuItem::Move));
-    macts->push_back(new StrComp("startopaquemove", &WaMenuItem::MoveOpaque));
-    macts->push_back(new StrComp("endmoveresize", &WaMenuItem::EndMoveResize));
-    macts->push_back(new StrComp("viewportleft",
+    macts.push_back(new StrComp("unmap", &WaMenuItem::UnmapMenu));
+    macts.push_back(new StrComp("unmapfocused", &WaMenuItem::UnmapMenuFocus));
+    macts.push_back(new StrComp("unmapsubs", &WaMenuItem::UnmapSubmenus));
+    macts.push_back(new StrComp("unmaptree", &WaMenuItem::UnmapTree));
+    macts.push_back(new StrComp("exec", &WaMenuItem::Exec));
+    macts.push_back(new StrComp("func", &WaMenuItem::Func));
+    macts.push_back(new StrComp("raise", &WaMenuItem::Raise));
+    macts.push_back(new StrComp("focus", &WaMenuItem::Focus));
+    macts.push_back(new StrComp("lower", &WaMenuItem::Lower));
+    macts.push_back(new StrComp("startmove", &WaMenuItem::Move));
+    macts.push_back(new StrComp("startopaquemove", &WaMenuItem::MoveOpaque));
+    macts.push_back(new StrComp("endmoveresize", &WaMenuItem::EndMoveResize));
+    macts.push_back(new StrComp("viewportleft",
                                  &WaMenuItem::MoveViewportLeft));
-    macts->push_back(new StrComp("viewportright",
+    macts.push_back(new StrComp("viewportright",
                                  &WaMenuItem::MoveViewportRight));
-    macts->push_back(new StrComp("viewportup", &WaMenuItem::MoveViewportUp));
-    macts->push_back(new StrComp("viewportdown",
+    macts.push_back(new StrComp("viewportup", &WaMenuItem::MoveViewportUp));
+    macts.push_back(new StrComp("viewportdown",
                                  &WaMenuItem::MoveViewportDown));
-    macts->push_back(new StrComp("viewportrelativemove", 
+    macts.push_back(new StrComp("viewportrelativemove", 
                                  &WaMenuItem::ViewportRelativeMove));
-    macts->push_back(new StrComp("viewportfixedmove", 
+    macts.push_back(new StrComp("viewportfixedmove", 
                                  &WaMenuItem::ViewportFixedMove));
-    macts->push_back(new StrComp("startviewportmove",
+    macts.push_back(new StrComp("startviewportmove",
                                  &WaMenuItem::ViewportMove));
-    macts->push_back(new StrComp("taskswitcher", &WaMenuItem::TaskSwitcher));
-    macts->push_back(new StrComp("previoustask", &WaMenuItem::PreviousTask));
-    macts->push_back(new StrComp("nexttask", &WaMenuItem::NextTask));
-    macts->push_back(new StrComp("nextitem", &WaMenuItem::NextItem));
-    macts->push_back(new StrComp("previousitem", &WaMenuItem::PreviousItem));
-    macts->push_back(new StrComp("pointerrelativewarp", 
+    macts.push_back(new StrComp("taskswitcher", &WaMenuItem::TaskSwitcher));
+    macts.push_back(new StrComp("previoustask", &WaMenuItem::PreviousTask));
+    macts.push_back(new StrComp("nexttask", &WaMenuItem::NextTask));
+    macts.push_back(new StrComp("nextitem", &WaMenuItem::NextItem));
+    macts.push_back(new StrComp("previousitem", &WaMenuItem::PreviousItem));
+    macts.push_back(new StrComp("pointerrelativewarp", 
                                  &WaMenuItem::PointerRelativeWarp));
-    macts->push_back(new StrComp("pointerfixedwarp",
+    macts.push_back(new StrComp("pointerfixedwarp",
                                  &WaMenuItem::PointerFixedWarp));
-    macts->push_back(new StrComp("menumap", &WaMenuItem::MenuMap));
-    macts->push_back(new StrComp("menuremap", &WaMenuItem::MenuRemap));
-    macts->push_back(new StrComp("menumapfocused",
+    macts.push_back(new StrComp("menumap", &WaMenuItem::MenuMap));
+    macts.push_back(new StrComp("menuremap", &WaMenuItem::MenuRemap));
+    macts.push_back(new StrComp("menumapfocused",
                                  &WaMenuItem::MenuMapFocused));
-    macts->push_back(new StrComp("menuremapfocused",
+    macts.push_back(new StrComp("menuremapfocused",
                                  &WaMenuItem::MenuRemapFocused));
-    macts->push_back(new StrComp("menuunmap", &WaMenuItem::MenuUnmap));
-    macts->push_back(new StrComp("menuunmapfocused",
+    macts.push_back(new StrComp("menuunmap", &WaMenuItem::MenuUnmap));
+    macts.push_back(new StrComp("menuunmapfocused",
                                  &WaMenuItem::MenuUnmapFocus));
-    macts->push_back(new StrComp("restart", &WaMenuItem::Restart));
-    macts->push_back(new StrComp("exit", &WaMenuItem::Exit));
-    macts->push_back(new StrComp("nop", &WaMenuItem::Nop));
+    macts.push_back(new StrComp("restart", &WaMenuItem::Restart));
+    macts.push_back(new StrComp("exit", &WaMenuItem::Exit));
+    macts.push_back(new StrComp("nop", &WaMenuItem::Nop));
     
-    types = new list<StrComp *>;
-    types->push_back(new StrComp("keypress", KeyPress));
-    types->push_back(new StrComp("keyrelease", KeyRelease));
-    types->push_back(new StrComp("buttonpress", ButtonPress));
-    types->push_back(new StrComp("buttonrelease", ButtonRelease));
-    types->push_back(new StrComp("doubleclick", DoubleClick));
-    types->push_back(new StrComp("enternotify", EnterNotify));
-    types->push_back(new StrComp("leavenotify", LeaveNotify));
-    types->push_back(new StrComp("maprequest", MapRequest));
+    types.push_back(new StrComp("keypress", KeyPress));
+    types.push_back(new StrComp("keyrelease", KeyRelease));
+    types.push_back(new StrComp("buttonpress", ButtonPress));
+    types.push_back(new StrComp("buttonrelease", ButtonRelease));
+    types.push_back(new StrComp("doubleclick", DoubleClick));
+    types.push_back(new StrComp("enternotify", EnterNotify));
+    types.push_back(new StrComp("leavenotify", LeaveNotify));
+    types.push_back(new StrComp("maprequest", MapRequest));
 
-    bdetails = new list<StrComp *>;
-    bdetails->push_back(new StrComp("anybutton", (unsigned long) 0));
-    bdetails->push_back(new StrComp("button1", Button1));
-    bdetails->push_back(new StrComp("button2", Button2));
-    bdetails->push_back(new StrComp("button3", Button3));
-    bdetails->push_back(new StrComp("button4", Button4));
-    bdetails->push_back(new StrComp("button5", Button5));
-    bdetails->push_back(new StrComp("button6", 6));
-    bdetails->push_back(new StrComp("button7", 7));
+    bdetails.push_back(new StrComp("anybutton", (unsigned long) 0));
+    bdetails.push_back(new StrComp("button1", Button1));
+    bdetails.push_back(new StrComp("button2", Button2));
+    bdetails.push_back(new StrComp("button3", Button3));
+    bdetails.push_back(new StrComp("button4", Button4));
+    bdetails.push_back(new StrComp("button5", Button5));
+    bdetails.push_back(new StrComp("button6", 6));
+    bdetails.push_back(new StrComp("button7", 7));
     
-    mods = new list<StrComp *>;
-    mods->push_back(new StrComp("shiftmask", ShiftMask));
-    mods->push_back(new StrComp("lockmask", LockMask));
-    mods->push_back(new StrComp("controlmask", ControlMask));
-    mods->push_back(new StrComp("mod1mask", Mod1Mask));
-    mods->push_back(new StrComp("mod2mask", Mod2Mask));
-    mods->push_back(new StrComp("mod3mask", Mod3Mask));
-    mods->push_back(new StrComp("mod4mask", Mod4Mask));
-    mods->push_back(new StrComp("mod5mask", Mod5Mask));
-    mods->push_back(new StrComp("button1mask", Button1Mask));
-    mods->push_back(new StrComp("button2mask", Button2Mask));
-    mods->push_back(new StrComp("button3mask", Button3Mask));
-    mods->push_back(new StrComp("button4mask", Button4Mask));
-    mods->push_back(new StrComp("button5mask", Button5Mask));
-    mods->push_back(new StrComp("moveresizemask", MoveResizeMask));
-
-    frameacts  = new list<WaAction *>;
-    awinacts   = new list<WaAction *>;
-    pwinacts   = new list<WaAction *>;
-    titleacts  = new list<WaAction *>;
-    labelacts  = new list<WaAction *>;
-    handleacts = new list<WaAction *>;
-    rgacts     = new list<WaAction *>;
-    lgacts     = new list<WaAction *>;
-    rootacts   = new list<WaAction *>;
-    weacts     = new list<WaAction *>;
-    eeacts     = new list<WaAction *>;
-    neacts     = new list<WaAction *>;
-    seacts     = new list<WaAction *>;
-    mtacts     = new list<WaAction *>;
-    miacts     = new list<WaAction *>;
-    msacts     = new list<WaAction *>;
-    mcbacts    = new list<WaAction *>;
-
-    dockstyles = new list<DockStyle *>;
-    buttonstyles = new list<ButtonStyle *>;
+    mods.push_back(new StrComp("shiftmask", ShiftMask));
+    mods.push_back(new StrComp("lockmask", LockMask));
+    mods.push_back(new StrComp("controlmask", ControlMask));
+    mods.push_back(new StrComp("mod1mask", Mod1Mask));
+    mods.push_back(new StrComp("mod2mask", Mod2Mask));
+    mods.push_back(new StrComp("mod3mask", Mod3Mask));
+    mods.push_back(new StrComp("mod4mask", Mod4Mask));
+    mods.push_back(new StrComp("mod5mask", Mod5Mask));
+    mods.push_back(new StrComp("button1mask", Button1Mask));
+    mods.push_back(new StrComp("button2mask", Button2Mask));
+    mods.push_back(new StrComp("button3mask", Button3Mask));
+    mods.push_back(new StrComp("button4mask", Button4Mask));
+    mods.push_back(new StrComp("button5mask", Button5Mask));
+    mods.push_back(new StrComp("moveresizemask", MoveResizeMask));
 }
 
 /**
@@ -344,53 +319,12 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
  * Deletes all action lists and all WaActions in them.
  */
 ResourceHandler::~ResourceHandler(void) {
-    while (! dockstyles->empty()) {
-        while (! dockstyles->back()->order->empty()) {
-            delete [] dockstyles->back()->order->back();
-            dockstyles->back()->order->pop_back();
-        }
-        delete dockstyles->back()->order;
-        delete dockstyles->back();
-        dockstyles->pop_back();
-    }
-    delete dockstyles;
-    delete buttonstyles;
-
-    delete [] pathenv;
-
-    LISTCLEAR(wacts);
-    LISTCLEAR(racts);
-    LISTCLEAR(macts);
-    LISTCLEAR(types);
-    LISTCLEAR(bdetails);
-    LISTCLEAR(mods);
-    
-    ACTLISTCLEAR(frameacts);
-    ACTLISTCLEAR(awinacts);
-    ACTLISTCLEAR(pwinacts);
-    ACTLISTCLEAR(titleacts);
-    ACTLISTCLEAR(labelacts);
-    ACTLISTCLEAR(handleacts);
-    ACTLISTCLEAR(rgacts);
-    ACTLISTCLEAR(lgacts);
-    ACTLISTCLEAR(rootacts);
-    ACTLISTCLEAR(weacts);
-    ACTLISTCLEAR(eeacts);
-    ACTLISTCLEAR(neacts);
-    ACTLISTCLEAR(seacts);
-    ACTLISTCLEAR(mtacts);
-    ACTLISTCLEAR(miacts);
-    ACTLISTCLEAR(msacts);
-    ACTLISTCLEAR(mcbacts);
-
-    LISTCLEAR3(ext_frameacts);
-    LISTCLEAR3(ext_awinacts);
-    LISTCLEAR3(ext_pwinacts);
-    LISTCLEAR3(ext_titleacts);
-    LISTCLEAR3(ext_labelacts);
-    LISTCLEAR3(ext_handleacts);
-    LISTCLEAR3(ext_rgacts);
-    LISTCLEAR3(ext_lgacts);
+    LISTDEL(wacts);
+    LISTDEL(racts);
+    LISTDEL(macts);
+    LISTDEL(types);
+    LISTDEL(bdetails);
+    LISTDEL(mods);    
     
     delete [] rc_file;
     delete [] style_file;
@@ -399,14 +333,19 @@ ResourceHandler::~ResourceHandler(void) {
 }
 
 /**
- * @fn    LoadConfig(void)
+ * @fn    LoadConfig(WaScreen *waimea)
  * @brief Reads config file
  *
- * Reads all configuration resources from config file.
+ * Reads all configuration resources for common for all screens from the
+ * config file.
+ *
+ * @param waimea Pointer to Waimea object
  */
-void ResourceHandler::LoadConfig(void) {
+void ResourceHandler::LoadConfig(Waimea *waimea) {
     XrmValue value;
     char *value_type;
+    char rc_name[30], rc_class[30];
+    char *__m_wastrdup_tmp;
     
     database = (XrmDatabase) 0;
     if (! (database = XrmGetFileDatabase(rc_file))) {
@@ -417,106 +356,158 @@ void ResourceHandler::LoadConfig(void) {
                 WARNING << "can't open system default rcfile \"" << rc_file <<
                     "\" for reading" << endl;
     }
-
-    if (! style_forced)
-        if (XrmGetResource(database, "styleFile", "StyleFile",
-                           &value_type, &value)) {
-            delete [] style_file;
-            style_file = environment_expansion(wastrdup(value.addr));
-        }
-
-    if (! action_forced)
-        if (XrmGetResource(database, "actionFile", "ActionFile",
-                           &value_type, &value)) {
-            delete [] action_file;
-            action_file = environment_expansion(wastrdup(value.addr));
-        }
-
-    if (! menu_forced)
-        if (XrmGetResource(database, "menuFile", "MenuFile",
-                           &value_type, &value)) {
-            delete [] menu_file;
-            menu_file = environment_expansion(wastrdup(value.addr));
-        }
-   
+    
+    waimea->screenmask = 0;
+    sprintf(rc_name, "screenMask");
+    sprintf(rc_class, "ScreenMask");
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        char *token = strtok(value.addr, ", \t");
+        if (token) waimea->screenmask |= (1L << atoi(token));
+        while ((token = strtok(NULL, ", \t")))
+            waimea->screenmask |= (1L << atoi(token));
+    } else
+        waimea->screenmask = (1L << 0) | (1L << 2) | (1L << 3);
+    
     char *path = getenv("PATH");
-    if (XrmGetResource(database, "scriptDir", "ScriptDir",
-                       &value_type, &value)) {
-        char *sdir = environment_expansion(wastrdup(value.addr));
-        pathenv = new char[strlen(path) + strlen(sdir) + 7];
-        sprintf(pathenv, "PATH=%s:%s", sdir, path);
+    sprintf(rc_name, "scriptDir");
+    sprintf(rc_class, "ScriptDir");
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        char *sdir = environment_expansion(__m_wastrdup(value.addr));
+        waimea->pathenv = new char[strlen(path) + strlen(sdir) + 7];
+        sprintf(waimea->pathenv, "PATH=%s:%s", sdir, path);
         delete [] sdir;
     }
     else { 
-        pathenv = new char[strlen(path) + strlen(DEFAULTSCRIPTDIR) + 7];
-        sprintf(pathenv, "PATH=%s:%s", DEFAULTSCRIPTDIR, path);
+        waimea->pathenv =
+            new char[strlen(path) + strlen(DEFAULTSCRIPTDIR) + 7];
+        sprintf(waimea->pathenv, "PATH=%s:%s", DEFAULTSCRIPTDIR, path);
     }
+
+    sprintf(rc_name, "doubleClickInterval");
+    sprintf(rc_class, "DoubleClickInterval");
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        if (sscanf(value.addr, "%lu", &waimea->double_click) != 1)
+            waimea->double_click = 300;
+    } else
+        waimea->double_click = 300;
+
+    if (waimea->double_click > 999) waimea->double_click = 999;
+
+    XrmDestroyDatabase(database);
+}
+
+/**
+ * @fn    LoadConfig(WaScreen *wascreen)
+ * @brief Reads config file
+ *
+ * Reads all configuration resources for this screen from the config file.
+ *
+ * @param wascreen Screen to read resources for
+ */
+void ResourceHandler::LoadConfig(WaScreen *wascreen) {
+    XrmValue value;
+    char *value_type;
+    char rc_name[30], rc_class[30];
+    int sn = wascreen->screen_number;
+    ScreenConfig *sc = &wascreen->config;
+    char *__m_wastrdup_tmp;
     
-    if (XrmGetResource(database, "virtualSize", "ViriualSize",
-                       &value_type, &value)) {
-        if (sscanf(value.addr, "%ux%u", &virtual_x, &virtual_y) != 2) {
-            virtual_x = virtual_y = 3;
+    database = (XrmDatabase) 0;
+    if (! (database = XrmGetFileDatabase(rc_file)))
+        if (! rc_forced) database = XrmGetFileDatabase(DEFAULTRCFILE);
+    
+    sc->style_file = __m_wastrdup(style_file);
+    if (! style_forced) {
+        sprintf(rc_name, "screen%d.styleFile", sn);
+        sprintf(rc_class, "Screen%d.StyleFile", sn);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+            delete [] sc->style_file;
+            sc->style_file = environment_expansion(__m_wastrdup(value.addr));
+        }
+    }
+
+    sc->action_file = __m_wastrdup(action_file);
+    if (! action_forced) {
+        sprintf(rc_name, "screen%d.actionFile", sn);
+        sprintf(rc_class, "Screen%d.ActionFile", sn);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+            delete [] sc->action_file;
+            sc->action_file = environment_expansion(__m_wastrdup(value.addr));
+        }
+    }
+
+    sc->menu_file = __m_wastrdup(menu_file);
+    if (! menu_forced) {
+        sprintf(rc_name, "screen%d.menuFile", sn);
+        sprintf(rc_class, "Screen%d.MenuFile", sn);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+            delete [] sc->menu_file;
+            sc->menu_file = environment_expansion(__m_wastrdup(value.addr));
+        }
+    }
+
+    sprintf(rc_name, "screen%d.virtualSize", sn);
+    sprintf(rc_class, "Screen%d.VirtualSize", sn);
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        if (sscanf(value.addr, "%ux%u", &sc->virtual_x, &sc->virtual_y) != 2) {
+            sc->virtual_x = sc->virtual_y = 3;
         }
     } else
-        virtual_x = virtual_y = 3;
-    if (virtual_x > 20) virtual_x = 20;
-    if (virtual_y > 20) virtual_y = 20;
-    if (virtual_x < 1) virtual_x = 1;
-    if (virtual_y < 1) virtual_y = 1;
-    
-    if (XrmGetResource(database, "colorsPerChannel",
-                       "ColorsPerChannel", &value_type, &value)) {
-        if (sscanf(value.addr, "%d", &colors_per_channel) != 1) {
-            colors_per_channel = 4;
+        sc->virtual_x = sc->virtual_y = 3;
+    if (sc->virtual_x > 20) sc->virtual_x = 20;
+    if (sc->virtual_y > 20) sc->virtual_y = 20;
+    if (sc->virtual_x < 1) sc->virtual_x = 1;
+    if (sc->virtual_y < 1) sc->virtual_y = 1;
+
+    sprintf(rc_name, "screen%d.colorsPerChannel", sn);
+    sprintf(rc_class, "Screen%d.ColorsPerChannel", sn);
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        if (sscanf(value.addr, "%d", &sc->colors_per_channel) != 1) {
+            sc->colors_per_channel = 4;
         } else {
-            if (colors_per_channel < 2) colors_per_channel = 2;
-            if (colors_per_channel > 6) colors_per_channel = 6;
+            if (sc->colors_per_channel < 2) sc->colors_per_channel = 2;
+            if (sc->colors_per_channel > 6) sc->colors_per_channel = 6;
         }
     } else
-        colors_per_channel = 4;
-    
-    if (XrmGetResource(database, "cacheMax", "CacheMax",
-                       &value_type, &value)) {
-        if (sscanf(value.addr, "%lu", &cache_max) != 1)
-            cache_max = 200;
-    } else
-        cache_max = 200;
+        sc->colors_per_channel = 4;
 
-    if (XrmGetResource(database, "imageDither", "ImageDither",
-                       &value_type, &value)) {
+    sprintf(rc_name, "screen%d.cacheMax", sn);
+    sprintf(rc_class, "Screen%d.CacheMax", sn);
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        if (sscanf(value.addr, "%lu", &sc->cache_max) != 1)
+            sc->cache_max = 200;
+    } else
+        sc->cache_max = 200;
+
+    sprintf(rc_name, "screen%d.imageDither", sn);
+    sprintf(rc_class, "screen%d.ImageDither", sn);
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
         if (! strncasecmp("true", value.addr, value.size))
-            image_dither = true;
+            sc->image_dither = true;
         else
-            image_dither = false;
+            sc->image_dither = false;
     } else
-        image_dither = true;
-    
-    if (XrmGetResource(database, "doubleClickInterval",
-                       "DoubleClickInterval", &value_type, &value)) {
-        if (sscanf(value.addr, "%lu", &double_click) != 1)
-            double_click = 300;
-    } else
-        double_click = 300;
+        sc->image_dither = true;
 
-    if (double_click > 999) double_click = 999;
-
-    if (XrmGetResource(database, "menuStacking", "MenuStacking",
-                       &value_type, &value)) {
+    sprintf(rc_name, "screen%d.menuStacking", sn);
+    sprintf(rc_class, "Screen%d.MenuStacking", sn);
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
         if (! strncasecmp("AlwaysAtBottom", value.addr, value.size))
-            menu_stacking = AlwaysAtBottom;
+            sc->menu_stacking = AlwaysAtBottom;
         else if (! strncasecmp("AlwaysOnTop", value.addr, value.size))
-            menu_stacking = AlwaysOnTop;
+            sc->menu_stacking = AlwaysOnTop;
     } else
-        menu_stacking = NormalStacking;    
+        sc->menu_stacking = NormalStacking;
 
-    if (XrmGetResource(database, "transientAbove", "TransientAbove",
-                       &value_type, &value)) {
+    sprintf(rc_name, "screen%d.transientAbove", sn);
+    sprintf(rc_class, "Screen%d.TransientAbove", sn);
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
         if (! strncasecmp("true", value.addr, value.size))
-            trans = true;
+            sc->transient_above = true;
         else
-            trans = false;
+            sc->transient_above = false;
     } else
-        trans = true;
+        sc->transient_above = true;
 
     
     unsigned int dummy;
@@ -524,24 +515,26 @@ void ResourceHandler::LoadConfig(void) {
     int dock_num, i;
     bool d_exists = true, have_u = false;
     DockStyle *dockstyle;
-    char rc_name[20], rc_class[20];
 
     for (dock_num = 0; d_exists && dock_num < 100; ++dock_num) {
         d_exists = false;
         dockstyle = new DockStyle;
     
-        sprintf(rc_name, "dock%d.geometry", dock_num);
-        sprintf(rc_class, "Dock%d.Geometry", dock_num);
+        sprintf(rc_name, "screen%d.dock%d.geometry", sn, dock_num);
+        sprintf(rc_class, "Screen%d.Dock%d.Geometry", sn, dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
             dockstyle->geometry = XParseGeometry(value.addr, &dockstyle->x,
                                                  &dockstyle->y, &dummy,
                                                  &dummy);
             d_exists = true;
-        }
+        } else
+            dockstyle->geometry = XParseGeometry("-0+0", &dockstyle->x,
+                                                 &dockstyle->y, &dummy,
+                                                 &dummy);
         
         dockstyle->order = new list<char *>;
-        sprintf(rc_name, "dock%d.order", dock_num);
-        sprintf(rc_class, "Dock%d.Order", dock_num);
+        sprintf(rc_name, "screen%d.dock%d.order", sn, dock_num);
+        sprintf(rc_class, "Screen%d.Dock%d.Order", sn, dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
             d_exists = true;
             token = value.addr;
@@ -553,7 +546,7 @@ void ResourceHandler::LoadConfig(void) {
                     token[i] = '\0';
                     token[3] = 'N';
                     token[4] = '_';
-                    dockstyle->order->push_back(wastrdup(&token[3]));
+                    dockstyle->order->push_back(__m_wastrdup(&token[3]));
                     token = token + strlen(token) + 1;
                 }
                 else if (! strncasecmp("class", token, 5)) {
@@ -562,12 +555,12 @@ void ResourceHandler::LoadConfig(void) {
                     token[i] = '\0';
                     token[4] = 'N';
                     token[5] = '_';
-                    dockstyle->order->push_back(wastrdup(&token[4]));
+                    dockstyle->order->push_back(__m_wastrdup(&token[4]));
                     token = token + strlen(token) + 1;
                 }
                 else if (! strncasecmp("unknown", token, 7) && !have_u) {
                     have_u = true;
-                    dockstyle->order->push_back(wastrdup("U"));
+                    dockstyle->order->push_back(__m_wastrdup("U"));
                     token = token + 7;
                 }
                 else {
@@ -576,9 +569,10 @@ void ResourceHandler::LoadConfig(void) {
             }
         }
 
-        sprintf(rc_name, "dock%d.centered", dock_num);
-        sprintf(rc_class, "Dock%d.Centered", dock_num);
-        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        sprintf(rc_name, "screen%d.dock%d.centered", sn, dock_num);
+        sprintf(rc_class, "Screen%d.Dock%d.Centered", sn, dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
             d_exists = true;
             if (! strncasecmp("true", value.addr, value.size))
                 dockstyle->centered = true;
@@ -587,9 +581,10 @@ void ResourceHandler::LoadConfig(void) {
         } else
             dockstyle->centered = false;
 
-        sprintf(rc_name, "dock%d.inworkspace", dock_num);
-        sprintf(rc_class, "Dock%d.Inworkspace", dock_num);
-        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        sprintf(rc_name, "screen%d.dock%d.inworkspace", sn, dock_num);
+        sprintf(rc_class, "Screen%d.Dock%d.Inworkspace", sn, dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
             d_exists = true;
             if (! strncasecmp("true", value.addr, value.size))
                 dockstyle->inworkspace = true;
@@ -598,9 +593,10 @@ void ResourceHandler::LoadConfig(void) {
         } else
             dockstyle->inworkspace = false;
 
-        sprintf(rc_name, "dock%d.direction", dock_num);
-        sprintf(rc_class, "Dock%d.Direction", dock_num);
-        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        sprintf(rc_name, "screen%d.dock%d.direction", sn, dock_num);
+        sprintf(rc_class, "Screen%d.Dock%d.Direction", sn, dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
             d_exists = true;
             if (! strncasecmp("Horizontal", value.addr, value.size))
                 dockstyle->direction = HorizontalDock;
@@ -609,9 +605,10 @@ void ResourceHandler::LoadConfig(void) {
         } else
             dockstyle->direction = VerticalDock;
 
-        sprintf(rc_name, "dock%d.gridSpace", dock_num);
-        sprintf(rc_class, "Dock%d.GridSpace", dock_num);
-        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        sprintf(rc_name, "screen%d.dock%d.gridSpace", sn, dock_num);
+        sprintf(rc_class, "Screen%d.Dock%d.GridSpace", sn, dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
             d_exists = true;
             if (sscanf(value.addr, "%u", &dockstyle->gridspace) != 1)
                 dockstyle->gridspace = 2;
@@ -620,9 +617,10 @@ void ResourceHandler::LoadConfig(void) {
         
         if (dockstyle->gridspace > 50) dockstyle->gridspace = 50;
 
-        sprintf(rc_name, "dock%d.stacking", dock_num);
-        sprintf(rc_class, "Dock%d.Stacking", dock_num);
-        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        sprintf(rc_name, "screen%d.dock%d.stacking", sn, dock_num);
+        sprintf(rc_class, "Screen%d.Dock%d.Stacking", sn, dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
             d_exists = true;
             if (! strncasecmp("AlwaysAtBottom", value.addr, value.size))
                 dockstyle->stacking = AlwaysAtBottom;
@@ -632,43 +630,45 @@ void ResourceHandler::LoadConfig(void) {
             dockstyle->stacking = AlwaysOnTop;
         
         if (d_exists || ! dock_num)
-            dockstyles->push_back(dockstyle);
+            wascreen->wstyle.dockstyles.push_back(dockstyle);
         else {
             delete dockstyle->order;
             delete dockstyle;
         }
     }
-    if (! have_u) dockstyles->back()->order->push_back(wastrdup("U"));
+    if (! have_u)
+        wascreen->wstyle.dockstyles.back()->order->push_back(
+            __m_wastrdup("U"));
     
     XrmDestroyDatabase(database);
 } 
     
 /**
- * @fn    LoadStyle(WaScreen *scrn)
+ * @fn    LoadStyle(WaScreen *wascreen)
  * @brief Reads style file
  *
  * Reads a style resources from a style file.
  *
- * @param scrn WaScreen to load style for
+ * @param wascreen WaScreen to load style for
  */
-void ResourceHandler::LoadStyle(WaScreen *scrn) {
+void ResourceHandler::LoadStyle(WaScreen *wascreen) {
     XrmValue value;
     char *value_type;
-    int screen = scrn->screen_number;
-    WindowStyle *wstyle = &scrn->wstyle;
-    MenuStyle   *mstyle = &scrn->mstyle;
-    WaImageControl *ic = scrn->ic;
-    wascreen = scrn;
+    int screen = wascreen->screen_number;
+    WindowStyle *wstyle = &wascreen->wstyle;
+    MenuStyle   *mstyle = &wascreen->mstyle;
+    WaImageControl *ic = wascreen->ic;
+    char *__m_wastrdup_tmp;
     
     database = (XrmDatabase) 0;
     
-    if (! (database = XrmGetFileDatabase(style_file)))
-        WARNING << "can't open stylefile \"" << style_file << 
-            "\" for reading" << endl;
+    if (! (database = XrmGetFileDatabase(wascreen->config.style_file)))
+        WARNING << "can't open stylefile \"" << wascreen->config.style_file
+                << "\" for reading" << endl;
     
-    int slen = strlen(style_file) - 1;
-    for (; slen >= 1 && style_file[slen] != '/'; slen--);
-    style_file[slen] = '\0';
+    int slen = strlen(wascreen->config.style_file) - 1;
+    for (; slen >= 1 && wascreen->config.style_file[slen] != '/'; slen--);
+    wascreen->config.style_file[slen] = '\0';
 
 #ifdef XFT
     WaFont default_font = { true, "arial:pixelsize=12" };
@@ -736,7 +736,8 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     ReadDatabaseColor("menu.frame.textColor", "Menu.Frame.TextColor",
                       &mstyle->f_text, BlackPixel(display, screen), ic);
     ReadDatabaseColor("menu.hilite.textColor", "Menu.Hilite.TextColor",
-                      &mstyle->f_hilite_text, BlackPixel(display, screen), ic);
+                      &mstyle->f_hilite_text, BlackPixel(display, screen),
+                      ic);
     ReadDatabaseColor("menu.title.textColor", "Menu.Title.TextColor",
                       &mstyle->t_text, BlackPixel(display, screen), ic);
 
@@ -785,7 +786,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     if (XrmGetResource(database, "menu.bullet.look", "Menu.Bullet.Look",
                        &value_type, &value)) {
         if (sscanf(value.addr, "'%u'", &ch) != 1) {
-            mstyle->bullet = wastrdup(value.addr);
+            mstyle->bullet = __m_wastrdup(value.addr);
         } else {
             look_tmp = new char[2];
             sprintf(look_tmp, "%c", ch);
@@ -800,26 +801,26 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     if (XrmGetResource(database, "menu.checkbox.true.look",
                        "Menu.Checkbox.True.Look", &value_type, &value)) {
         if (sscanf(value.addr, "'%u'", &ch) != 1) {
-            mstyle->checkbox_true = wastrdup(value.addr);
+            mstyle->checkbox_true = __m_wastrdup(value.addr);
         } else {
             look_tmp = new char[2];
             sprintf(look_tmp, "%c", ch);
             mstyle->checkbox_true = look_tmp;
         }
     } else
-        mstyle->checkbox_true = wastrdup("[x]");
+        mstyle->checkbox_true = __m_wastrdup("[x]");
 
     if (XrmGetResource(database, "menu.checkbox.false.look",
                        "Menu.Checkbox.False.Look", &value_type, &value)) {
         if (sscanf(value.addr, "'%u'", &ch) != 1) {
-            mstyle->checkbox_false = wastrdup(value.addr);
+            mstyle->checkbox_false = __m_wastrdup(value.addr);
         } else {
             look_tmp = new char[2];
             sprintf(look_tmp, "%c", ch);
             mstyle->checkbox_false = look_tmp;
         }
     } else
-        mstyle->checkbox_false = wastrdup("[ ]");
+        mstyle->checkbox_false = __m_wastrdup("[ ]");
 
     
     ReadDatabaseColor("borderColor", "BorderColor",
@@ -881,12 +882,12 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     
     if (XrmGetResource(database, "rootCommand", "RootCommand",
                        &value_type, &value))
-        waexec(value.addr, scrn->displaystring);
+        waexec(value.addr, wascreen->displaystring);
 
     int num = 0;
     char rc_name[50], rc_class[50];
-    list<DockStyle *>::iterator dit = dockstyles->begin();
-    for (; dit != dockstyles->end(); ++dit, ++num) {
+    list<DockStyle *>::iterator dit = wascreen->wstyle.dockstyles.begin();
+    for (; dit != wascreen->wstyle.dockstyles.end(); ++dit, ++num) {
         (*dit)->style.border_color = wstyle->border_color;
         (*dit)->style.texture = wstyle->t_focus;
         (*dit)->style.border_width = wstyle->border_width;
@@ -928,6 +929,8 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     ReadDatabaseColor("window.button.pressed.picColor",
                       "Window.Button.Pressed.PicColor",
                       &cp_tmp, cf_tmp.getPixel(), ic);
+
+    list<ButtonStyle *> *buttonstyles = &wascreen->wstyle.buttonstyles;
 
     ButtonStyle *b = new ButtonStyle;
     b->id = 0;
@@ -975,7 +978,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.Foreground", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             if (! strncasecmp("true", value.addr, value.size)) b->fg = true;
             else b->fg = false;
             found = true;
@@ -984,7 +987,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.Autoplace", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             if (! strncasecmp("Left", value.addr, value.size))
                 b->autoplace = WestType;
             else if(! strncasecmp("False", value.addr, value.size))
@@ -996,7 +999,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.Position", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             if (! sscanf(value.addr, "%d", &b->x)) {
                 b->autoplace = EastType;
             }
@@ -1007,7 +1010,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.State", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             if (! strncasecmp("SHADED", value.addr, value.size))
                 b->cb = ShadeCBoxType;
             else if(! strncasecmp("MAXIMIZED", value.addr, value.size))
@@ -1034,7 +1037,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.False.Focus", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             ReadDatabaseTexture(rc_name, rc_class, &b->t_focused,
                                 WhitePixel(display, screen), ic);
             found = true;
@@ -1043,7 +1046,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.False.Focus.PicColor", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             ReadDatabaseColor(rc_name, rc_class, &b->c_focused,
                               BlackPixel(display, screen), ic);
             found = true;
@@ -1052,7 +1055,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.False.Unfocus", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             ReadDatabaseTexture(rc_name, rc_class, &b->t_unfocused,
                                 WhitePixel(display, screen), ic);
             found = true;
@@ -1061,7 +1064,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.False.Unfocus.PicColor", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             ReadDatabaseColor(rc_name, rc_class, &b->c_unfocused,
                               BlackPixel(display, screen), ic);
             found = true;
@@ -1070,7 +1073,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.False.Pressed", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             ReadDatabaseTexture(rc_name, rc_class, &b->t_pressed,
                                 WhitePixel(display, screen), ic);
             found = true;
@@ -1079,7 +1082,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.False.Pressed.PicColor", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             ReadDatabaseColor(rc_name, rc_class, &b->c_pressed,
                               BlackPixel(display, screen), ic);
             found = true;
@@ -1095,7 +1098,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.True.Focus", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             ReadDatabaseTexture(rc_name, rc_class, &b->t_focused2,
                                 WhitePixel(display, screen), ic);
             found = true;
@@ -1104,7 +1107,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.True.Focus.PicColor", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             ReadDatabaseColor(rc_name, rc_class, &b->c_focused2,
                               BlackPixel(display, screen), ic);
             found = true;
@@ -1113,7 +1116,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.True.Unfocus", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             ReadDatabaseTexture(rc_name, rc_class, &b->t_unfocused2,
                                 WhitePixel(display, screen), ic);
             found = true;
@@ -1122,7 +1125,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.True.Unfocus.PicColor", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             ReadDatabaseColor(rc_name, rc_class, &b->c_unfocused2,
                               BlackPixel(display, screen), ic);
             found = true;
@@ -1131,7 +1134,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.True.Pressed", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             ReadDatabaseTexture(rc_name, rc_class, &b->t_pressed2,
                                 WhitePixel(display, screen), ic);
             found = true;
@@ -1140,7 +1143,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         sprintf(rc_class, "Window.Button%d.True.Pressed.PicColor", num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type,
                            &value)) {
-            if (first) { BSCLEAR(buttonstyles); first = false; }
+            if (first) { LISTPTRDEL(buttonstyles); first = false; }
             ReadDatabaseColor(rc_name, rc_class, &b->c_pressed2,
                               BlackPixel(display, screen), ic);
             found = true;
@@ -1148,57 +1151,62 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         if (found) buttonstyles->push_back(b);
         else delete b;
     }
-    wstyle->buttonstyles = buttonstyles;
     wstyle->b_num = buttonstyles->size();
         
     XrmDestroyDatabase(database);
 }
 
 /**
- * @fn    LoadMenus(void)
+ * @fn    LoadMenus(WaScreen *wascreen)
  * @brief Reads menu file
  *
  * Creates menus by parsing the menu file.
+ *
+ * @param wascreen WaScreen to load menus for
  */
-void ResourceHandler::LoadMenus(void) {
+void ResourceHandler::LoadMenus(WaScreen *wascreen) {
     FILE *file;
 
-    if (! (file = fopen(menu_file, "r"))) {
-        WARNING << "can't open menufile \"" << menu_file << 
+    if (! (file = fopen(wascreen->config.menu_file, "r"))) {
+        WARNING << "can't open menufile \"" << wascreen->config.menu_file << 
             "\" for reading" << endl;
         return;
     }
-    while (! feof(file)) ParseMenu(NULL, file);
+    while (! feof(file)) ParseMenu(NULL, file, wascreen);
     fclose(file);
 }
 
 /**
- * @fn    LoadActions(void)
+ * @fn    LoadActions(WaScreen *wascreen)
  * @brief Reads action file
  *
  * Creates action lists by parsing the action file.
+ *
+ * @param wascreen WaScreen to create action lists for
  */
-void ResourceHandler::LoadActions(void) {
+void ResourceHandler::LoadActions(WaScreen *wascreen) {
+    ScreenConfig *sc = &wascreen->config;
     FILE *file;
     int i, i2, i3;
     bool cmd;
     int ret;
-    char *buffer = new char[8192];
-    char *buffer2 = new char[8192];
+    char buffer[8192];
+    char buffer2[8192];
     char *str;
+    char *__m_wastrdup_tmp;
     WaActionExtList *ext_list;
     list<Define *> *defs = new list<Define *>;
-    bacts = new list<WaAction *>*[wascreen->wstyle.b_num];
-    ext_bacts = new list<WaActionExtList *>*[wascreen->wstyle.b_num];
+    sc->bacts = new list<WaAction *>*[wascreen->wstyle.b_num];
+    sc->ext_bacts = new list<WaActionExtList *>*[wascreen->wstyle.b_num];
     for (i = 0; i < wascreen->wstyle.b_num; i++) {
-        bacts[i] = new list<WaAction *>;
-        ext_bacts[i] = new list<WaActionExtList *>;
+        sc->bacts[i] = new list<WaAction *>;
+        sc->ext_bacts[i] = new list<WaActionExtList *>;
     }
     
-    if (! (file = fopen(action_file, "r"))) {
-        WARNING << "can't open action file \"" << action_file << 
+    if (! (file = fopen(sc->action_file, "r"))) {
+        WARNING << "can't open action file \"" << sc->action_file << 
             "\" for reading" << endl;
-        exit(1);
+        return;
     }
     for (;;) {
         for (i = 0; (ret = fgetc(file)) != EOF &&
@@ -1211,9 +1219,8 @@ void ResourceHandler::LoadActions(void) {
         }
         if (ret == EOF) {
             fclose(file);
-            LISTCLEAR(defs);
-            delete buffer;
-            delete buffer2;
+            LISTPTRDEL(defs);
+            delete defs;
             return;
         }
         else buffer[i] = ret;
@@ -1240,38 +1247,45 @@ void ResourceHandler::LoadActions(void) {
                 buffer2[i2] = '\0';
                 if (! strncasecmp(str, "DEF", 3)) {
                     str = strtrim(str + 3);                   
-                    defs->push_front(new Define(wastrdup(str),
-                                                wastrdup(strtrim((char *)
-                                                                 buffer2))));
+                    defs->push_front(new Define(str, strtrim(buffer2)));
                 }
                 else {                  
                     str = strtrim(str);
                     if (! strcasecmp(str, "root")) {
-                        ReadActions((char *) buffer2, defs, racts, rootacts);
+                        ReadActions((char *) buffer2, defs, &racts,
+                                    &sc->rootacts, wascreen);
                     }
                     else if (! strcasecmp(str, "westedge")) {
-                        ReadActions((char *) buffer2, defs, racts, weacts);
+                        ReadActions((char *) buffer2, defs, &racts,
+                                    &sc->weacts, wascreen);
                     }
                     else if (! strcasecmp(str, "eastedge")) {
-                        ReadActions((char *) buffer2, defs, racts, eeacts);
+                        ReadActions((char *) buffer2, defs, &racts,
+                                    &sc->eeacts, wascreen);
                     }
                     else if (! strcasecmp(str, "northedge")) {
-                        ReadActions((char *) buffer2, defs, racts, neacts);
+                        ReadActions((char *) buffer2, defs, &racts,
+                                    &sc->neacts, wascreen);
                     }
                     else if (! strcasecmp(str, "southedge")) {
-                        ReadActions((char *) buffer2, defs, racts, seacts);
+                        ReadActions((char *) buffer2, defs, &racts,
+                                    &sc->seacts, wascreen);
                     }
                     else if (! strcasecmp(str, "menu.title")) {
-                        ReadActions((char *) buffer2, defs, macts, mtacts);
+                        ReadActions((char *) buffer2, defs, &macts,
+                                    &sc->mtacts, wascreen);
                     }
                     else if (! strcasecmp(str, "menu.item")) {
-                        ReadActions((char *) buffer2, defs, macts, miacts);
+                        ReadActions((char *) buffer2, defs, &macts,
+                                    &sc->miacts, wascreen);
                     }
                     else if (! strcasecmp(str, "menu.sub")) {
-                        ReadActions((char *) buffer2, defs, macts, msacts);
+                        ReadActions((char *) buffer2, defs, &macts,
+                                    &sc->msacts, wascreen);
                     }
                     else if (! strcasecmp(str, "menu.checkbox")) {
-                        ReadActions((char *) buffer2, defs, macts, mcbacts);
+                        ReadActions((char *) buffer2, defs, &macts,
+                                    &sc->mcbacts, wascreen);
                     }
                     else {
                         ext_list = NULL;
@@ -1284,11 +1298,12 @@ void ResourceHandler::LoadActions(void) {
                             }
                             str[i3] = '\0';
                             ext_list = new WaActionExtList(NULL,
-                                                           wastrdup(str + 6),
+                                                           __m_wastrdup(str +
+                                                                        6),
                                                            NULL);
                             str = str + i3 + 1;
-                            ReadActions((char *) buffer2, defs, wacts,
-                                        &ext_list->list);
+                            ReadActions((char *) buffer2, defs, &wacts,
+                                        &ext_list->list, wascreen);
                         }
                         else if (! strncasecmp(str, "name", 4)) {
                             for (i3 = 4; str[i3] != ']' && str[i3] != '\0';
@@ -1298,12 +1313,13 @@ void ResourceHandler::LoadActions(void) {
                                 break;
                             }
                             str[i3] = '\0';
-                            ext_list = new WaActionExtList(wastrdup(str + 5),
+                            ext_list = new WaActionExtList(__m_wastrdup(str +
+                                                                        5),
                                                            NULL,
                                                            NULL);
                             str = str + i3 + 1;
-                            ReadActions((char *) buffer2, defs, wacts,
-                                        &ext_list->list);
+                            ReadActions((char *) buffer2, defs, &wacts,
+                                        &ext_list->list, wascreen);
                         }
                         else if (! strncasecmp(str, "title", 5)) {
                             for (i3 = 5; str[i3] != ']' && str[i3] != '\0';
@@ -1315,10 +1331,11 @@ void ResourceHandler::LoadActions(void) {
                             str[i3] = '\0';
                             ext_list = new WaActionExtList(NULL,
                                                            NULL,
-                                                           wastrdup(str + 6));
+                                                           __m_wastrdup(str +
+                                                                        6));
                             str = str + i3 + 1;
-                            ReadActions((char *) buffer2, defs, wacts,
-                                        &ext_list->list);
+                            ReadActions((char *) buffer2, defs, &wacts,
+                                        &ext_list->list, wascreen);
                         }
                         else if (! strncasecmp(str, "window", 6)) {
                             str = str + 6;
@@ -1328,59 +1345,66 @@ void ResourceHandler::LoadActions(void) {
                             break;
                         }
                         if (! strcasecmp(str, ".frame")) {
-                            if (ext_list) ext_frameacts.push_back(ext_list);
-                            else ReadActions((char *) buffer2, defs, wacts,
-                                             frameacts);
+                            if (ext_list)
+                                sc->ext_frameacts.push_back(ext_list);
+                            else ReadActions((char *) buffer2, defs, &wacts,
+                                             &sc->frameacts, wascreen);
                         }
                         else if (! strcasecmp(str, ".title")) {
-                            if (ext_list) ext_titleacts.push_back(ext_list);
-                            else ReadActions((char *) buffer2, defs, wacts,
-                                             titleacts);
+                            if (ext_list)
+                                sc->ext_titleacts.push_back(ext_list);
+                            else ReadActions((char *) buffer2, defs, &wacts,
+                                             &sc->titleacts, wascreen);
                         }
                         else if (! strcasecmp(str, ".label")) {
-                            if (ext_list) ext_labelacts.push_back(ext_list);
-                            else ReadActions((char *) buffer2, defs, wacts,
-                                             labelacts);
+                            if (ext_list)
+                                sc->ext_labelacts.push_back(ext_list);
+                            else ReadActions((char *) buffer2, defs, &wacts,
+                                             &sc->labelacts, wascreen);
                         }
                         else if (! strcasecmp(str, ".handle")) {
-                            if (ext_list) ext_handleacts.push_back(ext_list);
-                            else ReadActions((char *) buffer2, defs, wacts,
-                                             handleacts);
+                            if (ext_list)
+                                sc->ext_handleacts.push_back(ext_list);
+                            else ReadActions((char *) buffer2, defs, &wacts,
+                                             &sc->handleacts, wascreen);
                         }
                         else if (! strcasecmp(str, ".activeclient")) {
-                            if (ext_list) ext_awinacts.push_back(ext_list);
-                            else ReadActions((char *) buffer2, defs, wacts,
-                                             awinacts);
+                            if (ext_list)
+                                sc->ext_awinacts.push_back(ext_list);
+                            else ReadActions((char *) buffer2, defs, &wacts,
+                                             &sc->awinacts, wascreen);
                         }
                         else if (! strcasecmp(str, ".passiveclient")) {
-                            if (ext_list) ext_pwinacts.push_back(ext_list);
-                            else ReadActions((char *) buffer2, defs, wacts,
-                                             pwinacts);
+                            if (ext_list)
+                                sc->ext_pwinacts.push_back(ext_list);
+                            else ReadActions((char *) buffer2, defs, &wacts,
+                                             &sc->pwinacts, wascreen);
                         }
                         else if (! strcasecmp(str, ".leftgrip")) {
-                            if (ext_list) ext_lgacts.push_back(ext_list);
-                            else ReadActions((char *) buffer2, defs, wacts,
-                                             lgacts);
+                            if (ext_list) sc->ext_lgacts.push_back(ext_list);
+                            else ReadActions((char *) buffer2, defs, &wacts,
+                                             &sc->lgacts, wascreen);
                         }
                         else if (! strcasecmp(str, ".rightgrip")) {
-                            if (ext_list) ext_rgacts.push_back(ext_list);
-                            else ReadActions((char *) buffer2, defs, wacts,
-                                             rgacts);
+                            if (ext_list) sc->ext_rgacts.push_back(ext_list);
+                            else ReadActions((char *) buffer2, defs, &wacts,
+                                             &sc->rgacts, wascreen);
                         }
                         else if (! strncasecmp(str, ".button", 7)) {
                             int id;
                             if (strlen(str) > 7) {
                                 id = atoi(str + 7);
-                                if (id < 0 || id >=
-                                    waimea->wascreen->wstyle.b_num)
-                                    WARNING << "bad button id: " <<
-                                        id << endl;
+                                if (id < 0 || id >= wascreen->wstyle.b_num)
+                                    WARNING << "bad button id: " << id <<
+                                        endl;
                                 else {
                                     if (ext_list)
-                                        ext_bacts[id]->push_back(ext_list);
+                                        sc->ext_bacts[id]->push_back(
+                                            ext_list);
                                     else
                                         ReadActions((char *) buffer2, defs,
-                                                    wacts, bacts[id]);
+                                                    &wacts, sc->bacts[id],
+                                                    wascreen);
                                 }
                             }
                         }
@@ -1399,26 +1423,30 @@ void ResourceHandler::LoadActions(void) {
  * @fn    ReadActions(char *s,
  *                    list<Define *> *defs,
  *                    list<StrComp *> *comp,
- *                    list<WaAction *> *insert)
+ *                    list<WaAction *> *insert,
+ *                    WaScreen *wascreen)
  * @brief Parses a block of actions
  *
  * Parses a block of action lines. All defines are replaced with actual lines
  * and then parsed.
  *
+ * @param defs List with temporary defined action lists
  * @param comp List with available actions
  * @param insert List to insert action in
+ * @param wascreen WaScreen to create action list for
  */
-void ResourceHandler::ReadActions(char *s,
+void ResourceHandler::ReadActions(char s[8192],
                                   list<Define *> *defs,
                                   list<StrComp *> *comp,
-                                  list<WaAction *> *insert) {
+                                  list<WaAction *> *insert,
+                                  WaScreen *wascreen) {
     bool match, ret = false;
     char tmp[8192];
     char *ts;
     int i;
     list<Define *>::iterator it;
     for (;;) {       
-        for (i = 0; s[i] != ',' && s[i] != '\0'; i++);       
+        for (i = 0; s[i] != ',' && s[i] != '\0'; i++);
         if (s[i] == '\0') {
             s[i + 1] = '\0';
             ret = true;
@@ -1426,7 +1454,7 @@ void ResourceHandler::ReadActions(char *s,
         else s[i] = '\0';
         ts = strtrim(s);
         if (strlen(ts) == 0) {
-            s = s + i + 1;           
+            s = s + i + 1;
             if (ret) return;
             continue;
         }
@@ -1445,7 +1473,7 @@ void ResourceHandler::ReadActions(char *s,
             }
         }
         if (! match) {
-            ParseAction(ts, comp, insert);           
+            ParseAction(ts, comp, insert, wascreen);           
             s = s + i + 1;
         }
         if (ret) return;
@@ -1498,14 +1526,16 @@ void ResourceHandler::ReadDatabaseColor(char *rname, char *rclass,
 #ifdef XFT
     color->setXftOpacity(opacity);
 #endif // XFT
-    
+
+    delete [] oclass;
+    delete [] oname;
 }
 
 /**
  * @fn    ReadDatabaseTexture(char *rname, char *rclass,
  *                            WaColor *color,
  *                            unsigned long default_pixel,
- *                            WaImageControl *ic, WaScreen *scrn)
+ *                            WaImageControl *ic)
  * @brief Reads a texture
  *
  * Reads a texture from resource database.
@@ -1523,7 +1553,7 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
     XrmValue value;
     char *value_type;
 
-    Colormap colormap = wascreen->colormap;
+    Colormap colormap = ic->getColormap();
 
     if (XrmGetResource(database, rname, rclass, &value_type,
                        &value))
@@ -1539,6 +1569,10 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
         int clen = strlen(rclass) + 10, nlen = strlen(rname) + 10;
         char *pixmapclass = new char[clen], *pixmapname = new char[nlen];
         char pixmap_path[1024];
+
+        imlib_context_push(ic->getWaScreen()->imlib_context);
+        texture->setContext(&ic->getWaScreen()->imlib_context);
+        imlib_context_set_mask(0);
         
         Imlib_Border bd;
         Imlib_Image image = NULL;
@@ -1553,7 +1587,8 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
                         "\"\n";
             }
             else {
-                sprintf(pixmap_path, "%s/%s", style_file, value.addr);
+                sprintf(pixmap_path, "%s/%s",
+                        ic->getWaScreen()->config.style_file, value.addr);
                 if (! (image = imlib_load_image(pixmap_path))) {
                     WARNING << "failed loading image \"" << value.addr <<
                         "\"\n";
@@ -1576,6 +1611,7 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
         
         delete [] pixmapclass;
         delete [] pixmapname;
+        imlib_context_pop();
     }
 #endif // PIXMAP
         
@@ -1609,7 +1645,8 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
             if (xcol.green >= 0xff) xcol.green = 0xffff;
             else xcol.green *= 0xff;
             xcol.blue = (unsigned int) (texture->getColor()->getBlue() +
-                                        (texture->getColor()->getBlue() >> 1));
+                                        (texture->getColor()->getBlue() >>
+                                         1));
             if (xcol.blue >= 0xff) xcol.blue = 0xffff;
             else xcol.blue *= 0xff;
 
@@ -1623,7 +1660,8 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
                                 (texture->getColor()->getRed() >> 1)) * 0xff;
             xcol.green =
                 (unsigned int) ((texture->getColor()->getGreen() >> 2) +
-                                (texture->getColor()->getGreen() >> 1)) * 0xff;
+                                (texture->getColor()->getGreen() >> 1)) *
+                0xff;
             xcol.blue =
                 (unsigned int) ((texture->getColor()->getBlue() >> 2) +
                                 (texture->getColor()->getBlue() >> 1)) * 0xff;
@@ -1653,8 +1691,14 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
     }
 
 #ifdef XRENDER
-
     if (texture->getTexture() & WaImage_ParentRelative) {
+        delete [] colorclass;
+        delete [] colorname;
+        return;
+    }
+
+    if (! ic->getWaScreen()->render_extension) {
+        texture->setOpacity(0);
         delete [] colorclass;
         delete [] colorname;
         return;
@@ -1680,7 +1724,7 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
     opacity = (opacity * 255) / 100;
     if (opacity > 255) opacity = 255;
     else if (opacity < 0) opacity = 0;
-
+    
     texture->setOpacity(opacity);
 
     if (opacity > 0 && opacity < 255) {
@@ -1689,30 +1733,31 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
         Rpf.depth = 8;
         Rpf.direct.alphaMask = 0xff;
         Rpa.repeat = True;
-        xformat = XRenderFindFormat(wascreen->display, PictFormatType |
+        xformat = XRenderFindFormat(ic->getDisplay(), PictFormatType |
                                     PictFormatDepth | PictFormatAlphaMask,
                                     &Rpf, 0);
-        alphaPixmap = XCreatePixmap(wascreen->display, wascreen->id, 1, 1, 8);
-        alphaPicture = XRenderCreatePicture(wascreen->display, alphaPixmap,
+        alphaPixmap = XCreatePixmap(ic->getDisplay(), ic->getDrawable(),
+                                    1, 1, 8);
+        alphaPicture = XRenderCreatePicture(ic->getDisplay(), alphaPixmap,
                                             xformat, CPRepeat, &Rpa);
-        XRenderFillRectangle(wascreen->display, PictOpSrc, alphaPicture, &clr,
+        XRenderFillRectangle(ic->getDisplay(), PictOpSrc, alphaPicture, &clr,
                              0, 0, 1, 1);
         texture->setAlphaPicture(alphaPicture);
-        XFreePixmap(wascreen->display, alphaPixmap);
+        XFreePixmap(ic->getDisplay(), alphaPixmap);
         if (texture->getTexture() == (WaImage_Solid | WaImage_Flat)) {
-            Rpf.depth = wascreen->screen_depth;
-            xformat = XRenderFindFormat(wascreen->display, PictFormatType |
+            Rpf.depth = ic->getDepth();
+            xformat = XRenderFindFormat(ic->getDisplay(), PictFormatType |
                                         PictFormatDepth,
                                         &Rpf, 0);
-            solidPixmap = XCreatePixmap(wascreen->display, wascreen->id, 1, 1,
-                                        wascreen->screen_depth);
-            solidPicture = XRenderCreatePicture(wascreen->display, solidPixmap,
+            solidPixmap = XCreatePixmap(ic->getDisplay(), ic->getDrawable(),
+                                        1, 1, ic->getDepth());
+            solidPicture = XRenderCreatePicture(ic->getDisplay(), solidPixmap,
                                                 xformat, CPRepeat, &Rpa);
-            XRenderFillRectangle(wascreen->display, PictOpSrc, solidPicture,
+            XRenderFillRectangle(ic->getDisplay(), PictOpSrc, solidPicture,
                                  texture->getColor()->getXRenderColor(),
                                  0, 0, 1, 1);
             texture->setSolidPicture(solidPicture);
-            XFreePixmap(wascreen->display, solidPixmap);
+            XFreePixmap(ic->getDisplay(), solidPixmap);
         }
     }
 #endif // XRENDER
@@ -1739,6 +1784,7 @@ void ResourceHandler::ReadDatabaseFont(char *rname, char *rclass,
     char *value_type;
     char *xft_match;
     char *f;
+    char *__m_wastrdup_tmp;
     
     if (XrmGetResource(database, rname, rclass, &value_type, &value)) {
         f = value.addr;
@@ -1755,40 +1801,44 @@ void ResourceHandler::ReadDatabaseFont(char *rname, char *rclass,
 #endif // XFT
             
         }
-        font->font = wastrdup(f);
+        font->font = __m_wastrdup(f);
         strtrim(font->font);
         if (xft_match) xft_match[0] = '[';
     } else {
         font->xft = defaultfont->xft;
-        font->font = wastrdup(defaultfont->font);
+        font->font = __m_wastrdup(defaultfont->font);
     }
 }
 
 /**
- * @fn    ParseAction(const char *s, list<StrComp *> *comp,
- *                    list<WaAction *> *insert)
+ * @fn    ParseAction(const char *_s, list<StrComp *> *comp,
+ *                    list<WaAction *> *insert, WaScreen *wascreen)
  * @brief Parses an action line
  *
  * Parses an action line into an action object and inserts it in action list.
  *
- * @param s Action line to parse
+ * @param _s Action line to parse
  * @param comp List with available actions
  * @param insert List to insert action in
+ * @param wascreen WaScreen to parse action for
  */
-void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
-                                  list<WaAction *> *insert) {
+void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
+                                  list<WaAction *> *insert,
+                                  WaScreen *wascreen) {
     char *line, *token, *par, *tmp_par;
     int i, detail, mod;
     WaAction *act_tmp;
     KeySym keysym;
     list<StrComp *>::iterator it;
+    char *__m_wastrdup_tmp;
+    char *s = NULL;
     
     act_tmp = new WaAction;
     act_tmp->replay = false;
     act_tmp->delay.tv_sec = act_tmp->delay.tv_usec = 0;
     act_tmp->delay_breaks = NULL;
     
-    line = wastrdup((char *) s);
+    line = __m_wastrdup((char *) _s);
     
     detail = strchr(line, '=') ? 1: 0;
     mod    = strchr(line, '&') ? 1: 0;
@@ -1799,7 +1849,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         token++;
     }
     
-    tmp_par = wastrdup(token);
+    tmp_par = __m_wastrdup(token);
     par = tmp_par;
     
     act_tmp->exec = NULL;
@@ -1812,6 +1862,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                         << endl;
                 delete act_tmp;
                 delete [] line;
+                if (s) delete [] s; s = NULL;
                 return;
             }
         if (*par == '\0' || *par == ')') {
@@ -1823,6 +1874,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                     endl;
                 delete act_tmp;
                 delete [] line;
+                if (s) delete [] s; s = NULL;
                 return;
             }
         }
@@ -1841,6 +1893,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             endl;
         delete act_tmp;
         delete [] line;
+        if (s) delete [] s; s = NULL;
         return;
     }
     delete [] tmp_par;
@@ -1858,12 +1911,14 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         }
     }
     if (! *it) {
+        if (s) delete [] s; s = NULL;
         if ((s = strwithin(token, '{', '}'))) {
-            act_tmp->exec = (char *) s;
+            act_tmp->exec = __m_wastrdup(s);
         } else {
             WARNING << "\"" << token << "\" unknown action" << endl;
             delete act_tmp;
             delete [] line;
+            if (s) delete [] s; s = NULL;
             return;
         }
     }
@@ -1875,8 +1930,8 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     }
     token = strtrim(token);
     
-    it = types->begin();
-    for (; it != types->end(); ++it) {
+    it = types.begin();
+    for (; it != types.end(); ++it) {
         if ((*it)->Comp(token)) {
             act_tmp->type = (*it)->value;
             break;
@@ -1886,6 +1941,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         WARNING << "\"" << token << "\" unknown type" << endl;
         delete act_tmp;
         delete [] line;
+        if (s) delete [] s; s = NULL;
         return;
     }
     
@@ -1903,6 +1959,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                     WARNING << "\"" << token << "\" unknown key" << endl;
                     delete act_tmp;
                     delete [] line;
+                    if (s) delete [] s; s = NULL;
                     return;
                 } else
                     act_tmp->detail = XKeysymToKeycode(display, keysym);
@@ -1910,8 +1967,8 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         } else if (act_tmp->type == ButtonPress ||
                    act_tmp->type == ButtonRelease ||
                    act_tmp->type == DoubleClick) {
-            it = bdetails->begin();
-            for (; it != bdetails->end(); ++it) {
+            it = bdetails.begin();
+            for (; it != bdetails.end(); ++it) {
                 if ((*it)->Comp(token)) {
                     act_tmp->detail = (*it)->value;
                     break;
@@ -1921,6 +1978,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                 WARNING << "\"" << token << "\" unknown detail" << endl;
                 delete act_tmp;
                 delete [] line;
+                if (s) delete [] s; s = NULL;
                 return;
             }
         }        
@@ -1937,7 +1995,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                 negative = true;
                 token = strtrim(token + 1);
             }
-            for (it = mods->begin(); it != mods->end(); ++it) {
+            for (it = mods.begin(); it != mods.end(); ++it) {
                 if ((*it)->Comp(token)) {
                     if (negative)
                         act_tmp->nmod |= (*it)->value;
@@ -1950,6 +2008,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                 WARNING << "\"" << token << "\" unknown modifier" << endl;
                 delete act_tmp;
                 delete [] line;
+                if (s) delete [] s; s = NULL;
                 return;
             }
         }
@@ -1965,8 +2024,8 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             act_tmp->delay_breaks = new list<int>;
             while ((token = strtok(NULL, "|"))) {
                 token = strtrim(token);
-                it = types->begin();
-                for (; it != types->end(); ++it) {
+                it = types.begin();
+                for (; it != types.end(); ++it) {
                     if ((*it)->Comp(token)) {
                         act_tmp->delay_breaks->push_back((*it)->value);
                         break;
@@ -1981,10 +2040,11 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     }
     delete [] line;
     insert->push_back(act_tmp);
+    if (s) delete [] s; s = NULL;
 }
 
 /**
- * @fn    ParseMenus(WaMenu *menu, FILE *file)
+ * @fn    ParseMenu(WaMenu *menu, FILE *file, WaScreen *wascreen)
  * @brief Parses a menu file
  *
  * Parses a menu section of the menu file and creates a menu object for the
@@ -1995,16 +2055,18 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
  * @param menu Menu to add items to
  * @param file File descriptor for menu file
  *
- * @return Poniter to new menu if menu was sucessfully parsed,
+ * @return Pointer to new menu if menu was sucessfully parsed,
  *         otherwise NULL
  */
-WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
-    char *s, line[8192], *line1 = NULL, *line2 = NULL,
+WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file,
+                                   WaScreen *wascreen) {
+    char *s = NULL, line[8192], *line1 = NULL, *line2 = NULL,
         *par = NULL, *tmp_par = NULL;
     WaMenuItem *m;
     int i, type, cb;
     WaMenu *tmp_menu;
     list<StrComp *>::iterator it;
+    char *__m_wastrdup_tmp;
 
     while (fgets(line, 8192, file)) {
         linenr++;
@@ -2015,6 +2077,7 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
 
         cb = 0;
         
+        if (s) delete [] s; s = NULL;
         if (! (s = strwithin(line, '[', ']'))) {
             WARNING << "(" << basename(menu_file) << ":" << linenr << "):" <<
                 " missing tag" << endl;
@@ -2025,21 +2088,20 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             char *tmp_mf;
             int tmp_linenr;
 
-            delete [] s;
+            if (s) delete [] s; s = NULL;
             if ((s = strwithin(line, '(', ')', true))) {
                 if (! (include_file = fopen(s, "r"))) { 
                     WARNING << "can't open menufile \"" << s <<
                         "\" for reading" << endl;
-                    delete [] s;
                     continue;
                 }
                 tmp_mf = menu_file;
                 tmp_linenr = linenr;
                 menu_file = s;
-                while (! feof(include_file)) ParseMenu(menu, include_file);
+                while (! feof(include_file))
+                    ParseMenu(menu, include_file, wascreen);
                 menu_file = tmp_mf;
                 linenr = tmp_linenr;
-                delete [] s;
                 fclose(include_file);                
             } else {
                 WARNING << "(" << basename(menu_file) << ":" << linenr <<
@@ -2056,16 +2118,16 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             }
         }
         if (! strcasecmp(s, "start")) {
-            delete [] s;
-            if ((s = strwithin(line, '(', ')', true))) {                
-                tmp_menu = new WaMenu(wastrdup(s));
+            if (s) delete [] s; s = NULL;
+            if ((s = strwithin(line, '(', ')', true))) {
+                tmp_menu = new WaMenu(s);
                 if (menu) {
                     if (menu->dynamic) {
                         tmp_menu->dynamic = true;
-                        if (ParseMenu(tmp_menu, file))
+                        if (ParseMenu(tmp_menu, file, wascreen))
                             tmp_menu->Build(wascreen);
                     } else
-                        ParseMenu(tmp_menu, file);
+                        ParseMenu(tmp_menu, file, wascreen);
                 }
                 else menu = tmp_menu;
             } else
@@ -2074,27 +2136,27 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         else if ((! strcasecmp(s, "submenu")) || (! strcasecmp(s, "begin"))) {
-            delete [] s;
+            if (s) delete [] s; s = NULL;
             if ((s = strwithin(line, '(', ')', true))) {
                 if (menu) {
                     m = new WaMenuItem(s);
                     m->type = MenuSubType;
                     m->func_mask |= MenuSubMask;
                     m->func_mask1 |= MenuSubMask;
-                    m->sub = m->sub1 = wastrdup(s);
+                    m->sub = m->sub1 = __m_wastrdup(s);
                     menu->AddItem(m);
                 }
-                tmp_menu = new WaMenu(wastrdup(s));
-                m = new WaMenuItem(wastrdup(s));
+                tmp_menu = new WaMenu(s);
+                m = new WaMenuItem(s);
                 m->type = MenuTitleType;
                 tmp_menu->AddItem(m);
                 if (menu) {
                     if (menu->dynamic) {
                         tmp_menu->dynamic = true;
-                        if (ParseMenu(tmp_menu, file))
+                        if (ParseMenu(tmp_menu, file, wascreen))
                             tmp_menu->Build(wascreen);
                     } else
-                        ParseMenu(tmp_menu, file);
+                        ParseMenu(tmp_menu, file, wascreen);
                 }
                 else menu = tmp_menu;
             } else
@@ -2103,16 +2165,15 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         else if (! strcasecmp(s, "restart")) {
-            delete [] s;
+            if (s) delete [] s; s = NULL;
             if ((s = strwithin(line, '(', ')', true)))
                 m = new WaMenuItem(s);
             else                
-                m = new WaMenuItem(wastrdup(""));
-            
-            if ((s = strwithin(line, '{', '}'))) {
-                m->param1 = m->param = wastrdup(s);
-                delete [] s;
-            }            
+                m = new WaMenuItem("");
+
+            if (s) delete [] s; s = NULL;
+            if ((s = strwithin(line, '{', '}')))
+                m->param1 = m->param = __m_wastrdup(s);
             m->type = MenuItemType;            
             m->func_mask = MenuRFuncMask;
             m->rfunc = &WaScreen::Restart;
@@ -2120,11 +2181,11 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         else if (! strcasecmp(s, "exit")) {
-            delete [] s;
+            if (s) delete [] s; s = NULL;
             if ((s = strwithin(line, '(', ')', true)))
                 m = new WaMenuItem(s);
             else
-                m = new WaMenuItem(wastrdup(""));
+                m = new WaMenuItem("");
             m->type = MenuItemType;
             m->func_mask = MenuRFuncMask;
             m->rfunc = &WaScreen::Exit;
@@ -2132,96 +2193,85 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         else if (! strcasecmp(s, "exec")) {
-            delete [] s;
+            if (s) delete [] s; s = NULL;
             if ((s = strwithin(line, '(', ')', true)))
                 m = new WaMenuItem(s);
             else
-                m = new WaMenuItem(wastrdup(""));
+                m = new WaMenuItem("");
             m->type = MenuItemType;
+            if (s) delete [] s; s = NULL;
             if ((s = strwithin(line, '{', '}'))) {
                 if (*s != '\0') {
-                    m->exec = s;
-                    m->exec1 = s;
+                    m->exec = m->exec1 = __m_wastrdup(s);
                     m->func_mask |= MenuExecMask;
                     m->func_mask1 |= MenuExecMask;
                 }
-                else
-                    delete [] s;
             }
             menu->AddItem(m);
             continue;
         }
         else if (! strcasecmp(s, "nop")) {
-            delete [] s;
+            if (s) delete [] s; s = NULL;
             if ((s = strwithin(line, '(', ')', true)))
                 m = new WaMenuItem(s);
             else
-                m = new WaMenuItem(wastrdup(""));
+                m = new WaMenuItem("");
             m->type = MenuItemType;
             menu->AddItem(m);
             continue;
         }
         else if (! strcasecmp(s, "end")) {
-            delete [] s;
-            if (menu->item_list->empty()) {
+            if (menu->item_list.empty()) {
                 WARNING << "no elements in menu \"" << menu->name <<
                     "\"" << endl;
                 delete menu;
+                if (s) delete [] s; s = NULL;
                 return NULL;
             }
-            waimea->wamenu_list->push_back(menu);
+            wascreen->wamenu_list.push_back(menu);
+            if (s) delete [] s; s = NULL;
             return menu;
         }
         else if (! strncasecmp(s, "checkbox", 8)) {
             if (! strcasecmp(s + 9, "MAXIMIZED")) {
-                delete [] s;
                 type = MenuCBItemType;
                 cb = MaxCBoxType;
             }
             else if (! strcasecmp(s + 9, "SHADED")) {
-                delete [] s;
                 type = MenuCBItemType;
                 cb = ShadeCBoxType;
             }
             else if (! strcasecmp(s + 9, "STICKY")) {
-                delete [] s;
                 type = MenuCBItemType;
                 cb = StickCBoxType;
             }
             else if (! strcasecmp(s + 9, "DECORTITLE")) {
-                delete [] s;
                 type = MenuCBItemType;
                 cb = TitleCBoxType;
             }
             else if (! strcasecmp(s + 9, "DECORHANDLE")) {
-                delete [] s;
                 type = MenuCBItemType;
                 cb = HandleCBoxType;
             }
             else if (! strcasecmp(s + 9, "DECORBORDER")) {
-                delete [] s;
                 type = MenuCBItemType;
                 cb = BorderCBoxType;
             }
             else if (! strcasecmp(s + 9, "DECORALL")) {
-                delete [] s;
                 type = MenuCBItemType;
                 cb = AllCBoxType;
             }
             else if (! strcasecmp(s + 9, "ALWAYSONTOP")) {
-                delete [] s;
                 type = MenuCBItemType;
                 cb = AOTCBoxType;
             }
             else if (! strcasecmp(s + 9, "ALWAYSATBOTTOM")) {
-                delete [] s;
                 type = MenuCBItemType;
                 cb = AABCBoxType;
             }
             else {
                 WARNING << "(" << basename(menu_file) << ":" << linenr << 
                     "): '"<< s + 9 << "' unknown checkbox" << endl;
-                delete [] s;
                 continue;
             }
             for (i = 0; strncasecmp(&line[i], "@TRUE", 5) &&
@@ -2248,46 +2298,45 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             if (line2[i + 6] != '\0') line2[i] = '\0';
         }
         else if (! strcasecmp(s, "title")) {
-            delete [] s;
             type = MenuTitleType;
         }
         else if (! strcasecmp(s, "item")) {
-            delete [] s;
             type = MenuItemType;
         }
         else if (! strcasecmp(s, "sub")) {
-            delete [] s;
             type = MenuSubType;
         }
         else {
             WARNING << "(" << basename(menu_file) << ":" << linenr << 
                 "): bad tag [" << s << "]" << endl;
-            delete [] s;
             continue;
         }
         if (! cb) line1 = line;
+        if (s) delete [] s; s = NULL;
         if (! (s = strwithin(line1, '(', ')', true)))
-            s = wastrdup("");
-        m = new WaMenuItem(s);
+            m = new WaMenuItem("");
+        else
+            m = new WaMenuItem(s);
         m->label1 = m->label;
         m->type = type;
         m->cb = cb;
+        if (s) delete [] s; s = NULL;
         if ((s = strwithin(line1, '{', '}'))) {
             if (*s != '\0') {
-                m->exec = s;
-                m->exec1 = s;
+                m->exec = m->exec1 = __m_wastrdup(s);
                 m->func_mask |= MenuExecMask;
                 m->func_mask1 |= MenuExecMask;
             }
         }
+        if (s) delete [] s; s = NULL;
         if ((s = strwithin(line1, '<', '>'))) {
-            m->sub = s;
-            m->sub1 = s;
+            m->sub = m->sub1 = __m_wastrdup(s);
             m->func_mask |= MenuSubMask;
             m->func_mask1 |= MenuSubMask;
         }
+        if (s) delete [] s; s = NULL;
         if ((s = strwithin(line1, '"', '"'))) {
-            tmp_par = par = wastrdup(s);
+            tmp_par = par = __m_wastrdup(s);
             for (i = 0; *par != '(' && *par != '\0'; par++, i++);
             if (*(par++) == '(') {
                 s[i] = '\0';
@@ -2307,8 +2356,8 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             else
                 delete [] tmp_par;
             
-            it = wacts->begin();
-            for (; it != wacts->end(); ++it) {
+            it = wacts.begin();
+            for (; it != wacts.end(); ++it) {
                 if ((*it)->Comp(s)) {
                     m->wfunc = (*it)->winfunc;
                     m->wfunc1 = (*it)->winfunc;
@@ -2317,8 +2366,8 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                     break;
                 }
             }
-            it = racts->begin();
-            for (; it != racts->end(); ++it) {
+            it = racts.begin();
+            for (; it != racts.end(); ++it) {
                 if ((*it)->Comp(s)) {
                     m->rfunc = (*it)->rootfunc;
                     m->rfunc1 = (*it)->rootfunc;
@@ -2327,8 +2376,8 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                     break;
                 }
             }
-            it = macts->begin();
-            for (; it != macts->end(); ++it) {
+            it = macts.begin();
+            for (; it != macts.end(); ++it) {
                 if ((*it)->Comp(s)) {
                     m->mfunc = (*it)->menufunc;
                     m->mfunc1 = (*it)->menufunc;
@@ -2337,7 +2386,6 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                     break;
                 }
             }
-            delete [] s;
             if (! (m->wfunc || m->rfunc || m->mfunc)) {
                 WARNING << "(" << basename(menu_file) << ":" << linenr << 
                     "): function \"" << s << "\" not available" << endl;
@@ -2346,21 +2394,26 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         
         if (cb) {
+            if (s) delete [] s; s = NULL;
             if (! (s = strwithin(line2, '(', ')', true)))
-                s = wastrdup("");
-            m->label2 = s;
+                m->label2 = __m_wastrdup("");
+            else
+                m->label2 = __m_wastrdup(s);
+            if (s) delete [] s; s = NULL;
             if ((s = strwithin(line2, '{', '}'))) {
                 if (*s != '\0') {
-                    m->exec2 = s;
+                    m->exec2 = __m_wastrdup(s);
                     m->func_mask2 |= MenuExecMask;
                 }
             }
+            if (s) delete [] s; s = NULL;
             if ((s = strwithin(line2, '<', '>'))) {
-                m->sub2 = s;
+                m->sub2 = __m_wastrdup(s);
                 m->func_mask2 |= MenuSubMask;
             }
+            if (s) delete [] s; s = NULL;
             if ((s = strwithin(line2, '"', '"'))) {
-                tmp_par = par = wastrdup(s);
+                tmp_par = par = __m_wastrdup(s);
                 for (i = 0; *par != '(' && *par != '\0'; par++, i++);
                 if (*(par++) == '(') {
                     s[i] = '\0';
@@ -2380,28 +2433,25 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                 else
                     delete [] tmp_par;
                 
-                it = wacts->begin();
-                for (; it != wacts->end(); ++it) {
+                it = wacts.begin();
+                for (; it != wacts.end(); ++it) {
                     if ((*it)->Comp(s)) {
-                        delete [] s;
                         m->wfunc2 = (*it)->winfunc;
                         m->func_mask2 |= MenuWFuncMask;
                         break;
                     }
                 }
-                it = racts->begin();
-                for (; it != racts->end(); ++it) {
+                it = racts.begin();
+                for (; it != racts.end(); ++it) {
                     if ((*it)->Comp(s)) {
-                        delete [] s;
                         m->rfunc2 = (*it)->rootfunc;
                         m->func_mask2 |= MenuRFuncMask;
                         break;
                     }
                 }
-                it = macts->begin();
-                for (; it != macts->end(); ++it) {
+                it = macts.begin();
+                for (; it != macts.end(); ++it) {
                     if ((*it)->Comp(s)) {
-                        delete [] s;
                         m->mfunc2 = (*it)->menufunc;
                         m->func_mask2 |= MenuMFuncMask;
                         break;
@@ -2410,7 +2460,6 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                 if (! (m->wfunc2 || m->rfunc2 || m->mfunc2)) {
                     WARNING << "(" << basename(menu_file) << ":" << linenr <<
                         "): function \"" << s << "\" not available" << endl;
-                    delete [] s;
                     continue;
                 }
             }
@@ -2418,15 +2467,18 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         menu->AddItem(m);
     }
     if (menu) {
-        if (menu->item_list->empty()) {
+        if (menu->item_list.empty()) {
             WARNING << "no elements in menu \"" << menu->name <<
                 "\"" << endl;
             delete menu;
+            if (s) delete [] s; s = NULL;
             return NULL;
         }
-        waimea->wamenu_list->push_back(menu);
+        wascreen->wamenu_list.push_back(menu);
+        if (s) delete [] s; s = NULL;
         return menu;
     }
+    if (s) delete [] s; s = NULL;
     return NULL;
 }
 
@@ -2505,6 +2557,7 @@ char *strtrim(char *s) {
 char *strwithin(char *s, char c1, char c2, bool eval_env) {
     int i, n;
     char *str;
+    char *__m_wastrdup_tmp;
     
     for (i = 0;; i++) {
         if (s[i] == '\0') break;
@@ -2519,7 +2572,7 @@ char *strwithin(char *s, char c1, char c2, bool eval_env) {
     if (s[n] == '\0') return NULL; 
     
     s[n] = '\0';
-    str = wastrdup(s + i + 1);
+    str = __m_wastrdup(s + i + 1);
     s[n] = c2;
     
     if (eval_env) {
@@ -2612,10 +2665,11 @@ char *environment_expansion(char *s) {
 char *param_eval(char *action, char *param, WaScreen *wascreen) {
     char *tmp, *p;
     int i;
+    char *__m_wastrdup_tmp;
 
     if (! param) return param;
     
-    p = wastrdup(param);
+    p = __m_wastrdup(param);
     if ((! strncasecmp(action, "viewport", 8)) ||
         (! strncasecmp(action, "moveresize", 10))) {
         for (i = 0; p[i] != '\0'; i++) {

@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use Fcntl ':mode';
 
-my $title = "Styles";
+my $title = "styles";
 my $stylesdir = "@pkgdatadir@/styles";
 
 print "[title] ($title)\n";

@@ -26,18 +26,60 @@ AC_CHECK_LIB(X11, XOpenDisplay,
   AC_MSG_ERROR([Could not find XOpenDisplay in -lX11.])
 )
 
+use_interlacing="no"
+use_orderedpseudo="no"
+use_shape="no"
+use_xrender="no"
+use_xft="no"
+use_pixmap="no"
+
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 
 AC_HEADER_STDC
 AC_CHECK_HEADERS(ctype.h libgen.h signal.h stdio.h time.h unistd.h sys/select.h sys/signal.h sys/stat.h sys/time.h sys/types.h sys/wait.h iostream list set map)
 
+dnl Check for Interlacing
+INTERLACE=""
+enableval="yes"
+AC_MSG_CHECKING([whether to include interlacing image code])
+AC_ARG_ENABLE(
+  interlace, [  --enable-interlace      include code for image interlacing [default=yes]])
+
+: ${enableval="yes"}
+if test x$enableval = "xyes"; then
+  AC_MSG_RESULT([yes])
+  use_interlacing="yes"
+  INTERLACE="-DINTERLACE"
+else
+  AC_MSG_RESULT([no])
+fi
+AC_SUBST(INTERLACE)
+
+dnl Check for ordered 8bpp dithering
+ORDEREDPSEUDO=""
+enableval="yes"
+AC_MSG_CHECKING([whether to include Pseudocolor ordered dithering code])
+AC_ARG_ENABLE(ordered-pseudo,
+[  --enable-ordered-pseudo include code for ordered pseudocolor (8bpp)
+                          dithering [default=no]],
+  if test x$enableval = "xyes"; then
+    AC_MSG_RESULT([yes])
+    use_orderedpseudo="yes"
+    ORDEREDPSEUDO="-DORDEREDPSEUDO"
+  else
+    AC_MSG_RESULT([no])
+  fi,
+  AC_MSG_RESULT([no])
+)
+AC_SUBST(ORDEREDPSEUDO)
+
 dnl Check for XShape extension support and proper library files
 SHAPE=""
 enableval="yes"
 AC_MSG_CHECKING([whether to build support for the XShape extension])
 AC_ARG_ENABLE(
-  shape, [  --enable-shape          enable support of the XShape extension [default=yes]])
+  shape, [  --enable-shape          enable support for XShape extension [default=yes]])
 
 : ${enableval="yes"}
 if test x$enableval = "xyes"; then
@@ -50,6 +92,7 @@ if test x$enableval = "xyes"; then
 #include <X11/extensions/shape.h>
       , long foo = ShapeSet,
       AC_MSG_RESULT([yes])
+      use_shape="yes"
       SHAPE="-DSHAPE"; Xext_lib="-lXext",
       AC_MSG_RESULT([no])
     )
@@ -67,7 +110,8 @@ enableval="yes"
 have_xrender="false"
 AC_MSG_CHECKING([whether to build support for the XRender extension])
 AC_ARG_ENABLE(
-  xrender, [  --enable-xrender        enable support of the XRender extension if available [default=yes]])
+  xrender, [  --enable-xrender        enable support for XRender extension if available
+                          [default=yes]])
 : ${enableval="yes"}
 
 if test x$enableval = "xyes"; then
@@ -79,12 +123,12 @@ if test x$enableval = "xyes"; then
 #include <X11/extensions/Xrender.h>
       ,,
       AC_MSG_RESULT([yes])
+      use_xrender="yes"
       XRENDER="-DXRENDER"; XRender_lib="-lXrender"; have_xrender="true",
       AC_MSG_RESULT([no])
       AC_MSG_RESULT([** WARNING: X11/extensions/Xrender.h is missing])
       AC_MSG_RESULT([** WARNING: Disabled XRender extension support])
     ),
-  AC_MSG_RESULT([no])
   AC_MSG_RESULT([** WARNING: Could not find XRenderFindFormat in -lXrender])
   AC_MSG_RESULT([** WARNING: Disabled XRender extension support]))
 else
@@ -99,7 +143,8 @@ enableval="yes"
 XFT=""
 AC_MSG_CHECKING([whether to build support for the Xft library])
 AC_ARG_ENABLE(
-  xft, [  --enable-xft            enable support of the Xft library if available [default=yes]])
+  xft, [  --enable-xft            enable support for Xft library if available
+                          [default=yes]])
 : ${enableval="yes"}
 if test x$enableval = "xyes"; then
    if test x$have_xrender = "xtrue" ; then
@@ -125,12 +170,12 @@ if test x$enableval = "xyes"; then
 #include <X11/Xft/Xft.h>
         ,,
         AC_MSG_RESULT([yes])
+        use_xft="yes"
         XFT="-DXFT"; Xft_lib="-lXft",
         AC_MSG_RESULT([no])
         AC_MSG_RESULT([** WARNING: X11/Xft/Xft.h is missing])
        AC_MSG_RESULT([** WARNING: Disabled Xft library support])
       ),
-      AC_MSG_RESULT([no])
       AC_MSG_RESULT([** WARNING: Could not find XftFontOpen in -lXft])
       AC_MSG_RESULT([** WARNING: Disabled Xft library support]))
       ,
@@ -147,39 +192,6 @@ fi
 AC_SUBST(XFT)
 
 LIBS="$LIBS $Xft_lib"
-
-dnl Check for Interlacing
-INTERLACE=""
-enableval="yes"
-AC_MSG_CHECKING([whether to include interlacing image code])
-AC_ARG_ENABLE(
-  interlace, [  --enable-interlace      include code for image interlacing [default=yes]])
-
-: ${enableval="yes"}
-if test x$enableval = "xyes"; then
-  AC_MSG_RESULT([yes])
-  INTERLACE="-DINTERLACE"
-else
-  AC_MSG_RESULT([no])
-fi
-AC_SUBST(INTERLACE)
-
-dnl Check for ordered 8bpp dithering
-ORDEREDPSEUDO=""
-enableval="yes"
-AC_MSG_CHECKING([whether to include Pseudocolor ordered dithering code])
-AC_ARG_ENABLE(ordered-pseudo,
-[  --enable-ordered-pseudo include code for ordered pseudocolor (8bpp)
-                          dithering [default=no]],
-  if test x$enableval = "xyes"; then
-    AC_MSG_RESULT([yes])
-    ORDEREDPSEUDO="-DORDEREDPSEUDO"
-  else
-    AC_MSG_RESULT([no])
-  fi,
-  AC_MSG_RESULT([no])
-)
-AC_SUBST(ORDEREDPSEUDO)
 
 save_cppflags="$CPPFLAGS"
 save_ldflags="$LDFLAGS"
@@ -212,6 +224,7 @@ if test x$enableval = "xyes"; then
 #include <Imlib2.h>
       ,,
       AC_MSG_RESULT([yes])
+      use_pixmap="yes"
       PIXMAP="-DPIXMAP"; Imlib2_lib="-lImlib2",
       AC_MSG_RESULT([no])
       AC_MSG_RESULT([** WARNING: Imlib2.h is missing])
@@ -236,3 +249,45 @@ data/styles/Makefile
 data/scripts/Makefile
 data/backgrounds/Makefile
 doc/Makefile])
+
+echo ""
+echo "Finished configure:"
+
+if [[ $use_interlacing = "yes" ]] ; then
+   echo "  with    interlace";
+else
+   echo "  without interlace";
+fi
+
+if [[ $use_orderedpseudo = "yes" ]] ; then
+   echo "  with    ordered-pseudo";
+else
+   echo "  without ordered-pseudo";
+fi
+
+if [[ $use_shape = "yes" ]] ; then
+   echo "  with    xshape";
+else
+   echo "  without xshape";
+fi
+
+if [[ $use_xrender = "yes" ]] ; then
+   echo "  with    xrender";
+else
+   echo "  without xrender";
+fi
+
+if [[ $use_xft = "yes" ]] ; then
+   echo "  with    xft";
+else
+   echo "  without xft";
+fi
+
+if [[ $use_pixmap = "yes" ]] ; then
+   echo "  with    pixmap";
+else
+   echo "  without pixmap";
+fi
+
+echo ""
+echo "type 'make' to build Waimea."

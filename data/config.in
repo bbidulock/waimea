@@ -3,19 +3,24 @@
 ! --rcfile switch is used, waimea reads configuration options from 
 ! this file.
 !
-styleFile:         @pkgdatadir@/styles/Default.style
-menuFile:          @pkgdatadir@/menu
-actionFile:        @pkgdatadir@/actions/action
-colorsPerChannel:  4
-cacheMax:          200
-imageDither:       True
-virtualSize:       3x3
-menuStacking:      Normal
-transientAbove:    True
-dock0.geometry:    -0+0
-dock0.order:       UNKNOWN
-dock0.direction:   Vertical
-dock0.centered:    True
-dock0.gridSpace:   2
-dock0.stacking:    AlwaysOnTop
-dock0.inworkspace: False
+screenMask:                0 1 2 3
+scriptDir:                 @pkgdatadir@/scripts
+doubleClickInterval:       300
+
+! Screen 0 configuration
+screen0.styleFile:         @pkgdatadir@/styles/Default.style
+screen0.menuFile:          @pkgdatadir@/menu
+screen0.actionFile:        @pkgdatadir@/actions/action
+screen0.colorsPerChannel:  4
+screen0.cacheMax:          200
+screen0.imageDither:       True
+screen0.virtualSize:       3x3
+screen0.menuStacking:      Normal
+screen0.transientAbove:    True
+screen0.dock0.geometry:    -0+0
+screen0.dock0.order:       UNKNOWN
+screen0.dock0.direction:   Vertical
+screen0.dock0.centered:    False
+screen0.dock0.gridSpace:   2
+screen0.dock0.stacking:    AlwaysOnTop
+screen0.dock0.inworkspace: False

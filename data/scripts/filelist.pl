@@ -126,7 +126,7 @@ sub print_directory {
     
     $_[0] = $offset + $i;
     $_[1] = $offset + 1;
-    unshift  @output, print_title("$_[1] - $_[0]");
+    unshift  @output, print_title("$dir");
     
     print @output;
 }

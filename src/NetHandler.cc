@@ -132,15 +132,16 @@ void NetHandler::GetWMHints(WaWindow *ww) {
     XTextProperty text_prop;
     char **list, *tmp_name;
     int num;
+    char *__m_wastrdup_tmp;
     
     ww->state = NormalState;
     XGrabServer(display);
     if (validateclient(ww->id)) {
         if (XFetchName(ww->display, ww->id, &tmp_name)) {
-            ww->name = wastrdup(tmp_name);
+            ww->name = __m_wastrdup(tmp_name);
             XFree(tmp_name);
         } else
-            ww->name = wastrdup("");
+            ww->name = __m_wastrdup("");
         if ((wm_hints = XGetWMHints(display, ww->id)))
             if (wm_hints->flags & StateHint)
                 ww->state = wm_hints->initial_state;
@@ -149,7 +150,7 @@ void NetHandler::GetWMHints(WaWindow *ww) {
         if (XGetWMClientMachine(ww->display, ww->id, &text_prop)) {
             if (XTextPropertyToStringList(&text_prop, &list, &num)) {
                 XFree(text_prop.value);
-                ww->host = wastrdup(*list);
+                ww->host = __m_wastrdup(*list);
                 XFreeStringList(list);
             }
         }
@@ -186,19 +187,19 @@ void NetHandler::GetMWMHints(WaWindow *ww) {
                     (mwm_hints->decorations & MwmDecorHandle) ? true: false;
             }
         }
-        if (waimea->rh->trans &&
+        if (ww->wascreen->config.transient_above &&
             XGetTransientForHint(display, ww->id, &trans)) {
             if (trans && (trans != ww->id)) {
-                if (trans == waimea->wascreen->id) {
+                if (trans == ww->wascreen->id) {
                     list<WaWindow *>::iterator it =
-                        waimea->wawindow_list->begin();
-                    for (;it != waimea->wawindow_list->end(); ++it)
+                        ww->wascreen->wawindow_list.begin();
+                    for (;it != ww->wascreen->wawindow_list.end(); ++it)
                         (*it)->transients.push_back(ww->id);
                     ww->want_focus = true;
                 } else {
                     map<Window, WindowObject *>::iterator it;
-                    if ((it = waimea->window_table->find(trans)) !=
-                        waimea->window_table->end()) {
+                    if ((it = waimea->window_table.find(trans)) !=
+                        waimea->window_table.end()) {
                         if (((*it).second)->type == WindowType) {
                             ww->transient_for = trans;
                             ((WaWindow *)
@@ -360,13 +361,13 @@ void NetHandler::GetWmState(WaWindow *ww) {
             else if (data[i] == net_state_decorborder) border = true;
             else if (data[i] == net_state_aot) {
                 ww->flags.alwaysontop = true;
-                waimea->wawindow_list_stacking_aot->push_back(ww);
-                waimea->WaRaiseWindow(0);
+                ww->wascreen->wawindow_list_stacking_aot.push_back(ww);
+                ww->wascreen->WaRaiseWindow(0);
             }
             else if (data[i] == net_state_aab) {
                 ww->flags.alwaysatbottom = true;
-                waimea->wawindow_list_stacking_aab->push_back(ww);
-                waimea->WaLowerWindow(0);
+                ww->wascreen->wawindow_list_stacking_aab.push_back(ww);
+                ww->wascreen->WaLowerWindow(0);
             }
         }
         if (decor) {
@@ -517,8 +518,8 @@ void NetHandler::SetClientList(WaScreen *ws) {
     int i = 0;
 
     list<WaWindow *>::iterator it =
-        waimea->wawindow_list_map_order->begin();
-    for (; it != waimea->wawindow_list_map_order->end(); ++it) {
+        ws->wawindow_list_map_order.begin();
+    for (; it != ws->wawindow_list_map_order.end(); ++it) {
         data[i++] = (*it)->id;
     }
     if (i > 0)
@@ -540,14 +541,14 @@ void NetHandler::SetClientListStacking(WaScreen *ws) {
     list<WaWindow *>::iterator it;    
     int i = 0;
     
-    it = waimea->wawindow_list_stacking_aab->begin();
-    for (; it != waimea->wawindow_list_stacking_aab->end(); ++it)
+    it = ws->wawindow_list_stacking_aab.begin();
+    for (; it != ws->wawindow_list_stacking_aab.end(); ++it)
         data[i++] = (*it)->id;
-    rit = waimea->wawindow_list_stacking->rbegin();
-    for (; rit != ws->waimea->wawindow_list_stacking->rend(); ++rit)
+    rit = ws->wawindow_list_stacking.rbegin();
+    for (; rit != ws->wawindow_list_stacking.rend(); ++rit)
         data[i++] = (*rit)->id;
-    rit = waimea->wawindow_list_stacking_aot->rbegin();
-    for (; rit != waimea->wawindow_list_stacking_aot->rend(); ++rit)
+    rit = ws->wawindow_list_stacking_aot.rbegin();
+    for (; rit != ws->wawindow_list_stacking_aot.rend(); ++rit)
         data[i++] = (*rit)->id;
 
     if (i > 0)
@@ -570,20 +571,20 @@ void NetHandler::GetClientListStacking(WaScreen *ws) {
     unsigned int i;
     
     if (XGetWindowProperty(display, ws->id, net_client_list_stacking,
-                           0L, waimea->wawindow_list->size(),
+                           0L, ws->wawindow_list.size(),
                            false, XA_WINDOW, &real_type,
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
         items_read) {
         for (i = 0; i < items_read; i++) {
-            if (((it = waimea->window_table->find(data[i])) !=
-                 waimea->window_table->end()) &&
+            if (((it = waimea->window_table.find(data[i])) !=
+                 waimea->window_table.end()) &&
                 (((*it).second)->type == WindowType)) {
                 ww = ((WaWindow *) (*it).second);
                 if (! ww->flags.alwaysontop && ! ww->flags.alwaysatbottom) {
-                    waimea->WaRaiseWindow(ww->frame->id);
-                    waimea->wawindow_list_stacking->remove(ww);
-                    waimea->wawindow_list_stacking->push_front(ww);
+                    ws->WaRaiseWindow(ww->frame->id);
+                    ws->wawindow_list_stacking.remove(ww);
+                    ws->wawindow_list_stacking.push_front(ww);
                 }
             }
         }
@@ -607,15 +608,15 @@ void NetHandler::SetActiveWindow(WaScreen *ws, WaWindow *ww) {
     
     if (ww) {
         ws->focus = false;
-        waimea->wawindow_list->remove(ww);
-        waimea->wawindow_list->push_front(ww);
+        ws->wawindow_list.remove(ww);
+        ws->wawindow_list.push_front(ww);
     } else {
         ws->focus = true;
         data[i++] = None;
     }
 
-    it = waimea->wawindow_list->begin();
-    for (; it != waimea->wawindow_list->end(); ++it)
+    it = ws->wawindow_list.begin();
+    for (; it != ws->wawindow_list.end(); ++it)
         data[i++] = (*it)->id;
     
     XChangeProperty(display, ws->id, net_active_window, XA_WINDOW, 32,
@@ -640,7 +641,7 @@ void NetHandler::GetActiveWindow(WaScreen *ws) {
     int i;
     
     if (XGetWindowProperty(display, ws->id, net_active_window, 0L,
-                           waimea->wawindow_list->size(), 
+                           ws->wawindow_list.size(), 
                            false, XA_WINDOW, &real_type, &real_format, 
                            &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
@@ -650,12 +651,12 @@ void NetHandler::GetActiveWindow(WaScreen *ws) {
                 ws->Focus(e, ac);
                 break;
             }
-            if (((it = waimea->window_table->find(data[i])) !=
-                 waimea->window_table->end()) &&
+            if (((it = waimea->window_table.find(data[i])) !=
+                 waimea->window_table.end()) &&
                 (((*it).second)->type == WindowType)) {
                 ww = ((WaWindow *) (*it).second);
-                waimea->wawindow_list->remove(ww);
-                waimea->wawindow_list->push_front(ww);
+                ws->wawindow_list.remove(ww);
+                ws->wawindow_list.push_front(ww);
                 if (i == 0)
                     ww->Focus(false);
             }
@@ -737,8 +738,8 @@ void NetHandler::GetWmStrut(WaWindow *ww) {
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
         items_read >= 4) {
-        list<WMstrut *>::iterator it = ww->wascreen->strut_list->begin();
-        for (; it != ww->wascreen->strut_list->end(); ++it) {
+        list<WMstrut *>::iterator it = ww->wascreen->strut_list.begin();
+        for (; it != ww->wascreen->strut_list.end(); ++it) {
             if ((*it)->window == ww->id) {
                 (*it)->left = data[0];
                 (*it)->right = data[1];
@@ -756,7 +757,7 @@ void NetHandler::GetWmStrut(WaWindow *ww) {
             wm_strut->top = data[2];
             wm_strut->bottom = data[3];
             ww->wm_strut = wm_strut;
-            ww->wascreen->strut_list->push_back(wm_strut);
+            ww->wascreen->strut_list.push_back(wm_strut);
             ww->wascreen->UpdateWorkarea();
         }
         XFree(data);
@@ -921,7 +922,7 @@ void NetHandler::DeleteSupported(WaScreen *ws) {
 void NetHandler::GetXRootPMapId(WaScreen *ws) {
     CARD32 *data;
     
-    if (XGetWindowProperty(display, ws->id, xrootpmap_id, 0L, 1L, 
+    if (XGetWindowProperty(ws->pdisplay, ws->id, xrootpmap_id, 0L, 1L, 
                            false, XA_PIXMAP, &real_type,
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 

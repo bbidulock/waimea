@@ -68,7 +68,7 @@ Timer::~Timer(void) {
     timerval.it_value.tv_usec = 0;
     setitimer(ITIMER_REAL, &timerval, NULL);
     sigaction(SIGALRM, &action, NULL);
-    LISTCLEAR3(interrupts);
+    LISTDEL(interrupts);
 }
 
 /**
@@ -231,8 +231,8 @@ void timeout(int signal) {
     }
 
     map<Window, WindowObject *>::iterator wit;
-    if ((wit = timer->waimea->window_table->find(i->id)) !=
-        timer->waimea->window_table->end()) {
+    if ((wit = timer->waimea->window_table.find(i->id)) !=
+        timer->waimea->window_table.end()) {
         WindowObject *wo = (*wit).second;
 
         switch (wo->type) {

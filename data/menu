@@ -2,38 +2,38 @@
 ! Root Menu
 !
 [start] (rootmenu)
-  [title] (Root Menu)
-  [item]  (Xterm)     {xterm}
+  [title] (root menu)
+  [item]  (xterm)     {xterm}
 
-  [submenu] (Editors)
-    [item] (Emacs) {emacs}
-    [item] (Vi)    {xterm -e vi}
+  [submenu] (editors)
+    [item] (emacs) {emacs}
+    [item] (vi)    {xterm -e vi}
   [end]
 
-  [submenu] (Graphics)
-    [item] (The Gimp) {gimp}
-    [item] (Xpaint)   {xpaint}
-    [item] (Xv)       {xv}
+  [submenu] (graphics)
+    [item] (the gimp) {gimp}
+    [item] (xpaint)   {xpaint}
+    [item] (xv)       {xv}
   [end]
 
-  [submenu] (Multimedia)
-    [item] (Mplayer)    {gmplayer}
-    [item] (RealPlayer) {realplay}
-    [item] (XMMS)       {xmms}
+  [submenu] (multimedia)
+    [item] (mplayer)    {gmplayer}
+    [item] (realplayer) {realplay}
+    [item] (xmms)       {xmms}
   [end]
 
-  [submenu] (Networking)
-    [item] (Netscape) {netscape}
-    [item] (Mozilla)  {mozilla}
-    [item] (Licq)     {licq}
-    [item] (Ncftp)    {xterm -e ncftp} 
-    [item] (Telnet)   {xterm -e telnet}
+  [submenu] (networking)
+    [item] (netscape) {netscape}
+    [item] (mozilla)  {mozilla}
+    [item] (licq)     {licq}
+    [item] (ncftp)    {xterm -e ncftp} 
+    [item] (telnet)   {xterm -e telnet}
   [end]
 
-  [sub] (Styles) <!stylesdir.pl>
+  [sub] (styles) <!stylesdir.pl>
   
-  [restart] (Restart)
-  [exit]    (Exit)
+  [restart] (restart)
+  [exit]    (exit)
 [end]
 
 !
@@ -41,20 +41,20 @@
 !
 [start] (window)
   [title]   (\n)
-  [submenu] (Settings)
-    [checkbox=MAXIMIZED]      @FALSE (Maximized)        "maximize"         @TRUE (Maximized)        "unmaximize"
-    [checkbox=SHADED]         @FALSE (Shaded)           "shade"            @TRUE (Shaded)           "unshade"
-    [checkbox=STICKY]         @FALSE (Sticky)           "sticky"           @TRUE (Sticky)           "unsticky"
-    [checkbox=ALWAYSONTOP]    @FALSE (Always On Top)    "alwaysontopon"    @TRUE (Always On Top)    "alwaysontopoff"
-    [checkbox=ALWAYSATBOTTOM] @FALSE (Always At Bottom) "alwaysatbottomon" @TRUE (Always At Bottom) "alwaysatbottomoff"
-    [checkbox=DECORTITLE]     @FALSE (Titlebar)         "decortitleon"     @TRUE (Titlebar)         "decortitleoff"
-    [checkbox=DECORHANDLE]    @FALSE (Handlebar)        "decorhandleon"    @TRUE (Handlebar)        "decorhandleoff"
-    [checkbox=DECORBORDER]    @FALSE (Border)           "decorborderon"    @TRUE (Border)           "decorborderoff"
-    [checkbox=DECORALL]       @FALSE (All Decorations)  "decorallon"       @TRUE (All Decorations)  "decoralloff"
+  [submenu] (settings)
+    [checkbox=MAXIMIZED]      @FALSE (maximized)        "maximize"         @TRUE (maximized)        "unmaximize"
+    [checkbox=SHADED]         @FALSE (shaded)           "shade"            @TRUE (shaded)           "unshade"
+    [checkbox=STICKY]         @FALSE (sticky)           "sticky"           @TRUE (sticky)           "unsticky"
+    [checkbox=ALWAYSONTOP]    @FALSE (always on top)    "alwaysontopon"    @TRUE (always on top)    "alwaysontopoff"
+    [checkbox=ALWAYSATBOTTOM] @FALSE (always at bottom) "alwaysatbottomon" @TRUE (always at bottom) "alwaysatbottomoff"
+    [checkbox=DECORTITLE]     @FALSE (titlebar)         "decortitleon"     @TRUE (titlebar)         "decortitleoff"
+    [checkbox=DECORHANDLE]    @FALSE (handlebar)        "decorhandleon"    @TRUE (handlebar)        "decorhandleoff"
+    [checkbox=DECORBORDER]    @FALSE (border)           "decorborderon"    @TRUE (border)           "decorborderoff"
+    [checkbox=DECORALL]       @FALSE (all decorations)  "decorallon"       @TRUE (all decorations)  "decoralloff"
   [end]
-  [sub]     (Process Info) <!procinfo.pl -host \"\h\" -pid \"\p\">
-  [item]    (Raise)        "raise"
-  [item]    (Lower)        "lower"
-  [item]    (Kill Client)  "kill"
-  [item]    (Close)        "close"
+  [sub]     (process info) <!procinfo.pl -host \"\h\" -pid \"\p\">
+  [item]    (raise)        "raise"
+  [item]    (lower)        "lower"
+  [item]    (kill client)  "kill"
+  [item]    (close)        "close"
 [end]

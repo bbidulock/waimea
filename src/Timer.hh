@@ -29,7 +29,7 @@
 class Timer;
 class Interrupt;
 
-#include "WaScreen.hh"
+#include "WaMenu.hh"
 
 class Timer {
 public:

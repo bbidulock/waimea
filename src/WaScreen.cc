@@ -25,9 +25,19 @@
 #  include <stdio.h>
 #endif // HAVE_STDIO_H
 
+#ifdef    HAVE_UNISTD_H
+#  include <sys/types.h>
+#  include <sys/wait.h>
+#  include <unistd.h>
+#endif // HAVE_UNISTD_H
+
 #ifdef    STDC_HEADERS
 #  include <stdlib.h>
 #endif // STDC_HEADERS
+
+#ifdef    HAVE_SIGNAL_H
+#  include <signal.h>
+#endif // HAVE_SIGNAL_H
 
 #ifdef    HAVE_IOSTREAM
 #  include <iostream>
@@ -66,6 +76,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     screen_depth = DefaultDepth(display, screen_number);
     width = DisplayWidth(display, screen_number);
     height = DisplayHeight(display, screen_number);
+    
     waimea = wa;
     net = waimea->net;
     rh = wa->rh;
@@ -74,13 +85,22 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     default_font.xft = false;
     default_font.font = "fixed";
 
+    XFlush(display);
+    XSync(display, false);
+    if (! (pdisplay = XOpenDisplay(wa->options->display))) {
+        ERROR << "can't open display: " << wa->options->display << endl;
+        exit(1);
+    }
+    
 #ifdef PIXMAP
-    imlib_context_set_display(display);
-    imlib_context_set_colormap(colormap);
-    imlib_context_set_visual(visual);
-    imlib_context_set_mask(0);
-    imlib_context_set_drawable(id);
-    imlib_context_set_anti_alias(1);    
+    imlib_context = imlib_context_new();
+    imlib_context_push(imlib_context);
+    imlib_context_set_display(pdisplay);
+    imlib_context_set_drawable(RootWindow(pdisplay, screen_number));
+    imlib_context_set_colormap(DefaultColormap(pdisplay, screen_number));
+    imlib_context_set_visual(DefaultVisual(pdisplay, screen_number));
+    imlib_context_set_anti_alias(1);
+    imlib_context_pop();
 #endif // PIXMAP
     
     eventmask = SubstructureRedirectMask | StructureNotifyMask |
@@ -88,12 +108,21 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
         KeyReleaseMask | ButtonPressMask | ButtonReleaseMask |
         EnterWindowMask | LeaveWindowMask | FocusChangeMask;
 
+    sprintf(displaystring, "DISPLAY=%s", DisplayString(display));
+    sprintf(displaystring + strlen(displaystring) - 1, "%d", screen_number);
+
     XSetErrorHandler((XErrorHandler) wmrunningerror);
     XSelectInput(display, id, eventmask);
     XSync(display, false);
+    XSync(pdisplay, false);
     XSetErrorHandler((XErrorHandler) xerrorhandler);
+    if (waimea->wmerr) {
+        cerr << "waimea: warning: another window manager is running on " <<
+            displaystring + 8 << endl;
+        return;
+    }
     
-    waimea->window_table->insert(make_pair(id, this));
+    waimea->window_table.insert(make_pair(id, this));
     
     attrib_set.override_redirect = true;
     wm_check = XCreateWindow(display, id, 0, 0, 1, 1, 0,
@@ -101,41 +130,44 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
                              CWOverrideRedirect, &attrib_set);
     net->SetSupported(this);
     net->SetSupportedWMCheck(this, wm_check);
-   
-    sprintf(displaystring, "DISPLAY=%s", DisplayString(display));
-    sprintf(displaystring + strlen(displaystring) - 1, "%d", screen_number);
 	
     v_x = v_y = 0;
 
-    ic = new WaImageControl(display, this, rh->image_dither,
-                            rh->colors_per_channel, rh->cache_max);
+#ifdef XRENDER
+    int event_basep, error_basep;
+    render_extension =
+      XRenderQueryExtension(pdisplay, &event_basep, &error_basep);
+#endif // XRENDER
+
+    rh->LoadConfig(this);
+    rh->LoadMenus(this);
+
+    ic = new WaImageControl(pdisplay, this, config.image_dither,
+                            config.colors_per_channel, config.cache_max);
     ic->installRootColormap();
 
     rh->LoadStyle(this);
-    waimea->wascreen = this;
-    rh->LoadActions();
+    rh->LoadActions(this);
 
     CreateFonts();
     CreateColors();
     RenderCommonImages();
     XDefineCursor(display, id, waimea->session_cursor);
     
-    v_xmax = (rh->virtual_x - 1) * width;
-    v_ymax = (rh->virtual_y - 1) * height;
+    v_xmax = (config.virtual_x - 1) * width;
+    v_ymax = (config.virtual_y - 1) * height;
     west = new ScreenEdge(this, 0, 0, 2, height, WEdgeType);
+    west->actionlist = &config.weacts;
     east = new ScreenEdge(this, width - 2, 0, 2, height, EEdgeType);
+    east->actionlist = &config.eeacts;
     north = new ScreenEdge(this, 0, 0, width, 2, NEdgeType);
+    north->actionlist = &config.neacts;
     south = new ScreenEdge(this, 0, height - 2, width, 2, SEdgeType);
+    south->actionlist = &config.seacts;
     net->SetDesktopGeometry(this);
     net->GetDesktopViewPort(this);
     net->SetDesktopViewPort(this);
-
-#ifdef SHAPE
-    int dummy;
-    shape = XShapeQueryExtension(display, &shape_event, &dummy);
-#endif // SHAPE
-
-    strut_list = new list<WMstrut *>;
+    
     workarea = new Workarea;
     workarea->x = workarea->y = 0;
     workarea->width = width;
@@ -143,15 +175,23 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     net->SetWorkarea(this);
 
 #ifdef XRENDER
-    net->GetXRootPMapId(this);
-    ic->setXRootPMapId((xrootpmap_id)? true: false);
-#endif // XRENDER    
-
-    docks = new list<DockappHandler *>;
-    list<DockStyle *>::iterator dit = waimea->rh->dockstyles->begin();
-    for (; dit != waimea->rh->dockstyles->end(); ++dit) {
-        docks->push_back(new DockappHandler(this, *dit));
+    if (render_extension) {
+      net->GetXRootPMapId(this);
+      ic->setXRootPMapId((xrootpmap_id)? true: false);
     }
+#endif // XRENDER
+
+    list<DockStyle *>::iterator dit = wstyle.dockstyles.begin();
+    for (; dit != wstyle.dockstyles.end(); ++dit) {
+        docks.push_back(new DockappHandler(this, *dit));
+    }
+    
+    window_menu = new WindowMenu();
+    wamenu_list.push_back(window_menu);
+    
+    list<WaMenu *>::iterator mit = wamenu_list.begin();
+    for (; mit != wamenu_list.end(); ++mit)
+    	(*mit)->Build(this);
     
     WaWindow *newwin;
     XWMHints *wm_hints;
@@ -165,16 +205,11 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
                 (wm_hints->initial_state == WithdrawnState)) {
                 AddDockapp(children[i]);
             }
-            else if ((waimea->window_table->find(children[i]))
-                     == waimea->window_table->end()) {
+            else if ((waimea->window_table.find(children[i]))
+                     == waimea->window_table.end()) {
                 newwin = new WaWindow(children[i], this);
-                map<Window, WindowObject *>::iterator it;
-                if ((it = waimea->window_table->find(children[i]))
-                    != waimea->window_table->end()) {
-                    if (((*it).second)->type == WindowType) {
-                        newwin->net->SetState(newwin, NormalState);
-                    }
-                }
+                if (waimea->FindWin(children[i], WindowType))
+                    newwin->net->SetState(newwin, NormalState);
             }
         }
     }
@@ -184,6 +219,9 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     net->SetClientList(this);
     net->SetClientListStacking(this);
     net->GetActiveWindow(this);
+    WaRaiseWindow((Window) 0);
+
+    actionlist = &config.rootacts;
 }
 
 /**
@@ -193,9 +231,90 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
  * Deletes all created colors and fonts.
  */
 WaScreen::~WaScreen(void) {
-    LISTCLEAR(docks);
-    
+    XFlush(display);
+    XFlush(pdisplay);
+    XSelectInput(display, id, NoEventMask);
+    net->SetClientList(this);
+    net->SetClientListStacking(this);
+    net->DeleteSupported(this);
+    XDestroyWindow(display, wm_check);
+
+    LISTDEL(docks);
     LISTDEL(strut_list);
+    LISTDEL(wamenu_list);
+    LISTDELITEMS(wawindow_list);
+    LISTCLEAR(wawindow_list_map_order);
+    LISTCLEAR(wawindow_list_stacking);
+    LISTCLEAR(wawindow_list_stacking_aot);
+    LISTCLEAR(wawindow_list_stacking_aab);
+    LISTCLEAR(always_on_top_list);
+    LISTCLEAR(always_at_bottom_list);
+
+    list<ButtonStyle *>::iterator bit = wstyle.buttonstyles.begin();
+    for (; bit != wstyle.buttonstyles.end(); ++bit) {
+        if ((*bit)->fg) {            
+            XFreeGC(display, (*bit)->g_focused);
+            XFreeGC(display, (*bit)->g_unfocused);
+            XFreeGC(display, (*bit)->g_pressed);
+        }
+    }
+
+#ifdef PIXMAP
+    imlib_context_free(imlib_context);
+#endif // PIXMAP
+    
+    while (! wstyle.dockstyles.empty()) {
+        while (! wstyle.dockstyles.back()->order->empty()) {
+            delete [] wstyle.dockstyles.back()->order->back();
+            wstyle.dockstyles.back()->order->pop_back();
+        }
+        delete wstyle.dockstyles.back()->order;
+        delete wstyle.dockstyles.back();
+        wstyle.dockstyles.pop_back();
+    }
+
+    delete [] config.style_file;
+    delete [] config.menu_file;
+    delete [] config.action_file;
+    
+    ACTLISTCLEAR(config.frameacts);
+    ACTLISTCLEAR(config.awinacts);
+    ACTLISTCLEAR(config.pwinacts);
+    ACTLISTCLEAR(config.titleacts);
+    ACTLISTCLEAR(config.labelacts);
+    ACTLISTCLEAR(config.handleacts);
+    ACTLISTCLEAR(config.rgacts);
+    ACTLISTCLEAR(config.lgacts);
+    ACTLISTCLEAR(config.rootacts);
+    ACTLISTCLEAR(config.weacts);
+    ACTLISTCLEAR(config.eeacts);
+    ACTLISTCLEAR(config.neacts);
+    ACTLISTCLEAR(config.seacts);
+    ACTLISTCLEAR(config.mtacts);
+    ACTLISTCLEAR(config.miacts);
+    ACTLISTCLEAR(config.msacts);
+    ACTLISTCLEAR(config.mcbacts);
+    int i;
+    for (i = 0; i < wstyle.b_num; i++) {
+        ACTLISTPTRCLEAR(config.bacts[i]);
+        delete config.bacts[i];
+    }
+    delete [] config.bacts;
+
+    LISTDEL(config.ext_frameacts);
+    LISTDEL(config.ext_awinacts);
+    LISTDEL(config.ext_pwinacts);
+    LISTDEL(config.ext_titleacts);
+    LISTDEL(config.ext_labelacts);
+    LISTDEL(config.ext_handleacts);
+    LISTDEL(config.ext_rgacts);
+    LISTDEL(config.ext_lgacts);
+    for (i = 0; i < wstyle.b_num; i++) {
+        LISTPTRDEL(config.ext_bacts[i]);
+        delete config.ext_bacts[i];
+    }
+    delete [] config.ext_bacts;
+
     delete west;
     delete east;
     delete north;
@@ -213,14 +332,7 @@ WaScreen::~WaScreen(void) {
     delete [] mstyle.checkbox_true;
     delete [] mstyle.checkbox_false;
 
-    list<ButtonStyle *>::iterator bit = wstyle.buttonstyles->begin();
-    for (; bit != wstyle.buttonstyles->end(); ++bit) {
-        if ((*bit)->fg) {
-            XFreeGC(display, (*bit)->g_focused);
-            XFreeGC(display, (*bit)->g_unfocused);
-            XFreeGC(display, (*bit)->g_pressed);
-        }
-    }
+    LISTDEL(wstyle.buttonstyles);
     
 #ifdef XFT
     if (wstyle.wa_font.xft) XftFontClose(display, wstyle.xftfont);
@@ -267,12 +379,250 @@ WaScreen::~WaScreen(void) {
         XFreeGC(display, mstyle.cfh_text_gc);
         XFreeGC(display, mstyle.cf_text_gc);
     }
-
-    net->DeleteSupported(this);
-    XDestroyWindow(display, wm_check);
-    XSelectInput(display, id, NoEventMask);
+    
     XSync(display, false);
-    waimea->window_table->erase(id);
+    XSync(pdisplay, false);
+    XCloseDisplay(pdisplay);
+    waimea->window_table.erase(id);
+}
+
+/**
+ * @fn    WaRaiseWindow(Window win)
+ * @brief Raise window
+ *
+ * Raises a window in the display stack keeping alwaysontop windows, always
+ * on top. To update the stacking order so that alwaysontop windows are on top
+ * of all other windows we call this function with zero as win argument. 
+ *
+ * @param win Window to Raise, or 0 for alwaysontop windows update
+ */
+void WaScreen::WaRaiseWindow(Window win) {
+    int i;
+    bool in_list = false;
+    
+    if (always_on_top_list.size() || wawindow_list_stacking_aot.size() ||
+        wamenu_list_stacking_aot.size()) {
+        Window *stack = new Window[always_on_top_list.size() +
+                                  wawindow_list_stacking_aot.size() +
+                                  wamenu_list_stacking_aot.size() +
+                                  ((win)? 1: 0)];
+        
+        list<Window>::iterator it = always_on_top_list.begin();
+        for (i = 0; it != always_on_top_list.end(); ++it) {
+            if (*it == win) in_list = true;
+            stack[i++] = *it;
+        }
+        list<WaMenu *>::iterator mit = wamenu_list_stacking_aot.begin();
+        for (; mit != wamenu_list_stacking_aot.end(); ++mit) {
+            if ((*mit)->frame == win) in_list = true;
+            stack[i++] = (*mit)->frame;
+        }
+        list<WaWindow *>::iterator wit = wawindow_list_stacking_aot.begin();
+        for (; wit != wawindow_list_stacking_aot.end(); ++wit) {
+            if ((*wit)->frame->id == win) in_list = true;
+            stack[i++] = (*wit)->frame->id;
+        }
+        if (win && ! in_list) stack[i++] = win;
+        
+        XRaiseWindow(display, stack[0]);
+        XRestackWindows(display, stack, i);
+        
+        delete [] stack;
+    } else
+        if (win) {
+            XGrabServer(display);
+            if (validateclient(win))
+                XRaiseWindow(display, win);
+            XUngrabServer(display);
+        }
+}
+
+/**
+ * @fn    WaLowerWindow(Window win)
+ * @brief Lower window
+ *
+ * Lower a window in the display stack keeping alwaysatbottom windows, always
+ * at the bottom. To update the stacking order so that alwaysatbottom windows
+ * are at the bottom of all other windows we call this function with zero as
+ * win argument. 
+ *
+ * @param win Window to Lower, or 0 for alwaysatbottom windows update
+ */
+void WaScreen::WaLowerWindow(Window win) {
+    int i;
+    bool in_list = false;
+    
+    if (always_at_bottom_list.size() || wawindow_list_stacking_aab.size()) {
+        Window *stack = new Window[always_at_bottom_list.size() +
+                                  wawindow_list_stacking_aab.size() +
+                                  ((win)? 1: 0)];
+        i = 0;
+        if (win) stack[i++] = win;
+        
+        list<Window>::reverse_iterator it = always_at_bottom_list.rbegin();
+        for (; it != always_at_bottom_list.rend(); ++it) {
+            if (*it == win) in_list = true;
+            stack[i++] = *it;
+        }
+        list<WaMenu *>::reverse_iterator mit =
+            wamenu_list_stacking_aab.rbegin();
+        for (; mit != wamenu_list_stacking_aab.rend(); ++mit) {
+            if ((*mit)->frame == win) in_list = true;
+            stack[i++] = (*mit)->frame;
+        }
+        list<WaWindow *>::reverse_iterator wit =
+            wawindow_list_stacking_aab.rbegin();
+        for (; wit != wawindow_list_stacking_aab.rend(); ++wit) {
+            if ((*wit)->frame->id == win) in_list = true;
+            stack[i++] = (*wit)->frame->id;
+        }
+        
+        if (in_list) {
+            XLowerWindow(display, stack[1]);
+            XRestackWindows(display, stack + 1, i - 1);
+        }
+        else {
+            XLowerWindow(display, stack[0]);
+            XRestackWindows(display, stack, i);
+        }
+        
+        delete [] stack;
+    } else
+        if (win) {
+            XGrabServer(display);
+            if (validateclient(win))
+                XLowerWindow(display, win);
+            XUngrabServer(display);
+        }
+}
+
+/**
+ * @fn    UpdateCheckboxes(int type)
+ * @brief Updates menu checkboxes
+ *
+ * Redraws all checkbox menu items to make sure they are synchronized with
+ * their given flag.
+ *
+ * @param type Type of checkboxes to update
+ */
+void WaScreen::UpdateCheckboxes(int type) {
+    list<WaMenuItem *>::iterator miit;
+
+    if (! waimea->eh) return;
+    
+    list<WaMenu *>::iterator mit = wamenu_list.begin();
+    for (; mit != wamenu_list.end(); ++mit) {
+        miit = (*mit)->item_list.begin();
+        for (; miit != (*mit)->item_list.end(); ++miit) {
+            if ((*miit)->cb == type) (*miit)->DrawFg();
+        }
+    }
+}
+
+/**
+ * @fn    GetMenuNamed(char *menu)
+ * @brief Find a menu
+ *
+ * Searches through menu list after a menu named as 'menu' parameter.
+ *
+ * @param menu menu name to use for search
+ *
+ * @return Pointer to menu object if a menu was found, if no menu was found
+ *         NULL is returned
+ */
+WaMenu *WaScreen::GetMenuNamed(char *menu) {
+    WaMenu *dmenu;
+    int i;
+
+    if (! menu) return NULL;
+   
+    list<WaMenu *>::iterator menu_it = wamenu_list.begin();
+    for (; menu_it != wamenu_list.end(); ++menu_it)
+        if (! strcmp((*menu_it)->name, menu))
+            return *menu_it;
+            
+    for (i = 0; menu[i] != '\0' && menu[i] != '!'; i++);
+    if (menu[i] == '!' && menu[i + 1] != '\0') {
+        dmenu = CreateDynamicMenu(menu);
+        return dmenu;
+    }
+    
+    WARNING << "\"" << menu << "\" unknown menu" << endl;
+    return NULL;
+} 
+
+/**
+ * @fn    CreateDynamicMenu(char *name)
+ * @brief Creates a dynamic menu
+ *
+ * Executes command line and parses standard out as a menu file.
+ *
+ * @param name Name of dynamic menu to create
+ *
+ * @return Created menu, NULL if error occured inmenu parsing
+ */
+WaMenu *WaScreen::CreateDynamicMenu(char *name) {
+    char *tmp_argv[128];
+    int m_pipe[2];
+    WaMenu *dmenu;
+    int pid, status, i;
+    char *allocname = NULL;
+    char *__m_wastrdup_tmp;
+
+    for (i = 0; name[i] != '\0' && name[i] != '!'; i++);
+    if (name[i] == '!' && name[i + 1] != '\0') {
+        allocname = __m_wastrdup(&name[i + 1]);
+        commandline_to_argv(allocname, tmp_argv);
+    } else 
+        return NULL;
+
+    if (pipe(m_pipe) < 0) {
+        WARNING;
+        perror("pipe");
+    }
+    else {
+        struct sigaction action;
+        
+        action.sa_handler = SIG_DFL;
+        action.sa_mask = sigset_t();
+        action.sa_flags = 0;
+        sigaction(SIGCHLD, &action, NULL); 
+        pid = fork();
+        if (pid == 0) {
+            dup2(m_pipe[1], STDOUT_FILENO);
+            close(m_pipe[0]);
+            close(m_pipe[1]);
+            putenv(waimea->pathenv);
+            if (execvp(*tmp_argv, tmp_argv) < 0)
+                WARNING << *tmp_argv << ": command not found" << endl;
+            close(STDOUT_FILENO);
+            exit(127);
+        }
+        close(m_pipe[1]);
+        rh->linenr = 0;
+        delete [] config.menu_file;
+        config.menu_file = new char[strlen(*tmp_argv) + 8];
+        sprintf(config.menu_file, "%s:STDOUT", *tmp_argv);
+        dmenu = new WaMenu(name);
+        dmenu->dynamic = dmenu->dynamic_root = true;
+        FILE *fd = fdopen(m_pipe[0], "r");
+        dmenu = rh->ParseMenu(dmenu, fd, this);
+        fclose(fd);
+        if (waitpid(pid, &status, 0) == -1) {
+            WARNING; 
+            perror("waitpid");
+        }
+        action.sa_handler = signalhandler;
+        action.sa_flags = SA_NOCLDSTOP | SA_NODEFER;
+        sigaction(SIGCHLD, &action, NULL);
+        if (dmenu != NULL) {
+            dmenu->Build(this);
+            if (allocname) delete [] allocname;
+            return dmenu;
+        }
+    }
+    if (allocname) delete [] allocname;
+    return NULL;
 }
 
 /**
@@ -284,6 +634,7 @@ WaScreen::~WaScreen(void) {
 void WaScreen::CreateFonts(void) {
     int w_diff, mf_diff, mt_diff, mb_diff, mct_diff, mcf_diff;
     bool set_mih;
+    char *__m_wastrdup_tmp;
     
     if (! mstyle.item_height) set_mih = true;
     else set_mih = false;
@@ -302,7 +653,7 @@ void WaScreen::CreateFonts(void) {
                 wstyle.wa_font.font << "\"" << endl;
             wstyle.wa_font.xft = default_font.xft;
             delete [] wstyle.wa_font.font;
-            wstyle.wa_font.font = wastrdup(default_font.font);
+            wstyle.wa_font.font = __m_wastrdup(default_font.font);
         } else {
             w_diff = wstyle.xftfont->ascent - wstyle.xftfont->descent;
             if (! wstyle.title_height)
@@ -316,7 +667,7 @@ void WaScreen::CreateFonts(void) {
                 mstyle.wa_f_font.font << "\"" << endl;
             mstyle.wa_f_font.xft = default_font.xft;
             delete [] mstyle.wa_f_font.font;
-            mstyle.wa_f_font.font = wastrdup(default_font.font);
+            mstyle.wa_f_font.font = __m_wastrdup(default_font.font);
         } else {
             mf_diff = mstyle.f_xftfont->ascent - mstyle.f_xftfont->descent;
             if (set_mih)
@@ -330,7 +681,7 @@ void WaScreen::CreateFonts(void) {
                 mstyle.wa_t_font.font << "\"" << endl;
             mstyle.wa_t_font.xft = default_font.xft;
             delete [] mstyle.wa_t_font.font;
-            mstyle.wa_t_font.font = wastrdup(default_font.font);
+            mstyle.wa_t_font.font = __m_wastrdup(default_font.font);
         } else {
             mt_diff = mstyle.t_xftfont->ascent - mstyle.t_xftfont->descent;
             if (! mstyle.title_height)
@@ -344,7 +695,7 @@ void WaScreen::CreateFonts(void) {
                 mstyle.wa_b_font.font << "\"" << endl;
             mstyle.wa_b_font.xft = default_font.xft;
             delete [] mstyle.wa_b_font.font;
-            mstyle.wa_b_font.font = wastrdup(default_font.font);
+            mstyle.wa_b_font.font = __m_wastrdup(default_font.font);
         } else {
             mb_diff = mstyle.b_xftfont->ascent - mstyle.b_xftfont->descent;
             if (set_mih && mstyle.item_height <
@@ -359,7 +710,7 @@ void WaScreen::CreateFonts(void) {
                 mstyle.wa_ct_font.font << "\"" << endl;
             mstyle.wa_ct_font.xft = default_font.xft;
             delete [] mstyle.wa_ct_font.font;
-            mstyle.wa_ct_font.font = wastrdup(default_font.font);
+            mstyle.wa_ct_font.font = __m_wastrdup(default_font.font);
         } else {
             mct_diff = mstyle.ct_xftfont->ascent - mstyle.ct_xftfont->descent;
             if (set_mih && mstyle.item_height <
@@ -374,7 +725,7 @@ void WaScreen::CreateFonts(void) {
                 mstyle.wa_cf_font.font << "\"" << endl;
             mstyle.wa_cf_font.xft = default_font.xft;
             delete [] mstyle.wa_cf_font.font;
-            mstyle.wa_cf_font.font = wastrdup(default_font.font);
+            mstyle.wa_cf_font.font = __m_wastrdup(default_font.font);
         } else {
             mcf_diff = mstyle.cf_xftfont->ascent - mstyle.cf_xftfont->descent;
             if (set_mih && mstyle.item_height <
@@ -489,8 +840,8 @@ void WaScreen::CreateFonts(void) {
 void WaScreen::CreateColors(void) {
     XGCValues gcv;    
 
-    list<ButtonStyle *>::iterator bit = wstyle.buttonstyles->begin();
-    for (; bit != wstyle.buttonstyles->end(); ++bit) {
+    list<ButtonStyle *>::iterator bit = wstyle.buttonstyles.begin();
+    for (; bit != wstyle.buttonstyles.end(); ++bit) {
         if ((*bit)->fg) {
             gcv.foreground = (*bit)->c_focused.getPixel();
             (*bit)->g_focused = XCreateGC(display, id, GCForeground, &gcv);
@@ -529,7 +880,8 @@ void WaScreen::CreateColors(void) {
     if (! mstyle.wa_f_font.xft) {
         gcv.foreground = mstyle.f_text.getPixel();
         gcv.font = mstyle.f_font->fid;
-        mstyle.f_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
+        mstyle.f_text_gc = XCreateGC(display, id, GCForeground | GCFont,
+                                     &gcv);
 
         gcv.foreground = mstyle.f_hilite_text.getPixel();
         gcv.font = mstyle.f_font->fid;
@@ -540,13 +892,15 @@ void WaScreen::CreateColors(void) {
     if (! mstyle.wa_t_font.xft) {
         gcv.foreground = mstyle.t_text.getPixel();
         gcv.font = mstyle.t_font->fid;
-        mstyle.t_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
+        mstyle.t_text_gc = XCreateGC(display, id, GCForeground | GCFont,
+                                     &gcv);
     }
 
     if (! mstyle.wa_b_font.xft) {
         gcv.foreground = mstyle.f_text.getPixel();
         gcv.font = mstyle.b_font->fid;
-        mstyle.b_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
+        mstyle.b_text_gc = XCreateGC(display, id, GCForeground | GCFont,
+                                     &gcv);
 
         gcv.foreground = mstyle.f_hilite_text.getPixel();
         gcv.font = mstyle.b_font->fid;
@@ -587,8 +941,8 @@ void WaScreen::CreateColors(void) {
  */
 void WaScreen::RenderCommonImages(void) {
     WaTexture *texture;
-    list<ButtonStyle *>::iterator bit = wstyle.buttonstyles->begin();
-    for (; bit != wstyle.buttonstyles->end(); ++bit) {
+    list<ButtonStyle *>::iterator bit = wstyle.buttonstyles.begin();
+    for (; bit != wstyle.buttonstyles.end(); ++bit) {
         texture = &(*bit)->t_focused;
         if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
             (*bit)->p_focused = None;
@@ -673,8 +1027,8 @@ void WaScreen::UpdateWorkarea(void) {
     workarea->x = workarea->y = 0;
     workarea->width = width;
     workarea->height = height;
-    list<WMstrut *>::iterator it = strut_list->begin();
-    for (; it != strut_list->end(); ++it) {
+    list<WMstrut *>::iterator it = strut_list.begin();
+    for (; it != strut_list.end(); ++it) {
         if ((*it)->left > workarea->x) workarea->x = (*it)->left;
         if ((*it)->top > workarea->y) workarea->y = (*it)->top;
         if ((width - (*it)->right) < workarea->width)
@@ -690,8 +1044,8 @@ void WaScreen::UpdateWorkarea(void) {
         old_width != workarea->width || old_height != workarea->height) {
         net->SetWorkarea(this);
         
-        list<WaWindow *>::iterator wa_it = waimea->wawindow_list->begin();
-        for (; wa_it != waimea->wawindow_list->end(); ++wa_it) {
+        list<WaWindow *>::iterator wa_it = wawindow_list.begin();
+        for (; wa_it != wawindow_list.end(); ++wa_it) {
             if ((*wa_it)->flags.max) {
                 (*wa_it)->flags.max = false;
                 res_x = (*wa_it)->restore_max.x;
@@ -730,8 +1084,8 @@ void WaScreen::MoveViewportTo(int x, int y) {
     v_x = x;
     v_y = y;
 
-    list<WaWindow *>::iterator it = waimea->wawindow_list->begin();
-    for (; it != waimea->wawindow_list->end(); ++it) {
+    list<WaWindow *>::iterator it = wawindow_list.begin();
+    for (; it != wawindow_list.end(); ++it) {
         if (! (*it)->flags.sticky) {
             (*it)->attrib.x = (*it)->attrib.x + x_move;
             (*it)->attrib.y = (*it)->attrib.y + y_move;
@@ -749,8 +1103,8 @@ void WaScreen::MoveViewportTo(int x, int y) {
             }   
         }
     }
-    list<WaMenu *>::iterator it2 = waimea->wamenu_list->begin();
-    for (; it2 != waimea->wamenu_list->end(); ++it2) {
+    list<WaMenu *>::iterator it2 = wamenu_list.begin();
+    for (; it2 != wamenu_list.end(); ++it2) {
         if ((*it2)->mapped && (! (*it2)->root_menu))
             (*it2)->Move(x_move, y_move);
     }
@@ -879,8 +1233,8 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                               &event);
         switch (event.type) {
             case MotionNotify:
-                it = waimea->wawindow_list->begin();
-                for (; it != waimea->wawindow_list->end(); ++it) {
+                it = wawindow_list.begin();
+                for (; it != wawindow_list.end(); ++it) {
                     (*it)->dontsend = true;
                 }    
                 MoveViewportTo(v_x - (event.xmotion.x_root - px),
@@ -890,8 +1244,8 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                 break;
             case LeaveNotify:
             case EnterNotify:
-                it = waimea->wawindow_list->begin();
-                for (; it != waimea->wawindow_list->end(); ++it) {
+                it = wawindow_list.begin();
+                for (; it != wawindow_list.end(); ++it) {
                     (*it)->dontsend = true;
                 }    
                 MoveViewportTo(v_x - (event.xcrossing.x_root - px),
@@ -915,8 +1269,8 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
-                it = waimea->wawindow_list->begin();
-                for (; it != waimea->wawindow_list->end(); ++it) {
+                it = wawindow_list.begin();
+                for (; it != wawindow_list.end(); ++it) {
                     (*it)->dontsend = false;
                     if ((((*it)->attrib.x + (*it)->attrib.width) > 0 &&
                          (*it)->attrib.x < width) && 
@@ -966,7 +1320,7 @@ void WaScreen::MenuMap(XEvent *, WaAction *ac, bool focus) {
     Window w;
     int i, x, y;
     unsigned int ui;
-    WaMenu *menu = waimea->GetMenuNamed(ac->param);
+    WaMenu *menu = GetMenuNamed(ac->param);
 
     if (! menu) return;
     if (waimea->eh->move_resize != EndMoveResizeType) return;
@@ -975,7 +1329,8 @@ void WaScreen::MenuMap(XEvent *, WaAction *ac, bool focus) {
         if (menu->tasksw) menu->Build(this);
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
-        if ((y + menu->height + mstyle.border_width * 2) > (unsigned int) height)
+        if ((y + menu->height + mstyle.border_width * 2) >
+            (unsigned int) height)
            y -= (menu->height + mstyle.border_width * 2);
         if ((x + menu->width + mstyle.border_width * 2) > (unsigned int) width)
             x -= (menu->width + mstyle.border_width * 2);
@@ -997,20 +1352,21 @@ void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     Window w;
     int i, x, y;
     unsigned int ui;
-    WaMenu *menu = waimea->GetMenuNamed(ac->param);
+    WaMenu *menu = GetMenuNamed(ac->param);
 
     if (! menu) return;
     if (menu->dynamic && menu->mapped) {
         menu->Unmap(menu->has_focus);
-        if (! (menu = waimea->CreateDynamicMenu(ac->param))) return;
+        if (! (menu = CreateDynamicMenu(ac->param))) return;
     }
     if (waimea->eh->move_resize != EndMoveResizeType) return;
     
     if (XQueryPointer(display, id, &w, &w, &x, &y, &i, &i, &ui)) {
-        if (menu->tasksw) waimea->taskswitch->Build(this);
+        if (menu->tasksw) menu->Build(this);
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
-        if ((y + menu->height + mstyle.border_width * 2) > (unsigned int) height)
+        if ((y + menu->height + mstyle.border_width * 2) >
+            (unsigned int) height)
             y -= (menu->height + mstyle.border_width * 2);
         if ((x + menu->width + mstyle.border_width * 2) > (unsigned int) width)
             x -= (menu->width + mstyle.border_width * 2);                
@@ -1031,7 +1387,7 @@ void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
  * @param bool True if we should focus root item
  */
 void WaScreen::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
-    WaMenu *menu = waimea->GetMenuNamed(ac->param);
+    WaMenu *menu = GetMenuNamed(ac->param);
 
     if (! menu) return;
     if (waimea->eh->move_resize != EndMoveResizeType) return;
@@ -1075,10 +1431,10 @@ void WaScreen::Exit(XEvent *, WaAction *) {
  */
 void WaScreen::TaskSwitcher(XEvent *, WaAction *) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
-    waimea->taskswitch->Build(this);
-    waimea->taskswitch->ReMap(width / 2 - waimea->taskswitch->width / 2,
-                              height / 2 - waimea->taskswitch->height / 2);
-    waimea->taskswitch->FocusFirst();
+    window_menu->Build(this);
+    window_menu->ReMap(width / 2 - window_menu->width / 2,
+                       height / 2 - window_menu->height / 2);
+    window_menu->FocusFirst();
 }
 
 /**
@@ -1092,7 +1448,7 @@ void WaScreen::TaskSwitcher(XEvent *, WaAction *) {
  */
 void WaScreen::PreviousTask(XEvent *e, WaAction *ac) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
-    list<WaWindow *>::iterator it = waimea->wawindow_list->begin();
+    list<WaWindow *>::iterator it = wawindow_list.begin();
     it++;
     (*it)->Raise(e, ac);
     (*it)->FocusVis(e, ac);
@@ -1109,8 +1465,8 @@ void WaScreen::PreviousTask(XEvent *e, WaAction *ac) {
  */
 void WaScreen::NextTask(XEvent *e, WaAction *ac) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
-    waimea->wawindow_list->back()->Raise(e, ac);
-    waimea->wawindow_list->back()->FocusVis(e, ac);
+    wawindow_list.back()->Raise(e, ac);
+    wawindow_list.back()->FocusVis(e, ac);
 }
 
 /**
@@ -1204,8 +1560,8 @@ void WaScreen::AddDockapp(Window window) {
     list<char *>::iterator it;
     list<DockappHandler *>::iterator dock_it;
     if (have_hints) {
-        dock_it = docks->begin();
-        for (; dock_it != docks->end(); ++dock_it) {
+        dock_it = docks.begin();
+        for (; dock_it != docks.end(); ++dock_it) {
             it = (*dock_it)->style->order->begin();
             for (; it != (*dock_it)->style->order->end(); ++it) {
                 if ((**it == 'N') &&
@@ -1228,8 +1584,8 @@ void WaScreen::AddDockapp(Window window) {
             }
         }
     }
-    dock_it = docks->begin();
-    for (; dock_it != docks->end(); ++dock_it) {
+    dock_it = docks.begin();
+    for (; dock_it != docks.end(); ++dock_it) {
         it = (*dock_it)->style->order->begin();
         for (; it != (*dock_it)->style->order->end(); ++it) {
             if (**it == 'U') {
@@ -1278,9 +1634,9 @@ ScreenEdge::ScreenEdge(WaScreen *wascrn, int x, int y, int width, int height,
     wa->waimea->net->wXDNDMakeAwareness(id);
     
     XMapWindow(wa->display, id);
-    wa->waimea->always_on_top_list->push_back(id);
-    wa->waimea->WaRaiseWindow(0);
-    wa->waimea->window_table->insert(make_pair(id, this));
+    wa->always_on_top_list.push_back(id);
+    wa->WaRaiseWindow(0);
+    wa->waimea->window_table.insert(make_pair(id, this));
 }
 
 /**
@@ -1290,7 +1646,7 @@ ScreenEdge::ScreenEdge(WaScreen *wascrn, int x, int y, int width, int height,
  * Destroys ScreenEdge window
  */
 ScreenEdge::~ScreenEdge(void) {
-    wa->waimea->always_on_top_list->remove(id);
-    wa->waimea->window_table->erase(id);
+    wa->always_on_top_list.remove(id);
+    wa->waimea->window_table.erase(id);
     XDestroyWindow(wa->display, id);
 }

@@ -17,11 +17,6 @@
 
 #include <X11/Xlib.h>
 
-#ifdef    SHAPE
-#  include <X11/Xutil.h>
-#  include <X11/extensions/shape.h>
-#endif // SHAPE
-
 #ifdef    XRENDER
 #  include <X11/extensions/Xrender.h>
 #endif // XRENDER
@@ -50,9 +45,10 @@ typedef struct {
 } WaFont;
 
 #include "WaImage.hh"
-#include "EventHandler.hh"
-#include "NetHandler.hh"
+#include "ResourceHandler.hh"
 #include "DockappHandler.hh"
+#include "NetHandler.hh"
+#include "WaMenu.hh"
 
 typedef struct {
     int x;
@@ -85,7 +81,8 @@ typedef struct {
     int justify, y_pos;
     unsigned int handle_width, border_width, title_height;
 
-    list<ButtonStyle *> *buttonstyles;
+    list<ButtonStyle *> buttonstyles;
+    list<DockStyle *> dockstyles;
     int b_num;
 } WindowStyle;
 
@@ -109,10 +106,34 @@ typedef struct {
     unsigned int border_width, title_height, item_height;
 } MenuStyle;
 
+typedef struct {
+    char *style_file, *menu_file, *action_file;
+    unsigned int virtual_x;
+    unsigned int virtual_y;
+    int colors_per_channel, menu_stacking;
+    long unsigned int cache_max;
+    bool image_dither, transient_above;
+    
+    list<WaAction *> frameacts, awinacts, pwinacts, titleacts, labelacts,
+        handleacts, rgacts, lgacts, rootacts, weacts, eeacts, neacts,
+        seacts, mtacts, miacts, msacts, mcbacts;
+    list<WaAction *> **bacts;
+
+    list<WaActionExtList *> ext_frameacts, ext_awinacts, ext_pwinacts,
+        ext_titleacts, ext_labelacts, ext_handleacts, ext_rgacts, ext_lgacts;
+    list<WaActionExtList *> **ext_bacts;
+} ScreenConfig;
+
 class WaScreen : public WindowObject {
 public:
     WaScreen(Display *, int, Waimea *);
     virtual ~WaScreen(void);
+
+    void WaRaiseWindow(Window);
+    void WaLowerWindow(Window);
+    void UpdateCheckboxes(int);
+    WaMenu *GetMenuNamed(char *);
+    WaMenu *CreateDynamicMenu(char *);
 
     void MoveViewportTo(int, int);
     void MoveViewport(int);
@@ -180,14 +201,22 @@ public:
     WaImageControl *ic;
     WindowStyle wstyle;
     MenuStyle mstyle;
+    ScreenConfig config;
     WaFont default_font;
     XFontStruct *def_font;
+    WindowMenu *window_menu;
 
     Pixmap fgrip, ugrip;
+    Display *pdisplay;
     
 #ifdef XRENDER
+    bool render_extension;
     Pixmap xrootpmap_id;
 #endif // XRENDER
+
+#ifdef PIXMAP
+    Imlib_Context imlib_context;
+#endif // PIXMAP
 
     unsigned long fbutton_pixel, ubutton_pixel, pbutton_pixel, fgrip_pixel,
         ugrip_pixel;
@@ -196,13 +225,19 @@ public:
     Workarea *workarea;
     Window wm_check;
     bool focus;
-    
-    list<WMstrut *> *strut_list;
-    list<DockappHandler *> *docks;
 
-#ifdef SHAPE
-    int shape, shape_event;
-#endif // SHAPE
+    list<Window> always_on_top_list;
+    list<Window> always_at_bottom_list;
+    list<WaWindow *> wawindow_list;
+    list<WaWindow *> wawindow_list_map_order;
+    list<WaWindow *> wawindow_list_stacking;
+    list<WaWindow *> wawindow_list_stacking_aot;
+    list<WaWindow *> wawindow_list_stacking_aab;
+    list<WaMenu *> wamenu_list;
+    list<WaMenu *> wamenu_list_stacking_aot;
+    list<WaMenu *> wamenu_list_stacking_aab;
+    list<WMstrut *> strut_list;
+    list<DockappHandler *> docks;
 
 private:
     void CreateVerticalEdges(void);

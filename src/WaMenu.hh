@@ -19,12 +19,11 @@
 
 class WaMenu;
 class WaMenuItem;
-class TaskSwitcher;
+class WindowMenu;
 
 typedef struct _WaAction WaAction;
 typedef void (WaMenuItem::*MenuActionFn)(XEvent *, WaAction *);
 
-#include "ResourceHandler.hh"
 #include "WaScreen.hh"
 
 #define MenuExecMask  (1L << 0)
@@ -51,8 +50,8 @@ public:
     void Unmap(bool);
     void UnmapSubmenus(bool);
     void UnmapTree(void);
-    void CreateOutlineWindows(void);
-    void ToggleOutline(void);
+    void CreateOutline(void);
+    void DestroyOutline(void);
     void DrawOutline(int, int);
     void Raise(void);
     void FocusFirst(void);
@@ -62,12 +61,11 @@ public:
     WaScreen *wascreen;
     WaImageControl *ic;
     
-    list<WaMenuItem *> *item_list;    
+    list<WaMenuItem *> item_list;    
 
     Window frame, o_west, o_north, o_south, o_east;
     int x, y, width, height, bullet_width, cb_width, extra_width;
-    bool mapped, built, o_mapped, has_focus, tasksw, dynamic, dynamic_root,
-        ignore;
+    bool mapped, built, has_focus, tasksw, dynamic, dynamic_root, ignore;
     char *name;
     Pixmap pbackframe, ptitle, philite, psub, psubhilite;
     unsigned long backframe_pixel, title_pixel, hilite_pixel,
@@ -207,10 +205,9 @@ public:
 
 };
 
-
-class TaskSwitcher : public WaMenu {
+class WindowMenu : public WaMenu {
 public:
-    TaskSwitcher(void);
+    WindowMenu(void);
 
     void Build(WaScreen *);
     

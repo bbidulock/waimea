@@ -32,21 +32,12 @@ typedef struct _DockStyle DockStyle;
 typedef struct _ButtonStyle ButtonStyle;
 
 #include "WaWindow.hh"
+#include "WaMenu.hh"
 #include "Waimea.hh"
-#include "WaScreen.hh"
+
+#define IS_ENV_CHAR(ch) (isalnum(ch) || ch == '_')
 
 #define ACTLISTCLEAR(list) \
-    while (! list->empty()) { \
-        if (list->back()->exec) \
-            delete [] list->back()->exec; \
-        if (list->back()->param) \
-            delete [] list->back()->param; \
-        delete list->back(); \
-        list->pop_back(); \
-    } \
-    delete list;
-
-#define ACTLISTCLEAR2(list) \
     while (! list.empty()) { \
         if (list.back()->exec) \
             delete [] list.back()->exec; \
@@ -56,13 +47,16 @@ typedef struct _ButtonStyle ButtonStyle;
         list.pop_back(); \
     }
 
-#define BSCLEAR(list) \
+#define ACTLISTPTRCLEAR(list) \
     while (! list->empty()) { \
+        if (list->back()->exec) \
+            delete [] list->back()->exec; \
+        if (list->back()->param) \
+            delete [] list->back()->param; \
         delete list->back(); \
-        list-> pop_back(); \
+        list->pop_back(); \
     }
 
-#define IS_ENV_CHAR(ch) (isalnum(ch) || ch == '_')
 
 struct _WaAction {
     WwActionFn winfunc;
@@ -126,59 +120,39 @@ class ResourceHandler {
 public:
     ResourceHandler(Waimea *, struct waoptions *);
     virtual ~ResourceHandler(void);
-    
-    void LoadConfig(void);
-    void LoadStyle(WaScreen *);
-    void LoadMenus(void);
-    void LoadActions(void);
-    void ReadActions(char *, list<Define *> *, list<StrComp *> *,
-                     list<WaAction *> *);
-    WaMenu *ParseMenu(WaMenu *, FILE *);
 
-    char *rc_file;
-    char *style_file;
-    char *menu_file;
-    char *action_file;
-    char *pathenv;
-    unsigned int virtual_x;
-    unsigned int virtual_y;
-    int colors_per_channel, menu_stacking;
-    long unsigned int cache_max, double_click;
-    bool image_dither, rc_forced, style_forced, action_forced, menu_forced,
-        trans;
+    void LoadConfig(Waimea *);
+    void LoadConfig(WaScreen *);
+    void LoadStyle(WaScreen *);
+    void LoadMenus(WaScreen *);
+    void LoadActions(WaScreen *);
+    WaMenu *ParseMenu(WaMenu *, FILE *, WaScreen *);
+
+    char *rc_file, *style_file, *menu_file, *action_file;
+    bool rc_forced, style_forced, action_forced, menu_forced;
     int linenr;
     
-    list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
-        *handleacts, *rgacts, *lgacts, *rootacts, *weacts, *eeacts, *neacts,
-        *seacts, *mtacts, *miacts, *msacts, *mcbacts;
-    list<WaAction *> **bacts;
-
-    list<WaActionExtList *> ext_frameacts, ext_awinacts, ext_pwinacts,
-        ext_titleacts, ext_labelacts, ext_handleacts, ext_rgacts, ext_lgacts;
-    list<WaActionExtList *> **ext_bacts;
-
-    list<DockStyle *> *dockstyles;
-    list<ButtonStyle *> *buttonstyles;
-    
 private:
+    void ReadActions(char *, list<Define *> *, list<StrComp *> *,
+                     list<WaAction *> *, WaScreen *);
     void ReadDatabaseColor(char *, char *, WaColor *, unsigned long,
                            WaImageControl *);
     void ReadDatabaseTexture(char *, char *, WaTexture *, unsigned long,
                              WaImageControl *);
     void ReadDatabaseFont(char *, char *, WaFont *, WaFont *);
-    void ParseAction(const char *, list<StrComp *> *, list<WaAction *> *);
+    void ParseAction(const char *, list<StrComp *> *, list<WaAction *> *,
+                     WaScreen *);
 
     Waimea *waimea;
-    WaScreen *wascreen;
     Display *display;
     XrmDatabase database;
     char *homedir;
-    list<StrComp *> *wacts;
-    list<StrComp *> *racts;
-    list<StrComp *> *macts;
-    list<StrComp *> *types;
-    list<StrComp *> *bdetails;
-    list<StrComp *> *mods;
+    list<StrComp *> wacts;
+    list<StrComp *> racts;
+    list<StrComp *> macts;
+    list<StrComp *> types;
+    list<StrComp *> bdetails;
+    list<StrComp *> mods;
 };
 
 #define WindowFuncMask (1L << 0)
@@ -187,8 +161,11 @@ private:
 
 class Define {
 public:
-    inline Define(char *n, char *v) { name = n; value = v; }
-    inline ~Define(void) { delete name; delete value; }
+    inline Define(char *n, char *v) {
+        char *__m_wastrdup_tmp;
+        name = __m_wastrdup(n); value = __m_wastrdup(v);
+    }
+    inline ~Define(void) { delete [] name; delete [] value; }
     
     char *name;
     char *value;
@@ -202,9 +179,10 @@ public:
         title = t;
     }
     inline ~WaActionExtList(void) {
-        if (name) delete name;
-        if (cl) delete cl;
-        ACTLISTCLEAR2(list);
+        if (name) delete [] name;
+        if (cl) delete [] cl;
+        if (title) delete [] title;
+        ACTLISTCLEAR(list);
     }
     
     char *name;

@@ -49,6 +49,7 @@ int main(int argc, char **argv) {
     sprintf(program_name, "%s", argv[0]);
     int i;
     XEvent e;
+    char *__m_wastrdup_tmp;
 
     options.menufile = options.actionfile = options.stylefile =
         options.rcfile = options.display = NULL;
@@ -61,33 +62,33 @@ int main(int argc, char **argv) {
         } else if (! strncmp(argv[i], "--display=", 10) &&
                    strlen(argv[i]) >= 11) { options.display = argv[i] + 10;
         } else if (! strcmp(argv[i], "--rcfile")) {
-            if (i + 1 < argc) options.rcfile = wastrdup(argv[i++ + 1]);
+            if (i + 1 < argc) options.rcfile = __m_wastrdup(argv[i++ + 1]);
             else { cerr << program_name << ": option `" <<
                        argv[i] << "' requires an argument" << endl; return 1; }
         } else if (! strncmp(argv[i], "--rcfile=", 9) &&
                    strlen(argv[i]) >= 10) {
-            options.rcfile = wastrdup(argv[i] + 9);
+            options.rcfile = __m_wastrdup(argv[i] + 9);
         } else if (! strcmp(argv[i], "--stylefile")) {
-            if (i + 1 < argc) options.stylefile = wastrdup(argv[i++ + 1]);
+            if (i + 1 < argc) options.stylefile = __m_wastrdup(argv[i++ + 1]);
             else { cerr << program_name << ": option `" <<
                        argv[i] << "' requires an argument" << endl; return 1; }
         } else if (! strncmp(argv[i], "--stylefile=", 12) &&
                    strlen(argv[i]) >= 13) {
-            options.stylefile = wastrdup(argv[i] + 12);
+            options.stylefile = __m_wastrdup(argv[i] + 12);
         } else if (! strcmp(argv[i], "--actionfile")) {
-            if (i + 1 < argc) options.actionfile = wastrdup(argv[i++ + 1]);
+            if (i + 1 < argc) options.actionfile = __m_wastrdup(argv[i++ + 1]);
             else { cerr << program_name << ": option `" <<
                        argv[i] << "' requires an argument" << endl; return 1; }
         } else if (! strncmp(argv[i], "--actionfile=", 13) &&
                    strlen(argv[i]) >= 14) {
-            options.actionfile = wastrdup(argv[i] + 13);
+            options.actionfile = __m_wastrdup(argv[i] + 13);
         } else if (! strcmp(argv[i], "--menufile")) {
-            if (i + 1 < argc) options.menufile = wastrdup(argv[i++ + 1]);
+            if (i + 1 < argc) options.menufile = __m_wastrdup(argv[i++ + 1]);
             else { cerr << program_name << ": option `" <<
                        argv[i] << "' requires an argument" << endl; return 1; }
         } else if (! strncmp(argv[i], "--menufile=", 11) &&
                    strlen(argv[i]) >= 12) {
-            options.menufile = wastrdup(argv[i] + 11);
+            options.menufile = __m_wastrdup(argv[i] + 11);
         } else if (! strcmp(argv[i], "--usage")) {
             usage(); return 0;
         } else if (! strcmp(argv[i], "--help")) {
