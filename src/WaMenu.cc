@@ -1257,8 +1257,12 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
         Hilite();
         if (menu->has_focus && type != MenuTitleType) Focus();
     }
-    else if (ed->type == LeaveNotify && type != MenuSubType)
-        DeHilite();
+    else if (ed->type == LeaveNotify) {
+        if (type == MenuSubType) {
+            if (! sub1) 
+                DeHilite();
+        } else DeHilite();
+    }
 }
 
 /**

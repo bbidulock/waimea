@@ -402,11 +402,15 @@ char *wastrdup(char *s) {
  * @param command Program name to execute when restarting
  */
 void restart(char *command) {
-    delete waimea;
+    char *tmp_argv[128];
+    
     if (command) {
-        execlp(command, command, NULL);
-        perror(command);
-    }
+        argv = commandline_to_argv(wastrdup(command), tmp_argv);
+        delete waimea;
+        execvp(*tmp_argv, tmp_argv);
+        perror(*tmp_argv);
+    } else
+        delete waimea;
     execvp(argv[0], argv);
     perror(argv[0]);
     exit(EXIT_FAILURE);
@@ -424,3 +428,43 @@ void quit(int status) {
     delete waimea;
     exit(status);
 }
+
+/**
+ * @fn    commandline_to_argv(char *s)   
+ * @brief Parse command line to arguments
+ *
+ * Parses a command line string into an vector of arguments. Characters
+ * between '"' are parsed as one argument. Dangerous because it destroys
+ * command line string given as parameter.
+ *
+ * @param s Command line string
+ * @param tmp_argv Vector that should point to the different parameters
+ *
+ * @return argument vector
+ */
+char **commandline_to_argv(char *s, char **tmp_argv) {
+    int i;
+    
+    for (i = 0;;) {
+        for (; *s == ' ' || *s == '\t'; s++);
+        if (*s == '"') {
+            tmp_argv[i++] = ++s;
+            for (; *s != '"' && *s != '\0'; s++);
+            if (*s == '\0') break;
+            *s = '\0';
+            s++;
+            if (*s == '\0') break;
+        }
+        else {
+            tmp_argv[i++] = s;
+            for (; *s != ' ' && *s != '\t' && *s != '\0'; s++);
+            if (*s == '\0') break;
+            *s = '\0';
+            s++;
+        }
+    }
+    tmp_argv[i] = NULL;
+    return tmp_argv;
+}
+
+

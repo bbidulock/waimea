@@ -134,5 +134,6 @@ void signalhandler(int);
 char *wastrdup(char *);
 void restart(char *);
 void quit(int);
+char **commandline_to_argv(char *, char **);
 
 #endif // __Waimea_hh

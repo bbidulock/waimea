@@ -1495,7 +1495,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             if ((s = strwithin(line, '(', ')')))
                 m = new WaMenuItem(s);
             else
-                m = new WaMenuItem(wastrdup(s));
+                m = new WaMenuItem(wastrdup(""));
             m->type = MenuItemType;
             if ((s = strwithin(line, '{', '}'))) {
                 if (*s != '\0') {
@@ -1515,7 +1515,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             if ((s = strwithin(line, '(', ')')))
                 m = new WaMenuItem(s);
             else
-                m = new WaMenuItem(wastrdup(s));
+                m = new WaMenuItem(wastrdup(""));
             m->type = MenuItemType;
             menu->AddItem(m);
             continue;
