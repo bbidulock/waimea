@@ -1052,9 +1052,10 @@ void ResourceHandler::LoadActions(void) {
     FILE *file;
     int i, i2, i3;
     bool cmd;
-    signed char *buffer = new signed char[8192];
-    signed char *buffer2 = new signed char[8192];
-    signed char tmp_ch;
+    int ret;
+    char *buffer = new char[8192];
+    char *buffer2 = new char[8192];
+    char tmp_ch;
     char *str;
     WaActionExtList *ext_list;
     list<Define *> *defs = new list<Define *>;
@@ -1065,14 +1066,15 @@ void ResourceHandler::LoadActions(void) {
         exit(1);
     }
     for (;;) {
-        for (i = 0; (buffer[i] = fgetc(file)) != EOF &&
-                 buffer[i] != '{'; i++) {
+        for (i = 0; (ret = fgetc(file)) != EOF &&
+                 ret != '{'; i++) {
+            buffer[i] = ret;
             if (buffer[i] == '#' || buffer[i] == '!') {
                 i--;
-                while ((tmp_ch = fgetc(file)) != EOF && tmp_ch != '\n');
+                while ((ret = fgetc(file)) != EOF && ret != '\n');
             }
         }
-        if (buffer[i] == EOF) {
+        if (ret == EOF) {
             fclose(file);
             LISTCLEAR(defs);
             LISTCLEAR(wacts);
@@ -1085,7 +1087,8 @@ void ResourceHandler::LoadActions(void) {
             delete buffer2;
             return;
         }
-        str = strtrim((char *) buffer);
+        else buffer[i] = ret;
+        str = strtrim(buffer);
         switch (buffer[i]) {
             case '\n':
                 i = 0;
@@ -1093,18 +1096,19 @@ void ResourceHandler::LoadActions(void) {
             case '{':
                 buffer[i] = '\0';
                 cmd = false;
-                for (i2 = 0; (buffer2[i2] = fgetc(file)) != EOF &&
-                         (buffer2[i2] != '}' || cmd); i2++) {
+                for (i2 = 0; (ret = fgetc(file)) != EOF &&
+                         (ret != '}' || cmd); i2++) {
+                    buffer2[i2] = ret;
                     if (buffer2[i2] == '{') cmd = true;
                     if (buffer2[i2] == '}') cmd = false;
                     if (buffer2[i2] == '#' || buffer[i] == '!') {
                         i2--;
-                        while ((tmp_ch = fgetc(file)) != EOF &&
-                               tmp_ch != '\n');
+                        while ((ret = fgetc(file)) != EOF && ret != '\n');
                     }
                 }
-                if (buffer2[i2] == EOF) ERROR << "missing '}'" << endl;
-                buffer2[i2] = '\0';               
+                buffer2[i2] = ret;
+                if (ret == EOF) ERROR << "missing '}'" << endl;
+                buffer2[i2] = '\0';
                 if (! strncasecmp(str, "DEF", 3)) {
                     str = strtrim(str + 3);                   
                     defs->push_front(new Define(wastrdup(str),
