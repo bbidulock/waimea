@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-use Fcntl ':mode';
+use POSIX;
 
 my $script_location = $0;
 my $offset = 0;
@@ -85,12 +85,12 @@ sub print_directory {
     while ($dir_list[$i+$offset] && (($i == $max_menu_length-1 && !$dir_list[$i+$offset+1]) ||
 				     $i < $max_menu_length-1)) {
 	$mode = (stat("$dir\/$dir_list[$i+$offset]"))[2];
-	if ($mode & S_IFDIR) {
+	if (S_ISDIR($mode)) {
 	    push  @output, print_sub("$dir_list[$i+$offset]\/", '0',
 				     "$script_location -dir \\\"$dir/$dir_list[$i+$offset]\\\"");
 	}
-	if ($mode & S_IFREG) {
-	    if ($mode & S_IEXEC) {
+	if (S_ISREG($mode)) {
+	    if (S_ISEXEC($mode)) {
 		push  @output, print_sub("$dir_list[$i+$offset]",
 					 "\\\"$dir/$dir_list[$i+$offset]\\\"",
 					 "$script_location -file \\\"$dir/$dir_list[$i+$offset]\\\"");

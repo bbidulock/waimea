@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-use Fcntl ':mode';
+use POSIX;
 
 my $title = "styles";
 my $stylesdir = "@pkgdatadir@/styles";
@@ -25,11 +25,11 @@ sub print_directory {
     while ($temp = shift @dir_list) {
 	$mode = (stat("$_[0]\/$temp"))[2];
 	if (!($temp eq '..' || $temp eq '.')) {
-	    if ($mode & S_IFDIR) {
+	    if (S_ISDIR($mode)) {
 		print_directory("$_[0]\/$temp");
 	    }
 	    else {
-		if ($mode & S_IFREG) {
+		if (S_ISREG($mode)) {
 		    $_ = $temp;
 		    if (/(.+)\.style$/) {
 			print "[item] ($1) \"restart(waimea --stylefile=";

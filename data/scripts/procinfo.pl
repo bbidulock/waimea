@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-use Fcntl ':mode';
+use POSIX;
 
 my $script_location = $0;
 my $offset = 0;
