@@ -1929,8 +1929,9 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
             }
             
             colors = new XColor[ncolors];
-            if (! colors)
+            if (! colors) {
                 ERROR << "error allocating colormap" << endl; quit(1);
+            }
             
 #ifdef    ORDEREDPSEUDO
             int i = 0, ii, p, r, g, b, bits = 256 / colors_per_channel;

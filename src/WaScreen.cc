@@ -539,7 +539,8 @@ void WaScreen::UpdateCheckboxes(int type) {
     for (; mit != wamenu_list.end(); ++mit) {
         miit = (*mit)->item_list.begin();
         for (; miit != (*mit)->item_list.end(); ++miit) {
-            if ((*miit)->cb == type) (*miit)->DrawFg();
+            if ((*miit)->cb == type && (*miit)->menu->mapped)
+                (*miit)->DrawFg();
         }
     }
 }

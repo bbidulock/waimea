@@ -457,12 +457,15 @@ void WaMenu::Map(int mx, int my) {
     if (mapped) return;
 
     if (wascreen->config.menu_stacking == AlwaysAtBottom) {
+        wascreen->wamenu_list_stacking_aab.remove(this);
         wascreen->wamenu_list_stacking_aab.push_back(this);
         wascreen->WaLowerWindow(frame);
     } else if (wascreen->config.menu_stacking == AlwaysOnTop) {
+        wascreen->wamenu_list_stacking_aot.remove(this);
         wascreen->wamenu_list_stacking_aot.push_front(this);
         wascreen->WaRaiseWindow(0);
     } else {
+        wascreen->wa_list_stacking.remove(this);
         wascreen->wa_list_stacking.push_front(this);
         wascreen->WaRaiseWindow(frame);
     }
@@ -497,12 +500,15 @@ void WaMenu::ReMap(int mx, int my) {
     if (mapped) Move(mx - x, my - y);
     else {
         if (wascreen->config.menu_stacking == AlwaysAtBottom) {
+            wascreen->wamenu_list_stacking_aab.remove(this);
             wascreen->wamenu_list_stacking_aab.push_back(this);
             wascreen->WaLowerWindow(frame);
         } else if (wascreen->config.menu_stacking == AlwaysOnTop) {
+            wascreen->wamenu_list_stacking_aot.remove(this);
             wascreen->wamenu_list_stacking_aot.push_front(this);
             wascreen->WaRaiseWindow(0);
         } else {
+            wascreen->wa_list_stacking.remove(this);
             wascreen->wa_list_stacking.push_front(this);
             wascreen->WaRaiseWindow(frame);
         }
