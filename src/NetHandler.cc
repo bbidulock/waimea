@@ -247,7 +247,7 @@ void NetHandler::GetWMNormalHints(WaWindow *ww) {
     else WW_DELETED;
     XUngrabServer(display);
 
-    if (status == Success) {
+    if (status) {
         if (size_hints->flags & PMaxSize) {
             ww->size.max_width = size_hints->max_width;
             ww->size.max_height = size_hints->max_height;
@@ -263,17 +263,18 @@ void NetHandler::GetWMNormalHints(WaWindow *ww) {
         if (size_hints->flags & PBaseSize) {
             ww->size.base_width = size_hints->base_width;
             ww->size.base_height = size_hints->base_height;
-            if (ww->size.width_inc == 0) {
-                ww->size.base_width = 0;
-                ww->size.width_inc = 1;
-            }
-            if (ww->size.height_inc == 0) {
-                ww->size.base_height = 0;
-                ww->size.height_inc = 1;
-            }
         }
         if (size_hints->flags & PWinGravity)
             ww->size.win_gravity = size_hints->win_gravity;
+
+        if (ww->size.width_inc == 0) {
+            ww->size.base_width = 0;
+            ww->size.width_inc = 1;
+        }
+        if (ww->size.height_inc == 0) {
+            ww->size.base_height = 0;
+            ww->size.height_inc = 1;
+        }
     }
     
     if (ww->size.min_width < ((ww->title_w - 4) * 3 + 8))

@@ -2180,6 +2180,8 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
     Pixmap retp;
     if (texture->getTexture() & WaImage_ParentRelative) return ParentRelative;
     
+    XSync(wascreen->display, false);
+    
     Pixmap pixmap = searchCache(width, height, texture->getTexture(),
                                 texture->getColor(), texture->getColorTo());
     if (pixmap) {
@@ -2514,6 +2516,8 @@ Pixmap WaImageControl::xrender(Pixmap p, unsigned int width,
     if ((! texture->getOpacity()) || parent == None || dest == None)
         return p;
 
+    XSync(wascreen->display, false);
+    
     GC gc = DefaultGC(display, screen_number);
     XCopyArea(display, parent, dest, gc, src_x, src_y, width,
               height,  0, 0);
