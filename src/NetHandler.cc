@@ -1076,7 +1076,6 @@ void NetHandler::GetWmType(WaWindow *ww) {
                       ww->wascreen->wawindow_list_stacking_aab.remove(ww);
                   ww->flags.alwaysatbottom = ww->flags.alwaysontop = false;
                   ww->flags.forcedatbottom = true;
-                  ww->flags.focusable = false;
                   ww->wascreen->always_at_bottom_list.push_back(ww->frame->id);
                   ww->wascreen->WaLowerWindow(ww->frame->id);
             }
@@ -1085,7 +1084,7 @@ void NetHandler::GetWmType(WaWindow *ww) {
                 ww->flags.tasklist = false;
                 ww->flags.sticky = true;
                 ww->flags.border = ww->flags.title = ww->flags.handle =
-                    ww->flags.all = ww->flags.focusable = false;
+                    ww->flags.all = false;
                 if (ww->flags.alwaysontop)
                     ww->wascreen->wawindow_list_stacking_aot.remove(ww);
                 if (ww->flags.alwaysatbottom)
