@@ -61,19 +61,19 @@ CONFIG FILE
        styleFile
                 Style file path.
 
-        menuFile
+       menuFile
                 Menu file path.
 
-        actionFile
+       actionFile
                 Action file path.
 
-        ColorsPerChannel
+       ColorsPerChannel
                 Colors per channel to use for image rendering.
 
-        cacheMax
+       cacheMax
                 Cache limit for pixmap caching.
 
-        virtualSize
+       virtualSize
                 Virtual desktop size. Ex. '3x3' will set the virtual desktop 
                 size to three times screen height in virtual height and three
                 times screen width in virtual width.
@@ -97,7 +97,7 @@ STYLES
                 ">" string is used.
 
         menu.borderWidth
-                Border with of all menus, By default 2.
+                Border width of all menus, By default 2.
 
         titleWidth
                 Forces title with to number of pixels. By default the title 
@@ -241,20 +241,43 @@ ACTIONS
                 scrollviewportright(pixels)
                 scrollviewportup(pixels)
                 scrollviewportdown(pixels)
-			For the scrollview actions it's possible to 
+			For the scrollviewport actions it's possible to 
 			specify with a parameter how many pixels to scroll.
 			If no parameter then default value (30) is used.
 
         List of event types:
                 buttonpress
                 buttonrelease
+		keypress
+		keyrelease
                 enternotify
                 leavenotify
                 maprequest
 
         List of event details:
-                anybutton
-                button1-7
+		For ButtonEvents:
+                	anybutton
+                	button1-7
+		For KeyEvents:
+			anykey
+			alt_l
+			control_l
+			shift_l
+			shift_r
+			tab
+			f1
+			f2
+			f3
+			f4
+			f5
+			f6
+			f7
+			f8
+			f9
+			f10
+			'key-code'
+				It is possible to specify a keycode beteen
+				two "'" characters as detail for KeyEvents.
 
         List of event modifiers:
                 shiftmask
@@ -272,8 +295,8 @@ MENUS
         the global system menu file. If you want to force Waimea to read a 
         specified menu file use '--menufile' switch. 
 
-        A menu definition starts with a [begin] (menu_name) statement and ends
-        with a [end] statement. Remember that a [begin] must be followed by a
+        A menu definition starts with a [start] (menu_name) statement and ends
+        with a [end] statement. Remember that a [start] must be followed by a
         menu name. Between the [begin] and [end] statements a number of 
         [item], [title] and [sub] statements should be put. The only thing 
         separating these three menu item types are there looks and action 
@@ -287,7 +310,7 @@ MENUS
 
         Example:
 
-        [begin]   (menu)
+        [start]   (menu)
           [title] (Menu)
           [item]  (Xterm)    {xterm}
           [sub]   (Programs) <progs>
@@ -298,8 +321,8 @@ MENUS
         It is possible to start defining a new menu within another menu.
         Example:
 
-        [begin]    (menu)
-          [begin]  (menu2)
+        [start]    (menu)
+          [start]  (menu2)
             [item] (not smart)    {rm -rf ~/.}
             [end]
           [sub]    <menu2>
