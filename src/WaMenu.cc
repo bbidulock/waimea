@@ -35,7 +35,7 @@ WaMenu::WaMenu(char *n) {
     
     height = 0;
     width = 0;
-    mapped = has_focus = built = tasksw = False;
+    mapped = has_focus = built = tasksw = false;
     root_menu = NULL;
     root_item = NULL;
     wf = (Window) 0;
@@ -77,7 +77,7 @@ WaMenu::~WaMenu(void) {
  */
 void WaMenu::AddItem(WaMenuItem *item) {
     item->menu = this;
-    item->hilited = False;
+    item->hilited = false;
     item_list->push_back(item);
 }
 
@@ -142,22 +142,11 @@ void WaMenu::Build(WaScreen *screen) {
             }
         }
     }
-    
-    int lasttype = 0;
-    it = item_list->begin();
-    for (i = 1; it != item_list->end(); ++it, ++i) {
+
 #ifdef XFT
-        XGlyphInfo extents;
-        XftFont *font;
-        
-        if ((*it)->type == MenuTitleType)
-            font = wascreen->mstyle.t_xftfont;
-        else
-            font = wascreen->mstyle.f_xftfont;
-        
-        XftTextExtents8(display, font, (unsigned char *) (*it)->label,
-                        strlen((*it)->label), &extents);
-        (*it)->width = extents.width + 20;
+    XGlyphInfo extents;
+    XftFont *font;
+    for (it = item_list->begin(); it != item_list->end(); ++it) {
         if ((*it)->type == MenuSubType) {
             XftTextExtents8(display, wascreen->mstyle.b_xftfont,
                             (unsigned char *) wascreen->mstyle.bullet,
@@ -175,41 +164,61 @@ void WaMenu::Build(WaScreen *screen) {
                             strlen(wascreen->mstyle.checkbox_false), &extents);
             if (extents.width > cb_width) cb_width = extents.width;
             (*it)->cb_width1 = extents.width;
-            
+        }
+    }
+#else // ! XFT
+    XFontStruct *font;
+    int tmp_w;
+    for (it = item_list->begin(); it != item_list->end(); ++it) {    
+        if ((*it)->type == MenuSubType)
+            bullet_width = XTextWidth(wascreen->mstyle.b_font,
+                                      wascreen->mstyle.bullet,
+                                      strlen(wascreen->mstyle.bullet));
+        else if ((*it)->type == MenuCBItemType) {
+            (*it)->cb_width2 = cb_width = XTextWidth(
+                wascreen->mstyle.ct_font,
+                wascreen->mstyle.checkbox_true,
+                strlen(wascreen->mstyle.checkbox_true));
+            tmp_w = XTextWidth(wascreen->mstyle.cf_font,
+                               wascreen->mstyle.checkbox_false,
+                               strlen(wascreen->mstyle.checkbox_false));
+            if (tmp_w > cb_width) cb_width = tmp_w;
+            (*it)->cb_width1 = tmp_w;
+        }
+    }
+#endif // XFT
+    extra_width = (bullet_width >= cb_width) ? bullet_width: cb_width;
+    
+    int lasttype = 0;
+    it = item_list->begin();
+    for (i = 1; it != item_list->end(); ++it, ++i) {
+#ifdef XFT
+        if ((*it)->type == MenuTitleType)
+            font = wascreen->mstyle.t_xftfont;
+        else
+            font = wascreen->mstyle.f_xftfont;
+        
+        XftTextExtents8(display, font, (unsigned char *) (*it)->label,
+                        strlen((*it)->label), &extents);
+        (*it)->width = extents.width + 20;
+        if ((*it)->type == MenuCBItemType) {
             XftTextExtents8(display, font, (unsigned char *) (*it)->label2,
                             strlen((*it)->label2), &extents);
             if ((extents.width + 20) > (*it)->width)
                 (*it)->width = extents.width + 20;
         }
 #else // ! XFT
-        XFontStruct *font;
-        int tmp_w;
         if ((*it)->type == MenuTitleType)
             font = wascreen->mstyle.t_font;
         else
             font = wascreen->mstyle.f_font;
-
-        (*it)->width = XTextWidth(font, (*it)->label,
-                                  strlen((*it)->label)) + 20;
         
-        if ((*it)->type == MenuSubType)
-            bullet_width = XTextWidth(wascreen->mstyle.b_font,
-                                      wascreen->mstyle.bullet,
-                                      strlen(wascreen->mstyle.bullet));
-        else if ((*it)->type == MenuCBItemType) {
-            (*it)->cb_width2 = cb_width = XTextWidth(wascreen->mstyle.ct_font,
-                                  wascreen->mstyle.checkbox_true,
-                                  strlen(wascreen->mstyle.checkbox_true));
-            tmp_w = XTextWidth(wascreen->mstyle.cf_font,
-                               wascreen->mstyle.checkbox_false,
-                               strlen(wascreen->mstyle.checkbox_false));
-            if (tmp_w > cb_width) cb_width = tmp_w;
-            (*it)->cb_width1 = tmp_w;
-            tmp_w = XTextWidth(font, (*it)->label2, strlen((*it)->label2)) + 20;
-            if (tmp_w > (*it)->width) (*it)->width = tmp_w;
+        (*it)->width = XTextWidth(font, (*it)->label, strlen((*it)->label)) +
+            20;
+        tmp_w = XTextWidth(font, (*it)->label2, strlen((*it)->label2)) + 20;
+        if (tmp_w > (*it)->width) (*it)->width = tmp_w;
         }
 #endif // XFT
-        extra_width = (bullet_width >= cb_width) ? bullet_width: cb_width;
         
         if (((*it)->width + extra_width) > width)
             width = (*it)->width + extra_width;
@@ -262,7 +271,7 @@ void WaMenu::Build(WaScreen *screen) {
     attrib_set.background_pixel = None;
     attrib_set.border_pixel = wascreen->mstyle.border_color.getPixel();
     attrib_set.colormap = wascreen->colormap;
-    attrib_set.override_redirect = True;
+    attrib_set.override_redirect = true;
     attrib_set.event_mask =  NoEventMask;
     
     if (! built) {
@@ -320,7 +329,7 @@ void WaMenu::Build(WaScreen *screen) {
         
         lasttype = (*it)->type;
     }
-    built = True;
+    built = true;
 }
 
 /**
@@ -343,8 +352,8 @@ void WaMenu::Map(int mx, int my) {
     
     x = mx;
     y = my;
-    mapped = True;
-    has_focus = False;
+    mapped = true;
+    has_focus = false;
     XMoveWindow(display, frame, x, y);
     XMapSubwindows(display, frame);
     XMapWindow(display, frame);
@@ -377,8 +386,8 @@ void WaMenu::ReMap(int mx, int my) {
     if (mapped) Move(mx - x, my - y);
     x = mx;
     y = my;
-    mapped = True;
-    has_focus = False;
+    mapped = true;
+    has_focus = false;
     XMoveWindow(display, frame, x, y);
     XMapSubwindows(display, frame);
     XMapWindow(display, frame);
@@ -439,7 +448,7 @@ void WaMenu::Unmap(bool focus) {
         }
     }
     if (focus) {
-        XSync(display, False);
+        XSync(display, false);
         while (XCheckTypedEvent(display, EnterNotify, &e));
     }
     if (root_item) {
@@ -450,10 +459,10 @@ void WaMenu::Unmap(bool focus) {
     }
     else {
         if (! waimea->wawindow_list->empty())
-            waimea->wawindow_list->front()->Focus(False);
+            waimea->wawindow_list->front()->Focus(false);
     }
     root_item = NULL;
-    mapped = False;
+    mapped = false;
 }
 
 /**
@@ -487,8 +496,8 @@ void WaMenu::UnmapTree(void) {
     if (root_menu) {
         root_menu->UnmapTree();
     }
-    UnmapSubmenus(False);
-    Unmap(False);
+    UnmapSubmenus(false);
+    Unmap(false);
 }
 
 /**
@@ -505,7 +514,7 @@ void WaMenu::CreateOutlineWindows(void) {
         CWColormap;
     attrib_set.background_pixel = wascreen->wstyle.outline_color.getPixel();
     attrib_set.colormap = wascreen->colormap;
-    attrib_set.override_redirect = True;
+    attrib_set.override_redirect = true;
     attrib_set.event_mask = NoEventMask;
     
     o_west = XCreateWindow(display, wascreen->id, 0, 0, 1, 1, 0,
@@ -524,7 +533,7 @@ void WaMenu::CreateOutlineWindows(void) {
     waimea->always_on_top_list->push_back(o_east);
     waimea->always_on_top_list->push_back(o_north);
     waimea->always_on_top_list->push_back(o_south);
-    o_mapped = False;
+    o_mapped = false;
 }
 
 /**
@@ -546,7 +555,7 @@ void WaMenu::ToggleOutline(void) {
         XUnmapWindow(display, o_east);
         XUnmapWindow(display, o_north);
         XUnmapWindow(display, o_south);
-        o_mapped = False;
+        o_mapped = false;
     }
     else {
         XMapWindow(display, o_west);
@@ -554,7 +563,7 @@ void WaMenu::ToggleOutline(void) {
         XMapWindow(display, o_north);
         XMapWindow(display, o_south);
         waimea->WaRaiseWindow(0);
-        o_mapped = True;
+        o_mapped = true;
     }       
 }
 
@@ -637,6 +646,7 @@ WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     submenu = submenu1 = submenu2 = NULL;
     exec = sub = exec1 = param1 = sub1 = label2 = exec2 = param2 =
         sub2 = cbox = NULL;
+    move_resize = false;
     
 #ifdef XFT
     xftdraw = (Drawable) 0;
@@ -714,14 +724,15 @@ void WaMenuItem::DrawFg(void) {
         case LeftJustify: x = 10; break;
         case CenterJustify:
             if (type == MenuTitleType)
-                x = ((menu->width - menu->bullet_width) / 2) - ((width - 20) / 2);
+                x = (menu->width / 2) - ((width - 20) / 2);
             else if (type == MenuCBItemType)
                 x = ((menu->width - menu->cb_width) / 2) - ((width - 20) / 2);
-            else x = ((menu->width - menu->extra_width) / 2) - ((width - 20) / 2);
+            else x = ((menu->width - menu->extra_width) / 2) -
+                     ((width - 20) / 2);
             break;
         default:
             if (type == MenuTitleType)
-                x = (menu->width - menu->bullet_width) - (width - 10);
+                x = menu->width - (width - 10);
             else if (type == MenuCBItemType)
                 x = (menu->width - menu->cb_width) - (width - 10);
             else x = (menu->width - menu->extra_width) - (width - 10);
@@ -808,7 +819,7 @@ void WaMenuItem::Hilite(void) {
             if (!(((*it)->func_mask & MenuSubMask) && (*it)->submenu->mapped))
                 (*it)->DeHilite();
     }
-    hilited = True;
+    hilited = true;
     if (menu->philite)
         XSetWindowBackgroundPixmap(menu->display, id, menu->philite);
     else
@@ -826,7 +837,7 @@ void WaMenuItem::Hilite(void) {
  */
 void WaMenuItem::DeHilite(void) {
     if (type == MenuTitleType) return;
-    hilited = False;
+    hilited = false;
     XSetWindowBackgroundPixmap(menu->display, id, menu->pframe);
     DrawFg();
 }
@@ -856,6 +867,7 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus) {
     int skip;
     
     if ((! (func_mask & MenuSubMask)) || submenu->mapped) return;
+    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     
     Hilite();
     if (submenu->tasksw) menu->waimea->taskswitch->Build(menu->wascreen);
@@ -890,6 +902,7 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
     int skip;    
 
     if (! (func_mask & MenuSubMask)) return;
+    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     
     Hilite();
     if (submenu->tasksw) menu->waimea->taskswitch->Build(menu->wascreen);
@@ -995,7 +1008,7 @@ void WaMenuItem::Lower(XEvent *, WaAction *) {
  */
 void WaMenuItem::Focus(void) {
     XSetInputFocus(menu->display, id, RevertToPointerRoot, CurrentTime);
-    menu->has_focus = True;
+    menu->has_focus = true;
     Hilite();
 }
 
@@ -1011,7 +1024,7 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
     XEvent event;
     int px, py, i;
     list<XEvent *> *maprequest_list;
-    bool started = False;
+    bool started = false;
     int nx = menu->x;
     int ny = menu->y;
     Window w;
@@ -1019,16 +1032,17 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
 
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     menu->waimea->eh->move_resize = MoveType;
+    move_resize = true;
     
     XQueryPointer(menu->display, menu->wascreen->id, &w, &w, &px,
                   &py, &i, &i, &ui);
     
     maprequest_list = new list<XEvent *>;
-    XGrabPointer(menu->display, id, True, ButtonReleaseMask |
+    XGrabPointer(menu->display, id, true, ButtonReleaseMask |
                  ButtonPressMask | PointerMotionMask | EnterWindowMask |
                  LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
                  menu->waimea->move_cursor, CurrentTime);
-    XGrabKeyboard(menu->display, id, True, GrabModeAsync, GrabModeAsync,
+    XGrabKeyboard(menu->display, id, true, GrabModeAsync, GrabModeAsync,
                   CurrentTime);
     for (;;) {
         menu->waimea->eh->EventLoop(
@@ -1037,7 +1051,7 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
             case MotionNotify:
                 if (! started) {
                     menu->ToggleOutline();
-                    started = True;
+                    started = true;
                 }
                 nx += event.xmotion.x_root - px;
                 ny += event.xmotion.y_root - py;
@@ -1078,6 +1092,7 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
+                move_resize = false;
                 XUngrabKeyboard(menu->display, CurrentTime);
                 XUngrabPointer(menu->display, CurrentTime);
                 return;
@@ -1104,16 +1119,17 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
 
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     menu->waimea->eh->move_resize = MoveType;
+    move_resize = true;
     
     XQueryPointer(menu->display, menu->wascreen->id, &w, &w, &px,
                   &py, &i, &i, &ui);
     
     maprequest_list = new list<XEvent *>;
-    XGrabPointer(menu->display, id, True, ButtonReleaseMask |
+    XGrabPointer(menu->display, id, true, ButtonReleaseMask |
                  ButtonPressMask | PointerMotionMask | EnterWindowMask |
                  LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
                  menu->waimea->move_cursor, CurrentTime);
-    XGrabKeyboard(menu->display, id, True, GrabModeAsync, GrabModeAsync,
+    XGrabKeyboard(menu->display, id, true, GrabModeAsync, GrabModeAsync,
                   CurrentTime);
     for (;;) {
         menu->waimea->eh->EventLoop(
@@ -1161,6 +1177,7 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
+                move_resize = false;
                 XUngrabKeyboard(menu->display, CurrentTime);
                 XUngrabPointer(menu->display, CurrentTime);
                 return;
@@ -1186,6 +1203,7 @@ void WaMenuItem::EndMoveResize(XEvent *, WaAction *) {
  * first window in list.
  */
 void WaMenuItem::TaskSwitcher(XEvent *, WaAction *) {
+    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     menu->waimea->taskswitch->Build(menu->wascreen);
     menu->waimea->taskswitch->Map(menu->wascreen->width / 2 -
                                   menu->waimea->taskswitch->width / 2,
@@ -1204,6 +1222,7 @@ void WaMenuItem::TaskSwitcher(XEvent *, WaAction *) {
  * @param ed Event details
  */
 void WaMenuItem::PreviousTask(XEvent *e, WaAction *ac) {
+    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     list<WaWindow *>::iterator it = menu->waimea->wawindow_list->begin();
     it++;
     (*it)->Raise(e, ac);
@@ -1220,6 +1239,7 @@ void WaMenuItem::PreviousTask(XEvent *e, WaAction *ac) {
  * @param ed Event details
  */
 void WaMenuItem::NextTask(XEvent *e, WaAction *ac) {
+    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     menu->waimea->wawindow_list->back()->Raise(e, ac);
     menu->waimea->wawindow_list->back()->FocusVis(e, ac);
 }
@@ -1345,7 +1365,7 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
 void WaMenuItem::UpdateCBox(void) {
     hash_map<Window, WindowObject *>::iterator it;
     Window func_win;
-    bool true_false = False;
+    bool true_false = false;
     WaWindow *ww;
 
     if (cb) {
@@ -1431,7 +1451,7 @@ void WaMenuItem::UpdateCBox(void) {
 TaskSwitcher::TaskSwitcher(void) : WaMenu(wastrdup("__windowlist__")) {
     WaMenuItem *m;
     
-    tasksw = True;
+    tasksw = true;
     m = new WaMenuItem(wastrdup("Window List"));
     m->type = MenuTitleType;
     AddItem(m);
@@ -1491,52 +1511,52 @@ void WaMenuItem::ViewportMove(XEvent *e, WaAction *wa) {
     menu->wascreen->ViewportMove(e, wa);
 }
 void WaMenuItem::MoveViewportLeft(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(WestDirection, True);
+    menu->wascreen->MoveViewport(WestDirection, true);
 }
 void WaMenuItem::MoveViewportRight(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(EastDirection, True);
+    menu->wascreen->MoveViewport(EastDirection, true);
 }
 void WaMenuItem::MoveViewportUp(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(NorthDirection, True);
+    menu->wascreen->MoveViewport(NorthDirection, true);
 }
 void WaMenuItem::MoveViewportDown(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(SouthDirection, True);
+    menu->wascreen->MoveViewport(SouthDirection, true);
 }
 void WaMenuItem::ScrollViewportLeft(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(WestDirection, True, ac);
+    menu->wascreen->ScrollViewport(WestDirection, true, ac);
 }
 void WaMenuItem::ScrollViewportRight(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(EastDirection, True, ac);
+    menu->wascreen->ScrollViewport(EastDirection, true, ac);
 }
 void WaMenuItem::ScrollViewportUp(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(NorthDirection, True, ac);
+    menu->wascreen->ScrollViewport(NorthDirection, true, ac);
 }
 void WaMenuItem::ScrollViewportDown(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(SouthDirection, True, ac);
+    menu->wascreen->ScrollViewport(SouthDirection, true, ac);
 }
 void WaMenuItem::MoveViewportLeftNoWarp(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(WestDirection, False);
+    menu->wascreen->MoveViewport(WestDirection, false);
 }
 void WaMenuItem::MoveViewportRightNoWarp(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(EastDirection, False);
+    menu->wascreen->MoveViewport(EastDirection, false);
 }
 void WaMenuItem::MoveViewportUpNoWarp(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(NorthDirection, False);
+    menu->wascreen->MoveViewport(NorthDirection, false);
 }
 void WaMenuItem::MoveViewportDownNoWarp(XEvent *, WaAction *) {
-    menu->wascreen->MoveViewport(SouthDirection, False);
+    menu->wascreen->MoveViewport(SouthDirection, false);
 }
 void WaMenuItem::ScrollViewportLeftNoWarp(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(WestDirection, False, ac);
+    menu->wascreen->ScrollViewport(WestDirection, false, ac);
 }
 void WaMenuItem::ScrollViewportRightNoWarp(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(EastDirection, False, ac);
+    menu->wascreen->ScrollViewport(EastDirection, false, ac);
 }
 void WaMenuItem::ScrollViewportUpNoWarp(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(NorthDirection, False, ac);
+    menu->wascreen->ScrollViewport(NorthDirection, false, ac);
 }
 void WaMenuItem::ScrollViewportDownNoWarp(XEvent *, WaAction *ac) {
-    menu->wascreen->ScrollViewport(SouthDirection, False, ac);
+    menu->wascreen->ScrollViewport(SouthDirection, false, ac);
 }
 
 /**

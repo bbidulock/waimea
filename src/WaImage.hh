@@ -108,7 +108,7 @@ private:
   WaImageControl *control;
 
 #ifdef    INTERLACE
-  Bool interlaced;
+  bool interlaced;
 #endif // INTERLACE
 
   XColor *colors;
@@ -151,7 +151,7 @@ public:
 
 class WaImageControl {
 private:
-    Bool dither;
+    bool dither;
     Display *display;
     Visual *visual;
     Colormap colormap;
@@ -181,12 +181,12 @@ protected:
                        WaColor *);
     
 public:
-    WaImageControl(Display *, WaScreen *, Bool = False, int = 4,
+    WaImageControl(Display *, WaScreen *, bool = false, int = 4,
                    unsigned long = 200l);
     virtual ~WaImageControl(void);
     
     inline Display *getDisplay(void) { return display; }
-    inline const Bool &doDither(void) { return dither; }
+    inline const bool &doDither(void) { return dither; }
     inline int getScreen(void) { return screen_number; }
     inline Visual *getVisual(void) { return visual; }
     inline const Window &getDrawable(void) const { return window; }
@@ -206,7 +206,7 @@ public:
     void getXColorTable(XColor **, int *);
     void getGradientBuffers(unsigned int, unsigned int,
                             unsigned int **, unsigned int **);
-    void setDither(Bool d) { dither = d; }
+    void setDither(bool d) { dither = d; }
     void setColorsPerChannel(int);
     void parseTexture(WaTexture *, char *);
     void parseColor(WaColor *, char * = 0);

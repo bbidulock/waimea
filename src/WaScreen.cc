@@ -52,7 +52,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     waimea = wa;
     net = waimea->net;
     rh = wa->rh;
-    focus = True;
+    focus = true;
     
     eventmask = SubstructureRedirectMask | StructureNotifyMask |
         PropertyChangeMask | ColormapChangeMask | KeyPressMask |
@@ -61,12 +61,12 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     
     XSetErrorHandler((XErrorHandler) wmrunningerror);
     XSelectInput(display, id, eventmask);
-    XSync(display, False);
+    XSync(display, false);
     XSetErrorHandler((XErrorHandler) xerrorhandler);
     
     waimea->window_table->insert(make_pair(id, this));
     
-    attrib_set.override_redirect = True;
+    attrib_set.override_redirect = true;
     wm_check = XCreateWindow(display, id, 0, 0, 1, 1, 0,
                        CopyFromParent, InputOnly, CopyFromParent,
                        CWOverrideRedirect, &attrib_set);
@@ -225,18 +225,12 @@ WaScreen::~WaScreen(void) {
  */
 void WaScreen::CreateFonts(void) {
 #ifdef XFT
-    double default_font_size;
-
-    if (height > 1024) default_font_size = 8.5;
-    else if (height > 768) default_font_size = 9.5;
-    else if (height > 600) default_font_size = 12.5;
-    else if (height > 480) default_font_size = 15.5;
-    else default_font_size = 18.5;
+    double default_font_size = 12.0;
     
     if (wstyle.xftsize < 2.0) wstyle.xftsize = default_font_size;
     if (! (wstyle.xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
                                         XftTypeString, wstyle.xftfontname,
-                                        XFT_SIZE, XftTypeDouble,
+                                        XFT_PIXEL_SIZE, XftTypeDouble,
                                         wstyle.xftsize, 0))) {
         ERROR << "couldn't load font \"" << wstyle.xftfontname << "\"" << endl;
         quit(1);
@@ -244,41 +238,48 @@ void WaScreen::CreateFonts(void) {
     if (mstyle.f_xftsize < 2.0) mstyle.f_xftsize = default_font_size;
     if (! (mstyle.f_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
                                           XftTypeString, mstyle.f_xftfontname,
-                                          XFT_SIZE, XftTypeDouble,
+                                          XFT_PIXEL_SIZE, XftTypeDouble,
                                           mstyle.f_xftsize, 0))) {
-        ERROR << "couldn't load font \"" << mstyle.f_xftfontname << "\"" << endl;
+        ERROR << "couldn't load font \"" << mstyle.f_xftfontname << "\"" <<
+            endl;
         quit(1);
     }
     if (mstyle.t_xftsize < 2.0) mstyle.t_xftsize = default_font_size;
     if (! (mstyle.t_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
                                           XftTypeString, mstyle.t_xftfontname,
-                                          XFT_SIZE, XftTypeDouble,
+                                          XFT_PIXEL_SIZE, XftTypeDouble,
                                           mstyle.t_xftsize, 0))) {
-        ERROR << "couldn't load font \"" << mstyle.t_xftfontname << "\"" << endl;
+        ERROR << "couldn't load font \"" << mstyle.t_xftfontname << "\"" <<
+            endl;
         quit(1);
     }
     if (mstyle.b_xftsize < 2.0) mstyle.b_xftsize = default_font_size;
     if (! (mstyle.b_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
                                           XftTypeString, mstyle.b_xftfontname,
-                                          XFT_SIZE, XftTypeDouble,
+                                          XFT_PIXEL_SIZE, XftTypeDouble,
                                           mstyle.b_xftsize, 0))) {
-        ERROR << "couldn't load font \"" << mstyle.b_xftfontname << "\"" << endl;
+        ERROR << "couldn't load font \"" << mstyle.b_xftfontname << "\"" <<
+            endl;
         quit(1);
     }
     if (mstyle.ct_xftsize < 2.0) mstyle.ct_xftsize = default_font_size;
     if (! (mstyle.ct_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
-                                          XftTypeString, mstyle.ct_xftfontname,
-                                          XFT_SIZE, XftTypeDouble,
-                                          mstyle.ct_xftsize, 0))) {
-        ERROR << "couldn't load font \"" << mstyle.ct_xftfontname << "\"" << endl;
+                                           XftTypeString,
+                                           mstyle.ct_xftfontname,
+                                           XFT_PIXEL_SIZE, XftTypeDouble,
+                                           mstyle.ct_xftsize, 0))) {
+        ERROR << "couldn't load font \"" << mstyle.ct_xftfontname << "\"" <<
+            endl;
         quit(1);
     }
     if (mstyle.cf_xftsize < 2.0) mstyle.cf_xftsize = default_font_size;
     if (! (mstyle.cf_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
-                                          XftTypeString, mstyle.cf_xftfontname,
-                                          XFT_SIZE, XftTypeDouble,
-                                          mstyle.cf_xftsize, 0))) {
-        ERROR << "couldn't load font \"" << mstyle.cf_xftfontname << "\"" << endl;
+                                           XftTypeString,
+                                           mstyle.cf_xftfontname,
+                                           XFT_PIXEL_SIZE, XftTypeDouble,
+                                           mstyle.cf_xftsize, 0))) {
+        ERROR << "couldn't load font \"" << mstyle.cf_xftfontname << "\"" <<
+            endl;
         quit(1);
     }
     int w_diff = wstyle.xftfont->ascent - wstyle.xftfont->descent;
@@ -530,7 +531,7 @@ void WaScreen::UpdateWorkarea(void) {
         list<WaWindow *>::iterator wa_it = waimea->wawindow_list->begin();
         for (; wa_it != waimea->wawindow_list->end(); ++wa_it) {
             if ((*wa_it)->flags.max) {
-                (*wa_it)->flags.max = False;
+                (*wa_it)->flags.max = false;
                 res_x = (*wa_it)->restore_max.x;
                 res_y = (*wa_it)->restore_max.y;
                 res_w = (*wa_it)->restore_max.width;
@@ -579,9 +580,9 @@ void WaScreen::MoveViewportTo(int x, int y) {
                  (*it)->attrib.y < height))
                 (*it)->RedrawWindow();
             else {
-                (*it)->dontsend = True;
+                (*it)->dontsend = true;
                 (*it)->RedrawWindow();
-                (*it)->dontsend = False;
+                (*it)->dontsend = false;
                 net->SetVirtualPos(*it);
             }   
         }
@@ -726,11 +727,11 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
     XQueryPointer(display, id, &w, &w, &px, &py, &i, &i, &ui);
     
     maprequest_list = new list<XEvent *>;
-    XGrabPointer(display, id, True, ButtonReleaseMask | ButtonPressMask |
+    XGrabPointer(display, id, true, ButtonReleaseMask | ButtonPressMask |
                  PointerMotionMask | EnterWindowMask | LeaveWindowMask,
                  GrabModeAsync, GrabModeAsync, None, waimea->move_cursor,
                  CurrentTime);
-    XGrabKeyboard(display, id, True, GrabModeAsync, GrabModeAsync,
+    XGrabKeyboard(display, id, true, GrabModeAsync, GrabModeAsync,
                   CurrentTime);
     for (;;) {
         waimea->eh->EventLoop(waimea->eh->menu_viewport_move_return_mask,
@@ -739,7 +740,7 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
             case MotionNotify:
                 it = waimea->wawindow_list->begin();
                 for (; it != waimea->wawindow_list->end(); ++it) {
-                    (*it)->dontsend = True;
+                    (*it)->dontsend = true;
                 }    
                 MoveViewportTo(v_x - (event.xmotion.x_root - px),
                                v_y - (event.xmotion.y_root - py));
@@ -750,7 +751,7 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
             case EnterNotify:
                 it = waimea->wawindow_list->begin();
                 for (; it != waimea->wawindow_list->end(); ++it) {
-                    (*it)->dontsend = True;
+                    (*it)->dontsend = true;
                 }    
                 MoveViewportTo(v_x - (event.xcrossing.x_root - px),
                                v_y - (event.xcrossing.y_root - py));
@@ -775,7 +776,7 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                 delete maprequest_list;
                 it = waimea->wawindow_list->begin();
                 for (; it != waimea->wawindow_list->end(); ++it) {
-                    (*it)->dontsend = False;
+                    (*it)->dontsend = false;
                     if ((((*it)->attrib.x + (*it)->attrib.width) > 0 &&
                          (*it)->attrib.x < width) && 
                         (((*it)->attrib.y + (*it)->attrib.height) > 0 &&
@@ -807,7 +808,7 @@ void WaScreen::EndMoveResize(XEvent *, WaAction *) {
  * Sets the keyboard input focus to the WaScreens root window.
  */
 void WaScreen::Focus(XEvent *, WaAction *) {
-    focus = True;
+    focus = true;
     XSetInputFocus(display, id, RevertToPointerRoot, CurrentTime);
 }
 
@@ -827,6 +828,7 @@ void WaScreen::MenuMap(XEvent *, WaAction *ac, bool focus) {
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
     if (! menu) return;
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
 
     if (XQueryPointer(display, id, &w, &w, &rx, &ry, &i, &i, &ui)) {
         if (menu->tasksw) menu->Build(this);
@@ -854,6 +856,7 @@ void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
     if (! menu) return;
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
     
     if (XQueryPointer(display, id, &w, &w, &rx, &ry, &i, &i, &ui)) {
         if (menu->tasksw) waimea->taskswitch->Build(this);
@@ -878,6 +881,7 @@ void WaScreen::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
     if (! menu) return;
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
     
     menu->Unmap(focus);
     menu->UnmapSubmenus(focus);
@@ -917,6 +921,7 @@ void WaScreen::Exit(XEvent *, WaAction *) {
  * first window in list.
  */
 void WaScreen::TaskSwitcher(XEvent *, WaAction *) {
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
     waimea->taskswitch->Build(this);
     waimea->taskswitch->Map(width / 2 - waimea->taskswitch->width / 2,
                             height / 2 - waimea->taskswitch->height / 2);
@@ -933,6 +938,7 @@ void WaScreen::TaskSwitcher(XEvent *, WaAction *) {
  * @param ed Event details
  */
 void WaScreen::PreviousTask(XEvent *e, WaAction *ac) {
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
     list<WaWindow *>::iterator it = waimea->wawindow_list->begin();
     it++;
     (*it)->Raise(e, ac);
@@ -949,6 +955,7 @@ void WaScreen::PreviousTask(XEvent *e, WaAction *ac) {
  * @param ed Event details
  */
 void WaScreen::NextTask(XEvent *e, WaAction *ac) {
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
     waimea->wawindow_list->back()->Raise(e, ac);
     waimea->wawindow_list->back()->FocusVis(e, ac);
 }
@@ -1089,7 +1096,7 @@ ScreenEdge::ScreenEdge(WaScreen *wascrn, int x, int y, int width, int height,
     XSetWindowAttributes attrib_set;
     
     wa = wascrn;
-    attrib_set.override_redirect = True;
+    attrib_set.override_redirect = true;
     attrib_set.event_mask = EnterWindowMask | LeaveWindowMask |
         ButtonPressMask | ButtonReleaseMask;
     

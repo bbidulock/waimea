@@ -132,7 +132,8 @@ public:
     list<WaMenu *> *wamenu_list;
 };
 
-Bool validateclient(Window); 
+bool validateclient(Window);
+bool validateclient_mapped(Window);
 void wawarning(char *, ...);
 void waerror(char *, ...);
 void waexec(const char *, char *);

@@ -128,11 +128,11 @@ southedge.2: ScrollViewportDown(20) : EnterNotify & ControlMask
 !
 ! == Menu ==
 !
-menu.*.1: Raise         : ButtonPress = Button1 & Mod1Mask
-menu.*.2: StartMove     : ButtonPress = Button1 & Mod1Mask
-menu.*.3: UnLink        : ButtonPress = Button1 & Mod1Mask
-menu.*.4: Lower         : ButtonPress = Button2 & Mod1Mask
-menu.*.5: EndMoveResize : ButtonRelease = Button1 & MoveResizeMask
+menu.*.1: Raise           : ButtonPress = Button1 & Mod1Mask
+menu.*.2: StartOpaqueMove : ButtonPress = Button1 & Mod1Mask
+menu.*.3: UnLink          : ButtonPress = Button1 & Mod1Mask
+menu.*.4: Lower           : ButtonPress = Button2 & Mod1Mask
+menu.*.5: EndMoveResize   : ButtonRelease = Button1 & MoveResizeMask
 !
 menu.title.6:  UnLink          : ButtonPress = Button1 & !Mod1Mask
 menu.title.7:  Raise           : ButtonPress = Button1 & !Mod1Mask
@@ -175,7 +175,7 @@ menu.sub.6:  UnmapSubs       : EnterNotify
 menu.sub.7:  MapSub          : EnterNotify
 menu.sub.8:  RemapSub        : ButtonPress = AnyButton
 menu.sub.9:  NextItem        : KeyPress = Tab
-menu.sub.10:  NextItem        : KeyPress = Down
+menu.sub.10: NextItem        : KeyPress = Down
 menu.sub.11: PreviousItem    : KeyPress = Up
 menu.sub.12: RemapSubFocused : KeyPress = Right
 menu.sub.13: RemapSubFocused : KeyPress = Return

@@ -356,7 +356,7 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
     wc.height = e->height;
     wc.sibling = e->above;
     wc.stack_mode = e->detail;
-    
+
     hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(e->window)) !=
         waimea->window_table->end()) {
@@ -393,7 +393,6 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
             da->dh->Update();
         }
     }
-    
     XGrabServer(e->display);
     if (validateclient(e->window))
         XConfigureWindow(e->display, e->window, e->value_mask, &wc);
@@ -472,14 +471,14 @@ void EventHandler::EvUnmapDestroy(XEvent *e) {
         != waimea->window_table->end()) {
         if (((*it).second)->type == WindowType) {
             if (e->type == DestroyNotify)
-                ((WaWindow *) (*it).second)->deleted = True;
+                ((WaWindow *) (*it).second)->deleted = true;
             delete ((WaWindow *) (*it).second);
             if (! waimea->wawindow_list->empty())
-                waimea->wawindow_list->front()->Focus(False);
+                waimea->wawindow_list->front()->Focus(false);
         }
         else if (((*it).second)->type == DockAppType) {
             if (e->type == DestroyNotify)
-                ((Dockapp *) (*it).second)->deleted = True;
+                ((Dockapp *) (*it).second)->deleted = true;
             dh = ((Dockapp *) (*it).second)->dh;
             delete ((Dockapp *) (*it).second);
             dh->Update();
@@ -616,28 +615,28 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
  * @param act Action to use for matching
  * @param ed Structure containing event details
  *
- * @return True if match, otherwise False
+ * @return True if match, otherwise false
  */
 Bool eventmatch(WaAction *act, EventDetail *ed) {
     int i;
     
-    if (ed->type != act->type) return False;
-    if ((act->detail && ed->detail) ? (act->detail == ed->detail): True) {
+    if (ed->type != act->type) return false;
+    if ((act->detail && ed->detail) ? (act->detail == ed->detail): true) {
         for (i = 0; i <= 12; i++)
             if (act->mod & (1 << i))
                 if (! (ed->mod & (1 << i)))
-                    return False;
+                    return false;
         if (act->mod & MoveResizeMask)
             if (! (ed->mod & MoveResizeMask))
-                return False;
+                return false;
         for (i = 0; i <= 12; i++)
             if (act->nmod & (1 << i))
                 if (ed->mod & (1 << i))
-                    return False;
-        //if (act->nmod & MoveResizeMask)
-        //    if (ed->mod & MoveResizeMask)
-        //        return False;
-        return True;
+                    return false;
+        if (act->nmod & MoveResizeMask)
+            if (ed->mod & MoveResizeMask)
+                return false;
+        return true;
     }
-    return False;
+    return false;
 }

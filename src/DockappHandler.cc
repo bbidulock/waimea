@@ -51,7 +51,7 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) {
     attrib_set.background_pixel = None;
     attrib_set.border_pixel = wascreen->wstyle.border_color.getPixel();
     attrib_set.colormap = wascreen->colormap;
-    attrib_set.override_redirect = True;
+    attrib_set.override_redirect = true;
     attrib_set.event_mask = SubstructureRedirectMask | ButtonPressMask |
         EnterWindowMask | LeaveWindowMask;
     
@@ -246,7 +246,7 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
     dh = dhand;
     client_id = win;
     display = dh->display;
-    deleted = False;
+    deleted = false;
 
     XWMHints *wmhints = XGetWMHints(display, win);
     if (wmhints) {

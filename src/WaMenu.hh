@@ -108,22 +108,22 @@ public:
     
     void UnLinkMenu(XEvent *, WaAction *);
     inline void MapSubmenu(XEvent *e, WaAction *ac) {
-        MapSubmenu(e, ac, False);
+        MapSubmenu(e, ac, false);
     }
     inline void MapSubmenuFocused(XEvent *e, WaAction *ac) {
-        MapSubmenu(e, ac, True);
+        MapSubmenu(e, ac, true);
     }
     inline void RemapSubmenu(XEvent *e, WaAction *ac) {
-        RemapSubmenu(e, ac, False);
+        RemapSubmenu(e, ac, false);
     }
     inline void RemapSubmenuFocused(XEvent *e, WaAction *ac) {
-        RemapSubmenu(e, ac, True);
+        RemapSubmenu(e, ac, true);
     }
     inline void UnmapMenu(XEvent *e, WaAction *wa) {
-        UnmapMenu(e, wa, False);
+        UnmapMenu(e, wa, false);
     }
     inline void UnmapMenuFocus(XEvent *e, WaAction *wa) {
-        UnmapMenu(e, wa, True);
+        UnmapMenu(e, wa, true);
     }
     void Exec(XEvent *, WaAction *);
     void Func(XEvent *, WaAction *);
@@ -133,7 +133,7 @@ public:
     void Lower(XEvent *, WaAction *);
     inline void Focus(XEvent *, WaAction *) { Focus(); }
     inline void UnmapSubmenus(XEvent *, WaAction *) {
-        menu->UnmapSubmenus(False); }
+        menu->UnmapSubmenus(false); }
     inline void UnmapTree(XEvent *, WaAction *) { menu->UnmapTree(); }
     inline void Raise(XEvent *, WaAction *) { menu->Raise(); }
     void ViewportMove(XEvent *e, WaAction *);
@@ -167,7 +167,7 @@ public:
     
     int func_mask, func_mask1, func_mask2, height, width, dy, realheight,
                    cb, cb_y, cb_width, cb_width1, cb_width2;
-    bool hilited;
+    bool hilited, move_resize;
     char *label, *exec, *param, *sub;
     char *label1, *exec1, *param1, *sub1;
     char *label2, *exec2, *param2, *sub2;

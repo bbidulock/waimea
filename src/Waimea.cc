@@ -135,7 +135,7 @@ Waimea::~Waimea(void) {
     HASHDEL(window_table);
     delete eh;
 
-    XSync(display, False);
+    XSync(display, false);
     XCloseDisplay(display);
 }
 
@@ -151,14 +151,14 @@ Waimea::~Waimea(void) {
  */
 void Waimea::WaRaiseWindow(Window win) {
     int i;
-    bool in_list = False;
+    bool in_list = false;
     
     if (always_on_top_list->size()) {
         Window *stack = new Window[always_on_top_list->size() + ((win)? 1: 0)];
 
         list<Window>::iterator it = always_on_top_list->begin();
         for (i = 0; it != always_on_top_list->end(); ++it) {
-            if (*it == win) in_list = True;
+            if (*it == win) in_list = true;
             stack[i++] = *it;
         }
         if (win && ! in_list) stack[i++] = win;
@@ -189,7 +189,7 @@ void Waimea::WaRaiseWindow(Window win) {
  */
 void Waimea::WaLowerWindow(Window win) {
     int i;
-    bool in_list = False;
+    bool in_list = false;
     
     if (always_at_bottom_list->size()) {
         Window *stack = new Window[always_at_bottom_list->size() +
@@ -265,27 +265,51 @@ WaMenu *Waimea::GetMenuNamed(char *menu) {
 
 /**
  * @fn    validateclient(Window id)
- * @brief Validates a window
+ * @brief Validates if a window exists
  *
- * Checks if the event queue holds any DestroyNotify or UnmapNotify events
- * for the window we want to validate. If non of these events are found in the
+ * Checks if the event queue holds a DestroyNotify event for the window we want
+ * to validate. If no event is found in the event queue when the window is
+ * valid.
+ *
+ * @param id Resource ID used for window validation
+ *
+ * @return True if window is valid, otherwise false
+ */
+bool validateclient(Window id) {
+    XFlush(waimea->display);
+    
+    XEvent e;
+    if (XCheckTypedWindowEvent(waimea->display, id, DestroyNotify, &e)) {
+        XPutBackEvent(waimea->display, &e);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * @fn    validateclient_mapped(Window id)
+ * @brief Validates if a window exist and is mapped
+ *
+ * Checks if the event queue holds any DestroyNotify or UnmapNotify events for
+ * the window we want to validate. If none of these events are found in the
  * event queue when the window is valid.
  *
  * @param id Resource ID used for window validation
  *
- * @return True if window is valid, otherwise False
+ * @return True if window is valid, otherwise false
  */
-Bool validateclient(Window id) {
-    XSync(waimea->display, False);
+bool validateclient_mapped(Window id) {
+    XFlush(waimea->display);
     
     XEvent e;
-    if (XCheckTypedWindowEvent(waimea->display, id, DestroyNotify, &e) ||
-        XCheckTypedWindowEvent(waimea->display, id, UnmapNotify, &e)) {
+    if (XCheckTypedWindowEvent(waimea->display, id, UnmapNotify, &e) ||
+        XCheckTypedWindowEvent(waimea->display, id, DestroyNotify, &e)) {
         XPutBackEvent(waimea->display, &e);
-        return False;
+        return false;
     }
-    return True;
+    return true;
 }
+
 
 /**
  * @fn    waexec(const char *command, char *displaystring)
@@ -319,7 +343,7 @@ void waexec(const char *command, char *displaystring) {
 int xerrorhandler(Display *d, XErrorEvent *e) {
     char buff[128];
     hash_map<Window, WindowObject *>::iterator it;
-   
+
     XGetErrorDatabaseText(d, "XlibMessage", "XError", "", buff, 128);
     cerr << buff;
     XGetErrorText(d, e->error_code, buff, 128);

@@ -31,65 +31,65 @@ NetHandler::NetHandler(Waimea *wa) {
     wm_hints = XAllocWMHints();
     size_hints = XAllocSizeHints();
     mwm_hints_atom =
-        XInternAtom(display, "_MOTIF_WM_HINTS", False);
+        XInternAtom(display, "_MOTIF_WM_HINTS", false);
     wm_state =
-        XInternAtom(display, "WM_STATE", False);
+        XInternAtom(display, "WM_STATE", false);
     net_supported =
-        XInternAtom(display, "_NET_SUPPORTED", False);
+        XInternAtom(display, "_NET_SUPPORTED", false);
     net_supported_wm_check =
-        XInternAtom(display, "_NET_SUPPORTING_WM_CHECK", False);
+        XInternAtom(display, "_NET_SUPPORTING_WM_CHECK", false);
     net_client_list =
-        XInternAtom(display, "_NET_CLIENT_LIST", False);
+        XInternAtom(display, "_NET_CLIENT_LIST", false);
     net_client_list_stacking =
-        XInternAtom(display, "_NET_CLIENT_LIST_STACKING", False);
+        XInternAtom(display, "_NET_CLIENT_LIST_STACKING", false);
     net_active_window =
-        XInternAtom(display, "_NET_ACTIVE_WINDOW", False);
+        XInternAtom(display, "_NET_ACTIVE_WINDOW", false);
     net_state =
-        XInternAtom(display, "_NET_WM_STATE", False);
+        XInternAtom(display, "_NET_WM_STATE", false);
     net_state_sticky =
-        XInternAtom(display, "_NET_WM_STATE_STICKY", False);
+        XInternAtom(display, "_NET_WM_STATE_STICKY", false);
     net_state_shaded =
-        XInternAtom(display, "_NET_WM_STATE_SHADED", False);
+        XInternAtom(display, "_NET_WM_STATE_SHADED", false);
     net_maximized_vert =
-        XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+        XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", false);
     net_maximized_horz =
-        XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+        XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
     net_state_decor =
-        XInternAtom(display, "_NET_WM_STATE_DECOR", False);
+        XInternAtom(display, "_NET_WM_STATE_DECOR", false);
     net_state_decortitle =
-        XInternAtom(display, "_NET_WM_STATE_DECOR_TITLE", False);
+        XInternAtom(display, "_NET_WM_STATE_DECOR_TITLE", false);
     net_state_decorhandle =
-        XInternAtom(display, "_NET_WM_STATE_DECOR_HANDLE", False);
+        XInternAtom(display, "_NET_WM_STATE_DECOR_HANDLE", false);
     net_state_decorborder =
-        XInternAtom(display, "_NET_WM_STATE_DECOR_BORDER", False);
+        XInternAtom(display, "_NET_WM_STATE_DECOR_BORDER", false);
     net_state_aot =
-        XInternAtom(display, "_NET_WM_STATE_ALWAYS_ON_TOP", False);
+        XInternAtom(display, "_NET_WM_STATE_ALWAYS_ON_TOP", false);
     net_state_aot =
-        XInternAtom(display, "_NET_WM_STATE_ALWAYS_ON_TOP", False);
+        XInternAtom(display, "_NET_WM_STATE_ALWAYS_ON_TOP", false);
     net_state_aab =
-        XInternAtom(display, "_NET_WM_STATE_ALWAYS_AT_BOTTOM", False);
+        XInternAtom(display, "_NET_WM_STATE_ALWAYS_AT_BOTTOM", false);
     net_maximized_restore =
-        XInternAtom(display, "_NET_MAXIMIZED_RESTORE", False);
+        XInternAtom(display, "_NET_MAXIMIZED_RESTORE", false);
     net_virtual_pos =
-        XInternAtom(display, "_NET_VIRTUAL_POS", False);
+        XInternAtom(display, "_NET_VIRTUAL_POS", false);
     net_desktop_viewport =
-        XInternAtom(display, "_NET_DESKTOP_VIEWPORT", False);
+        XInternAtom(display, "_NET_DESKTOP_VIEWPORT", false);
     net_desktop_geometry =
-        XInternAtom(display, "_NET_DESKTOP_GEOMETRY", False);
+        XInternAtom(display, "_NET_DESKTOP_GEOMETRY", false);
     net_wm_strut =
-        XInternAtom(display, "_NET_WM_STRUT", False);
+        XInternAtom(display, "_NET_WM_STRUT", false);
     net_workarea =
-        XInternAtom(display, "_NET_WORKAREA", False);
+        XInternAtom(display, "_NET_WORKAREA", false);
     net_wm_name =
-        XInternAtom(display, "_NET_WM_NAME", False);
+        XInternAtom(display, "_NET_WM_NAME", false);
     net_restart =
-        XInternAtom(display, "_NET_RESTART", False);
+        XInternAtom(display, "_NET_RESTART", false);
     net_shutdown =
-        XInternAtom(display, "_NET_SHUTDOWN", False);
+        XInternAtom(display, "_NET_SHUTDOWN", false);
     
-    xa_xdndaware = XInternAtom(display, "XdndAware", False);
-    xa_xdndenter = XInternAtom(display, "XdndEnter", False);
-    xa_xdndleave = XInternAtom(display, "XdndLeave", False);
+    xa_xdndaware = XInternAtom(display, "XdndAware", false);
+    xa_xdndenter = XInternAtom(display, "XdndEnter", false);
+    xa_xdndleave = XInternAtom(display, "XdndLeave", false);
 
     event.type = ClientMessage;
     event.xclient.display = display;
@@ -137,23 +137,23 @@ void NetHandler::GetWMHints(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::GetMWMHints(WaWindow *ww) {
-    ww->flags.title = ww->flags.border = ww->flags.handle = True;
+    ww->flags.title = ww->flags.border = ww->flags.handle = true;
     
     XGrabServer(display);
     if (validateclient(ww->id))
         if (XGetWindowProperty(display, ww->id, mwm_hints_atom, 0L, 20L,
-                               False, mwm_hints_atom, &real_type,
+                               false, mwm_hints_atom, &real_type,
                                &real_format, &items_read, &items_left,
                                (unsigned char **) &mwm_hints) == Success
             && items_read >= PropMotifWmHintsElements) {
             if (mwm_hints->flags & MwmHintsDecorations
                 && !(mwm_hints->decorations & MwmDecorAll)) {
                 ww->flags.title  =
-                    (mwm_hints->decorations & MwmDecorTitle)  ? True: False;
+                    (mwm_hints->decorations & MwmDecorTitle)  ? true: false;
                 ww->flags.border =
-                (mwm_hints->decorations & MwmDecorBorder) ? True: False;
+                (mwm_hints->decorations & MwmDecorBorder) ? true: false;
                 ww->flags.handle =
-                    (mwm_hints->decorations & MwmDecorHandle) ? True: False;
+                    (mwm_hints->decorations & MwmDecorHandle) ? true: false;
             }
         }
     XUngrabServer(display);
@@ -224,7 +224,7 @@ void NetHandler::GetState(WaWindow *ww) {
     ww->state = WithdrawnState;
     XGrabServer(display);
     if (validateclient(ww->id))
-        if (XGetWindowProperty(display, ww->id, wm_state, 0L, 1L, False,
+        if (XGetWindowProperty(display, ww->id, wm_state, 0L, 1L, false,
                                wm_state, &real_type, &real_format, &items_read,
                                &items_left, (unsigned char **) &data) ==
             Success && items_read) {
@@ -260,7 +260,7 @@ void NetHandler::SetState(WaWindow *ww, int newstate) {
         XUngrabServer(display);
     }
 
-    ww->want_focus = False;
+    ww->want_focus = false;
     
     data[0] = ww->state;
     data[1] = None;
@@ -285,40 +285,40 @@ void NetHandler::GetWmState(WaWindow *ww) {
     CARD32 *data;
     XEvent *e = NULL;
     WaAction *ac = NULL;
-    bool vert = False, horz = False, shaded = False, title = False,
-        handle = False, border = False, decor = False;
+    bool vert = false, horz = false, shaded = false, title = false,
+        handle = false, border = false, decor = false;
     unsigned int i;
     
     if (XGetWindowProperty(display, ww->id, net_state, 0L, 10L,
-                           False, XA_ATOM, &real_type,
+                           false, XA_ATOM, &real_type,
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
         items_read) {
         for (i = 0; i < items_read; i++) {
-            if (data[i] == net_state_sticky) ww->flags.sticky = True;
-            else if (data[i] == net_state_shaded) shaded = True;
-            else if (data[i] == net_maximized_vert) vert = True;
-            else if (data[i] == net_maximized_horz) horz = True;
-            else if (data[i] == net_state_decor) decor = True;
-            else if (data[i] == net_state_decortitle) title = True;
-            else if (data[i] == net_state_decorhandle) handle = True;
-            else if (data[i] == net_state_decorborder) border = True;
+            if (data[i] == net_state_sticky) ww->flags.sticky = true;
+            else if (data[i] == net_state_shaded) shaded = true;
+            else if (data[i] == net_maximized_vert) vert = true;
+            else if (data[i] == net_maximized_horz) horz = true;
+            else if (data[i] == net_state_decor) decor = true;
+            else if (data[i] == net_state_decortitle) title = true;
+            else if (data[i] == net_state_decorhandle) handle = true;
+            else if (data[i] == net_state_decorborder) border = true;
             else if (data[i] == net_state_aot) {
-                ww->flags.alwaysontop = True;
+                ww->flags.alwaysontop = true;
                 waimea->always_on_top_list->push_back(ww->frame->id);
                 waimea->WaRaiseWindow(0);
             }
             else if (data[i] == net_state_aab) {
-                ww->flags.alwaysatbottom = True;
+                ww->flags.alwaysatbottom = true;
                 waimea->always_at_bottom_list->push_back(ww->frame->id);
                 waimea->WaLowerWindow(0);
             }
         }
         if (decor) {
-            ww->flags.title = ww->flags.handle = ww->flags.border = False;
-            if (title) ww->flags.title = True;
-            if (handle) ww->flags.handle = True;
-            if (border) ww->flags.border = True;
+            ww->flags.title = ww->flags.handle = ww->flags.border = false;
+            if (title) ww->flags.title = true;
+            if (handle) ww->flags.handle = true;
+            if (border) ww->flags.border = true;
             ww->flags.all = ww->flags.title && ww->flags.handle &&
                 ww->flags.border;
             ww->UpdateAllAttributes();
@@ -326,7 +326,7 @@ void NetHandler::GetWmState(WaWindow *ww) {
         XFree(data);
         if (vert && horz) {
             if (XGetWindowProperty(display, ww->id, net_maximized_restore,
-                                   0L, 6L, False, XA_CARDINAL, &real_type,
+                                   0L, 6L, false, XA_CARDINAL, &real_type,
                                    &real_format, &items_read, &items_left, 
                                    (unsigned char **) &data) ==
                 Success && items_read >= 6) {
@@ -509,7 +509,7 @@ void NetHandler::GetClientListStacking(WaScreen *ws) {
     
     if (XGetWindowProperty(display, ws->id, net_client_list_stacking,
                            0L, waimea->wawindow_list->size(),
-                           False, XA_WINDOW, &real_type,
+                           false, XA_WINDOW, &real_type,
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
         items_read) {
@@ -544,11 +544,11 @@ void NetHandler::SetActiveWindow(WaScreen *ws, WaWindow *ww) {
     int i = 0;
     
     if (ww) {
-        ws->focus = False;
+        ws->focus = false;
         waimea->wawindow_list->remove(ww);
         waimea->wawindow_list->push_front(ww);
     } else {
-        ws->focus = True;
+        ws->focus = true;
         data[i++] = None;
     }
 
@@ -579,7 +579,7 @@ void NetHandler::GetActiveWindow(WaScreen *ws) {
     
     if (XGetWindowProperty(display, ws->id, net_active_window, 0L,
                            waimea->wawindow_list->size(), 
-                           False, XA_WINDOW, &real_type, &real_format, 
+                           false, XA_WINDOW, &real_type, &real_format, 
                            &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
         items_read) {
@@ -595,7 +595,7 @@ void NetHandler::GetActiveWindow(WaScreen *ws) {
                 waimea->wawindow_list->remove(ww);
                 waimea->wawindow_list->push_front(ww);
                 if (i == 0)
-                    ww->Focus(False);
+                    ww->Focus(false);
             }
         }
         XFree(data);
@@ -616,7 +616,7 @@ void NetHandler::GetVirtualPos(WaWindow *ww) {
     XGrabServer(display);
     if (validateclient(ww->id))
         if (XGetWindowProperty(display, ww->id, net_virtual_pos, 0L, 2L, 
-                               False, XA_INTEGER, &real_type, &real_format, 
+                               false, XA_INTEGER, &real_type, &real_format, 
                                &items_read, &items_left, 
                                (unsigned char **) &data) == Success && 
             items_read >= 2) {
@@ -668,10 +668,10 @@ void NetHandler::SetVirtualPos(WaWindow *ww) {
 void NetHandler::GetWmStrut(WaWindow *ww) {
     CARD32 *data;
     WMstrut *wm_strut;
-    bool found = False;
+    bool found = false;
     
     if (XGetWindowProperty(display, ww->id, net_wm_strut, 0L, 4L, 
-                           False, XA_CARDINAL, &real_type,
+                           false, XA_CARDINAL, &real_type,
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
         items_read >= 4) {
@@ -682,7 +682,7 @@ void NetHandler::GetWmStrut(WaWindow *ww) {
                 (*it)->right = data[1];
                 (*it)->top = data[2];
                 (*it)->bottom = data[3];
-                found = True;
+                found = true;
                 ww->wascreen->UpdateWorkarea();
             }
         }
@@ -713,7 +713,7 @@ void NetHandler::GetDesktopViewPort(WaScreen *ws) {
     CARD32 *data;
     
     if (XGetWindowProperty(display, ws->id, net_desktop_viewport, 0L, 2L, 
-                           False, XA_CARDINAL, &real_type,
+                           false, XA_CARDINAL, &real_type,
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
         items_read >= 2) { 

@@ -111,10 +111,10 @@ public:
     void Raise(XEvent *, WaAction *);
     void Lower(XEvent *, WaAction *);
     inline void Focus(XEvent *e, WaAction *ac) {
-        Focus(False);
+        Focus(false);
     }
     inline void FocusVis(XEvent *e, WaAction *ac) {
-        Focus(True);
+        Focus(true);
     }
     void Move(XEvent *, WaAction *);
     void MoveOpaque(XEvent *, WaAction *);
@@ -138,22 +138,22 @@ public:
     void Kill(XEvent *, WaAction *);
     void CloseKill(XEvent *, WaAction *);
     inline void MenuMap(XEvent *e, WaAction *ac) {
-        MenuMap(e, ac, False);
+        MenuMap(e, ac, false);
     }
     inline void MenuMapFocused(XEvent *e, WaAction *ac) {
-        MenuMap(e, ac, True);
+        MenuMap(e, ac, true);
     }
     inline void MenuRemap(XEvent *e, WaAction *ac) {
-        MenuRemap(e, ac, False);
+        MenuRemap(e, ac, false);
     }
     inline void MenuRemapFocused(XEvent *e, WaAction *ac) {
-        MenuRemap(e, ac, True);
+        MenuRemap(e, ac, true);
     }
     inline void MenuUnmap(XEvent *e, WaAction *wa) {
-        MenuUnmap(e, wa, False);
+        MenuUnmap(e, wa, false);
     }
     inline void MenuUnmapFocus(XEvent *e, WaAction *wa) {
-        MenuUnmap(e, wa, True);
+        MenuUnmap(e, wa, true);
     }
     void Shade(XEvent *, WaAction *);
     void UnShade(XEvent *, WaAction *);
@@ -201,14 +201,14 @@ public:
     void PointerWarp(XEvent *, WaAction *);
     inline void RaiseFocus(XEvent *e, WaAction *ac) {
         Raise(e, ac);
-        Focus(True);
+        Focus(true);
     }
     inline void Nop(XEvent *, WaAction *) {}
 
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
     
     char *name;
-    Bool has_focus, want_focus, mapped, dontsend, deleted;
+    bool has_focus, want_focus, mapped, dontsend, deleted;
     Display *display;
     Waimea *waimea;
     WaScreen *wascreen;
@@ -251,7 +251,7 @@ private:
     
     WaImageControl *ic;
     Window o_west, o_north, o_south, o_east;
-    bool o_mapped;
+    bool o_mapped, move_resize;
     Pixmap ftitle, fhandle, flabel;
     Pixmap utitle, uhandle, ulabel;
     Pixmap *ptitle, *phandle, *plabel, *pgrip, *pbutton;

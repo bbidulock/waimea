@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <hash_set.h>
+#include <string>
 
 /**
  * @fn    WaWindow(Window win_id, WaScreen *scrn) :
@@ -43,6 +44,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     ic = wascreen->ic;
     net = waimea->net;
     wm_strut = NULL;
+    move_resize = false;
 
     if (XFetchName(display, id, &tmp_name)) {
         name = wastrdup(tmp_name);
@@ -57,17 +59,17 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     attrib.width  = init_attrib.width;
     attrib.height = init_attrib.height;
     
-    want_focus = mapped = dontsend = deleted = False;
+    want_focus = mapped = dontsend = deleted = false;
     
 #ifdef SHAPE
-    shaped = False;
+    shaped = false;
 #endif //SHAPE
 
     border_w = title_w = handle_w = 0;
-    has_focus = True;
+    has_focus = true;
     flags.sticky = flags.shaded = flags.max = flags.title = flags.handle =
         flags.border = flags.all = flags.alwaysontop =
-        flags.alwaysatbottom = False;
+        flags.alwaysatbottom = false;
 
     net->GetWMHints(this);
     net->GetMWMHints(this);
@@ -131,19 +133,19 @@ WaWindow::~WaWindow(void) {
         XRemoveFromSaveSet(display, id);
         Gravitate(RemoveGravity);
         if (flags.shaded) attrib.height = restore_shade;
-        if (attrib.x > wascreen->width)
+        if (attrib.x >= wascreen->width)
             attrib.x = attrib.x % wascreen->width;
-        if (attrib.y > wascreen->height)
+        if (attrib.y >= wascreen->height)
             attrib.y = attrib.y % wascreen->height;
 
-        if (attrib.x + attrib.width < 0)
+        if (attrib.x + attrib.width <= 0)
             attrib.x = wascreen->width + (attrib.x % wascreen->width);
-        if (attrib.y + attrib.height < 0)
+        if (attrib.y + attrib.height <= 0)
             attrib.y = wascreen->height + (attrib.y % wascreen->height);
 
         XReparentWindow(display, id, wascreen->id, attrib.x, attrib.y);
     }
-    XSync(display, False);
+    XSync(display, false);
     XUngrabServer(display);
     
     XDestroyWindow(display, frame->id);    
@@ -228,12 +230,13 @@ void WaWindow::Gravitate(int multiplier) {
 void WaWindow::InitPosition(void) {
     if (size.min_width > attrib.width) attrib.width = size.min_width;
     if (size.min_height > attrib.height) attrib.height = size.min_height;
-    old_attrib.x = restore_max.x = attrib.x;
-    old_attrib.y = restore_max.y = attrib.y;
-    old_attrib.width = restore_max.width = attrib.width;
-    old_attrib.height = restore_shade =
-        restore_max.height = attrib.height;
+    restore_max.x = attrib.x;
+    restore_max.y = attrib.y;
+    restore_max.width = attrib.width;
+    restore_shade = restore_max.height = attrib.height;
     restore_max.misc0 = restore_max.misc1 = 0;
+    old_attrib.x = old_attrib.y = old_attrib.height = old_attrib.width =
+        - 0xffff;
 }
 
 /**
@@ -244,8 +247,10 @@ void WaWindow::InitPosition(void) {
  */
 void WaWindow::MapWindow(void) {
     XGrabServer(display);
-    if (validateclient(id))
+    if (validateclient(id)) {
         XMapWindow(display, id);
+        RedrawWindow();
+    }
     XUngrabServer(display);
     if (flags.handle) {
         XMapRaised(display, grip_l->id);
@@ -270,7 +275,7 @@ void WaWindow::MapWindow(void) {
         XUnmapWindow(display, button_c->id);
     }
     XMapWindow(display, frame->id);
-    mapped = True;
+    mapped = true;
 }
 
 /**
@@ -392,7 +397,7 @@ void WaWindow::UpdateAllAttributes(void) {
         m_y = restore_max.y;
         m_w = restore_max.width;
         m_h = restore_max.height;
-        flags.max = False;
+        flags.max = false;
         _Maximize(restore_max.misc0, restore_max.misc1);
         restore_max.x = m_x;
         restore_max.y = m_y;
@@ -411,27 +416,27 @@ void WaWindow::UpdateAllAttributes(void) {
  * We only redraw those things that need to be redrawn.
  */
 void WaWindow::RedrawWindow(void) {
-    Bool move = False, resize = False;
+    Bool move = false, resize = false;
 
     if (old_attrib.x != attrib.x) {
         frame->attrib.x = attrib.x - border_w;
         
         old_attrib.x = attrib.x;
 
-        move = True;
+        move = true;
     }
     if (old_attrib.y != attrib.y) {
         frame->attrib.y = attrib.y - border_w;
         if (flags.title) frame->attrib.y -= title_w + border_w;
         old_attrib.y = attrib.y;
             
-        move = True;
+        move = true;
     }
     if (old_attrib.width != attrib.width) {
         frame->attrib.width = attrib.width;
         old_attrib.width = attrib.width;
 
-        resize = True;
+        resize = true;
 
         if (flags.title) {
             title->attrib.width = attrib.width;
@@ -474,7 +479,7 @@ void WaWindow::RedrawWindow(void) {
         if (flags.handle) frame->attrib.height += handle_w + border_w;
         old_attrib.height = attrib.height;
         
-        resize = True;
+        resize = true;
         if (flags.handle) {
             handle->attrib.y = frame->attrib.height - handle_w - border_w;
             grip_l->attrib.y = frame->attrib.height - handle_w - border_w;
@@ -498,7 +503,7 @@ void WaWindow::RedrawWindow(void) {
     }
     if (resize) {
         if (flags.max && (old_attrib.width != attrib.width || ! flags.shaded)) {
-            flags.max = False;
+            flags.max = false;
             net->SetWmState(this);
             DrawMaxButtonFg();
             waimea->UpdateCheckboxes(MaxCBoxType);
@@ -534,15 +539,25 @@ void WaWindow::RedrawWindow(void) {
  * our frame and activates needed grab buttons.
  */
 void WaWindow::ReparentWin(void) {
+    XSetWindowAttributes attrib_set;
+    
     XGrabServer(display);
     if (validateclient(id)) {
         XSelectInput(display, id, NoEventMask);
         XSetWindowBorderWidth(display, id, 0);
         XReparentWindow(display, id, frame->id, 0, title_w + border_w);
         XChangeSaveSet(display, id, SetModeInsert);
-        XSelectInput(display, id, FocusChangeMask | PropertyChangeMask |
-                     StructureNotifyMask | SubstructureNotifyMask);
+        XFlush(display);
 
+        attrib_set.event_mask =  
+            PropertyChangeMask | StructureNotifyMask | FocusChangeMask;
+        attrib_set.do_not_propagate_mask =
+            ButtonPressMask | ButtonReleaseMask | ButtonMotionMask; 
+        
+        XChangeWindowAttributes(display, id, CWEventMask | CWDontPropagate,
+                                &attrib_set);
+        
+        
 #ifdef SHAPE
         XRectangle *dummy = NULL;
         int n, order;
@@ -550,7 +565,7 @@ void WaWindow::ReparentWin(void) {
             XShapeSelectInput(display, id, ShapeNotifyMask);
             dummy = XShapeGetRectangles(display, id, ShapeBounding, &n,
                                         &order);
-            if (n > 1) shaped = True;
+            if (n > 1) shaped = true;
         }
         XFree(dummy);
 #endif // SHAPE
@@ -580,12 +595,12 @@ void WaWindow::UpdateGrabs(void) {
             if ((*it)->type == ButtonPress || (*it)->type == ButtonRelease ||
                 (*it)->type == DoubleClick) {
                 XGrabButton(display, (*it)->detail ? (*it)->detail: AnyButton,
-                            AnyModifier, id, True, ButtonPressMask |
+                            AnyModifier, id, true, ButtonPressMask |
                             ButtonReleaseMask | ButtonMotionMask,
                             GrabModeSync, GrabModeSync, None, None);     
             } else if ((*it)->type == KeyPress || (*it)->type == KeyRelease) {
                 XGrabKey(display, (*it)->detail ? (*it)->detail: AnyKey,
-                         AnyModifier, id, True, GrabModeSync, GrabModeSync);
+                         AnyModifier, id, true, GrabModeSync, GrabModeSync);
             }
         }
     }
@@ -649,7 +664,7 @@ void WaWindow::SendConfig(void) {
     ce.width             = attrib.width;
     ce.border_width      = 0;
     ce.above             = frame->id;
-    ce.override_redirect = False;
+    ce.override_redirect = false;
 
     if (flags.shaded)
         ce.height = restore_shade;
@@ -658,7 +673,7 @@ void WaWindow::SendConfig(void) {
 
     XGrabServer(display);
     if (validateclient(id)) 
-        XSendEvent(display, id, True, NoEventMask, (XEvent *)&ce);
+        XSendEvent(display, id, true, NoEventMask, (XEvent *)&ce);
     XUngrabServer(display);
 }
 
@@ -676,7 +691,7 @@ void WaWindow::CreateOutlineWindows(void) {
         CWColormap;
     attrib_set.background_pixel = wascreen->wstyle.outline_color.getPixel();
     attrib_set.colormap = wascreen->colormap;
-    attrib_set.override_redirect = True;
+    attrib_set.override_redirect = true;
     attrib_set.event_mask = NoEventMask;
     
     o_west = XCreateWindow(display, wascreen->id, 0, 0, 1, 1, 0,
@@ -695,7 +710,7 @@ void WaWindow::CreateOutlineWindows(void) {
     waimea->always_on_top_list->push_back(o_east);
     waimea->always_on_top_list->push_back(o_north);
     waimea->always_on_top_list->push_back(o_south);
-    o_mapped = False;
+    o_mapped = false;
 }
 
 /**
@@ -710,7 +725,7 @@ void WaWindow::ToggleOutline(void) {
         XUnmapWindow(display, o_east);
         XUnmapWindow(display, o_north);
         XUnmapWindow(display, o_south);
-        o_mapped = False;
+        o_mapped = false;
     }
     else {
         XMapWindow(display, o_west);
@@ -718,7 +733,7 @@ void WaWindow::ToggleOutline(void) {
         XMapWindow(display, o_north);
         XMapWindow(display, o_south);
         waimea->WaRaiseWindow(0);
-        o_mapped = True;
+        o_mapped = true;
     }
         
 }
@@ -760,7 +775,7 @@ void WaWindow::DrawOutline(int x, int y, int width, int height) {
 void WaWindow::FocusWin(void) {
     if (has_focus) return;
 
-    has_focus = True;
+    has_focus = true;
     
     ptitle  = &ftitle;
     plabel  = &flabel;
@@ -798,7 +813,7 @@ void WaWindow::FocusWin(void) {
 void WaWindow::UnFocusWin(void) {
     if (! has_focus) return;
 
-    has_focus = False;
+    has_focus = false;
     
     ptitle  = &utitle;
     plabel  = &ulabel;
@@ -1181,7 +1196,7 @@ void WaWindow::ButtonDehilite(int type) {
  */
 void WaWindow::ButtonPressed(int type) {
     XEvent e;
-    bool in_window = True;
+    bool in_window = true;
     
     pbutton = &wascreen->pbutton;
     button_pixel = &wascreen->pbutton_pixel;
@@ -1197,12 +1212,12 @@ void WaWindow::ButtonPressed(int type) {
             case EnterNotify:
                 pbutton = &wascreen->pbutton;
                 button_pixel = &wascreen->pbutton_pixel;
-                in_window = True;
+                in_window = true;
                 ButtonHilite(type);
                 break;
             case LeaveNotify:
                 ButtonDehilite(type);
-                in_window = False;
+                in_window = false;
             case ButtonRelease:
                 pbutton = (has_focus) ? &wascreen->fbutton: &wascreen->ubutton;
                 button_pixel = (has_focus) ?
@@ -1214,7 +1229,7 @@ void WaWindow::ButtonPressed(int type) {
             case MButtonType: DrawMaxButton(); break;
         }
         if (e.type == ButtonRelease) {
-            if (in_window) XSendEvent(display, e.xany.window, True,
+            if (in_window) XSendEvent(display, e.xany.window, true,
                                       ButtonReleaseMask, &e);
             return;
         }
@@ -1238,7 +1253,7 @@ void WaWindow::ButtonPressed(int type) {
  * @return True if a resize is allowed otherwise false
  */
 bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
-    bool resize = False;
+    bool resize = false;
 
     *n_w = attrib.width;
     *n_h = attrib.height;
@@ -1246,7 +1261,7 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
         (width <= (attrib.width - size.width_inc)) ||
         attrib.width == width) {
         if (width >= size.min_width && width <= size.max_width) {
-            resize = True;
+            resize = true;
             if (size.width_inc == 1)
                 *n_w = width;
             else
@@ -1255,7 +1270,7 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
     }
     if ((height <= -(handle_w + border_w * 2)) && title_w) {
         if (! flags.shaded) {
-            flags.shaded = True;
+            flags.shaded = true;
             restore_shade = attrib.height;
             net->SetWmState(this);
             waimea->UpdateCheckboxes(ShadeCBoxType);
@@ -1268,9 +1283,9 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
         (height <= (attrib.height - size.height_inc)) ||
         attrib.height == height) {
         if ((height < 1) && (size.min_height <= 1) && title_w) {
-            resize = True;
+            resize = true;
             if (! flags.shaded) {
-                flags.shaded = True;
+                flags.shaded = true;
                 restore_shade = attrib.height;
                 net->SetWmState(this);
                 waimea->UpdateCheckboxes(ShadeCBoxType);
@@ -1282,9 +1297,9 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
                     ((height - size.base_height) % size.height_inc);
         }
         else if (height >= size.min_height && height <= size.max_height) {
-            resize = True;
+            resize = true;
             if (flags.shaded) {
-                flags.shaded = False;
+                flags.shaded = false;
                 net->SetWmState(this);
                 waimea->UpdateCheckboxes(ShadeCBoxType);
             }
@@ -1344,7 +1359,7 @@ void WaWindow::Focus(bool vis) {
     
     if (mapped) {
         XGrabServer(display);
-        if (validateclient(id)) {
+        if (validateclient_mapped(id)) {
             if (vis) {
                 if (attrib.x >= wascreen->width ||
                     attrib.y >= wascreen->height ||
@@ -1355,7 +1370,7 @@ void WaWindow::Focus(bool vis) {
                     newvx = (x / wascreen->width) * wascreen->width;
                     newvy = (y / wascreen->height) * wascreen->height;
                     wascreen->MoveViewportTo(newvx, newvy);
-                    XSync(display, False);
+                    XSync(display, false);
                     while (XCheckTypedEvent(display, EnterNotify, &e));
                 }
             }
@@ -1364,7 +1379,7 @@ void WaWindow::Focus(bool vis) {
         }
         XUngrabServer(display);
     } else
-        want_focus = True;
+        want_focus = true;
 }
 
 /**
@@ -1380,7 +1395,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
     XEvent event, *map_ev;
     int px, py, nx, ny, i;
     list<XEvent *> *maprequest_list;
-    bool started = False;
+    bool started = false;
     Window w;
     unsigned int ui;
     
@@ -1390,22 +1405,23 @@ void WaWindow::Move(XEvent *e, WaAction *) {
     nx = attrib.x;
     ny = attrib.y;
     waimea->eh->move_resize = MoveType;
+    move_resize = true;
 
     if (e->type == MapRequest) {
         nx = attrib.x = px + border_w;
         ny = attrib.y = py + title_w + border_w;
         DrawOutline(nx, ny, attrib.width, attrib.height);
         ToggleOutline();
-        started = True;
+        started = true;
     }
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id)) {
-        XGrabPointer(display, (mapped) ? id: wascreen->id, True,
+        XGrabPointer(display, (mapped) ? id: wascreen->id, true,
                      ButtonReleaseMask | ButtonPressMask | PointerMotionMask |
                      EnterWindowMask | LeaveWindowMask, GrabModeAsync,
                      GrabModeAsync, None, waimea->move_cursor, CurrentTime);
-        XGrabKeyboard(display, (mapped) ? id: wascreen->id, True,
+        XGrabKeyboard(display, (mapped) ? id: wascreen->id, true,
                       GrabModeAsync, GrabModeAsync, CurrentTime);
     }
     XUngrabServer(display);
@@ -1419,7 +1435,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                 py  = event.xmotion.y_root;
                 if (! started) {
                     ToggleOutline();
-                    started = True;
+                    started = true;
                 }
                 DrawOutline(nx, ny, attrib.width, attrib.height);
                 break;
@@ -1437,7 +1453,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                     py  = event.xcrossing.y_root;
                     if (! started) {
                         ToggleOutline();
-                        started = True;
+                        started = true;
                     }
                     DrawOutline(nx, ny, attrib.width, attrib.height);
                 }
@@ -1454,6 +1470,8 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                     delete maprequest_list;
                     XPutBackEvent(display, &event);
                     if (started) ToggleOutline();
+                    XUngrabKeyboard(display, CurrentTime);
+                    XUngrabPointer(display, CurrentTime);
                     return;
                 }
                 waimea->eh->EvUnmapDestroy(&event);
@@ -1474,19 +1492,19 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                 if (event.type == KeyPress || event.type == KeyRelease)
                     event.xkey.window = id;
                 waimea->eh->HandleEvent(&event);
+                DrawOutline(nx, ny, attrib.width, attrib.height);
                 if (waimea->eh->move_resize != EndMoveResizeType) break;
                 if (started) ToggleOutline();
-                if (attrib.x != nx || attrib.y != ny) {
-                    attrib.x = nx;
-                    attrib.y = ny;
-                    RedrawWindow();
-                }
+                attrib.x = nx;
+                attrib.y = ny;
+                RedrawWindow();
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
                     delete maprequest_list->front();
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
+                move_resize = false;
                 XUngrabKeyboard(display, CurrentTime);
                 XUngrabPointer(display, CurrentTime);
                 return;
@@ -1514,6 +1532,7 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
     sx = nx = attrib.x;
     sy = ny = attrib.y;
     waimea->eh->move_resize = MoveOpaqueType;
+    move_resize = true;
 
     XQueryPointer(display, wascreen->id, &w, &w, &px, &py, &i, &i, &ui);
 
@@ -1524,15 +1543,15 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
         net->SetState(this, NormalState);
         net->SetVirtualPos(this);
     }
-    dontsend = True;
+    dontsend = true;
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id)) {
-        XGrabPointer(display, (mapped) ? id: wascreen->id, True,
+        XGrabPointer(display, (mapped) ? id: wascreen->id, true,
                      ButtonReleaseMask | ButtonPressMask | PointerMotionMask |
                      EnterWindowMask | LeaveWindowMask, GrabModeAsync,
                      GrabModeAsync, None, waimea->move_cursor, CurrentTime);
-        XGrabKeyboard(display, (mapped) ? id: wascreen->id, True,
+        XGrabKeyboard(display, (mapped) ? id: wascreen->id, true,
                       GrabModeAsync, GrabModeAsync, CurrentTime);
     }
     XUngrabServer(display);
@@ -1577,6 +1596,8 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                     delete maprequest_list;
                     XPutBackEvent(display, &event);
                     return;
+                    XUngrabKeyboard(display, CurrentTime);
+                    XUngrabPointer(display, CurrentTime);
                 }
                 waimea->eh->EvUnmapDestroy(&event);
                 break;
@@ -1607,7 +1628,7 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
-                dontsend = False;
+                dontsend = move_resize = false;
                 XUngrabKeyboard(display, CurrentTime);
                 XUngrabPointer(display, CurrentTime);
                 return;
@@ -1630,7 +1651,7 @@ void WaWindow::Resize(XEvent *e, int how) {
     XEvent event, *map_ev;
     int px, py, width, height, n_w, n_h, o_w, o_h, n_x, o_x, i;
     list<XEvent *> *maprequest_list;
-    bool started = False;
+    bool started = false;
     Window w;
     unsigned int ui;
     
@@ -1641,6 +1662,7 @@ void WaWindow::Resize(XEvent *e, int how) {
     width  = n_w = o_w = attrib.width;
     height = n_h = o_h = attrib.height;
     waimea->eh->move_resize = ResizeType;
+    move_resize = true;
 
     if (e->type == MapRequest) {
         if (how > 0) n_x = attrib.x = px - attrib.width - border_w * 2;
@@ -1648,19 +1670,19 @@ void WaWindow::Resize(XEvent *e, int how) {
         attrib.y = py - attrib.height - title_w - border_w * 4;
         DrawOutline(n_x, attrib.y, n_w, n_h);
         ToggleOutline();
-        started = True;
+        started = true;
     }
     
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id)) {
-        XGrabPointer(display, (mapped) ? id: wascreen->id, True,
+        XGrabPointer(display, (mapped) ? id: wascreen->id, true,
                      ButtonReleaseMask | ButtonPressMask | PointerMotionMask |
                      EnterWindowMask | LeaveWindowMask, GrabModeAsync,
                      GrabModeAsync, None, (how > 0) ?
                      waimea->resizeright_cursor: waimea->resizeleft_cursor,
                      CurrentTime);
-        XGrabKeyboard(display, (mapped) ? id: wascreen->id, True,
+        XGrabKeyboard(display, (mapped) ? id: wascreen->id, true,
                       GrabModeAsync, GrabModeAsync, CurrentTime);
     }
     XUngrabServer(display);
@@ -1676,7 +1698,7 @@ void WaWindow::Resize(XEvent *e, int how) {
                     if (how == WestType) n_x -= n_w - o_w;
                     if (! started) {
                         ToggleOutline();
-                        started = True;
+                        started = true;
                     }
                     o_x = n_x;
                     o_w = n_w;
@@ -1705,14 +1727,14 @@ void WaWindow::Resize(XEvent *e, int how) {
                         if (how == WestType) n_x -= n_w - o_w;
                         if (! started) {
                             ToggleOutline();
-                            started = True;
+                            started = true;
                         }
                         o_x = n_x;
                         o_w = n_w;
                         o_h = n_h;
                         DrawOutline(n_x, attrib.y, n_w, n_h);
                     }
-                }
+              }
                 break;
             case DestroyNotify:
             case UnmapNotify:
@@ -1726,6 +1748,8 @@ void WaWindow::Resize(XEvent *e, int how) {
                     delete maprequest_list;
                     XPutBackEvent(display, &event);
                     if (started) ToggleOutline();
+                    XUngrabKeyboard(display, CurrentTime);
+                    XUngrabPointer(display, CurrentTime);
                     return;
                 }
                 waimea->eh->EvUnmapDestroy(&event);
@@ -1748,18 +1772,17 @@ void WaWindow::Resize(XEvent *e, int how) {
                 waimea->eh->HandleEvent(&event);
                 if (waimea->eh->move_resize != EndMoveResizeType) break;
                 if (started) ToggleOutline();
-                if (attrib.width != n_w || attrib.height != n_h) {
-                    attrib.x      = n_x;
-                    attrib.width  = n_w;
-                    attrib.height = n_h;
-                    RedrawWindow();
-                }
+                attrib.width = width;
+                attrib.height = height;
+                attrib.x = n_x;
+                RedrawWindow();
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
                     delete maprequest_list->front();
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
+                move_resize = false;
                 XUngrabKeyboard(display, CurrentTime);
                 XUngrabPointer(display, CurrentTime);
                 return;
@@ -1789,11 +1812,12 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
     XQueryPointer(display, wascreen->id, &w, &w, &px, &py, &i, &i, &ui);
 
     if (waimea->eh->move_resize != EndMoveResizeType) return;
-    dontsend = True;
+    dontsend = true;
     sw = width  = n_w = attrib.width;
     sh = height = n_h = attrib.height;
     waimea->eh->move_resize = ResizeOpaqueType;
-
+    move_resize = true;
+    
     if (e->type == MapRequest) {
         if (how > 0) attrib.x = px - attrib.width - border_w * 2;
         else attrib.x = px;
@@ -1806,13 +1830,13 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id)) {
-        XGrabPointer(display, (mapped) ? id: wascreen->id, True,
+        XGrabPointer(display, (mapped) ? id: wascreen->id, true,
                      ButtonReleaseMask | ButtonPressMask | PointerMotionMask |
                      EnterWindowMask | LeaveWindowMask, GrabModeAsync,
                      GrabModeAsync, None, (how > 0) ?
                      waimea->resizeright_cursor: waimea->resizeleft_cursor,
                      CurrentTime);
-        XGrabKeyboard(display, (mapped) ? id: wascreen->id, True,
+        XGrabKeyboard(display, (mapped) ? id: wascreen->id, true,
                       GrabModeAsync, GrabModeAsync, CurrentTime);
     }
     XUngrabServer(display);
@@ -1864,6 +1888,8 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                     }
                     delete maprequest_list;
                     XPutBackEvent(display, &event);
+                    XUngrabKeyboard(display, CurrentTime);
+                    XUngrabPointer(display, CurrentTime);
                     return;
                 }
                 waimea->eh->EvUnmapDestroy(&event);
@@ -1884,6 +1910,8 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                 if (event.type == KeyPress || event.type == KeyRelease)
                     event.xkey.window = id;
                 waimea->eh->HandleEvent(&event);
+                width = attrib.width;
+                height = attrib.height;
                 if (waimea->eh->move_resize != EndMoveResizeType) break;
                 if (attrib.width != sw || attrib.height != sh) {
                     SendConfig();
@@ -1895,7 +1923,7 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
-                dontsend = False;
+                dontsend = move_resize = false;
                 XUngrabKeyboard(display, CurrentTime);
                 XUngrabPointer(display, CurrentTime);
                 return;
@@ -1959,7 +1987,7 @@ void WaWindow::_Maximize(int x, int y) {
             restore_max.misc1 = wascreen->v_y;
         }    
         RedrawWindow();
-        flags.max = True;
+        flags.max = true;
         if (title_w) DrawMaxButtonFg();
         net->SetWmState(this);
         waimea->UpdateCheckboxes(MaxCBoxType);
@@ -1986,7 +2014,7 @@ void WaWindow::UnMaximize(XEvent *, WaAction *) {
             attrib.y = restore_max.y + (restore_max.misc1 - wascreen->v_y);
             attrib.width = n_w;
             attrib.height = n_h;
-            flags.max = False;
+            flags.max = false;
             RedrawWindow();
             if (flags.shaded) restore_shade = tmp_shade_height;
             if (title_w) DrawMaxButtonFg();
@@ -2023,14 +2051,14 @@ void WaWindow::Close(XEvent *, WaAction *) {
 
     ev.type = ClientMessage;
     ev.xclient.window = id;
-    ev.xclient.message_type = XInternAtom(display, "WM_PROTOCOLS", False);
+    ev.xclient.message_type = XInternAtom(display, "WM_PROTOCOLS", false);
     ev.xclient.format = 32;
-    ev.xclient.data.l[0] = XInternAtom(display, "WM_DELETE_WINDOW", False);
+    ev.xclient.data.l[0] = XInternAtom(display, "WM_DELETE_WINDOW", false);
     ev.xclient.data.l[1] = CurrentTime;
 
     XGrabServer(display);
     if (validateclient(id))
-        XSendEvent(display, id, False, NoEventMask, &ev);
+        XSendEvent(display, id, false, NoEventMask, &ev);
     XUngrabServer(display);
 
 }
@@ -2061,14 +2089,14 @@ void WaWindow::Kill(XEvent *, WaAction *) {
  */
 void WaWindow::CloseKill(XEvent *e, WaAction *ac) {
     int i, n;
-    bool close = False;
+    bool close = false;
     Atom *protocols;
-    Atom del_atom = XInternAtom(display, "WM_DELETE_WINDOW", False);
+    Atom del_atom = XInternAtom(display, "WM_DELETE_WINDOW", false);
 
     XGrabServer(display);
     if (validateclient(id))
         if (XGetWMProtocols(display, id, &protocols, &n)) {
-            for (i = 0; i < n; i++) if (protocols[i] == del_atom) close = True;
+            for (i = 0; i < n; i++) if (protocols[i] == del_atom) close = true;
             XFree(protocols);
         }
     XUngrabServer(display);
@@ -2093,6 +2121,7 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
     if (! menu) return;
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
     
     if (XQueryPointer(display, wascreen->id, &w, &w, &rx, &ry, &i, &i, &ui)) {
         if (menu->tasksw) waimea->taskswitch->Build(wascreen);
@@ -2122,6 +2151,7 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
     if (! menu) return;
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
     
     if (XQueryPointer(display, wascreen->id, &w, &w, &rx, &ry, &i, &i, &ui)) {
         if (menu->tasksw) waimea->taskswitch->Build(wascreen);
@@ -2146,6 +2176,7 @@ void WaWindow::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
     
     if (! menu) return;
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
     
     menu->Unmap(focus);
     menu->UnmapSubmenus(focus);
@@ -2180,7 +2211,7 @@ void WaWindow::UnShade(XEvent *, WaAction *) {
     if (flags.shaded) {
         attrib.height = restore_shade;
         RedrawWindow();
-        flags.shaded = False;
+        flags.shaded = false;
         net->SetWmState(this);
         waimea->UpdateCheckboxes(ShadeCBoxType);
     }
@@ -2205,11 +2236,11 @@ void WaWindow::ToggleShade(XEvent *e, WaAction *ac) {
  * @fn    Sticky(XEvent *, WaAction *)
  * @brief Makes window sticky
  *
- * Sets the sticky flag to True. This makes viewport moving functions
+ * Sets the sticky flag to true. This makes viewport moving functions
  * to ignore this window.
  */
 void WaWindow::Sticky(XEvent *, WaAction *) {
-    flags.sticky = True;
+    flags.sticky = true;
     net->SetWmState(this);
     waimea->UpdateCheckboxes(StickCBoxType);
 }
@@ -2218,11 +2249,11 @@ void WaWindow::Sticky(XEvent *, WaAction *) {
  * @fn    UnSticky(XEvent *, WaAction *)
  * @brief Makes window normal
  *
- * Sets the sticky flag to False. This makes viewport moving functions
+ * Sets the sticky flag to false. This makes viewport moving functions
  * treat this window as a normal window.
  */
 void WaWindow::UnSticky(XEvent *, WaAction *) {
-    flags.sticky = False;
+    flags.sticky = false;
     net->SetWmState(this);
     waimea->UpdateCheckboxes(StickCBoxType);
 }
@@ -2247,6 +2278,7 @@ void WaWindow::ToggleSticky(XEvent *, WaAction *) {
  * first window in list.
  */
 void WaWindow::TaskSwitcher(XEvent *, WaAction *) {
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
     waimea->taskswitch->Build(wascreen);
     waimea->taskswitch->Map(wascreen->width / 2 -
                             waimea->taskswitch->width / 2,
@@ -2265,6 +2297,7 @@ void WaWindow::TaskSwitcher(XEvent *, WaAction *) {
  * @param ed Event details
  */
 void WaWindow::PreviousTask(XEvent *e, WaAction *ac) {
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
     list<WaWindow *>::iterator it = waimea->wawindow_list->begin();
     it++;
     (*it)->Raise(e, ac);
@@ -2281,6 +2314,7 @@ void WaWindow::PreviousTask(XEvent *e, WaAction *ac) {
  * @param ed Event details
  */
 void WaWindow::NextTask(XEvent *e, WaAction *ac) {
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
     waimea->wawindow_list->back()->Raise(e, ac);
     waimea->wawindow_list->back()->FocusVis(e, ac);
 }
@@ -2294,7 +2328,7 @@ void WaWindow::NextTask(XEvent *e, WaAction *ac) {
 void WaWindow::DecorTitleOn(XEvent *, WaAction *) {
     if (flags.title) return;
     
-    flags.title = True;
+    flags.title = true;
     flags.all = flags.title && flags.handle && flags.border;
     UpdateAllAttributes();
     MapWindow();
@@ -2312,7 +2346,7 @@ void WaWindow::DecorTitleOn(XEvent *, WaAction *) {
 void WaWindow::DecorHandleOn(XEvent *, WaAction *) {
     if (flags.handle) return;
     
-    flags.handle = True;
+    flags.handle = true;
     flags.all = flags.title && flags.handle && flags.border;
     UpdateAllAttributes();
     MapWindow();
@@ -2330,7 +2364,7 @@ void WaWindow::DecorHandleOn(XEvent *, WaAction *) {
 void WaWindow::DecorBorderOn(XEvent *, WaAction *) {
     if (flags.border) return;
     
-    flags.border = True;
+    flags.border = true;
     flags.all = flags.title && flags.handle && flags.border;
     UpdateAllAttributes();
     MapWindow();
@@ -2348,10 +2382,10 @@ void WaWindow::DecorBorderOn(XEvent *, WaAction *) {
 void WaWindow::DecorAllOn(XEvent *, WaAction *) {
     if (flags.all) return;
 
-    flags.all = True;
-    flags.border = True;
-    flags.title = True;
-    flags.handle = True;
+    flags.all = true;
+    flags.border = true;
+    flags.title = true;
+    flags.handle = true;
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
@@ -2370,8 +2404,8 @@ void WaWindow::DecorAllOn(XEvent *, WaAction *) {
 void WaWindow::DecorTitleOff(XEvent *, WaAction *) {
     if (flags.shaded || ! flags.title) return;
     
-    flags.title = False;
-    flags.all = False;
+    flags.title = false;
+    flags.all = false;
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
@@ -2388,8 +2422,8 @@ void WaWindow::DecorTitleOff(XEvent *, WaAction *) {
 void WaWindow::DecorHandleOff(XEvent *, WaAction *) {
     if (! flags.handle) return;
     
-    flags.handle = False;
-    flags.all = False;
+    flags.handle = false;
+    flags.all = false;
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
@@ -2406,8 +2440,8 @@ void WaWindow::DecorHandleOff(XEvent *, WaAction *) {
 void WaWindow::DecorBorderOff(XEvent *, WaAction *) {
     if (! flags.border) return;
     
-    flags.border = False;
-    flags.all = False;
+    flags.border = false;
+    flags.all = false;
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
@@ -2424,10 +2458,10 @@ void WaWindow::DecorBorderOff(XEvent *, WaAction *) {
 void WaWindow::DecorAllOff(XEvent *, WaAction *) {
     if (flags.shaded || ! flags.all) return;
 
-    flags.all = False;
-    flags.border = False;
-    flags.title = False;
-    flags.handle = False;
+    flags.all = false;
+    flags.border = false;
+    flags.title = false;
+    flags.handle = false;
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
@@ -2487,8 +2521,8 @@ void WaWindow::DecorBorderToggle(XEvent *e, WaAction *ac) {
  * windows.
  */
 void WaWindow::AlwaysontopOn(XEvent *, WaAction *) {
-    flags.alwaysontop = True;
-    flags.alwaysatbottom = False;
+    flags.alwaysontop = true;
+    flags.alwaysatbottom = false;
     waimea->always_at_bottom_list->remove(frame->id);
     waimea->always_on_top_list->push_back(frame->id);
     waimea->WaRaiseWindow(0);
@@ -2509,8 +2543,8 @@ void WaWindow::AlwaysontopOn(XEvent *, WaAction *) {
  * windows.
  */
 void WaWindow::AlwaysatbottomOn(XEvent *, WaAction *) {
-    flags.alwaysontop = False;
-    flags.alwaysatbottom = True;
+    flags.alwaysontop = false;
+    flags.alwaysatbottom = true;
     waimea->always_on_top_list->remove(frame->id);
     waimea->always_at_bottom_list->push_back(frame->id);
     waimea->WaLowerWindow(0);
@@ -2530,7 +2564,7 @@ void WaWindow::AlwaysatbottomOn(XEvent *, WaAction *) {
  * Removes window from list of always on top windows.
  */
 void WaWindow::AlwaysontopOff(XEvent *, WaAction *) {
-    flags.alwaysontop = False;
+    flags.alwaysontop = false;
     waimea->always_on_top_list->remove(frame->id);
     waimea->WaRaiseWindow(0);
     net->SetWmState(this);
@@ -2547,7 +2581,7 @@ void WaWindow::AlwaysontopOff(XEvent *, WaAction *) {
  * Removes window from list of always at bottom windows.
  */
 void WaWindow::AlwaysatbottomOff(XEvent *, WaAction *) {
-    flags.alwaysatbottom = False;
+    flags.alwaysatbottom = false;
     waimea->always_at_bottom_list->remove(frame->id);
     waimea->WaLowerWindow(0);
     net->SetWmState(this);
@@ -2603,7 +2637,7 @@ void WaWindow::AlwaysatbottomToggle(XEvent *e, WaAction *ac) {
 void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
                      int etype) {
     XEvent fev;
-    bool replay = False, wait_release = False, match = False;
+    bool replay = false, wait_release = false, match = false;
     
     list<WaAction *>::iterator it = acts->begin();
     if (waimea->eh->move_resize != EndMoveResizeType)
@@ -2614,7 +2648,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
                     if ((*it)->type == ButtonRelease &&
                         (*it)->detail == ed->detail &&
                         (! ((*it)->mod & MoveResizeMask)))
-                        wait_release = match = True;
+                        wait_release = match = true;
                 }
             }
             else if (ed->type == KeyPress) {
@@ -2622,7 +2656,8 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
                     if ((*it)->type == KeyRelease &&
                         (*it)->detail == ed->detail &&
                         (! ((*it)->mod & MoveResizeMask))) {
-                        wait_release = match = True;
+                        wait_release = match = true;
+                        XAutoRepeatOff(display);
                     }
                 }
             }
@@ -2630,8 +2665,9 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
     it = acts->begin();
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
-            match = True;
-            if ((*it)->replay && ! wait_release) replay = True;
+            match = true;
+            XAutoRepeatOn(display);
+            if ((*it)->replay && ! wait_release) replay = true;
             if ((*it)->exec)
                 waexec((*it)->exec, wascreen->displaystring);
             else
@@ -2640,7 +2676,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
     }
     if (waimea->eh->move_resize != EndMoveResizeType) return;
     
-    XSync(display, False);
+    XSync(display, false);
     while (XCheckTypedEvent(display, FocusOut, &fev))
         waimea->eh->EvFocus(&fev.xfocus);
     while (XCheckTypedEvent(display, FocusIn, &fev))
@@ -2702,7 +2738,7 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
     attrib_set.background_pixel = None;
     attrib_set.border_pixel = wa->wascreen->wstyle.border_color.getPixel();
     attrib_set.colormap = wa->wascreen->colormap;
-    attrib_set.override_redirect = True;
+    attrib_set.override_redirect = true;
     attrib_set.event_mask = ButtonPressMask | ButtonReleaseMask |
         EnterWindowMask | LeaveWindowMask;
     attrib.x = 0;
@@ -2760,52 +2796,52 @@ void WaWindow::ViewportMove(XEvent *e, WaAction *wa) {
     wascreen->ViewportMove(e, wa);
 }
 void WaWindow::MoveViewportLeft(XEvent *, WaAction *) {
-    wascreen->MoveViewport(WestDirection, True);
+    wascreen->MoveViewport(WestDirection, true);
 }
 void WaWindow::MoveViewportRight(XEvent *, WaAction *) {
-    wascreen->MoveViewport(EastDirection, True);
+    wascreen->MoveViewport(EastDirection, true);
 }
 void WaWindow::MoveViewportUp(XEvent *, WaAction *) {
-    wascreen->MoveViewport(NorthDirection, True);
+    wascreen->MoveViewport(NorthDirection, true);
 }
 void WaWindow::MoveViewportDown(XEvent *, WaAction *) {
-    wascreen->MoveViewport(SouthDirection, True);
+    wascreen->MoveViewport(SouthDirection, true);
 }
 void WaWindow::ScrollViewportLeft(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(WestDirection, True, ac);
+    wascreen->ScrollViewport(WestDirection, true, ac);
 }
 void WaWindow::ScrollViewportRight(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(EastDirection, True, ac);
+    wascreen->ScrollViewport(EastDirection, true, ac);
 }
 void WaWindow::ScrollViewportUp(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(NorthDirection, True, ac);
+    wascreen->ScrollViewport(NorthDirection, true, ac);
 }
 void WaWindow::ScrollViewportDown(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(SouthDirection, True, ac);
+    wascreen->ScrollViewport(SouthDirection, true, ac);
 }
 void WaWindow::MoveViewportLeftNoWarp(XEvent *, WaAction *) {
-    wascreen->MoveViewport(WestDirection, False);
+    wascreen->MoveViewport(WestDirection, false);
 }
 void WaWindow::MoveViewportRightNoWarp(XEvent *, WaAction *) {
-    wascreen->MoveViewport(EastDirection, False);
+    wascreen->MoveViewport(EastDirection, false);
 }
 void WaWindow::MoveViewportUpNoWarp(XEvent *, WaAction *) {
-    wascreen->MoveViewport(NorthDirection, False);
+    wascreen->MoveViewport(NorthDirection, false);
 }
 void WaWindow::MoveViewportDownNoWarp(XEvent *, WaAction *) {
-    wascreen->MoveViewport(SouthDirection, False);
+    wascreen->MoveViewport(SouthDirection, false);
 }
 void WaWindow::ScrollViewportLeftNoWarp(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(WestDirection, False, ac);
+    wascreen->ScrollViewport(WestDirection, false, ac);
 }
 void WaWindow::ScrollViewportRightNoWarp(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(EastDirection, False, ac);
+    wascreen->ScrollViewport(EastDirection, false, ac);
 }
 void WaWindow::ScrollViewportUpNoWarp(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(NorthDirection, False, ac);
+    wascreen->ScrollViewport(NorthDirection, false, ac);
 }
 void WaWindow::ScrollViewportDownNoWarp(XEvent *, WaAction *ac) {
-    wascreen->ScrollViewport(SouthDirection, False, ac);
+    wascreen->ScrollViewport(SouthDirection, false, ac);
 }
 
 /**

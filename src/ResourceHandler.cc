@@ -36,25 +36,25 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     style_file = wastrdup((char *) DEFAULTSTYLE);
     action_file = wastrdup((char *) DEFAULTACTION);
     menu_file = wastrdup((char *) DEFAULTMENU);
-    rc_forced = style_forced = action_forced = menu_forced = False;
+    rc_forced = style_forced = action_forced = menu_forced = false;
     if (options->rcfile) {
         rc_file = options->rcfile;
-        rc_forced = True;
+        rc_forced = true;
     } else {
         rc_file = new char[strlen(homedir) + strlen("/.waimearc") + 1];
         sprintf(rc_file, "%s/.waimearc", homedir);
     }
     if (options->stylefile) {
         style_file = options->stylefile;
-        style_forced = True;
+        style_forced = true;
     }
     if (options->actionfile) {
         action_file = options->actionfile;
-        action_forced = True;
+        action_forced = true;
     }
     if (options->menufile) {
         menu_file = options->menufile;
-        menu_forced = True;
+        menu_forced = true;
     }
 
     wacts = new list<StrComp *>;
@@ -440,11 +440,11 @@ void ResourceHandler::LoadConfig(void) {
     if (XrmGetResource(database, "imageDither", "ImageDither",
                        &value_type, &value)) {
         if (! strncasecmp("true", value.addr, value.size))
-            image_dither = True;
+            image_dither = true;
         else
-            image_dither = False;
+            image_dither = false;
     } else
-        image_dither = True;
+        image_dither = true;
     
     if (XrmGetResource(database, "doubleClickInterval",
                        "DoubleClickInterval", &value_type, &value)) {
@@ -467,12 +467,12 @@ void ResourceHandler::LoadConfig(void) {
     unsigned int dummy;
     char *token;
     int dock_num;
-    bool d_exists = True, have_u = False;
+    bool d_exists = true, have_u = false;
     DockStyle *dockstyle;
     char rc_name[20], rc_class[20];
 
     for (dock_num = 0; d_exists && dock_num < 100; ++dock_num) {
-        d_exists = False;
+        d_exists = false;
         dockstyle = new DockStyle;
     
         sprintf(rc_name, "dock%d.geometry", dock_num);
@@ -480,14 +480,14 @@ void ResourceHandler::LoadConfig(void) {
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
             dockstyle->geometry = XParseGeometry(value.addr, &dockstyle->x,
                                                 &dockstyle->y, &dummy, &dummy);
-            d_exists = True;
+            d_exists = true;
         }
         
         dockstyle->order = new list<char *>;
         sprintf(rc_name, "dock%d.order", dock_num);
         sprintf(rc_class, "Dock%d.Order", dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
-            d_exists = True;
+            d_exists = true;
             token = strtok(value.addr, " ");
             if (strlen(token) >= 3 && (token[0] == 'C' || token[0] == 'N') &&
                 token[1] == '_') {
@@ -500,7 +500,7 @@ void ResourceHandler::LoadConfig(void) {
                     dockstyle->order->push_back(wastrdup(token));
                 }
                 else if (! strcasecmp("unknown", token) && !have_u) {
-                    have_u = True;
+                    have_u = true;
                     dockstyle->order->push_back(wastrdup("U"));
                 }
             }
@@ -509,18 +509,18 @@ void ResourceHandler::LoadConfig(void) {
         sprintf(rc_name, "dock%d.centered", dock_num);
         sprintf(rc_class, "Dock%d.Centered", dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
-            d_exists = True;
+            d_exists = true;
             if (! strncasecmp("true", value.addr, value.size))
-                dockstyle->centered = True;
+                dockstyle->centered = true;
             else
-                dockstyle->centered = False;
+                dockstyle->centered = false;
         } else
-            dockstyle->centered = False;
+            dockstyle->centered = false;
 
         sprintf(rc_name, "dock%d.direction", dock_num);
         sprintf(rc_class, "Dock%d.Direction", dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
-            d_exists = True;
+            d_exists = true;
             if (! strncasecmp("Horizontal", value.addr, value.size))
                 dockstyle->direction = HorizontalDock;
             else
@@ -531,7 +531,7 @@ void ResourceHandler::LoadConfig(void) {
         sprintf(rc_name, "dock%d.gridSpace", dock_num);
         sprintf(rc_class, "Dock%d.GridSpace", dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
-            d_exists = True;
+            d_exists = true;
             if (sscanf(value.addr, "%u", &dockstyle->gridspace) != 1)
                 dockstyle->gridspace = 2;
         } else
@@ -542,7 +542,7 @@ void ResourceHandler::LoadConfig(void) {
         sprintf(rc_name, "dock%d.stacking", dock_num);
         sprintf(rc_class, "Dock%d.Stacking", dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
-            d_exists = True;
+            d_exists = true;
             if (! strncasecmp("AlwaysAtBottom", value.addr, value.size))
                 dockstyle->stacking = AlwaysAtBottom;
             else
@@ -605,7 +605,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
             wstyle->xftsize = 0.0;
         } else {
             if (wstyle->xftsize < 2.0) wstyle->xftsize = 2.0;
-            if (wstyle->xftsize > 10.0) wstyle->xftsize = 10.0;
+            if (wstyle->xftsize > 100.0) wstyle->xftsize = 100.0;
         }
     } else
         wstyle->xftsize = 0.0;
@@ -644,7 +644,8 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         mstyle->b_xftsize = mstyle->f_xftsize;
 
     if (XrmGetResource(database, "menu.checkbox.true.xftfontsize",
-                       "Menu.Checkbox.True.XftFontSize", &value_type, &value)) {
+                       "Menu.Checkbox.True.XftFontSize", &value_type,
+                       &value)) {
         if (! (mstyle->ct_xftsize = strtod(value.addr, 0))) {
             mstyle->ct_xftsize = mstyle->ct_xftsize;
         } else {
@@ -655,7 +656,8 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         mstyle->ct_xftsize = mstyle->f_xftsize;
 
     if (XrmGetResource(database, "menu.checkbox.false.xftfontsize",
-                       "Menu.Checkbox.False.XftFontSize", &value_type, &value)) {
+                       "Menu.Checkbox.False.XftFontSize", &value_type,
+                       &value)) {
         if (! (mstyle->cf_xftsize = strtod(value.addr, 0))) {
             mstyle->cf_xftsize = mstyle->cf_xftsize;
         } else {
@@ -1262,7 +1264,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     list<StrComp *>::iterator it;
     
     act_tmp = new WaAction;
-    act_tmp->replay = False;
+    act_tmp->replay = false;
     
     line = wastrdup((char *) s);
     
@@ -1271,7 +1273,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     token  = strtok(line, ":");
     token  = strtrim(token);
     if (*token == '*') {
-        act_tmp->replay = True;
+        act_tmp->replay = true;
         token++;
     }
     
@@ -1408,9 +1410,9 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         for (; *token == '\0'; token++);
         for (token = strtok(token, "&"); token; token = strtok(NULL, "&")) {
             token = strtrim(token);
-            negative = False;
+            negative = false;
             if (*token == '!') {
-                negative = True;
+                negative = true;
                 token = strtrim(token + 1);
             }
             for (it = mods->begin(); it != mods->end(); ++it) {
@@ -1831,17 +1833,17 @@ StrComp::StrComp(char *s, MenuActionFn ma) {
  * @fn    Comp(char *s)
  * @brief Tries to match object with string
  *
- * Tries to match string s with object string, if they match we return True
- * otherwise False.
+ * Tries to match string s with object string, if they match we return true
+ * otherwise false.
  *
  * @param s String we want to try matching with
  *
- * @return True if match, otherwise False
+ * @return True if match, otherwise false
  */
 bool StrComp::Comp(char *s) {
     if (! strcasecmp(s, str))
-        return True;    
-    return False;
+        return true;    
+    return false;
 }
 
 /**

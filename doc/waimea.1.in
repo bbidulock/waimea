@@ -460,9 +460,7 @@ Font for window titles.
 .TP 
 .B window.xftFontSize:     Float
 Floating point number between 2.0 and 100.0. This option sets the 
-size of the xft font to used for window titles. This is not really 
-in pixels but instead in a percentage of the screen height. See
-.BR Xft(3).
+xft font size to used for window titles (font height in pixels, default=11).
 
 .PP
 .B menu.*.font:     Font 
@@ -476,9 +474,7 @@ Font for menu items.
 .TP 
 .B menu.*.xftFontSize:     Float
 Floating point number between 2.0 and 100.0. This option sets the 
-size of the xft font to used for menu items. This is not really 
-in pixels but instead in a percentage of the screen height. See
-.BR Xft(3).
+xft font size to used for menu items (font height in pixels, default=11).
 
 .PP
 .TP 

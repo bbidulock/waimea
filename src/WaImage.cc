@@ -1734,7 +1734,7 @@ void WaImage::cdgradient(void) {
 }
 
 
-WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, Bool _dither,
+WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
                              int _cpc, unsigned long cmax) {
     display       = dpy;
     screen_number = scrn->screen_number;
@@ -1770,7 +1770,7 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, Bool _dither,
     }
     
     if (bits_per_pixel == 0) bits_per_pixel = screen_depth;
-    if (bits_per_pixel >= 24) setDither(False);
+    if (bits_per_pixel >= 24) setDither(false);
     
     red_offset = green_offset = blue_offset = 0;
     
@@ -2195,7 +2195,7 @@ void WaImageControl::getGradientBuffers(unsigned int w,
 void WaImageControl::installRootColormap(void) {
     XGrabServer(display);
     
-    Bool install = True;
+    bool install = true;
     int i = 0, ncmap = 0;
     Colormap *cmaps =
         XListInstalledColormaps(display, window, &ncmap);
@@ -2203,7 +2203,7 @@ void WaImageControl::installRootColormap(void) {
     if (cmaps) {
         for (i = 0; i < ncmap; i++)
             if (*(cmaps + i) == colormap)
-                install = False;
+                install = false;
         
         if (install)
             XInstallColormap(display, colormap);
@@ -2308,14 +2308,14 @@ void WaImageControl::parseColor(WaColor *color, char *c) {
         
         color->setPixel(0l);
         color->setRGB(0, 0, 0);
-        color->setAllocated(False);
+        color->setAllocated(false);
     }
     if (c) {
         unsigned char r, g, b;
        
         color->setPixel(getColor(c, &r, &g, &b));
         color->setRGB(r, g, b);
-        color->setAllocated(True);
+        color->setAllocated(true);
     }
 }
 
