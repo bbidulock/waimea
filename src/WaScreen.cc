@@ -440,17 +440,23 @@ void WaScreen::MoveViewport(int direction) {
 
 /**
  * @fn    ScrollViewport(int direction)
- * @brief Scroll viewport 30 pixels in specified direction
+ * @brief Scroll viewport
  *
- * Scrolls viewport 30 pixels in direction specified by direction parameter.
- * Direction can be one of WestDirection, EastDirection, NorthDirection and
- * SouthDirection.
+ * Scrolls viewport a number of pixels in direction specified by direction
+ * parameter. Direction can be one of WestDirection, EastDirection,
+ * NorthDirection and SouthDirection. The 'param' variable in 'ac' decides
+ * how many pixels we should scroll. If 'param' has no value we scroll the
+ * default value of 30 pixels.
  *
  * @param direction Direction to move viewport
  */
-void WaScreen::ScrollViewport(int direction) {
+void WaScreen::ScrollViewport(int direction, WaAction *ac) {
     int vd, scroll = 30;
-    
+
+    if (ac->param > 0) {
+        scroll = ac->param;
+        if (scroll > v_xmax) scroll = v_xmax;
+    }
     switch (direction) {
         case WestDirection:
             if (v_x > 0) {
@@ -487,88 +493,88 @@ void WaScreen::ScrollViewport(int direction) {
 }
 
 /**
- * @fn    Focus(XEvent *e)
+ * @fn    Focus(XEvent *, WaAction *)
  * @brief Set input focus to root image
  *
  * Sets the keyboard input focus to the WaScreens root window.
- *
- * @param e X event causing function call
  */
-void WaScreen::Focus(XEvent *e) {
+void WaScreen::Focus(XEvent *, WaAction *) {
     XSetInputFocus(display, id, RevertToPointerRoot, CurrentTime);
 }
 
 /**
- * @fn    MenuMap(XEvent *e)
+ * @fn    MenuMap(XEvent *e, WaAction *ac)
  * @brief Maps a menu
  *
  * Maps a menu at the current mouse position.
  *
  * @param e X event causing function call
+ * @param ac WaAction object
  */
-void WaScreen::MenuMap(XEvent *e) {
+void WaScreen::MenuMap(XEvent *e, WaAction *ac) {
+    WaMenu *menu = (WaMenu *) ac->param;
+    
     if (e->type == ButtonPress || e->type == ButtonRelease) {
-        map_menu->rf = this;
-        map_menu->ftype = MenuRFuncMask;
-        map_menu->Map(e->xbutton.x - (map_menu->width / 2),
-                      e->xbutton.y - (map_menu->item_list->front()->height /
-                                      2));
+        menu->rf = this;
+        menu->ftype = MenuRFuncMask;
+        menu->Map(e->xbutton.x - (menu->width / 2),
+                  e->xbutton.y - (menu->item_list->front()->height / 2));
     }
 }
 
 /**
- * @fn    MenuReMap(XEvent *e)
+ * @fn    MenuReMap(XEvent *e, WaAction *ac)
  * @brief Maps a menu
  *
  * Remaps a menu at the current mouse position.
  *
  * @param e X event causing function call
+ * @param ac WaAction object
  */
-void WaScreen::MenuReMap(XEvent *e) {
+void WaScreen::MenuReMap(XEvent *e, WaAction *ac) {
+    WaMenu *menu = (WaMenu *) ac->param;
+    
     if (e->type == ButtonPress || e->type == ButtonRelease) {
-        map_menu->rf = this;
-        map_menu->ftype = MenuRFuncMask;
-        map_menu->ReMap(e->xbutton.x - (map_menu->width / 2),
-                        e->xbutton.y - (map_menu->item_list->front()->height /
-                                        2));
+        menu->rf = this;
+        menu->ftype = MenuRFuncMask;
+        menu->ReMap(e->xbutton.x - (menu->width / 2),
+                    e->xbutton.y - (menu->item_list->front()->height / 2));
     }
 }
 
 /**
- * @fn    MenuUnmap(XEvent *e)
+ * @fn    MenuUnmap(XEvent *, WaAction *ac)
  * @brief Unmaps menu
  *
  * Unmaps a menu and its linked submenus.
  *
- * @param e X event causing function call
+ * @param ac WaAction object
  */
-void WaScreen::MenuUnmap(XEvent *e) {
-    map_menu->Unmap();
-    map_menu->UnmapSubmenus();
+void WaScreen::MenuUnmap(XEvent *, WaAction *ac) {
+    WaMenu *menu = (WaMenu *) ac->param;
+    
+    menu->Unmap();
+    menu->UnmapSubmenus();
 }
 
 /**
- * @fn    Restart(XEvent *e)
+ * @fn    Restart(XEvent *, WaAction *)
  * @brief Restarts window manager
  *
  * Restarts window manager by deleting all objects and executing the program
  * file again.
- *
- * @param e X event causing function call
  */
-void WaScreen::Restart(XEvent *e) {
+void WaScreen::Restart(XEvent *, WaAction *) {
     restart();
 }
 
 /**
- * @fn    Exit(XEvent *e)
+ * @fn    Exit(XEvent *, WaAction *)
  * @brief Shutdowns window manager
  *
  * Shutdowns window manager. Returning successful status.
- *
- * @param e X event causing function call
  */
-void WaScreen::Exit(XEvent *e) {
+void WaScreen::Exit(XEvent *, WaAction *) {
     quit(EXIT_SUCCESS);
 }
 
@@ -587,9 +593,7 @@ void WaScreen::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     list<WaAction *>::iterator it = acts->begin();
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
-            if ((*it)->menu)
-                map_menu = (*it)->menu;
-            ((*this).*((*it)->rootfunc))(e);
+            ((*this).*((*it)->rootfunc))(e, *it);
         }
     }
 }

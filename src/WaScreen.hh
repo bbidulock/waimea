@@ -25,7 +25,8 @@
 class WaScreen;
 class ScreenEdge;
 
-typedef void (WaScreen::*RootActionFn)(XEvent *);
+typedef struct _WaAction WaAction;
+typedef void (WaScreen::*RootActionFn)(XEvent *, WaAction *);
 
 #include "WaImage.hh"
 #include "Waimea.hh"
@@ -82,26 +83,36 @@ public:
     WaScreen(Display *, int, Waimea *);
     virtual ~WaScreen(void);
 
-    void Focus(XEvent *);
-    void MenuMap(XEvent *);
-    void MenuReMap(XEvent *);
-    void MenuUnmap(XEvent *);
-    void Restart(XEvent *);
-    void Exit(XEvent *);
+    void Focus(XEvent *, WaAction *);
+    void MenuMap(XEvent *, WaAction *);
+    void MenuReMap(XEvent *, WaAction *);
+    void MenuUnmap(XEvent *, WaAction *);
+    void Restart(XEvent *, WaAction *);
+    void Exit(XEvent *, WaAction *);
     void MoveViewportTo(int, int);
-    inline void MoveViewportLeft(XEvent *e) { MoveViewport(WestDirection); }
-    inline void MoveViewportRight(XEvent *e) { MoveViewport(EastDirection); }
-    inline void MoveViewportUp(XEvent *e) { MoveViewport(NorthDirection); }
-    inline void MoveViewportDown(XEvent *e) { MoveViewport(SouthDirection); }
-    inline void ScrollViewportLeft(XEvent *e) {
-        ScrollViewport(WestDirection);
+    inline void MoveViewportLeft(XEvent *, WaAction *) {
+        MoveViewport(WestDirection);
     }
-    inline void ScrollViewportRight(XEvent *e) {
-        ScrollViewport(EastDirection);
+    inline void MoveViewportRight(XEvent *, WaAction *) {
+        MoveViewport(EastDirection);
     }
-    inline void ScrollViewportUp(XEvent *e) { ScrollViewport(NorthDirection); }
-    inline void ScrollViewportDown(XEvent *e) {
-        ScrollViewport(SouthDirection);
+    inline void MoveViewportUp(XEvent *, WaAction *) {
+        MoveViewport(NorthDirection);
+    }
+    inline void MoveViewportDown(XEvent *, WaAction *) {
+        MoveViewport(SouthDirection);
+    }
+    inline void ScrollViewportLeft(XEvent *, WaAction *ac) {
+        ScrollViewport(WestDirection, ac);
+    }
+    inline void ScrollViewportRight(XEvent *, WaAction *ac) {
+        ScrollViewport(EastDirection, ac);
+    }
+    inline void ScrollViewportUp(XEvent *, WaAction *ac) {
+        ScrollViewport(NorthDirection, ac);
+    }
+    inline void ScrollViewportDown(XEvent *, WaAction *ac) {
+        ScrollViewport(SouthDirection, ac);
     }
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);
 
@@ -118,7 +129,6 @@ public:
     Pixmap fbutton, ubutton, pbutton, fgrip, ugrip;
     unsigned long fbutton_pixel, ubutton_pixel, pbutton_pixel, fgrip_pixel,
         ugrip_pixel;
-    WaMenu *map_menu;
     char displaystring[1024];
     ScreenEdge *west, *east, *north, *south;
 
@@ -129,7 +139,7 @@ private:
     void CreateFonts(void);
     void RenderCommonImages(void);
     void MoveViewport(int);
-    void ScrollViewport(int);
+    void ScrollViewport(int, WaAction *);
 #ifdef XFT
     void CreateXftColor(WaColor *, XftColor *);
 #endif // XFT

@@ -971,13 +971,13 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
 }
 
 /**
- * @fn    Raise(void)
+ * @fn    Raise(XEvent *, WaAction *)
  * @brief Raises the window
  *
  * Raises the window to the top of the display stack and redraws window 
  * foreground.
  */
-void WaWindow::Raise(XEvent *e) {
+void WaWindow::Raise(XEvent *, WaAction *) {
     waimea->WaRaiseWindow(frame->id);
     if (title_w) {
         DrawLabel();
@@ -988,22 +988,22 @@ void WaWindow::Raise(XEvent *e) {
 }
 
 /**
- * @fn    Lower(void)
+ * @fn    Lower(XEvent *, WaAction *)
  * @brief Lowers the window
  *
  * Lowers the window to the bottom of the display stack
  */
-void WaWindow::Lower(XEvent *e) {
+void WaWindow::Lower(XEvent *, WaAction *) {
     XLowerWindow(display, frame->id);
 }
 
 /**
- * @fn    Focus(void)
+ * @fn    Focus(XEvent *, WaAction *)
  * @brief Sets input focus to the window
  *
  * Gives window keyboard input focus.
  */
-void WaWindow::Focus(XEvent *e) {
+void WaWindow::Focus(XEvent *, WaAction *) {
     if (mapped) {
         XGrabServer(display);
         if (validateclient(id)) {
@@ -1024,7 +1024,7 @@ void WaWindow::Focus(XEvent *e) {
  *
  * @param e XEvent causing start of move
  */
-void WaWindow::Move(XEvent *e) {
+void WaWindow::Move(XEvent *e, WaAction *) {
     XEvent *event;
     int px, py, nx, ny;
     list<XEvent *> *maprequest_list;
@@ -1129,7 +1129,7 @@ void WaWindow::Move(XEvent *e) {
 }
 
 /**
- * @fn    MoveOpaque(XEvent *e)
+ * @fn    MoveOpaque(XEvent *e, WaAction *)
  * @brief Moves the window
  *
  * Moves the window using the opaque moving process, which means that the
@@ -1137,7 +1137,7 @@ void WaWindow::Move(XEvent *e) {
  *
  * @param e XEvent causing start of move
  */
-void WaWindow::MoveOpaque(XEvent *e) {
+void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
     XEvent *event;
     int px, py, nx = attrib.x, ny = attrib.y;
     list<XEvent *> *maprequest_list;
@@ -1400,15 +1400,13 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
 }
 
 /**
- * @fn    Maximize(XEvent *e)
+ * @fn    Maximize(XEvent *, WaAction *)
  * @brief Maximize the window
  *
  * Maximizes the window so that the window with it's decorations fills up
  * the hole screen.
- *
- * @param e XEvent causing maximization of window
  */
-void WaWindow::Maximize(XEvent *e) {
+void WaWindow::Maximize(XEvent *, WaAction *) {
     int n_w, n_h;
     int height = wascreen->height -
         (flags.border * wascreen->wstyle.border_width * 2) -
@@ -1434,14 +1432,12 @@ void WaWindow::Maximize(XEvent *e) {
 }
 
 /**
- * @fn    UnMaximize(XEvent *e)
+ * @fn    UnMaximize(XEvent *, WaAction *)
  * @brief Unmaximize the window
  *
  * Restores size and position of maximized window.
- *
- * @param e XEvent causing function call
  */
-void WaWindow::UnMaximize(XEvent *e) {
+void WaWindow::UnMaximize(XEvent *, WaAction *) {
     if (maximized) {
         attrib.x = restore.x;
         attrib.y = restore.y;
@@ -1452,32 +1448,31 @@ void WaWindow::UnMaximize(XEvent *e) {
 }
 
 /**
- * @fn    ToggleMaximize(XEvent *e)
+ * @fn    ToggleMaximize(XEvent *e, WaAction *ac)
  * @brief Maximizes or unmaximize window
  *
  * If window isn't maximized this function maximizes it and if it is already
  * maximized then function will unmaximized window.
  *
  * @param e XEvent causing function call
+ * @param ac WaAction object
  */
-void WaWindow::ToggleMaximize(XEvent *e) {
+void WaWindow::ToggleMaximize(XEvent *e, WaAction *ac) {
     if (maximized)
-        UnMaximize(e);
+        UnMaximize(e, ac);
     else
-        Maximize(e);
+        Maximize(e, ac);
 }
 
 
 /**
- * @fn    Close(XEvent *e)
+ * @fn    Close(XEvent *, WaAction *)
  * @brief Close the window
  *
  * Sends a delete message to the client window. A normal running X window
  * should accept this event and destroy itself. 
- *
- * @param e XEvent causing close of window
  */
-void WaWindow::Close(XEvent *e) {
+void WaWindow::Close(XEvent *, WaAction *) {
     XEvent ev;
 
     ev.type = ClientMessage;
@@ -1495,15 +1490,13 @@ void WaWindow::Close(XEvent *e) {
 }
 
 /**
- * @fn    Kill(XEvent *e)
+ * @fn    Kill(XEvent *, WaAction *)
  * @brief Kill the window
  *
  * Tells the the X server to remove the window from the screen through
  * killing the process that created it.
- *
- * @param e XEvent causing kill of window
  */
-void WaWindow::Kill(XEvent *e) {
+void WaWindow::Kill(XEvent *, WaAction *) {
     XGrabServer(display);
     if (validateclient(id))
         XKillClient(display, id);
@@ -1511,15 +1504,16 @@ void WaWindow::Kill(XEvent *e) {
 }
 
 /**
- * @fn    CloseKill(XEvent *e)
+ * @fn    CloseKill(XEvent *e, WaAction *ac)
  * @brief Close/Kill the window
  *
  * Checks if the window will accept a delete message. If it will, then we
  * use that method for closing the window otherwise we use the kill method.
  *
  * @param e XEvent causing close/kill of window
+ * @param ac WaAction object
  */
-void WaWindow::CloseKill(XEvent *e) {
+void WaWindow::CloseKill(XEvent *e, WaAction *ac) {
     int i, n;
     bool close = False;
     Atom *protocols;
@@ -1532,26 +1526,29 @@ void WaWindow::CloseKill(XEvent *e) {
             XFree(protocols);
         }
     XUngrabServer(display);
-    if (close) Close(e);
-    else Kill(e);
+    if (close) Close(e, ac);
+    else Kill(e, ac);
 }
 
 /**
- * @fn    MenuMap(XEvent *e)
+ * @fn    MenuMap(XEvent *e, WaAction *ac)
  * @brief Maps a menu
  *
  * Links the window to the menu and maps it at the position of the button
  * event causing mapping. If menu is already mapped nothing is done.
  *
  * @param e XEvent causing mapping of menu
+ * @param ac WaAction object
  */
-void WaWindow::MenuMap(XEvent *e) {
+void WaWindow::MenuMap(XEvent *e, WaAction *ac) {
+    WaMenu *menu = (WaMenu *) ac->param;
+    
     if (e->type == ButtonPress || e->type == ButtonRelease) {
-        map_menu->wf = id;
-        map_menu->ftype = MenuWFuncMask;
-        map_menu->Map(e->xbutton.x_root - (map_menu->width / 2),
-                      e->xbutton.y_root -
-                      (map_menu->item_list->front()->height / 2));
+        menu->wf = id;
+        menu->ftype = MenuWFuncMask;
+        menu->Map(e->xbutton.x_root - (menu->width / 2),
+                  e->xbutton.y_root -
+                  (menu->item_list->front()->height / 2));
     }
 }
 
@@ -1564,40 +1561,41 @@ void WaWindow::MenuMap(XEvent *e) {
  * it to the new position.
  *
  * @param e XEvent causing remapping of menu
+ * @param ac WaAction object
  */
-void WaWindow::MenuReMap(XEvent *e) {
+void WaWindow::MenuReMap(XEvent *e, WaAction *ac) {
+    WaMenu *menu = (WaMenu *) ac->param;
+    
     if (e->type == ButtonPress || e->type == ButtonRelease) {
-        map_menu->wf = id;
-        map_menu->ftype = MenuWFuncMask;
-        map_menu->ReMap(e->xbutton.x_root - (map_menu->width / 2),
-                        e->xbutton.y_root -
-                        (map_menu->item_list->front()->height / 2));
+        menu->wf = id;
+        menu->ftype = MenuWFuncMask;
+        menu->ReMap(e->xbutton.x_root - (menu->width / 2),
+                    e->xbutton.y_root -
+                    (menu->item_list->front()->height / 2));
     }
 }
 
 /**
- * @fn    MenuUnmap(XEvent *e)
+ * @fn    MenuUnmap(XEvent *, WaAction *ac)
  * @brief Unmaps a menu
  *
  * Unmaps a menu and all its submenus.
  *
- * @param e XEvent causing unmapping of menu
+ * @param ac WaAction object
  */
-void WaWindow::MenuUnmap(XEvent *e) {
-    map_menu->Unmap();
-    map_menu->UnmapSubmenus();
+void WaWindow::MenuUnmap(XEvent *, WaAction *ac) {
+    ((WaMenu *)(ac->param))->Unmap();
+    ((WaMenu *)(ac->param))->UnmapSubmenus();
 }
 
 /**
- * @fn    Shade(XEvent *e)
+ * @fn    Shade(XEvent *, WaAction *)
  * @brief Shade window
  *
  * Resizes window to so that only the titlebar is shown. Remembers previous
  * height of window that will be restored when unshading.
- *
- * @param e XEvent causing function call
  */
-void WaWindow::Shade(XEvent *e) {
+void WaWindow::Shade(XEvent *, WaAction *) {
     int n_w, n_h;
     
     if (IncSizeCheck(attrib.width, -(handle_w + border_w * 2), &n_w, &n_h)) {
@@ -1608,14 +1606,12 @@ void WaWindow::Shade(XEvent *e) {
 }
 
 /**
- * @fn    UnShade(XEvent *e)
+ * @fn    UnShade(XEvent *, WaAction *)
  * @brief Unshade window
  *
  * Restores height of shaded window.
- *
- * @param e XEvent causing function call
  */
-void WaWindow::UnShade(XEvent *e) {
+void WaWindow::UnShade(XEvent *, WaAction *) {
     if (shaded) {
         shaded = False;
         attrib.height = restore.height;
@@ -1624,54 +1620,50 @@ void WaWindow::UnShade(XEvent *e) {
 }
 
 /**
- * @fn    ToggleShade(XEvent *e)
+ * @fn    ToggleShade(XEvent *e, WaAction *ac)
  * @brief Shades window or unshades it
  *
  * If window isn't shaded this function will shade it and if it is already
  * shaded function unshades it.
  *
  * @param e XEvent causing function call
+ * @param ac WaAction object
+ *
  */
-void WaWindow::ToggleShade(XEvent *e) {
-    if (shaded) UnShade(e);
-    else Shade(e);
+void WaWindow::ToggleShade(XEvent *e, WaAction *ac) {
+    if (shaded) UnShade(e, ac);
+    else Shade(e, ac);
 }
 
 /**
- * @fn    Sticky(XEvent *e)
+ * @fn    Sticky(XEvent *, WaAction *)
  * @brief Makes window sticky
  *
  * Sets the flags.sticky flag to True. This makes viewport moving functions
  * to ignore this window.
- *
- * @param e XEvent causing function call
  */
-void WaWindow::Sticky(XEvent *e) {
+void WaWindow::Sticky(XEvent *, WaAction *) {
     flags.sticky = True;
 }
 
 /**
- * @fn    UnSticky(XEvent *e)
+ * @fn    UnSticky(XEvent *, WaAction *)
  * @brief Makes window normal
  *
  * Sets the sticky flag to False. This makes viewport moving functions
  * treat this window as a normal window.
- *
- * @param e XEvent causing function call
  */
-void WaWindow::UnSticky(XEvent *e) {
+void WaWindow::UnSticky(XEvent *, WaAction *) {
     flags.sticky = False;
 }
 
 /**
- * @fn    ToggleSticky(XEvent *e)
+ * @fn    ToggleSticky(XEvent *, WaAction *)
  * @brief Toggles sticky flag
  *
  * Inverts the sticky flag.
- *
- * @param e XEvent causing function call
  */
-void WaWindow::ToggleSticky(XEvent *e) {
+void WaWindow::ToggleSticky(XEvent *, WaAction *) {
     flags.sticky = ! flags.sticky;
 }
 
@@ -1693,9 +1685,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
     list<WaAction *>::iterator it = acts->begin();
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
-            if ((*it)->menu)
-                map_menu = (*it)->menu;
-            ((*this).*((*it)->winfunc))(e);
+            ((*this).*((*it)->winfunc))(e, *it);
         }
     }
     switch (etype) {

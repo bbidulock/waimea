@@ -130,7 +130,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     types->push_back(new StrComp("maprequest", MapRequest));
 
     details = new list<StrComp *>;
-    details->push_back(new StrComp("anybutton", 0));
+    details->push_back(new StrComp("anybutton", (unsigned long) 0));
     details->push_back(new StrComp("button1", Button1));
     details->push_back(new StrComp("button2", Button2));
     details->push_back(new StrComp("button3", Button3));
@@ -859,10 +859,12 @@ void ResourceHandler::ReadDatabaseFont(char *rname, char *rclass,
  */
 void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                                   list<WaAction *> *insert) {
-    char *line, *token, *mtok;
+    char *line, *token, *par;
     int i, detail, mod;
     WaAction *act_tmp;
 
+    list<StrComp *>::iterator it;
+    
     if (! (act_tmp = (WaAction *) malloc(sizeof(WaAction)))) {
         ERROR << "malloc returned NULL pointer (insufficient memory)" << endl;
         exit(1);
@@ -877,49 +879,63 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     token  = strtok(line, ":");
     token  = strtrim(token);
     
-    if (! strncasecmp(token, "menu", 4)) {
-        if (! (mtok = strdup(token))) {
-            ERROR << "strdup returned NULL pointer (insufficient memory)" <<
-                endl; exit(1);
-        }
-        for (; *(mtok++) != '(';)
-            if (*mtok == '\0') {
-                WARNING << "missing \"(\" in resource line \"" << s << "\""
-                        << endl;
-                free(act_tmp);
-                free(line);
-                return;
-            }
-        for (i = 0; mtok[i] != ')'; i++)
-            if (mtok[i] == '\0') {
+    if (! (par = strdup(token))) {
+        ERROR << "strdup returned NULL pointer (insufficient memory)" <<
+            endl; exit(1);
+    }
+    act_tmp->param = (unsigned long) 0;
+    for (; *par != '(' && *par != '\0'; par++);
+    if (*(par++) == '(') {
+        for (i = 0; par[i] != ')'; i++)
+            if (par[i] == '\0') {
                 WARNING << "missing \")\" in resource line \"" << s << "\"" 
                         << endl;
                 free(act_tmp);
                 free(line);
                 return;
             }
-        mtok[i] = '\0';
-        mtok = strtrim(mtok);
-
-        list<WaMenu *>::iterator menu_it = waimea->wamenu_list->begin();
-        for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {
-            if (! strcmp((*menu_it)->name, mtok)) {
-                act_tmp->menu = *menu_it;
-                break;
+        if (*par == '\0' || *par == ')') {
+            if (! strncasecmp(token, "menu", 4)) {
+                WARNING "\"" << token << "\" action must have a menu as" <<
+                    " parameter" << endl;
+                free(act_tmp);
+                free(line);
+                return;
             }
         }
-        if (menu_it == waimea->wamenu_list->end()) {
-            WARNING << "\"" << mtok << "\" unknown menu" << endl;
-            delete act_tmp;
-            free(line);
-            return;
+        if (! strncasecmp(token, "menu", 4)) {
+            par[i] = '\0';
+            par = strtrim(par);
+            list<WaMenu *>::iterator menu_it = waimea->wamenu_list->begin();
+            for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {
+                if (! strcmp((*menu_it)->name, par)) {
+                    act_tmp->param = (unsigned long) *menu_it;
+                    break;
+                }
+            }
+            if (menu_it == waimea->wamenu_list->end()) {
+                WARNING << "\"" << par << "\" unknown menu" << endl;
+                delete act_tmp;
+                free(line);
+                return;
+            }
+        }
+        else {
+            if (strlen(par))
+                act_tmp->param = (unsigned long) atol(par);
         }
         for (i = 0; token[i] != '('; i++);
         token[i] = '\0';
-    } else
-        act_tmp->menu = NULL;
+    }
+    else if (! strncasecmp(token, "menu", 4)) {
+        WARNING "\"" << token << "\" action must have a menu as" <<
+            " parameter" << endl;
+        free(act_tmp);
+        free(line);
+        return;
+    }
     
-    list<StrComp *>::iterator it = comp->begin();
+    it = comp->begin();
     for (; it != comp->end(); ++it) {
         if ((*it)->Comp(token)) {
             if ((*it)->type & WindowFuncMask)
@@ -942,7 +958,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     else {
         if (mod) token = strtok(NULL, "&");
         else {
-            token += strlen(token) + 1;
+            for (; *token != ' ' && *token != ':'; token++);
             for (; *token == '\0'; token++);
         }
     }
@@ -1152,7 +1168,7 @@ void ResourceHandler::ParseMenu(char *name, FILE *file) {
  * @param s String that match object
  * @param ??? Object that match string
  */
-StrComp::StrComp(char *s, int v) { str = s; value = v; type = 0; }
+StrComp::StrComp(char *s, unsigned long v) { str = s; value = v; type = 0; }
 StrComp::StrComp(char *s, WwActionFn a) {
    str = s; winfunc = a; type = WindowFuncMask; }
 StrComp::StrComp(char *s, RootActionFn ra) {

@@ -23,7 +23,8 @@
 class WaWindow;
 class WaChildWindow;
 
-typedef void (WaWindow::*WwActionFn)(XEvent *);
+typedef struct _WaAction WaAction;
+typedef void (WaWindow::*WwActionFn)(XEvent *, WaAction *);
 
 #include "WaScreen.hh"
 #include "WaMenu.hh"
@@ -83,30 +84,38 @@ public:
     void ButtonHilite(int);
     void ButtonDehilite(int);
     
-    void Raise(XEvent *);
-    void Lower(XEvent *);
-    void Focus(XEvent *);
-    void Move(XEvent *);
-    void MoveOpaque(XEvent *);
-    inline void ResizeRight(XEvent *e) { Resize(e, EastType); }
-    inline void ResizeLeft(XEvent *e) { Resize(e, WestType); }
-    inline void ResizeRightOpaque(XEvent *e) { ResizeOpaque(e, EastType); }
-    inline void ResizeLeftOpaque(XEvent *e) { ResizeOpaque(e, WestType); }
-    void Maximize(XEvent *);
-    void UnMaximize(XEvent *);
-    void ToggleMaximize(XEvent *);
-    void Close(XEvent *);
-    void Kill(XEvent *);
-    void CloseKill(XEvent *);
-    void MenuMap(XEvent *);
-    void MenuReMap(XEvent *);
-    void MenuUnmap(XEvent *);
-    void Shade(XEvent *);
-    void UnShade(XEvent *);
-    void ToggleShade(XEvent *);
-    void Sticky(XEvent *);
-    void UnSticky(XEvent *);
-    void ToggleSticky(XEvent *);
+    void Raise(XEvent *, WaAction *);
+    void Lower(XEvent *, WaAction *);
+    void Focus(XEvent *, WaAction *);
+    void Move(XEvent *, WaAction *);
+    void MoveOpaque(XEvent *, WaAction *);
+    inline void ResizeRight(XEvent *e, WaAction *) {
+        Resize(e, EastType);
+    }
+    inline void ResizeLeft(XEvent *e, WaAction *) {
+        Resize(e, WestType);
+    }
+    inline void ResizeRightOpaque(XEvent *e, WaAction *) {
+        ResizeOpaque(e, EastType);
+    }
+    inline void ResizeLeftOpaque(XEvent *e, WaAction *) {
+        ResizeOpaque(e, WestType);
+    }
+    void Maximize(XEvent *, WaAction *);
+    void UnMaximize(XEvent *, WaAction *);
+    void ToggleMaximize(XEvent *, WaAction *);
+    void Close(XEvent *, WaAction *);
+    void Kill(XEvent *, WaAction *);
+    void CloseKill(XEvent *, WaAction *);
+    void MenuMap(XEvent *, WaAction *);
+    void MenuReMap(XEvent *, WaAction *);
+    void MenuUnmap(XEvent *, WaAction *);
+    void Shade(XEvent *, WaAction *);
+    void UnShade(XEvent *, WaAction *);
+    void ToggleShade(XEvent *, WaAction *);
+    void Sticky(XEvent *, WaAction *);
+    void UnSticky(XEvent *, WaAction *);
+    void ToggleSticky(XEvent *, WaAction *);
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
     
     char *name;
@@ -120,7 +129,6 @@ public:
     WaWindowAttributes attrib, old_attrib, restore;
     WaWindowFlags flags;
     SizeStruct size;
-    WaMenu *map_menu;
     NetHandler *net;
     
 private:

@@ -671,27 +671,23 @@ void WaMenuItem::DeHilite(void) {
 }
 
 /**
- * @fn    UnmapMenu(XEvent *e)
+ * @fn    UnmapMenu(XEvent *, WaAction *)
  * @brief Unmaps menu
  *
  * Unmaps the menu holding the menu item.
- * 
- * @param e Event causing function call
  */
-void WaMenuItem::UnmapMenu(XEvent *e) {
+void WaMenuItem::UnmapMenu(XEvent *, WaAction *) {
     menu->Unmap();
 }
 
 /**
- * @fn    MapSubmenu(XEvent *e)
+ * @fn    MapSubmenu(XEvent *, WaAction *)
  * @brief Maps Submenu
  *
  * Maps menu items submenu, if there is one, at a good position close to the
  * menu item. If the submenu is already mapped then we do nothing.
- * 
- * @param e Event causing function call
  */
-void WaMenuItem::MapSubmenu(XEvent *e) {
+void WaMenuItem::MapSubmenu(XEvent *, WaAction *) {
     int skip;
     if ((! (func_mask & MenuSubMask)) || submenu->mapped) return;
 
@@ -713,16 +709,14 @@ void WaMenuItem::MapSubmenu(XEvent *e) {
 }
 
 /**
- * @fn    ReMapSubmenu(XEvent *e)
+ * @fn    ReMapSubmenu(XEvent *, WaAction * )
  * @brief Remaps Submenu
  *
  * Maps menu items submenu, if there is one, at a good position close to the
  * menu item. If the submenu is already mapped then we just move it to
  * the position we want to remap it to. 
- * 
- * @param e Event causing function call
  */
-void WaMenuItem::ReMapSubmenu(XEvent *e) {
+void WaMenuItem::ReMapSubmenu(XEvent *, WaAction *) {
     int skip;
     if (! (func_mask & MenuSubMask)) return;
 
@@ -744,35 +738,31 @@ void WaMenuItem::ReMapSubmenu(XEvent *e) {
 } 
 
 /**
- * @fn    UnLinkMenu(XEvent *e)
+ * @fn    UnLinkMenu(XEvent *, WaAction *)
  * @brief Unlink menu
  *
  * Removes link to menu tree from menu. Menu will not be apart of the menu tree
  * mapping the menu any longer after this. Unmapsubmenu and Unmapmenutree
  * functions applied somewhere in the old menu tree will not unmap this menu. 
- *
- * @param e Event causing function call
  */
-void WaMenuItem::UnLinkMenu(XEvent *e) {
+void WaMenuItem::UnLinkMenu(XEvent *, WaAction *) {
     menu->root_menu = NULL;
 }
 
 /**
- * @fn    Exec(XEvent *e)
+ * @fn    Exec(XEvent *, WaAction *)
  * @brief Execute program
  *
  * This function executes menu items command line, if there is one.
- *
- * @param e Event causing function call
  */
-void WaMenuItem::Exec(XEvent *e) {
+void WaMenuItem::Exec(XEvent *, WaAction *) {
     if (! (func_mask & MenuExecMask)) return;
 
     waexec(exec, menu->wascreen->displaystring);
 }
 
 /**
- * @fn    Func(XEvent *e)
+ * @fn    Func(XEvent *e, WaAction *ac)
  * @brief Call function
  *
  * This function calls the function stored in menu items function pointer, if
@@ -780,45 +770,44 @@ void WaMenuItem::Exec(XEvent *e) {
  * same type as the function is a member of.
  *
  * @param e Event causing function call
+ * @param ac WaAction object
  */
-void WaMenuItem::Func(XEvent *e) {
+void WaMenuItem::Func(XEvent *e, WaAction *ac) {
     hash_map<int, WindowObject *>::iterator it;
     
     if ((func_mask & MenuWFuncMask) && (menu->ftype == MenuWFuncMask)) {
         if ((it = menu->waimea->window_table->find(menu->wf)) !=
             menu->waimea->window_table->end()) {
             if (((*it).second)->type == WindowType) {
-                (*((WaWindow *) (*it).second).*(wfunc))(e);
+                (*((WaWindow *) (*it).second).*(wfunc))(e, ac);
             }
         }
     }
     else if ((func_mask & MenuRFuncMask) && (menu->ftype == MenuRFuncMask))
-        ((*(menu->rf)).*(rfunc))(e);
+        ((*(menu->rf)).*(rfunc))(e, ac);
     else if ((func_mask & MenuMFuncMask) && (menu->ftype == MenuMFuncMask))
-        ((*(menu->mf)).*(mfunc))(e);
+        ((*(menu->mf)).*(mfunc))(e, ac);
 }
 
 /**
- * @fn    Raise(XEvent *e)
+ * @fn    Raise(XEvent *, WaAction *)
  * @brief Lowers menu window in display stack
  *
  * Lowers the menu frame to the bottom of the display stack.
- *
- * @param e Event causing function call
  */
-void WaMenuItem::Lower(XEvent *e) {
+void WaMenuItem::Lower(XEvent *, WaAction *) {
     XLowerWindow(menu->display, menu->frame);
 }
 
 /**
- * @fn    Move(XEvent *e)
+ * @fn    Move(XEvent *e, WaAction *)
  * @brief Moves the menu items menu
  *
  * Non-opaque moving of menu.
  *
  * @param e Event causing function call
  */
-void WaMenuItem::Move(XEvent *e) {
+void WaMenuItem::Move(XEvent *e, WaAction *) {
     XEvent *event;
     int px, py;
     list<XEvent *> *maprequest_list;
@@ -888,14 +877,14 @@ void WaMenuItem::Move(XEvent *e) {
 }
 
 /**
- * @fn    MoveOpaque(XEvent *e)
+ * @fn    MoveOpaque(XEvent *e, WaAction *)
  * @brief Moves the menu items menu
  *
  * Opaque moving of menu.
  *
  * @param e Event causing function call
  */
-void WaMenuItem::MoveOpaque(XEvent *e) {
+void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
     XEvent *event;
     int px, py;
     list<XEvent *> *maprequest_list;
@@ -970,9 +959,7 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     list<WaAction *>::iterator it = acts->begin();
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
-            if ((*it)->menu)
-                map_menu = (*it)->menu;
-            ((*this).*((*it)->menufunc))(e);
+            ((*this).*((*it)->menufunc))(e, *it);
         }
     }
     if (ed->type == EnterNotify) {

@@ -21,7 +21,8 @@
 class WaMenu;
 class WaMenuItem;
 
-typedef void (WaMenuItem::*MenuActionFn)(XEvent *);
+typedef struct _WaAction WaAction;
+typedef void (WaMenuItem::*MenuActionFn)(XEvent *, WaAction *);
 
 #include "Waimea.hh"
 #include "WaWindow.hh"
@@ -90,18 +91,18 @@ public:
     void Hilite();
     void DeHilite();
     
-    void UnLinkMenu(XEvent *);
-    void MapSubmenu(XEvent *);
-    void ReMapSubmenu(XEvent *);
-    void UnmapMenu(XEvent *);
-    void Exec(XEvent *);
-    void Func(XEvent *);
-    void Move(XEvent *);
-    void MoveOpaque(XEvent *);
-    void Lower(XEvent *);
-    inline void UnmapSubmenus(XEvent *e) { menu->UnmapSubmenus(); }
-    inline void UnmapTree(XEvent *e) { menu->UnmapTree(); }
-    inline void Raise(XEvent *e) { menu->Raise(); }
+    void UnLinkMenu(XEvent *, WaAction *);
+    void MapSubmenu(XEvent *, WaAction *);
+    void ReMapSubmenu(XEvent *, WaAction *);
+    void UnmapMenu(XEvent *, WaAction *);
+    void Exec(XEvent *, WaAction *);
+    void Func(XEvent *, WaAction *);
+    void Move(XEvent *, WaAction *);
+    void MoveOpaque(XEvent *, WaAction *);
+    void Lower(XEvent *, WaAction *);
+    inline void UnmapSubmenus(XEvent *, WaAction *) { menu->UnmapSubmenus(); }
+    inline void UnmapTree(XEvent *, WaAction *) { menu->UnmapTree(); }
+    inline void Raise(XEvent *, WaAction *) { menu->Raise(); }
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);
     
     
@@ -113,7 +114,6 @@ public:
     RootActionFn rfunc;
     WaMenu *menu;
     WaMenu *submenu;
-    WaMenu *map_menu;
 #ifdef XFT        
     XftDraw *xftdraw;
 #endif // XFT

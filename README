@@ -202,9 +202,9 @@ ACTIONS
                 close
                 kill
                 closekill
-                menumap
-                menuremap
-                menuunmap
+                menumap(menu_name)
+                menuremap(menu_name)
+                menuunmap(menu_name)
                 shade
                 unshade
                 toggleshade
@@ -231,19 +231,22 @@ ACTIONS
 
         List of actions for root, *edge windows:
                 focus
-                menumap
-                menuremap
-                menuunmap
+                menumap(menu_name)
+                menuremap(menu_name)
+                menuunmap(menu_name)
                 restart
                 exit
                 viewportleft
                 viewportright
                 viewportup
                 viewportdown
-                scrollviewportleft
-                scrollviewportright
-                scrollviewportup
-                scrollviewportdown
+                scrollviewportleft(pixels)
+                scrollviewportright(pixels)
+                scrollviewportup(pixels)
+                scrollviewportdown(pixels)
+			For the scrollview actions it's possible to 
+			specify with a parameter how many pixels to scroll.
+			If no parameter then default value (30) is used.
 
         List of event types:
                 buttonpress

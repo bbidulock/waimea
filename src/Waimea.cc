@@ -115,7 +115,8 @@ Waimea::~Waimea(void) {
     delete net;
     delete rh;
     delete window_table;
-    
+
+    XSync(display, False);
     XCloseDisplay(display);
 }
 

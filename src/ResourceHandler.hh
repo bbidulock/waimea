@@ -34,8 +34,15 @@ struct _WaAction {
     WwActionFn winfunc;
     RootActionFn rootfunc;
     MenuActionFn menufunc;
-    WaMenu *menu;
+    unsigned long param;
     unsigned int type, detail, mod, nmod;
+};
+
+enum {
+    P_Left,
+    P_Right,
+    P_Up,
+    P_Down
 };
 
 #define LeftJustify   1
@@ -95,7 +102,7 @@ private:
 
 class StrComp {
 public:
-    StrComp(char *, int ); 
+    StrComp(char *, unsigned long); 
     StrComp(char *, WwActionFn);
     StrComp(char *, RootActionFn);
     StrComp(char *, MenuActionFn);
@@ -103,7 +110,7 @@ public:
     bool Comp(char *);
 
     char *str;
-    int value;
+    unsigned long value;
     int type;
     WwActionFn winfunc;
     RootActionFn rootfunc;
