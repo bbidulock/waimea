@@ -425,15 +425,17 @@ void WaMenu::Move(int dx, int dy) {
  * @param focus True if we should set focus to root item
  */
 void WaMenu::Unmap(bool focus) {
-    XEvent e;
-    
+    XEvent e;    
+
+    XUnmapWindow(display, frame);
+
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {        
         if ((*it)->hilited && ((*it)->type == MenuItemType ||
+                               (*it)->type == MenuCBItemType ||
                                ((*it)->type == MenuSubType && focus)))
             (*it)->DeHilite();
     }
-    XUnmapWindow(display, frame);
 
     if (focus) {
         // Bad!!
