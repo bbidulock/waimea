@@ -66,6 +66,8 @@ DockappHandler::DockappHandler(WaScreen *scrn) {
 
     if (stacking == AlwaysOnTop)
         waimea->always_on_top_list->push_back(id);
+    else
+        waimea->always_at_bottom_list->push_back(id);
 }
 
 /**
@@ -77,6 +79,8 @@ DockappHandler::DockappHandler(WaScreen *scrn) {
 DockappHandler::~DockappHandler(void) {
     if (stacking == AlwaysOnTop)
         waimea->always_on_top_list->remove(id);
+    else
+        waimea->always_at_bottom_list->remove(id);
     while (! dockapp_list->empty())
         delete dockapp_list->front();
     XDestroyWindow(display, id);
@@ -153,7 +157,6 @@ void DockappHandler::Update(void) {
         map_y = wascreen->height - wascreen->wstyle.border_width * 2 - height + y;
     
     XMoveWindow(display, id, map_x, map_y);
-    if (stacking == AlwaysAtBottom) XLowerWindow(display, id);
     XMapWindow(display, id);
 }
 

@@ -340,7 +340,6 @@ void WaWindow::ReparentWin(void) {
         XSetWindowBorderWidth(display, id, 0);
         XReparentWindow(display, id, frame->id, 0, title_w + border_w);
         XChangeSaveSet(display, id, SetModeInsert);
-        XLowerWindow(display, id);
         XSelectInput(display, id, FocusChangeMask | PropertyChangeMask |
                      StructureNotifyMask | SubstructureNotifyMask);
 
@@ -1080,7 +1079,7 @@ void WaWindow::Raise(XEvent *, WaAction *) {
  * Lowers the window to the bottom of the display stack
  */
 void WaWindow::Lower(XEvent *, WaAction *) {
-    XLowerWindow(display, frame->id);
+    waimea->WaLowerWindow(frame->id);
 }
 
 /**

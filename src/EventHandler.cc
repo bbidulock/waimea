@@ -289,7 +289,10 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
             mask = (e->value_mask & CWSibling)? CWSibling: 0;
             mask |= (e->value_mask & CWStackMode)? CWStackMode: 0;
             XConfigureWindow(ww->display, ww->frame->id, mask, &wc);
-            if (e->value_mask & CWStackMode) waimea->WaRaiseWindow((Window) 0);
+            if (e->value_mask & CWStackMode) {
+                waimea->WaRaiseWindow((Window) 0);
+                waimea->WaLowerWindow((Window) 0);
+            }
             ww->net->SetVirtualPos(ww);
             return;
         }

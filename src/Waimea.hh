@@ -88,6 +88,7 @@ public:
     virtual ~Waimea(void);
 
     void WaRaiseWindow(Window);
+    void WaLowerWindow(Window);
     
     Display *display;
     WaScreen *wascreen;
@@ -99,6 +100,7 @@ public:
     
     hash_map<long unsigned int, WindowObject *> *window_table;
     list<Window> *always_on_top_list;
+    list<Window> *always_at_bottom_list;
     list<WaWindow *> *wawindow_list;
     list<WaMenu *> *wamenu_list;
 };

@@ -75,6 +75,7 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     
     windows = window_table = new hash_map<Window, WindowObject *>;
     always_on_top_list = new list<Window>;
+    always_at_bottom_list = new list<Window>;
     wawindow_list = new list<WaWindow *>;
     wamenu_list = new list<WaMenu *>;
     
@@ -134,6 +135,7 @@ Waimea::~Waimea(void) {
  */
 void Waimea::WaRaiseWindow(Window win) {
     int i;
+    
     if (always_on_top_list->size()) {
         Window *stack = new Window[always_on_top_list->size() + ((win)? 1: 0)];
 
@@ -156,6 +158,48 @@ void Waimea::WaRaiseWindow(Window win) {
             XGrabServer(display);
             if (validateclient(win))
                 XRaiseWindow(display, win);
+            XUngrabServer(display);
+        }
+}
+
+/**
+ * @fn    WaLowerWindow(Window win)
+ * @brief Lower window
+ *
+ * Lower a window in the display stack keeping alwaysatbottom windows, always
+ * at the bottom. To update the stacking order so that alwaysatbottom windows
+ * are at the bottom of all other windows we call this function with zero as
+ * win argument. 
+ *
+ * @param win Window to Lower, or 0 for alwaysatbottom windows update
+ */
+void Waimea::WaLowerWindow(Window win) {
+    int i;
+    
+    if (always_at_bottom_list->size()) {
+        Window *stack = new Window[always_at_bottom_list->size() +
+                                  ((win)? 1: 0)];
+
+        if (win) stack[0] = win;
+                
+        list<Window>::reverse_iterator it = always_at_bottom_list->rbegin();
+        for (i = 1; it != always_at_bottom_list->rend(); ++it) {
+            stack[i++] = *it;
+        }
+        
+        XGrabServer(display);
+        if ((! win) || validateclient(win)) {
+            XLowerWindow(display, stack[0]);
+            XRestackWindows(display, stack, i);
+        }
+        XUngrabServer(display);
+        
+        delete [] stack;
+    } else
+        if (win) {
+            XGrabServer(display);
+            if (validateclient(win))
+                XLowerWindow(display, win);
             XUngrabServer(display);
         }
 }
