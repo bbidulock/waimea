@@ -139,6 +139,10 @@ public:
     void Restart(XEvent *, WaAction *);
     void Exit(XEvent *, WaAction *);
     void TaskSwitcher(XEvent *, WaAction *);
+    void PreviousTask(XEvent *, WaAction *);
+    void NextTask(XEvent *, WaAction *);
+    void PointerWarp(XEvent *, WaAction *);
+
     inline void MoveViewportLeft(XEvent *, WaAction *) {
         MoveViewport(WestDirection, True);
     }
@@ -187,8 +191,6 @@ public:
     inline void ScrollViewportDownNoWarp(XEvent *, WaAction *ac) {
         ScrollViewport(SouthDirection, False, ac);
     }
-    void PreviousTask(XEvent *, WaAction *);
-    void NextTask(XEvent *, WaAction *);
     inline void Nop(XEvent *, WaAction *) {}
     
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);

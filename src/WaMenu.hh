@@ -131,7 +131,8 @@ public:
     void MoveOpaque(XEvent *, WaAction *);
     void Lower(XEvent *, WaAction *);
     inline void Focus(XEvent *, WaAction *) { Focus(); }
-    inline void UnmapSubmenus(XEvent *, WaAction *) { menu->UnmapSubmenus(False); }
+    inline void UnmapSubmenus(XEvent *, WaAction *) {
+        menu->UnmapSubmenus(False); }
     inline void UnmapTree(XEvent *, WaAction *) { menu->UnmapTree(); }
     inline void Raise(XEvent *, WaAction *) { menu->Raise(); }
     void ViewportMove(XEvent *e, WaAction *);
@@ -156,6 +157,7 @@ public:
     void NextTask(XEvent *, WaAction *);
     void NextItem(XEvent *, WaAction *);
     void PreviousItem(XEvent *, WaAction *);
+    void PointerWarp(XEvent *, WaAction *);
     inline void Nop(XEvent *, WaAction *) {}
     
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);

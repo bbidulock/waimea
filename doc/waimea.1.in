@@ -756,6 +756,17 @@ window.
 
 .PP
 .TP
+.B pointerwarp(X11 geometry string)
+Warps mouse pointer. MUST have an X11 geometry string as parameter:
+[<width>{xX}<height>][{+-}<xoffset>{+-}<yoffset>] See
+.BR X(1).
+If width is given and not zero, warp in X dimension is fixed, otherwise 
+warp is relative to the current positon. If height is given and not 
+zero, warp in Y dimension is fixed, otherwise warp is relative to the 
+current positon. The X and Y offsets are the number of pixels to warp.
+
+.PP
+.TP
 .B nop
 Does nothing. But will when used as non-pass-through action on client 
 window grab the event from the client.

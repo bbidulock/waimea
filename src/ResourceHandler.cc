@@ -150,6 +150,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaWindow::AlwaysontopToggle));
     wacts->push_back(new StrComp("alwaysatbottomtoggle",
                                  &WaWindow::AlwaysatbottomToggle));
+    wacts->push_back(new StrComp("pointerwarp", &WaWindow::PointerWarp));
     wacts->push_back(new StrComp("nop", &WaWindow::Nop));
     
     racts = new list<StrComp *>;
@@ -160,7 +161,8 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     racts->push_back(new StrComp("menuremapfocused",
                                  &WaScreen::MenuRemapFocused));
     racts->push_back(new StrComp("menuunmap", &WaScreen::MenuUnmap));
-    racts->push_back(new StrComp("menuunmapfocused", &WaScreen::MenuUnmapFocus));
+    racts->push_back(new StrComp("menuunmapfocused",
+                                 &WaScreen::MenuUnmapFocus));
     racts->push_back(new StrComp("restart", &WaScreen::Restart));
     racts->push_back(new StrComp("exit", &WaScreen::Exit));
     racts->push_back(new StrComp("viewportleft", &WaScreen::MoveViewportLeft));
@@ -196,6 +198,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     racts->push_back(new StrComp("taskswitcher", &WaScreen::TaskSwitcher));
     racts->push_back(new StrComp("previoustask", &WaScreen::PreviousTask));
     racts->push_back(new StrComp("nexttask", &WaScreen::NextTask));
+    racts->push_back(new StrComp("pointerwarp", &WaScreen::PointerWarp));
     racts->push_back(new StrComp("nop", &WaScreen::Nop));
     
     macts = new list<StrComp *>;
@@ -254,6 +257,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     macts->push_back(new StrComp("nexttask", &WaMenuItem::NextTask));
     macts->push_back(new StrComp("nextitem", &WaMenuItem::NextItem));
     macts->push_back(new StrComp("previousitem", &WaMenuItem::PreviousItem));
+    macts->push_back(new StrComp("pointerwarp", &WaMenuItem::PointerWarp));
     macts->push_back(new StrComp("nop", &WaMenuItem::Nop));
     
     types = new list<StrComp *>;

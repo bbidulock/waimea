@@ -197,6 +197,7 @@ public:
     void AlwaysatbottomOff(XEvent *, WaAction *);
     void AlwaysontopToggle(XEvent *, WaAction *);
     void AlwaysatbottomToggle(XEvent *, WaAction *);
+    void PointerWarp(XEvent *, WaAction *);
     inline void RaiseFocus(XEvent *e, WaAction *ac) {
         Raise(e, ac);
         Focus(True);

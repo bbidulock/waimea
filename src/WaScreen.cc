@@ -928,6 +928,35 @@ void WaScreen::NextTask(XEvent *e, WaAction *ac) {
 }
 
 /**
+ * @fn    PointerWarp(XEvent *e, WaAction *ac)
+ * @brief Warp mouse pointer
+ *
+ * Parses the action parameter as an X geometry string. If width is given and
+ * not zero, warp in X dimension is fixed, otherwise warp is relative to the
+ * current positon. If height is given and not zero, warp in Y dimension is
+ * fixed, otherwise warp is relative to the current positon. The X and Y
+ * offsets are the number of pixels to warp.
+ *
+ * @param e X event that have occurred
+ * @param ed Event details
+ */
+void WaScreen::PointerWarp(XEvent *e, WaAction *ac) {
+    int x, y, mask, i, o_x, o_y;
+    unsigned int ui, w = 0, h = 0;
+    Window dw, dest_w = None;
+    
+    mask = XParseGeometry(ac->param, &x, &y, &w, &h);
+    if (mask & (WidthValue | HeightValue)) {
+        XQueryPointer(display, id, &dw, &dw, &o_x, &o_y, &i, &i, &ui);
+        
+        if (w) x = x - o_x;
+        if (h) y = y - o_y;
+    }
+    XWarpPointer(display, None, None, 0, 0, 0, 0, x, y);
+}
+
+
+/**
  * @fn    EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts)
  * @brief Calls WaScreen function
  *

@@ -1501,3 +1501,10 @@ void WaMenuItem::ScrollViewportUpNoWarp(XEvent *, WaAction *ac) {
 void WaMenuItem::ScrollViewportDownNoWarp(XEvent *, WaAction *ac) {
     menu->wascreen->ScrollViewport(SouthDirection, False, ac);
 }
+
+/**
+ * PointerWarp wrapper function.
+ */
+void WaMenuItem::PointerWarp(XEvent *e, WaAction *ac) {
+    menu->wascreen->PointerWarp(e, ac);
+}

@@ -2612,7 +2612,7 @@ WaChildWindow::~WaChildWindow(void) {
 
 
 /**
- * Viewport functions.
+ * Viewport wrapper functions.
  */
 void WaWindow::ViewportMove(XEvent *e, WaAction *wa) {
     wascreen->ViewportMove(e, wa);
@@ -2665,3 +2665,11 @@ void WaWindow::ScrollViewportUpNoWarp(XEvent *, WaAction *ac) {
 void WaWindow::ScrollViewportDownNoWarp(XEvent *, WaAction *ac) {
     wascreen->ScrollViewport(SouthDirection, False, ac);
 }
+
+/**
+ * PointerWarp wrapper function.
+ */
+void WaWindow::PointerWarp(XEvent *e, WaAction *ac) {
+    wascreen->PointerWarp(e, ac);
+}
+
