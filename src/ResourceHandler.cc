@@ -1052,9 +1052,9 @@ void ResourceHandler::LoadActions(void) {
     FILE *file;
     int i, i2, i3;
     bool cmd;
-    char *buffer = new char[8192];
-    char *buffer2 = new char[8192];
-    char tmp_ch;
+    signed char *buffer = new signed char[8192];
+    signed char *buffer2 = new signed char[8192];
+    signed char tmp_ch;
     char *str;
     WaActionExtList *ext_list;
     list<Define *> *defs = new list<Define *>;
@@ -1085,7 +1085,7 @@ void ResourceHandler::LoadActions(void) {
             delete buffer2;
             return;
         }
-        str = strtrim(buffer);
+        str = strtrim((char *) buffer);
         switch (buffer[i]) {
             case '\n':
                 i = 0;
@@ -1108,36 +1108,37 @@ void ResourceHandler::LoadActions(void) {
                 if (! strncasecmp(str, "DEF", 3)) {
                     str = strtrim(str + 3);                   
                     defs->push_front(new Define(wastrdup(str),
-                                                wastrdup(strtrim(buffer2))));
+                                                wastrdup(strtrim(
+                                                    (char *) buffer2))));
                 }
                 else {                  
                     str = strtrim(str);
                     if (! strcasecmp(str, "root")) {
-                        ReadActions(buffer2, defs, racts, rootacts);
+                        ReadActions((char *) buffer2, defs, racts, rootacts);
                     }
                     else if (! strcasecmp(str, "westedge")) {
-                        ReadActions(buffer2, defs, racts, weacts);
+                        ReadActions((char *) buffer2, defs, racts, weacts);
                     }
                     else if (! strcasecmp(str, "eastedge")) {
-                        ReadActions(buffer2, defs, racts, eeacts);
+                        ReadActions((char *) buffer2, defs, racts, eeacts);
                     }
                     else if (! strcasecmp(str, "northedge")) {
-                        ReadActions(buffer2, defs, racts, neacts);
+                        ReadActions((char *) buffer2, defs, racts, neacts);
                     }
                     else if (! strcasecmp(str, "southedge")) {
-                        ReadActions(buffer2, defs, racts, seacts);
+                        ReadActions((char *) buffer2, defs, racts, seacts);
                     }
                     else if (! strcasecmp(str, "menu.title")) {
-                        ReadActions(buffer2, defs, macts, mtacts);
+                        ReadActions((char *) buffer2, defs, macts, mtacts);
                     }
                     else if (! strcasecmp(str, "menu.item")) {
-                        ReadActions(buffer2, defs, macts, miacts);
+                        ReadActions((char *) buffer2, defs, macts, miacts);
                     }
                     else if (! strcasecmp(str, "menu.sub")) {
-                        ReadActions(buffer2, defs, macts, msacts);
+                        ReadActions((char *) buffer2, defs, macts, msacts);
                     }
                     else if (! strcasecmp(str, "menu.checkbox")) {
-                        ReadActions(buffer2, defs, macts, mcbacts);
+                        ReadActions((char *) buffer2, defs, macts, mcbacts);
                     }
                     else {
                         ext_list = NULL;
@@ -1153,7 +1154,8 @@ void ResourceHandler::LoadActions(void) {
                                                            wastrdup(str + 6),
                                                            NULL);
                             str = str + i3 + 1;
-                            ReadActions(buffer2, defs, wacts, &ext_list->list);
+                            ReadActions((char *) buffer2, defs, wacts,
+                                        &ext_list->list);
                         }
                         else if (! strncasecmp(str, "name", 4)) {
                             for (i3 = 4; str[i3] != ']' && str[i3] != '\0';
@@ -1167,7 +1169,8 @@ void ResourceHandler::LoadActions(void) {
                                                            NULL,
                                                            NULL);
                             str = str + i3 + 1;
-                            ReadActions(buffer2, defs, wacts, &ext_list->list);
+                            ReadActions((char *) buffer2, defs, wacts,
+                                        &ext_list->list);
                         }
                         else if (! strncasecmp(str, "title", 5)) {
                             for (i3 = 5; str[i3] != ']' && str[i3] != '\0';
@@ -1181,7 +1184,8 @@ void ResourceHandler::LoadActions(void) {
                                                            NULL,
                                                            wastrdup(str + 6));
                             str = str + i3 + 1;
-                            ReadActions(buffer2, defs, wacts, &ext_list->list);
+                            ReadActions((char *) buffer2, defs, wacts,
+                                        &ext_list->list);
                         }
                         else if (! strncasecmp(str, "window", 6)) {
                             str = str + 6;
@@ -1192,47 +1196,58 @@ void ResourceHandler::LoadActions(void) {
                         }
                         if (! strcasecmp(str, ".frame")) {
                             if (ext_list) ext_frameacts.push_back(ext_list);
-                            else ReadActions(buffer2, defs, wacts, frameacts);
+                            else ReadActions((char *) buffer2, defs, wacts,
+                                             frameacts);
                         }
                         else if (! strcasecmp(str, ".title")) {
                             if (ext_list) ext_titleacts.push_back(ext_list);
-                            else ReadActions(buffer2, defs, wacts, titleacts);
+                            else ReadActions((char *) buffer2, defs, wacts,
+                                             titleacts);
                         }
                         else if (! strcasecmp(str, ".label")) {
                             if (ext_list) ext_labelacts.push_back(ext_list);
-                            else ReadActions(buffer2, defs, wacts, labelacts);
+                            else ReadActions((char *) buffer2, defs, wacts,
+                                             labelacts);
                         }
                         else if (! strcasecmp(str, ".handle")) {
                             if (ext_list) ext_handleacts.push_back(ext_list);
-                            else ReadActions(buffer2, defs, wacts, handleacts);
+                            else ReadActions((char *) buffer2, defs, wacts,
+                                             handleacts);
                         }
                         else if (! strcasecmp(str, ".activeclient")) {
                             if (ext_list) ext_awinacts.push_back(ext_list);
-                            else ReadActions(buffer2, defs, wacts, awinacts);
+                            else ReadActions((char *) buffer2, defs, wacts,
+                                             awinacts);
                         }
                         else if (! strcasecmp(str, ".passiveclient")) {
                             if (ext_list) ext_pwinacts.push_back(ext_list);
-                            else ReadActions(buffer2, defs, wacts, pwinacts);
+                            else ReadActions((char *) buffer2, defs, wacts,
+                                             pwinacts);
                         }
                         else if (! strcasecmp(str, ".closebutton")) {
                             if (ext_list) ext_cbacts.push_back(ext_list);
-                            else ReadActions(buffer2, defs, wacts, cbacts);
+                            else ReadActions((char *) buffer2, defs, wacts,
+                                             cbacts);
                         }
                         else if (! strcasecmp(str, ".iconifybutton")) {
                             if (ext_list) ext_ibacts.push_back(ext_list);
-                            else ReadActions(buffer2, defs, wacts, ibacts);
+                            else ReadActions((char *) buffer2, defs, wacts,
+                                             ibacts);
                         }
                         else if (! strcasecmp(str, ".maximizebutton")) {
                             if (ext_list) ext_mbacts.push_back(ext_list);
-                            else ReadActions(buffer2, defs, wacts, mbacts);
+                            else ReadActions((char *) buffer2, defs, wacts,
+                                             mbacts);
                         }
                         else if (! strcasecmp(str, ".leftgrip")) {
                             if (ext_list) ext_lgacts.push_back(ext_list);
-                            else ReadActions(buffer2, defs, wacts, lgacts);
+                            else ReadActions((char *) buffer2, defs, wacts,
+                                             lgacts);
                         }
                         else if (! strcasecmp(str, ".rightgrip")) {
                             if (ext_list) ext_rgacts.push_back(ext_list);
-                            else ReadActions(buffer2, defs, wacts, rgacts);
+                            else ReadActions((char *) buffer2, defs, wacts,
+                                             rgacts);
                         }
                         else {
                             WARNING << "unknown window" << endl;
