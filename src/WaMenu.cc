@@ -1450,9 +1450,13 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
             if ((*it)->exec)
                 waexec((*it)->exec, menu->wascreen->displaystring);
             else {
-                if ((*it)->menufunc != &WaMenuItem::EndMoveResize &&
-                    !in_window) return;
-                ((*this).*((*it)->menufunc))(e, *it);
+                if (! in_window) {
+                    if ((*it)->menufunc == &WaMenuItem::EndMoveResize)
+                        ((*this).*((*it)->menufunc))(e, *it);
+                    else return;
+                }
+                else
+                    ((*this).*((*it)->menufunc))(e, *it);
             }
         }
     }
