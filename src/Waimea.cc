@@ -83,14 +83,14 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     move_cursor = XCreateFontCursor(display, XC_fleur);
     resizeleft_cursor = XCreateFontCursor(display, XC_ll_angle);
     resizeright_cursor = XCreateFontCursor(display, XC_lr_angle);
-    
+
     rh = new ResourceHandler(this, options);
     rh->LoadConfig();
     rh->LoadMenus();
     taskswitch = new TaskSwitcher();
     wamenu_list->push_back(taskswitch);
     rh->LoadActions(this);
-           
+
     net = new NetHandler(this);
     wascreen = new WaScreen(display, DefaultScreen(display), this);
 

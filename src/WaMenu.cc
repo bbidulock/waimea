@@ -304,6 +304,7 @@ void WaMenu::Build(WaScreen *screen) {
  * @param my Y coordinate to map menu at
  */
 void WaMenu::Map(int mx, int my) {
+    if (this == waimea->taskswitch && item_list->size() < 2) return;
     if (mapped) return;
     x = mx;
     y = my;
@@ -329,6 +330,7 @@ void WaMenu::Map(int mx, int my) {
  * @param my Y coordinate to remap menu at
  */
 void WaMenu::ReMap(int mx, int my) {
+    if (this == waimea->taskswitch && item_list->size() < 2) return;
     if (mapped) Move(mx - x, my - y);
     x = mx;
     y = my;
@@ -378,7 +380,8 @@ void WaMenu::Unmap(bool focus) {
     
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {        
-        if ((*it)->hilited && (*it)->type == MenuItemType)
+        if ((*it)->hilited && ((*it)->type == MenuItemType ||
+                               ((*it)->type == MenuSubType && focus)))
             (*it)->DeHilite();
     }
     XUnmapWindow(display, frame);
@@ -395,6 +398,7 @@ void WaMenu::Unmap(bool focus) {
         else
             root_item->DeHilite();
     }
+    focus = False;
 }
 
 /**
@@ -700,7 +704,8 @@ void WaMenuItem::Hilite(void) {
     list<WaMenuItem *>::iterator it = menu->item_list->begin();
     for (; it != menu->item_list->end(); ++it) {        
         if ((*it)->hilited && focus)
-            (*it)->DeHilite();
+            if (!(((*it)->func_mask & MenuSubMask) && (*it)->submenu->mapped))
+                (*it)->DeHilite();
     }
     hilited = True;
     if (menu->philite)
@@ -1199,7 +1204,7 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
     }
     built = False;
     focus = True;
-    
+   
     m = new WaMenuItem("Window List");
     m->type = MenuTitleType;
     AddItem(m);
@@ -1214,13 +1219,15 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
         m->wf = ww->id;
         AddItem(m);
     }
-    ww = (WaWindow *) wawindow_list->front();
-    m = new WaMenuItem(ww->name);
-    m->type = MenuItemType;
-    m->wfunc = &WaWindow::RaiseFocus;
-    m->func_mask |= MenuWFuncMask;
-    m->wf = ww->id;
-    AddItem(m);
+    if (! wawindow_list->empty()) {
+        ww = (WaWindow *) wawindow_list->front();
+        m = new WaMenuItem(ww->name);
+        m->type = MenuItemType;
+        m->wfunc = &WaWindow::RaiseFocus;
+        m->func_mask |= MenuWFuncMask;
+        m->wf = ww->id;
+        AddItem(m);
+    }
 
     WaMenu::Build(wascrn);
 }
