@@ -1438,6 +1438,7 @@ void WaScreen::Exit(XEvent *, WaAction *) {
  */
 void WaScreen::TaskSwitcher(XEvent *, WaAction *) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
+    if (wawindow_list.empty()) return;
 
     int workx, worky, workw, workh;
     GetWorkareaSize(&workx, &worky, &workw, &workh);
@@ -1459,6 +1460,8 @@ void WaScreen::TaskSwitcher(XEvent *, WaAction *) {
  */
 void WaScreen::PreviousTask(XEvent *e, WaAction *ac) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
+    if (wawindow_list.size() < 2) return;
+    
     list<WaWindow *>::iterator it = wawindow_list.begin();
     it++;
     (*it)->Raise(e, ac);
@@ -1476,6 +1479,8 @@ void WaScreen::PreviousTask(XEvent *e, WaAction *ac) {
  */
 void WaScreen::NextTask(XEvent *e, WaAction *ac) {
     if (waimea->eh->move_resize != EndMoveResizeType) return;
+    if (wawindow_list.size() < 2) return;
+    
     wawindow_list.back()->Raise(e, ac);
     wawindow_list.back()->FocusVis(e, ac);
 }
