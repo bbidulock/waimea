@@ -525,8 +525,8 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
             waimea->eh->EventLoop(waimea->eh->menu_viewport_move_return_mask);
         switch (event->type) {
             case MotionNotify:
-                MoveViewportTo(v_x + (event->xmotion.x_root - px),
-                               v_y + (event->xmotion.y_root - py));
+                MoveViewportTo(v_x - (event->xmotion.x_root - px),
+                               v_y - (event->xmotion.y_root - py));
                 px = event->xmotion.x_root;
                 py = event->xmotion.y_root;
                 break;

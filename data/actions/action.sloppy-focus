@@ -31,7 +31,7 @@
 ! == Normal Window ==
 !
 window.*.1: Raise             : ButtonPress = Button1 & Mod1Mask
-window.*.2: Move        : ButtonPress = Button1 & Mod1Mask
+window.*.2: MoveOpaque        : ButtonPress = Button1 & Mod1Mask
 window.*.3: ResizeRightOpaque : ButtonPress = Button3 & Mod1Mask
 window.*.4: Lower             : ButtonPress = Button2 & Mod1Mask
 !
@@ -101,7 +101,7 @@ southedge.2: ScrollViewportDown(20) : EnterNotify & ControlMask
 ! == Menu ==
 !
 menu.*.1: Raise      : ButtonPress = Button1 & Mod1Mask
-menu.*.2: Move : ButtonPress = Button1 & Mod1Mask
+menu.*.2: MoveOpaque : ButtonPress = Button1 & Mod1Mask
 menu.*.3: UnLink     : ButtonPress = Button1 & Mod1Mask
 menu.*.4: Lower      : ButtonPress = Button2 & Mod1Mask
 !
