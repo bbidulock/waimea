@@ -65,14 +65,6 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     attrib.y = init_attrib.y;
     attrib.width  = init_attrib.width;
     attrib.height = init_attrib.height;
-    if (attrib.x == 0) {
-        if (wascreen->workarea->x > attrib.x)
-            attrib.x = wascreen->workarea->x;
-    }
-    if (attrib.y == 0) {
-        if (wascreen->workarea->y > attrib.y)
-            attrib.y = wascreen->workarea->y;
-    }
     
     want_focus = mapped = dontsend = deleted = ign_config_req = false;
 
@@ -99,7 +91,6 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     net->GetWMHints(this);
     net->GetMWMHints(this);
     net->GetWMNormalHints(this);
-    net->GetVirtualPos(this);
     net->GetWmPid(this);
     
     Gravitate(ApplyGravity);
@@ -141,6 +132,11 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     label->g_x2 = right_end - 2;
 
     if (deleted) { delete this; return; }
+
+    net->GetWmState(this);
+    net->GetWmType(this);
+    net->GetVirtualPos(this);
+    net->GetWmStrut(this);
     
     ReparentWin();
     SetActionLists();
@@ -149,10 +145,6 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
 #ifdef SHAPE
     Shape();
 #endif // SHAPE
-
-    net->GetWmState(this);
-    net->GetWmType(this);
-    net->GetWmStrut(this);
 
     if (deleted) { delete this; return; }
     

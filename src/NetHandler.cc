@@ -1060,6 +1060,8 @@ void NetHandler::GetWmType(WaWindow *ww) {
                   ww->size.min_width = ww->wascreen->width;
                   ww->size.max_height = ww->wascreen->height;
                   ww->size.min_height = ww->wascreen->height;
+                  ww->attrib.x = 0;
+                  ww->attrib.y = 0;
                   if (ww->flags.alwaysontop)
                       ww->wascreen->wawindow_list_stacking_aot.remove(ww);
                   if (ww->flags.alwaysatbottom)
@@ -1095,7 +1097,26 @@ void NetHandler::GetWmType(WaWindow *ww) {
                 ww->wascreen->wawindow_list_stacking_aot.push_front(ww);
                 ww->wascreen->WaRaiseWindow(0);
             }
+            else if (data[i] == net_wm_window_type_normal) {
+                if (ww->attrib.x == 0) {
+                    if (ww->wascreen->workarea->x > ww->attrib.x)
+                ww->attrib.x = ww->wascreen->workarea->x;
+                }
+                if (ww->attrib.y == 0) {
+                    if (ww->wascreen->workarea->y > ww->attrib.y)
+                        ww->attrib.y = ww->wascreen->workarea->y;
+                }
+            }
         }
         XFree(data);
+    } else {
+        if (ww->attrib.x == 0) {
+            if (ww->wascreen->workarea->x > ww->attrib.x)
+                ww->attrib.x = ww->wascreen->workarea->x;
+        }
+        if (ww->attrib.y == 0) {
+            if (ww->wascreen->workarea->y > ww->attrib.y)
+                ww->attrib.y = ww->wascreen->workarea->y;
+        }
     }
 }
