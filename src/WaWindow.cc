@@ -44,13 +44,11 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     net = waimea->net;
     wm_strut = NULL;
 
-    if (! XFetchName(display, id, &tmp_name)) {
-        name = wastrdup("");
-    }
-    else {
+    if (XFetchName(display, id, &tmp_name)) {
         name = wastrdup(tmp_name);
         XFree(tmp_name);
-    }
+    } else name = wastrdup("");
+    
     XGetWindowAttributes(display, id, &init_attrib);
     attrib.colormap = init_attrib.colormap;
     size.win_gravity = init_attrib.win_gravity;

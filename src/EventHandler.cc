@@ -237,11 +237,11 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
                     if (XFetchName(ww->display, ww->id, &tmp_name)) {
                         delete [] ww->name;
                         ww->name = wastrdup(tmp_name);
+                        if (ww->title_w) ww->DrawLabelFg();
                         XFree(tmp_name);
                     }
                 }
                 XUngrabServer(e->display);
-                if (ww->title_w) ww->DrawLabelFg();
             }
         }
     }
@@ -427,19 +427,15 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
     } 
     else {
         wm_hints = XAllocWMHints();
-        XGrabServer(e->display);
-        if (validateclient(e->window)) {
-            XGetWindowAttributes(e->display, e->window, &attr);
-            if (! attr.override_redirect) {
-                if ((wm_hints = XGetWMHints(e->display, e->window)) &&
-                    (wm_hints->flags & StateHint) &&
-                    (wm_hints->initial_state == WithdrawnState)) {
-                    waimea->wascreen->AddDockapp(e->window);
-                }
-                else new WaWindow(e->window, waimea->wascreen);
+        XGetWindowAttributes(e->display, e->window, &attr);
+        if (! attr.override_redirect) {
+            if ((wm_hints = XGetWMHints(e->display, e->window)) &&
+                (wm_hints->flags & StateHint) &&
+                (wm_hints->initial_state == WithdrawnState)) {
+                waimea->wascreen->AddDockapp(e->window);
             }
+            else new WaWindow(e->window, waimea->wascreen);
         }
-        XUngrabServer(e->display);
         XFree(wm_hints);
     }
 }

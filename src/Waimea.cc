@@ -397,7 +397,7 @@ void signalhandler(int sig) {
 char *wastrdup(char *s) {
     char *tmp;
     tmp = new char[strlen(s) + 1];
-    sprintf(tmp, s);
+    sprintf(tmp, "%s", s);
     return tmp;
 }
 
