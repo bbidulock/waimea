@@ -19,9 +19,9 @@ WAIMEA WINDOW MANAGER
 
         Features under development:
          - New revolutionary of pager utility
+	 - Per window style and action configuration support
 
         Planned features:
-         - copy/cut/paste buffers control
          - Configuration program
          - ...
 
@@ -80,17 +80,48 @@ CONFIG FILE
                 size to three times screen height in virtual height and three
                 times screen width in virtual width.
 
-        dock0.geometry
+
+	Dockapp Holders
+	It is possible to have more than one dockapp holder running.
+	First dockapp handler should be named dock0 and the second dock1
+	and so on. One dockapp holder is always running whether you have a 
+	put a dock0 line in the config file or not.
+
+        dock[num].geometry
 		Placement of dockapp holder, X11 offset string of the form:
 		[{+-}<xoffset>{+-}<yoffset>]
+	
+	dock[num].order
+		A whitespace separated list describing how to order the
+		dockapps in the dockapp holder. Dockapps can be ordered
+		by window name and class. For window name use "N_" prefix
+		followed by window name and for window class use "C_" prefix
+		followed by window class.
+		Example:
+			dock0.order:	N_cpumeter C_pager UNKNOWN
+			
+		This will put dockapp window named cpumeter at the first
+		position in dockapp holder and pager dockapp at second 
+		position. All dockapp windows that doesn't match any "N_" or 
+		"C_" will be but at the position of the UNKNOWN string.
+		The UNKNOWN string MUST exist in ONE AND ONLY ONE of the
+		dockapp holder order resources.
 		
-	dock0.direction
+	dock[num].direction
 		Dockapp holder direction {Vertical, Horizontal}
 
-	dock0.gridSpace
+	dock[num].centered
+		True if you want the dockapp holder to be centered. If
+		direction is Vertical, yoffset from geometry resource will
+		be ignored and dockapp holder will be centered vertically.
+		If direction is Horizontal, xoffset from geometry resource 
+		will be ignored and dockapp holder will be centered 
+		horizontally.
+
+	dock[num].gridSpace
 		Number of pixels spacing between dockapps in dockapp holder.
 
-	dock0.stacking:
+	dock[num].stacking:
 		Stacking order for dockapp holder
 		{AlwaysOnTop, AlwaysAtBottom}.
 
@@ -185,7 +216,8 @@ ACTIONS
                 window.frame
                 window.title
                 window.label
-                window.client
+                window.client.active
+		window.client.passive
                 window.closeButton
                 window.iconifyButton
                 window.maximizeButton
