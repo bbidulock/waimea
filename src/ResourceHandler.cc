@@ -554,7 +554,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
  * @fn    LoadMenus(void)
  * @brief Reads menu file
  *
- * Creates all menus by parsing the menu file.
+ * Creates menus by parsing a menu file.
  */
 void ResourceHandler::LoadMenus(void) {
     FILE *file;
@@ -565,8 +565,9 @@ void ResourceHandler::LoadMenus(void) {
 
     linenr = 0;
     if (! (file = fopen(menu_file, "r"))) {
-        ERROR << "can't open menufile \"" << menu_file << 
-		"\" for reading" << endl; exit(1);
+        WARNING << "can't open menufile \"" << menu_file << 
+		"\" for reading" << endl;
+        return;
     }
     while (fgets(line, 1024, file)) {
         linenr++;
@@ -1130,6 +1131,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         else if (! strcasecmp(s, "restart")) {
+            free(s);
             if ((s = strwithin(line, '(', ')')))
                 m = new WaMenuItem(s);
             else m = new WaMenuItem("");
@@ -1140,6 +1142,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         else if (! strcasecmp(s, "exit")) {
+            free(s);
             if ((s = strwithin(line, '(', ')')))
                 m = new WaMenuItem(s);
             else m = new WaMenuItem("");
@@ -1150,6 +1153,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         else if (! strcasecmp(s, "exec")) {
+            free(s);
             if ((s = strwithin(line, '(', ')')))
                 m = new WaMenuItem(s);
             else m = new WaMenuItem("");
@@ -1163,9 +1167,19 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             menu->AddItem(m);
             continue;
         }
+        else if (! strcasecmp(s, "nop")) {
+            free(s);
+            if ((s = strwithin(line, '(', ')')))
+                m = new WaMenuItem(s);
+            else m = new WaMenuItem("");
+            m->type = MenuItemType;
+            menu->AddItem(m);
+            continue;
+        }
         else if (! strcasecmp(s, "end")) {
             if (menu->item_list->empty()) {
-                WARNING << "no elements in menu \"" << menu->name << "\"" << endl;
+                WARNING << "no elements in menu \"" << menu->name <<
+                    "\"" << endl;
                 free(s);
                 delete menu;
                 return;
@@ -1181,7 +1195,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             type = MenuSubType;
         else {
             WARNING << "at line " << linenr << ": [" << s << "]" <<
-                " is not a valid statement" << endl;
+                " invalid statement" << endl;
             free(s);
             continue;
         }

@@ -81,7 +81,7 @@ private:
     Display *display;
     XrmDatabase database;
     char *homedir;
-    int *linenr;
+    int linenr;
     list<StrComp *> *wacts;
     list<StrComp *> *racts;
     list<StrComp *> *macts;
