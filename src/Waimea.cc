@@ -291,7 +291,7 @@ void restart(void) {
     cout << "restarting." << endl;
     delete waimea;
     execvp(argv[0], argv);
-    perror("restart: ");
+    perror("restart");
     exit(EXIT_FAILURE);
 }
 
