@@ -20,9 +20,7 @@
 #  include <stdio.h>
 #endif // HAVE_STDIO_H
 
-#ifdef    HAVE_IOSTREAM
-#  include <iostream>
-#endif // HAVE_IOSTREAM
+#include <iostream>
 
 using std::cerr;
 using std::cout;

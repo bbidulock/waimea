@@ -32,9 +32,7 @@
 #  include <Imlib2.h>
 #endif // PIXMAP
 
-#ifdef    HAVE_LIST
-#  include <list>
-#endif // HAVE_LIST
+#include <list>
 
 using std::list;
 

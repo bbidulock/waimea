@@ -53,9 +53,7 @@ typedef unsigned int u_int32_t;
 #  include <ctype.h>
 #endif // HAVE_CTYPE_H
 
-#ifdef    HAVE_IOSTREAM
-#  include <iostream>
-#endif // HAVE_IOSTREAM
+#include <iostream>
 
 using std::cerr;
 using std::cout;

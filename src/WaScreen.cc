@@ -39,9 +39,7 @@
 #  include <signal.h>
 #endif // HAVE_SIGNAL_H
 
-#ifdef    HAVE_IOSTREAM
-#  include <iostream>
-#endif // HAVE_IOSTREAM
+#include <iostream>
 
 using std::cerr;
 using std::cout;

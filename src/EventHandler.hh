@@ -27,9 +27,7 @@
 #  endif // HAVE_SYS_TIME_H
 #endif // TIME_WITH_SYS_TIME
 
-#ifdef    HAVE_SET
-#  include <set>
-#endif // HAVE_SET
+#include <set>
 
 using std::set;
 

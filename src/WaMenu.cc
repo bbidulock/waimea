@@ -29,9 +29,7 @@
 #  include <string.h>
 #endif // STDC_HEADERS
 
-#ifdef    HAVE_IOSTREAM
-#  include <iostream>
-#endif // HAVE_IOSTREAM
+#include <iostream>
 
 using std::cerr;
 using std::cout;

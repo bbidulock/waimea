@@ -17,15 +17,11 @@
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 
-#ifdef    HAVE_LIST
-#  include <list>
-#endif // HAVE_LIST
+#include <list>
 
 using std::list;
 
-#ifdef    HAVE_MAP
-#  include <map>
-#endif // HAVE_MAP
+#include <map>
 
 using std::map;
 using std::make_pair;

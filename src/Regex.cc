@@ -18,6 +18,20 @@
 #include "Regex.hh"
 #include "Waimea.hh"
 
+#include <iostream>
+
+using std::cerr;
+using std::cout;
+using std::endl;
+
+/**
+ * @fn    Regex(char *_pattern)
+ * @brief Constructor for Regex class
+ *
+ * Compiles a regular expression that later can be used for string matching.
+ *
+ * @param _pattern Regular expression string
+ */
 Regex::Regex(char *_pattern) {
     int status = 0;
     char *err_msg = NULL;
@@ -59,6 +73,16 @@ Regex::Regex(char *_pattern) {
     delete [] pattern;
 }
 
+/**
+ * @fn    Match(char *str)
+ * @brief String matcher
+ *
+ * Matches string with compiled regular expression pattern. 
+ *
+ * @param str String to match with
+ *
+ * @return True if string matched, otherwise false
+ */
 bool Regex::Match(char *str) {
     int status = 0;
     char *err_msg = NULL;
