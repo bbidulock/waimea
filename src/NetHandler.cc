@@ -172,7 +172,6 @@ void NetHandler::GetWMNormalHints(WaWindow *ww) {
         ww->size.height_inc = 1;
     ww->size.base_width = ww->size.min_width;
     ww->size.base_height = ww->size.min_height;
-    ww->size.win_gravity = NorthWestGravity;
 
     size_hints->flags = 0;
     XGrabServer(display);

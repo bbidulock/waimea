@@ -47,7 +47,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     }
     XGetWindowAttributes(display, id, &init_attrib);
     attrib.colormap = init_attrib.colormap;
-    
+    size.win_gravity = init_attrib.win_gravity;
     attrib.x = init_attrib.x;
     attrib.y = init_attrib.y;
     attrib.width  = init_attrib.width;
@@ -281,6 +281,8 @@ void WaWindow::UpdateAllAttributes(void) {
     if (! flags.shaded)
         XResizeWindow(display, frame->id, frame->attrib.width,
                       frame->attrib.height);
+    
+    XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
             
     if (flags.title) {
         title->attrib.x = - border_w;
@@ -366,7 +368,7 @@ void WaWindow::UpdateAllAttributes(void) {
         else XMoveWindow(display, id, 0, title_w);
     }
     XUngrabServer(display);
-    
+
     int m_x, m_y, m_w, m_h;
     if (flags.max) {
         m_x = restore_max.x;
