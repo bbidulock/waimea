@@ -82,10 +82,10 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     
     v_xmax = (rh->virtual_x - 1) * width;
     v_ymax = (rh->virtual_y - 1) * height;
-    west = new ScreenEdge(this, 0, 0, 1, height, WEdgeType);
-    east = new ScreenEdge(this, width - 1, 0, 1, height, EEdgeType);
-    north = new ScreenEdge(this, 0, 0, width, 1, NEdgeType);
-    south = new ScreenEdge(this, 0, height - 1, width, 1, SEdgeType);
+    west = new ScreenEdge(this, 0, 0, 2, height, WEdgeType);
+    east = new ScreenEdge(this, width - 2, 0, 2, height, EEdgeType);
+    north = new ScreenEdge(this, 0, 0, width, 2, NEdgeType);
+    south = new ScreenEdge(this, 0, height - 2, width, 2, SEdgeType);
     net->SetDesktopGeometry(this);
     net->GetDesktopViewPort(this);
     net->SetDesktopViewPort(this);
@@ -448,7 +448,7 @@ void WaScreen::MoveViewport(int direction, bool warp) {
                 if ((v_x - width) < 0) vd = v_x;
                 else vd = width;
                 if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, 
-				       vd - 2, 0);
+				       vd - 4, 0);
                 MoveViewportTo(v_x - vd, v_y);
             }
             break;
@@ -457,7 +457,7 @@ void WaScreen::MoveViewport(int direction, bool warp) {
                 if ((v_x + width) > v_xmax) vd = v_xmax - v_x;
                 else vd = width;
                 if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0,
-                                       2 - vd, 0);
+                                       4 - vd, 0);
                 MoveViewportTo(v_x + vd, v_y);
             }
             break;
@@ -466,7 +466,7 @@ void WaScreen::MoveViewport(int direction, bool warp) {
                 if ((v_y - height) < 0) vd = v_y;
                 else vd = height;
                 if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0,
-                                       0, vd - 2);
+                                       0, vd - 4);
                 MoveViewportTo(v_x, v_y - vd);
             }
             break;
@@ -475,7 +475,7 @@ void WaScreen::MoveViewport(int direction, bool warp) {
                 if ((v_y + height) > v_ymax) vd = v_ymax - v_y;
                 else vd = height;
                 if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0,
-                                       0, 2 - vd);
+                                       0, 4 - vd);
                 MoveViewportTo(v_x, v_y + vd);
             }
     }
