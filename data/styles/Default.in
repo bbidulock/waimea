@@ -38,7 +38,7 @@ window.button.focus:            parentrelative
   window.button.focus.picColor: #000000
   
 window.button.unfocus:            parentrelative
-  window.button.unfocus.picColor: #505468
+  window.button.unfocus.picColor: #707488
   
 window.button.pressed:           sunken gradient vertical
   window.button.pressed.color:   #8090c0
