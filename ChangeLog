@@ -13,3 +13,4 @@ Mon Nov 26 2001 David Reveman (c99drn@cs.umu.se)
 
 	Added KeyEvent support
 	Added ViewportMove function
+	Added command line execution to action system

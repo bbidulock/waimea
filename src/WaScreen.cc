@@ -403,9 +403,10 @@ void WaScreen::MoveViewportTo(int x, int y) {
  * Direction can be one of WestDirection, EastDirection, NorthDirection and
  * SouthDirection.
  *
+ * @param warp True if we should warp pointer
  * @param direction Direction to move viewport
  */
-void WaScreen::MoveViewport(int direction) {
+void WaScreen::MoveViewport(int direction, bool warp) {
     int vd;
     
     switch (direction) {
@@ -413,7 +414,8 @@ void WaScreen::MoveViewport(int direction) {
             if (v_x > 0) {
                 if ((v_x - width) < 0) vd = v_x;
                 else vd = width;
-                XWarpPointer(display, None, None, 0, 0, 0, 0, vd - 2, 0);
+                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, 
+				       vd - 2, 0);
                 MoveViewportTo(v_x - vd, v_y);
             }
             break;
@@ -421,7 +423,8 @@ void WaScreen::MoveViewport(int direction) {
             if (v_x < v_xmax) {
                 if ((v_x + width) > v_xmax) vd = v_xmax - v_x;
                 else vd = width;
-                XWarpPointer(display, None, None, 0, 0, 0, 0, 2 - vd, 0);
+                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0,
+                                       2 - vd, 0);
                 MoveViewportTo(v_x + vd, v_y);
             }
             break;
@@ -429,7 +432,8 @@ void WaScreen::MoveViewport(int direction) {
             if (v_y > 0) {
                 if ((v_y - height) < 0) vd = v_y;
                 else vd = height;
-                XWarpPointer(display, None, None, 0, 0, 0, 0, 0, vd - 2);
+                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0,
+                                       0, vd - 2);
                 MoveViewportTo(v_x, v_y - vd);
             }
             break;
@@ -437,7 +441,8 @@ void WaScreen::MoveViewport(int direction) {
             if (v_y < v_ymax) {
                 if ((v_y + height) > v_ymax) vd = v_ymax - v_y;
                 else vd = height;
-                XWarpPointer(display, None, None, 0, 0, 0, 0, 0, 2 - vd);
+                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0,
+                                       0, 2 - vd);
                 MoveViewportTo(v_x, v_y + vd);
             }
     }
@@ -454,8 +459,10 @@ void WaScreen::MoveViewport(int direction) {
  * default value of 30 pixels.
  *
  * @param direction Direction to move viewport
+ * @param warp True if we should warp pointer
+ * @param ac Action causing function call
  */
-void WaScreen::ScrollViewport(int direction, WaAction *ac) {
+void WaScreen::ScrollViewport(int direction, bool warp, WaAction *ac) {
     int vd, scroll = 30;
 
     if (ac->param > 0) {
@@ -467,7 +474,7 @@ void WaScreen::ScrollViewport(int direction, WaAction *ac) {
             if (v_x > 0) {
                 if ((v_x - scroll) < 0) vd = v_x;
                 else vd = scroll;
-                XWarpPointer(display, None, None, 0, 0, 0, 0, vd, 0);
+                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, vd, 0);
                 MoveViewportTo(v_x - vd, v_y);
             }
             break;
@@ -475,7 +482,7 @@ void WaScreen::ScrollViewport(int direction, WaAction *ac) {
             if (v_x < v_xmax) {
                 if ((v_x + scroll) > v_xmax) vd = v_xmax - v_x;
                 else vd = scroll;
-                XWarpPointer(display, None, None, 0, 0, 0, 0, -vd, 0);
+                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, -vd, 0);
                 MoveViewportTo(v_x + vd, v_y);
             }
             break;
@@ -483,7 +490,7 @@ void WaScreen::ScrollViewport(int direction, WaAction *ac) {
             if (v_y > 0) {
                 if ((v_y - scroll) < 0) vd = v_y;
                 else vd = scroll;
-                XWarpPointer(display, None, None, 0, 0, 0, 0, 0, vd);
+                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, 0, vd);
                 MoveViewportTo(v_x, v_y - vd);
             }
             break;
@@ -491,7 +498,7 @@ void WaScreen::ScrollViewport(int direction, WaAction *ac) {
             if (v_y < v_ymax) {
                 if ((v_y + scroll) > v_ymax) vd = v_ymax - v_y;
                 else vd = scroll;
-                XWarpPointer(display, None, None, 0, 0, 0, 0, 0, -vd);
+                if (warp) XWarpPointer(display, None, None, 0, 0, 0, 0, 0, -vd);
                 MoveViewportTo(v_x, v_y + vd);
             }
     }
@@ -501,8 +508,7 @@ void WaScreen::ScrollViewport(int direction, WaAction *ac) {
  * @fn    ViewportMove(XEvent *e, WaAction *)
  * @brief Move viewport after mouse movement
  *
- * Moves viewport after mouse motion events. Moves the viewport in the same
- * way as you move a window.
+ * Moves viewport after mouse motion events.
  *
  * @param e XEvent causing function call
  */
@@ -670,7 +676,10 @@ void WaScreen::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     list<WaAction *>::iterator it = acts->begin();
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
-            ((*this).*((*it)->rootfunc))(e, *it);
+            if ((*it)->exec)
+                waexec((*it)->exec, displaystring);
+            else
+                ((*this).*((*it)->rootfunc))(e, *it);
         }
     }
 }

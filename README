@@ -186,6 +186,34 @@ ACTIONS
                 northedge
                 southedge
 
+	List of actions common for all window types:
+		{command line}
+			 You can specify a command line to execute instead of
+			 a function. Command line must be between a '{' 
+			 character and a '}' character.
+	        viewportleft
+                viewportright
+                viewportup
+                viewportdown
+		viewportleftnowarp
+                viewportrightnowarp
+                viewportupnowarp
+                viewportdownnowarp
+                scrollviewportleft(pixels)
+                scrollviewportright(pixels)
+                scrollviewportup(pixels)
+                scrollviewportdown(pixels)
+                scrollviewportleftnowarp(pixels)
+                scrollviewportrightnowarp(pixels)
+                scrollviewportupnowarp(pixels)
+                scrollviewportdownnowarp(pixels)
+			For the scrollviewport actions it's possible to 
+			specify with a parameter how many pixels to scroll.
+			If no parameter then default value (30) is used.
+		viewportmove
+			Moves viewport after mouse motion events (kind of 
+			the same way as you move windows).
+
         List of actions for window.* windows:
                 raise
                 lower
@@ -233,17 +261,6 @@ ACTIONS
                 menuunmap(menu_name)
                 restart
                 exit
-                viewportleft
-                viewportright
-                viewportup
-                viewportdown
-                scrollviewportleft(pixels)
-                scrollviewportright(pixels)
-                scrollviewportup(pixels)
-                scrollviewportdown(pixels)
-			For the scrollviewport actions it's possible to 
-			specify with a parameter how many pixels to scroll.
-			If no parameter then default value (30) is used.
 
         List of event types:
                 buttonpress

@@ -96,6 +96,37 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     wacts->push_back(new StrComp("sticky", &WaWindow::Sticky));
     wacts->push_back(new StrComp("unsticky", &WaWindow::UnSticky));
     wacts->push_back(new StrComp("togglesticky", &WaWindow::ToggleSticky));
+    wacts->push_back(new StrComp("viewportleft", &WaWindow::MoveViewportLeft));
+    wacts->push_back(new StrComp("viewportright",
+                                 &WaWindow::MoveViewportRight));
+    wacts->push_back(new StrComp("viewportup", &WaWindow::MoveViewportUp));
+    wacts->push_back(new StrComp("viewportdown", &WaWindow::MoveViewportDown));
+    wacts->push_back(new StrComp("scrollviewportleft",
+                                 &WaWindow::ScrollViewportLeft));
+    wacts->push_back(new StrComp("scrollviewportright",
+                                 &WaWindow::ScrollViewportRight));
+    wacts->push_back(new StrComp("scrollviewportup",
+                                 &WaWindow::ScrollViewportUp));
+    wacts->push_back(new StrComp("scrollviewportdown",
+                                 &WaWindow::ScrollViewportDown));
+    wacts->push_back(new StrComp("viewportleftnowarp",
+                                 &WaWindow::MoveViewportLeftNoWarp));
+    wacts->push_back(new StrComp("viewportrightnowarp",
+                                 &WaWindow::MoveViewportRightNoWarp));
+    wacts->push_back(new StrComp("viewportupnowarp",
+                                 &WaWindow::MoveViewportUpNoWarp));
+    wacts->push_back(new StrComp("viewportdownnowarp",
+                                 &WaWindow::MoveViewportDownNoWarp));
+    wacts->push_back(new StrComp("scrollviewportleftnowarp",
+                                 &WaWindow::ScrollViewportLeftNoWarp));
+    wacts->push_back(new StrComp("scrollviewportrightnowarp",
+                                 &WaWindow::ScrollViewportRightNoWarp));
+    wacts->push_back(new StrComp("scrollviewportupnowarp",
+                                 &WaWindow::ScrollViewportUpNoWarp));
+    wacts->push_back(new StrComp("scrollviewportdownnowarp",
+                                 &WaWindow::ScrollViewportDownNoWarp));
+    wacts->push_back(new StrComp("viewportmove",
+                                 &WaWindow::ViewportMove));
     
     racts = new list<StrComp *>;
     racts->push_back(new StrComp("focus", &WaScreen::Focus));
@@ -119,6 +150,22 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaScreen::ScrollViewportDown));
     racts->push_back(new StrComp("viewportmove",
                                  &WaScreen::ViewportMove));
+    racts->push_back(new StrComp("viewportleftnowarp",
+                                 &WaScreen::MoveViewportLeftNoWarp));
+    racts->push_back(new StrComp("viewportrightnowarp",
+                                 &WaScreen::MoveViewportRightNoWarp));
+    racts->push_back(new StrComp("viewportupnowarp",
+                                 &WaScreen::MoveViewportUpNoWarp));
+    racts->push_back(new StrComp("viewportdownnowarp",
+                                 &WaScreen::MoveViewportDownNoWarp));
+    racts->push_back(new StrComp("scrollviewportleftnowarp",
+                                 &WaScreen::ScrollViewportLeftNoWarp));
+    racts->push_back(new StrComp("scrollviewportrightnowarp",
+                                 &WaScreen::ScrollViewportRightNoWarp));
+    racts->push_back(new StrComp("scrollviewportupnowarp",
+                                 &WaScreen::ScrollViewportUpNoWarp));
+    racts->push_back(new StrComp("scrollviewportdownnowarp",
+                                 &WaScreen::ScrollViewportDownNoWarp));    
     
     macts = new list<StrComp *>;
     macts->push_back(new StrComp("unlink", &WaMenuItem::UnLinkMenu));
@@ -133,6 +180,37 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     macts->push_back(new StrComp("lower", &WaMenuItem::Lower));
     macts->push_back(new StrComp("move", &WaMenuItem::Move));
     macts->push_back(new StrComp("moveopaque", &WaMenuItem::MoveOpaque));
+    macts->push_back(new StrComp("viewportleft", &WaMenuItem::MoveViewportLeft));
+    macts->push_back(new StrComp("viewportright",
+                                 &WaMenuItem::MoveViewportRight));
+    macts->push_back(new StrComp("viewportup", &WaMenuItem::MoveViewportUp));
+    macts->push_back(new StrComp("viewportdown", &WaMenuItem::MoveViewportDown));
+    macts->push_back(new StrComp("scrollviewportleft",
+                                 &WaMenuItem::ScrollViewportLeft));
+    macts->push_back(new StrComp("scrollviewportright",
+                                 &WaMenuItem::ScrollViewportRight));
+    macts->push_back(new StrComp("scrollviewportup",
+                                 &WaMenuItem::ScrollViewportUp));
+    macts->push_back(new StrComp("scrollviewportdown",
+                                 &WaMenuItem::ScrollViewportDown));
+    macts->push_back(new StrComp("viewportleftnowarp",
+                                 &WaMenuItem::MoveViewportLeftNoWarp));
+    macts->push_back(new StrComp("viewportrightnowarp",
+                                 &WaMenuItem::MoveViewportRightNoWarp));
+    macts->push_back(new StrComp("viewportupnowarp",
+                                 &WaMenuItem::MoveViewportUpNoWarp));
+    macts->push_back(new StrComp("viewportdownnowarp",
+                                 &WaMenuItem::MoveViewportDownNoWarp));
+    macts->push_back(new StrComp("scrollviewportleftnowarp",
+                                 &WaMenuItem::ScrollViewportLeftNoWarp));
+    macts->push_back(new StrComp("scrollviewportrightnowarp",
+                                 &WaMenuItem::ScrollViewportRightNoWarp));
+    macts->push_back(new StrComp("scrollviewportupnowarp",
+                                 &WaMenuItem::ScrollViewportUpNoWarp));
+    macts->push_back(new StrComp("scrollviewportdownnowarp",
+                                 &WaMenuItem::ScrollViewportDownNoWarp));
+    macts->push_back(new StrComp("viewportmove",
+                                 &WaMenuItem::ViewportMove));
     
     types = new list<StrComp *>;
     types->push_back(new StrComp("keypress", KeyPress));
@@ -938,6 +1016,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         ERROR << "strdup returned NULL pointer (insufficient memory)" <<
             endl; exit(1);
     }
+    act_tmp->exec = (char *) 0;
     act_tmp->param = (unsigned long) 0;
     for (; *par != '(' && *par != '\0'; par++);
     if (*(par++) == '(') {
@@ -1003,10 +1082,14 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         }
     }
     if (! *it) {
-        WARNING << "\"" << token << "\" unknown action" << endl;
-        free(act_tmp);
-        free(line);
-        return;
+        if (s = strwithin(token, '{', '}')) {
+            act_tmp->exec = (char *) s;
+        } else {
+            WARNING << "\"" << token << "\" unknown action" << endl;
+            free(act_tmp);
+            free(line);
+            return;
+        }
     }
     
     if (detail) token = strtok(NULL, "=");
@@ -1144,7 +1227,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         if (! strcasecmp(s, "start")) {
             free(s);
-            if ((s = strwithin(line, '(', ')'))) {
+            if (s = strwithin(line, '(', ')')) {
                 menu = new WaMenu(s);
                 ParseMenu(menu, file);
             } else
@@ -1154,7 +1237,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         else if ((! strcasecmp(s, "submenu")) || (! strcasecmp(s, "begin"))) {
             free(s);
-            if ((s = strwithin(line, '(', ')'))) {
+            if (s = strwithin(line, '(', ')')) {
                 m = new WaMenuItem(s);
                 m->type = MenuSubType;
                 m->func_mask = MenuSubMask;
@@ -1172,7 +1255,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         else if (! strcasecmp(s, "restart")) {
             free(s);
-            if ((s = strwithin(line, '(', ')')))
+            if (s = strwithin(line, '(', ')'))
                 m = new WaMenuItem(s);
             else m = new WaMenuItem("");
             m->type = MenuItemType;
@@ -1183,7 +1266,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         else if (! strcasecmp(s, "exit")) {
             free(s);
-            if ((s = strwithin(line, '(', ')')))
+            if (s = strwithin(line, '(', ')'))
                 m = new WaMenuItem(s);
             else m = new WaMenuItem("");
             m->type = MenuItemType;
@@ -1194,11 +1277,11 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         else if (! strcasecmp(s, "exec")) {
             free(s);
-            if ((s = strwithin(line, '(', ')')))
+            if (s = strwithin(line, '(', ')'))
                 m = new WaMenuItem(s);
             else m = new WaMenuItem("");
             m->type = MenuItemType;
-            if ((s = strwithin(line, '{', '}'))) {
+            if (s = strwithin(line, '{', '}')) {
                 if (*s != '\0') {
                     m->exec = s;
                     m->func_mask |= MenuExecMask;
@@ -1209,7 +1292,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         else if (! strcasecmp(s, "nop")) {
             free(s);
-            if ((s = strwithin(line, '(', ')')))
+            if (s = strwithin(line, '(', ')'))
                 m = new WaMenuItem(s);
             else m = new WaMenuItem("");
             m->type = MenuItemType;
@@ -1240,21 +1323,21 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         free(s);
-        if ((s = strwithin(line, '(', ')')))
+        if (s = strwithin(line, '(', ')'))
             m = new WaMenuItem(s);
         else m = new WaMenuItem("");
         m->type = type;
-        if ((s = strwithin(line, '{', '}'))) {
+        if (s = strwithin(line, '{', '}')) {
             if (*s != '\0') {
                 m->exec = s;
                 m->func_mask |= MenuExecMask;
             }
         }
-        if ((s = strwithin(line, '<', '>'))) {
+        if (s = strwithin(line, '<', '>')) {
             m->sub = s;
             m->func_mask |= MenuSubMask;
         }
-        if ((s = strwithin(line, '"', '"'))) {
+        if (s = strwithin(line, '"', '"')) {
             list<StrComp *>::iterator it = wacts->begin();
             for (; it != wacts->end(); ++it) {
                 if ((*it)->Comp(s)) {

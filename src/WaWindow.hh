@@ -135,6 +135,24 @@ public:
     void Sticky(XEvent *, WaAction *);
     void UnSticky(XEvent *, WaAction *);
     void ToggleSticky(XEvent *, WaAction *);
+    void ViewportMove(XEvent *e, WaAction *);
+    void MoveViewportLeft(XEvent *, WaAction *);
+    void MoveViewportRight(XEvent *, WaAction *);
+    void MoveViewportUp(XEvent *, WaAction *);
+    void MoveViewportDown(XEvent *, WaAction *);
+    void ScrollViewportLeft(XEvent *, WaAction *);
+    void ScrollViewportRight(XEvent *, WaAction *);
+    void ScrollViewportUp(XEvent *, WaAction *);
+    void ScrollViewportDown(XEvent *, WaAction *);
+    void MoveViewportLeftNoWarp(XEvent *, WaAction *);
+    void MoveViewportRightNoWarp(XEvent *, WaAction *);
+    void MoveViewportUpNoWarp(XEvent *, WaAction *);
+    void MoveViewportDownNoWarp(XEvent *, WaAction *);
+    void ScrollViewportLeftNoWarp(XEvent *, WaAction *);
+    void ScrollViewportRightNoWarp(XEvent *, WaAction *);
+    void ScrollViewportUpNoWarp(XEvent *, WaAction *);
+    void ScrollViewportDownNoWarp(XEvent *, WaAction *);
+
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
     
     char *name;

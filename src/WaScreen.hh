@@ -89,6 +89,8 @@ public:
     virtual ~WaScreen(void);
 
     void MoveViewportTo(int, int);
+    void MoveViewport(int, bool);
+    void ScrollViewport(int, bool, WaAction *);
     void ViewportMove(XEvent *, WaAction *);
     void Focus(XEvent *, WaAction *);
     void MenuMap(XEvent *, WaAction *);
@@ -97,28 +99,52 @@ public:
     void Restart(XEvent *, WaAction *);
     void Exit(XEvent *, WaAction *);
     inline void MoveViewportLeft(XEvent *, WaAction *) {
-        MoveViewport(WestDirection);
+        MoveViewport(WestDirection, True);
     }
     inline void MoveViewportRight(XEvent *, WaAction *) {
-        MoveViewport(EastDirection);
+        MoveViewport(EastDirection, True);
     }
     inline void MoveViewportUp(XEvent *, WaAction *) {
-        MoveViewport(NorthDirection);
+        MoveViewport(NorthDirection, True);
     }
     inline void MoveViewportDown(XEvent *, WaAction *) {
-        MoveViewport(SouthDirection);
+        MoveViewport(SouthDirection, True);
     }
     inline void ScrollViewportLeft(XEvent *, WaAction *ac) {
-        ScrollViewport(WestDirection, ac);
+        ScrollViewport(WestDirection, True, ac);
     }
     inline void ScrollViewportRight(XEvent *, WaAction *ac) {
-        ScrollViewport(EastDirection, ac);
+        ScrollViewport(EastDirection, True, ac);
     }
     inline void ScrollViewportUp(XEvent *, WaAction *ac) {
-        ScrollViewport(NorthDirection, ac);
+        ScrollViewport(NorthDirection, True, ac);
     }
     inline void ScrollViewportDown(XEvent *, WaAction *ac) {
-        ScrollViewport(SouthDirection, ac);
+        ScrollViewport(SouthDirection, True, ac);
+    }
+    inline void MoveViewportLeftNoWarp(XEvent *, WaAction *) {
+        MoveViewport(WestDirection, False);
+    }
+    inline void MoveViewportRightNoWarp(XEvent *, WaAction *) {
+        MoveViewport(EastDirection, False);
+    }
+    inline void MoveViewportUpNoWarp(XEvent *, WaAction *) {
+        MoveViewport(NorthDirection, False);
+    }
+    inline void MoveViewportDownNoWarp(XEvent *, WaAction *) {
+        MoveViewport(SouthDirection, False);
+    }
+    inline void ScrollViewportLeftNoWarp(XEvent *, WaAction *ac) {
+        ScrollViewport(WestDirection, False, ac);
+    }
+    inline void ScrollViewportRightNoWarp(XEvent *, WaAction *ac) {
+        ScrollViewport(EastDirection, False, ac);
+    }
+    inline void ScrollViewportUpNoWarp(XEvent *, WaAction *ac) {
+        ScrollViewport(NorthDirection, False, ac);
+    }
+    inline void ScrollViewportDownNoWarp(XEvent *, WaAction *ac) {
+        ScrollViewport(SouthDirection, False, ac);
     }
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);
 
@@ -148,8 +174,6 @@ private:
     void CreateColors(void);
     void CreateFonts(void);
     void RenderCommonImages(void);
-    void MoveViewport(int);
-    void ScrollViewport(int, WaAction *);
 
 #ifdef XFT
     void CreateXftColor(WaColor *, XftColor *);

@@ -34,6 +34,7 @@ struct _WaAction {
     WwActionFn winfunc;
     RootActionFn rootfunc;
     MenuActionFn menufunc;
+    char *exec;
     unsigned long param;
     unsigned int type, detail, mod, nmod;
 };
