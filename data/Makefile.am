@@ -1,7 +1,6 @@
-SUBDIRS = styles backgrounds
+SUBDIRS = actions styles backgrounds
 CLEANFILES = waimearc.example
-pkgdata_DATA = menu \
-	       action
+pkgdata_DATA = menu
 
 all-local: waimearc.example
 

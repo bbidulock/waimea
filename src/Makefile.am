@@ -1,6 +1,6 @@
 DEFAULT_MENU=$(pkgdatadir)/menu
 DEFAULT_STYLE=$(pkgdatadir)/styles/Default
-DEFAULT_ACTION=$(pkgdatadir)/action
+DEFAULT_ACTION=$(pkgdatadir)/actions/action
 
 CPPFLAGS= @CPPFLAGS@ @SHAPE@ @XFT@ @INTERLACE@ @ORDEREDPSEUDO@ \
 -DDEFAULTSTYLE=\"$(DEFAULT_STYLE)\" \

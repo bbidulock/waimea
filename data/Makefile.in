@@ -68,10 +68,9 @@ VERSION = @VERSION@
 XFT = @XFT@
 regex_cmd = @regex_cmd@
 
-SUBDIRS = styles backgrounds
+SUBDIRS = actions styles backgrounds
 CLEANFILES = waimearc.example
-pkgdata_DATA = menu 	       action
-
+pkgdata_DATA = menu
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
 DATA =  $(pkgdata_DATA)
