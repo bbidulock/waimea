@@ -134,9 +134,9 @@ XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
             case ClientMessage:
                 EvClientMessage(event);
                 break;
-            default:
                 
 #ifdef SHAPE
+            default:                
                 if (event->type == waimea->wascreen->shape_event) {
                     hash_map<Window, WindowObject *>::iterator it;
                     if ((it = waimea->window_table->find(event->xany.window)) !=

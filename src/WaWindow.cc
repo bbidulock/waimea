@@ -97,7 +97,10 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     UnFocusWin();
     ReparentWin();
     UpdateGrabs();
+
+#ifdef SHAPE    
     Shape();
+#endif // SHAPE    
     
     net->GetWmState(this);
     
@@ -120,6 +123,7 @@ WaWindow::~WaWindow(void) {
     if (title_w)
         XftDrawDestroy(xftdraw);
 #endif // XFT
+    
     XGrabServer(display);
     if ((! deleted) && validateclient(id)) {
         XRemoveFromSaveSet(display, id);
@@ -312,7 +316,11 @@ void WaWindow::RedrawWindow(void) {
                           frame->attrib.height);
         }
         XUngrabServer(display);
+
+#ifdef SHAPE
         Shape();
+#endif // SHAPE
+        
     }
     if ((move || resize) && (! flags.shaded) && (! dontsend)) {
         net->SetVirtualPos(this);
