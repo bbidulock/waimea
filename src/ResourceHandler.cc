@@ -141,15 +141,33 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     types->push_back(new StrComp("leavenotify", LeaveNotify));
     types->push_back(new StrComp("maprequest", MapRequest));
 
-    details = new list<StrComp *>;
-    details->push_back(new StrComp("anybutton", (unsigned long) 0));
-    details->push_back(new StrComp("button1", Button1));
-    details->push_back(new StrComp("button2", Button2));
-    details->push_back(new StrComp("button3", Button3));
-    details->push_back(new StrComp("button4", Button4));
-    details->push_back(new StrComp("button5", Button5));
-    details->push_back(new StrComp("button6", 6));
-    details->push_back(new StrComp("button7", 7));
+    bdetails = new list<StrComp *>;
+    bdetails->push_back(new StrComp("anybutton", (unsigned long) 0));
+    bdetails->push_back(new StrComp("button1", Button1));
+    bdetails->push_back(new StrComp("button2", Button2));
+    bdetails->push_back(new StrComp("button3", Button3));
+    bdetails->push_back(new StrComp("button4", Button4));
+    bdetails->push_back(new StrComp("button5", Button5));
+    bdetails->push_back(new StrComp("button6", 6));
+    bdetails->push_back(new StrComp("button7", 7));
+
+    kdetails = new list<StrComp *>;
+    kdetails->push_back(new StrComp("anykey", (unsigned long) 0));
+    kdetails->push_back(new StrComp("alt_l", 64));
+    kdetails->push_back(new StrComp("control_l", 37));
+    kdetails->push_back(new StrComp("tab", 23));
+    kdetails->push_back(new StrComp("shift_l", 50));
+    kdetails->push_back(new StrComp("shift_r", 62));
+    kdetails->push_back(new StrComp("f1", 67));
+    kdetails->push_back(new StrComp("f2", 68));
+    kdetails->push_back(new StrComp("f3", 69));
+    kdetails->push_back(new StrComp("f4", 70));
+    kdetails->push_back(new StrComp("f5", 71));
+    kdetails->push_back(new StrComp("f6", 72));
+    kdetails->push_back(new StrComp("f7", 73));
+    kdetails->push_back(new StrComp("f8", 74));
+    kdetails->push_back(new StrComp("f9", 75));
+    kdetails->push_back(new StrComp("f10", 76));
     
     mods = new list<StrComp *>;
     mods->push_back(new StrComp("shiftmask", ShiftMask));
@@ -674,7 +692,8 @@ void ResourceHandler::LoadActions(Waimea *waimea) {
     LISTCLEAR(racts);
     LISTCLEAR(macts);
     LISTCLEAR(types);
-    LISTCLEAR(details);
+    LISTCLEAR(bdetails);
+    LISTCLEAR(kdetails);
     LISTCLEAR(mods);
 }
 
@@ -1021,20 +1040,33 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             for (; *token == '\0'; token++);
         }
         token = strtrim(token);
-        act_tmp->detail = *token - 29;
-        it = details->begin();
-        for (; it != details->end(); ++it) {
-            if ((*it)->Comp(token)) {
-                act_tmp->detail = (*it)->value;
-                break;
+        if (act_tmp->type == KeyPress || act_tmp->type == KeyRelease) {
+            it = kdetails->begin();
+            for (; it != kdetails->end(); ++it) {
+                if ((*it)->Comp(token)) {
+                    act_tmp->detail = (*it)->value;
+                    break;
+                }
             }
-        }
-        if (! *it) {
-            WARNING << "\"" << token << "\" unknown detail" << endl;
-            free(act_tmp);
-            free(line);
-            return;
-        }
+            if (! *it) {   
+                act_tmp->detail = *token - 29;
+            }
+        } else if (act_tmp->type == ButtonPress ||
+                   act_tmp->type == ButtonRelease) {
+            it = bdetails->begin();
+            for (; it != bdetails->end(); ++it) {
+                if ((*it)->Comp(token)) {
+                    act_tmp->detail = (*it)->value;
+                    break;
+                }
+            }
+            if (! *it) {
+                WARNING << "\"" << token << "\" unknown detail" << endl;
+                free(act_tmp);
+                free(line);
+                return;
+            }
+        }        
     }
 
     bool negative;

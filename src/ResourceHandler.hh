@@ -86,7 +86,8 @@ private:
     list<StrComp *> *racts;
     list<StrComp *> *macts;
     list<StrComp *> *types;
-    list<StrComp *> *details;
+    list<StrComp *> *bdetails;
+    list<StrComp *> *kdetails;
     list<StrComp *> *mods;
 };
 
