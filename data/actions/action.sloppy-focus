@@ -25,6 +25,7 @@
 ! Middle mouse button on root window moves viewport after mouse movement.
 ! Alt-F1  Toggle shade
 ! Alt-F2  Toggle maximize
+! Alt-F3  Brings up menu named 'window' linked to active window
 ! Alt-F4  Close window
 ! Alt-F10 Kill client
 ! Alt-Tab Maps TaskSwitcher
@@ -41,34 +42,42 @@ window.*.4: Lower             : ButtonPress = Button2 & Mod1Mask
 !
 window.frame.5:	Focus      : EnterNotify
 window.frame.6: Raise      : ButtonPress = Button1 & !Mod1Mask
-window.frame.7: Lower      : ButtonPress = Button2 & !Mod1Mask
-window.frame.8: MoveOpaque : ButtonPress = Button1 & !Mod1Mask
+window.frame.7: Focus      : ButtonPress = Button1 & !Mod1Mask
+window.frame.8: Lower      : ButtonPress = Button2 & !Mod1Mask
+window.frame.9: MoveOpaque : ButtonPress = Button1 & !Mod1Mask
 !
 window.title.5:  Raise             : ButtonPress = Button1 & !Mod1Mask
-window.title.6:  Lower             : ButtonPress = Button2 & !Mod1Mask
-window.title.7:  MoveOpaque        : ButtonPress = Button1 & !Mod1Mask
-window.title.8:  MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
-window.title.9:  MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
-window.title.10: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
+window.title.6:  Focus             : ButtonPress = Button1 & !Mod1Mask
+window.title.7:  Lower             : ButtonPress = Button2 & !Mod1Mask
+window.title.8:  MoveOpaque        : ButtonPress = Button1 & !Mod1Mask
+window.title.9:  MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
+window.title.10: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
+window.title.11: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
 !
 window.label.5:  Raise             : ButtonPress = Button1 & !Mod1Mask
-window.label.6:  Lower             : ButtonPress = Button2 & !Mod1Mask
-window.label.7:  MoveOpaque        : ButtonPress = Button1 & !Mod1Mask
-window.label.8:  MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
-window.label.9:  MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
-window.label.10: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
+window.label.6:  Focus             : ButtonPress = Button1 & !Mod1Mask
+window.label.7:  Lower             : ButtonPress = Button2 & !Mod1Mask
+window.label.8:  MoveOpaque        : ButtonPress = Button1 & !Mod1Mask
+window.label.9:  MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
+window.label.10: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
+window.label.11: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
 !
-window.handle.5: Raise      : ButtonPress = Button1 & !Mod1Mask
-window.handle.6: Lower      : ButtonPress = Button2 & !Mod1Mask
-window.handle.7: MoveOpaque : ButtonPress = Button1 & !Mod1Mask
+window.handle.5:  Raise             : ButtonPress = Button1 & !Mod1Mask
+window.handle.6:  Focus             : ButtonPress = Button1 & !Mod1Mask
+window.handle.7:  Lower             : ButtonPress = Button2 & !Mod1Mask
+window.handle.8:  MoveOpaque        : ButtonPress = Button1 & !Mod1Mask
+window.handle.9:  MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
+window.handle.10: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
+window.handle.11: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
 !
 window.client.active.5:  ToggleShade                : KeyPress = F1 & Mod1Mask
 window.client.active.6:  ToggleMaximize             : KeyPress = F2 & Mod1Mask
 window.client.active.7:  Raise                      : KeyPress = F2 & Mod1Mask
-window.client.active.8:  Close                      : KeyPress = F4 & Mod1Mask
-window.client.active.9:  Kill                       : KeyPress = F10 & Mod1Mask
-window.client.active.10: TaskSwitcher               : KeyPress = Tab & Mod1Mask
-window.client.active.11: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+window.client.active.8:  MenuRemapFocused(window)   : KeyPress = F3 & Mod1Mask
+window.client.active.9:  Close                      : KeyPress = F4 & Mod1Mask
+window.client.active.10: Kill                       : KeyPress = F10 & Mod1Mask
+window.client.active.11: TaskSwitcher               : KeyPress = Tab & Mod1Mask
+window.client.active.12: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
 !
 window.client.passive.5: Raise : MapRequest
 window.client.passive.6: Move  : MapRequest & ControlMask
@@ -143,15 +152,15 @@ menu.item.19: UnmapTree    : KeyPress = Escape
 menu.checkbox.5:  UnmapSubs    : EnterNotify
 menu.checkbox.6:  Exec         : ButtonRelease = AnyButton
 menu.checkbox.7:  Func         : ButtonRelease = AnyButton
-menu.checkbox.8:  UnmapFocused : KeyRelease = Alt_L
-menu.checkbox.9:  Func         : KeyRelease = Alt_L
-menu.checkbox.10: NextItem     : KeyPress = Tab
-menu.checkbox.11: NextItem     : KeyPress = Down
-menu.checkbox.12: PreviousItem : KeyPress = Up
-menu.checkbox.13: UnmapSubs    : KeyPress = Left
-menu.checkbox.14: UnmapFocused : KeyPress = Left
-menu.checkbox.15: Exec         : KeyPress = Return
-menu.checkbox.16: Func         : KeyPress = Return
+menu.checkbox.8:  NextItem     : KeyPress = Tab
+menu.checkbox.9:  NextItem     : KeyPress = Down
+menu.checkbox.10: PreviousItem : KeyPress = Up
+menu.checkbox.11: UnmapSubs    : KeyPress = Left
+menu.checkbox.12: UnmapFocused : KeyPress = Left
+menu.checkbox.13: Exec         : KeyPress = Return
+menu.checkbox.14: Func         : KeyPress = Return
+menu.checkbox.15: Exec         : KeyPress = space
+menu.checkbox.16: Func         : KeyPress = space
 menu.checkbox.17: UnmapTree    : KeyPress = Escape
 !
 menu.sub.5:  UnmapSubs       : EnterNotify

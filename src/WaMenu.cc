@@ -173,7 +173,7 @@ void WaMenu::Build(WaScreen *screen) {
         
         XftTextExtents8(display, font, (unsigned char *) (*it)->label,
                         strlen((*it)->label), &extents);
-        (*it)->width = (extents.width + 20);
+        (*it)->width = extents.width + 20;
         if ((*it)->type == MenuSubType) {
             XftTextExtents8(display, wascreen->mstyle.b_xftfont,
                             (unsigned char *) wascreen->mstyle.bullet,
@@ -184,15 +184,18 @@ void WaMenu::Build(WaScreen *screen) {
             XftTextExtents8(display, wascreen->mstyle.ct_xftfont,
                             (unsigned char *) wascreen->mstyle.checkbox_true,
                             strlen(wascreen->mstyle.checkbox_true), &extents);
-            cb_width = extents.width;
+            (*it)->cb_width2 = cb_width = extents.width;
+            
             XftTextExtents8(display, wascreen->mstyle.cf_xftfont,
                             (unsigned char *) wascreen->mstyle.checkbox_false,
                             strlen(wascreen->mstyle.checkbox_false), &extents);
             if (extents.width > cb_width) cb_width = extents.width;
+            (*it)->cb_width1 = extents.width;
+            
             XftTextExtents8(display, font, (unsigned char *) (*it)->label2,
                             strlen((*it)->label2), &extents);
             if ((extents.width + 20) > (*it)->width)
-                (*it)->width = (extents.width + 20);
+                (*it)->width = extents.width + 20;
         }
 #else // ! XFT
         XFontStruct *font;
@@ -246,7 +249,7 @@ void WaMenu::Build(WaScreen *screen) {
     }
     
     if (width > (wascreen->width / 2)) width = wascreen->width / 2;
-    WaTexture *texture = &wascreen->mstyle.back_frame;
+        WaTexture *texture = &wascreen->mstyle.back_frame;
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         pbackframe = None;
         backframe_pixel = texture->getColor()->getPixel();
@@ -493,7 +496,7 @@ void WaMenu::CreateOutlineWindows(void) {
     
     int create_mask = CWOverrideRedirect | CWBackPixel | CWEventMask |
         CWColormap;
-    attrib_set.background_pixel = wascreen->wstyle.border_color.getPixel();
+    attrib_set.background_pixel = wascreen->wstyle.outline_color.getPixel();
     attrib_set.colormap = wascreen->colormap;
     attrib_set.override_redirect = True;
     attrib_set.event_mask = NoEventMask;
@@ -622,7 +625,8 @@ void WaMenu::FocusFirst(void) {
 WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     label = s;
     id = (Window) 0;
-    func_mask = func_mask2 = height = width = dy = realheight = cb = 0;
+    func_mask = func_mask1 = func_mask2 = height = width = dy =
+        realheight = cb = 0;
     wfunc = wfunc2 = NULL;
     rfunc = rfunc2 = NULL;
     mfunc = mfunc2 = NULL;
@@ -730,7 +734,7 @@ void WaMenuItem::DrawFg(void) {
     }
     else if (type == MenuCBItemType) {
         XftDrawString8(xftdraw, xftcolor, cbox_xft_font,
-                       menu->width - (menu->cb_width + 5), cb_y,
+                       menu->width - (cb_width + 5), cb_y,
                        (unsigned char *) cbox, strlen(cbox));
     }
 #else // ! XFT
@@ -761,7 +765,7 @@ void WaMenuItem::DrawFg(void) {
     }
     else if (type == MenuCBItemType) {
         XDrawString(menu->display, (Drawable) id, *cbox_gc,
-                    menu->width - (menu->cb_width + 5), cb_y, cbox,
+                    menu->width - (cb_width + 5), cb_y, cbox,
                     strlen(cbox));
     }
 #endif // XFT
@@ -945,13 +949,13 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
 }
 
 /**
- * @fn    Raise(XEvent *, WaAction *)
+ * @fn    Lower(XEvent *, WaAction *)
  * @brief Lowers menu window in display stack
  *
  * Lowers the menu frame to the bottom of the display stack.
  */
 void WaMenuItem::Lower(XEvent *, WaAction *) {
-    XLowerWindow(menu->display, menu->frame);
+    menu->waimea->WaLowerWindow(menu->frame);
 }
 
 /**
@@ -1280,7 +1284,19 @@ void WaMenuItem::UpdateCBox(void) {
                         case ShadeCBoxType:
                             true_false = ww->flags.shaded; break;
                         case StickCBoxType:
-                            true_false = ww->flags.sticky;
+                            true_false = ww->flags.sticky; break;
+                        case TitleCBoxType:
+                            true_false = ww->flags.title; break;
+                        case HandleCBoxType:
+                            true_false = ww->flags.handle; break;
+                        case BorderCBoxType:
+                            true_false = ww->flags.border; break;
+                        case AllCBoxType:
+                            true_false = ww->flags.all; break;
+                        case AOTCBoxType:
+                            true_false = ww->flags.alwaysontop; break;
+                        case AABCBoxType:
+                            true_false = ww->flags.alwaysatbottom;
                     }
                     if (true_false) {
 #ifdef XFT
@@ -1297,6 +1313,7 @@ void WaMenuItem::UpdateCBox(void) {
                         rfunc = rfunc2;
                         mfunc = mfunc2;
                         func_mask = func_mask2;
+                        cb_width = cb_width2;
                     }
                     else {
 #ifdef XFT
@@ -1313,6 +1330,7 @@ void WaMenuItem::UpdateCBox(void) {
                         rfunc = rfunc1;
                         mfunc = mfunc1;
                         func_mask = func_mask1;
+                        cb_width = cb_width1;
                     }
                 }
             }

@@ -37,9 +37,15 @@ typedef void (WaMenuItem::*MenuActionFn)(XEvent *, WaAction *);
 #define MenuRFuncMask (1L << 3)
 #define MenuMFuncMask (1L << 4)
 
-#define MaxCBoxType   1
-#define ShadeCBoxType 2
-#define StickCBoxType 3
+#define MaxCBoxType    1
+#define ShadeCBoxType  2
+#define StickCBoxType  3
+#define TitleCBoxType  4
+#define HandleCBoxType 5
+#define BorderCBoxType 6
+#define AllCBoxType    7
+#define AOTCBoxType    8
+#define AABCBoxType    9
 
 class WaMenu {
 public:
@@ -158,7 +164,7 @@ public:
     
     
     int func_mask, func_mask1, func_mask2, height, width, dy, realheight,
-                   cb, cb_y;
+                   cb, cb_y, cb_width, cb_width1, cb_width2;
     bool hilited;
     char *label, *exec, *sub;
     char *label1, *exec1, *sub1;

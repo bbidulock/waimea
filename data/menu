@@ -42,9 +42,15 @@
 !
 [start] (window)
   [title] (Window Menu)
-  [checkbox=MAXIMIZED] @FALSE (Maximized) "maximize" @TRUE (Maximized) "unmaximize"
-  [checkbox=SHADED]    @FALSE (Shaded)    "shade"    @TRUE (Shaded)    "unshade"
-  [checkbox=STICKY]    @FALSE (Sticky)    "sticky"   @TRUE (Sticky)    "unsticky"
+  [checkbox=MAXIMIZED]      @FALSE (Maximized)        "maximize"         @TRUE (Maximized)        "unmaximize"
+  [checkbox=SHADED]         @FALSE (Shaded)           "shade"            @TRUE (Shaded)           "unshade"
+  [checkbox=STICKY]         @FALSE (Sticky)           "sticky"           @TRUE (Sticky)           "unsticky"
+  [checkbox=ALWAYSONTOP]    @FALSE (Always On Top)    "alwaysontopon"    @TRUE (Always On Top)    "alwaysontopoff"
+  [checkbox=ALWAYSATBOTTOM] @FALSE (Always At Bottom) "alwaysatbottomon" @TRUE (Always At Bottom) "alwaysatbottomoff"
+  [checkbox=DECORTITLE]     @FALSE (Titlebar)         "decortitleon"     @TRUE (Titlebar)         "decortitleoff"
+  [checkbox=DECORHANDLE]    @FALSE (Handlebar)        "decorhandleon"    @TRUE (Handlebar)        "decorhandleoff"
+  [checkbox=DECORBORDER]    @FALSE (Border)           "decorborderon"    @TRUE (Border)           "decorborderoff"
+  [checkbox=DECORALL]       @FALSE (All Decorations)  "decorallon"       @TRUE (All Decorations)  "decoralloff"
   [item]  (Raise)         "raise"
   [item]  (Lower)         "lower"
   [item]  (Kill Client)   "kill"

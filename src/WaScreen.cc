@@ -983,8 +983,8 @@ ScreenEdge::ScreenEdge(WaScreen *wascrn, int x, int y, int width, int height,
     wa->waimea->net->wXDNDMakeAwareness(id);
     
     XMapWindow(wa->display, id);
-    wa->waimea->WaRaiseWindow(0);
     wa->waimea->always_on_top_list->push_back(id);
+    wa->waimea->WaRaiseWindow(0);
     wa->waimea->window_table->insert(make_pair(id, this));
 }
 

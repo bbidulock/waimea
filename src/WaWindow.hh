@@ -63,6 +63,9 @@ typedef struct {
     bool sticky;
     bool shaded;
     bool max;
+    bool all;
+    bool alwaysontop;
+    bool alwaysatbottom;
 } WaWindowFlags;
 
 typedef struct {
@@ -79,11 +82,13 @@ class WaWindow : public WindowObject {
 public:
     WaWindow(Window, WaScreen *);
     virtual ~WaWindow(void);
-    
+
+    void MapWindow(void);
+    void UpdateAllAttributes(void);
+    void RedrawWindow(void);
     void SendConfig(void);
     void Gravitate(int);
     void ButtonPressed(int);
-    void RedrawWindow(void);
     void UpdateGrabs(void);
     bool IncSizeCheck(int, int, int *, int *);
     void DrawIconifyButtonFg(void);
@@ -176,6 +181,23 @@ public:
     void TaskSwitcher(XEvent *, WaAction *);
     void PreviousTask(XEvent *, WaAction *);
     void NextTask(XEvent *, WaAction *);
+    void DecorTitleOn(XEvent *, WaAction *);
+    void DecorHandleOn(XEvent *, WaAction *);
+    void DecorBorderOn(XEvent *, WaAction *);
+    void DecorAllOn(XEvent *, WaAction *);
+    void DecorTitleOff(XEvent *, WaAction *);
+    void DecorHandleOff(XEvent *, WaAction *);
+    void DecorBorderOff(XEvent *, WaAction *);
+    void DecorAllOff(XEvent *, WaAction *);
+    void DecorTitleToggle(XEvent *, WaAction *);
+    void DecorHandleToggle(XEvent *, WaAction *);
+    void DecorBorderToggle(XEvent *, WaAction *);
+    void AlwaysontopOn(XEvent *, WaAction *);
+    void AlwaysatbottomOn(XEvent *, WaAction *);
+    void AlwaysontopOff(XEvent *, WaAction *);
+    void AlwaysatbottomOff(XEvent *, WaAction *);
+    void AlwaysontopToggle(XEvent *, WaAction *);
+    void AlwaysatbottomToggle(XEvent *, WaAction *);
     inline void RaiseFocus(XEvent *e, WaAction *ac) {
         Raise(e, ac);
         Focus(e, ac, True);
@@ -250,7 +272,7 @@ private:
 
 class WaChildWindow : public WindowObject {
 public:
-    WaChildWindow(WaWindow *, Window, int, int);
+    WaChildWindow(WaWindow *, Window, int);
     virtual ~WaChildWindow(void);
     
     WaWindowAttributes attrib;

@@ -71,9 +71,11 @@ public:
 
     Atom mwm_hints_atom, wm_state, net_state, net_state_sticky,
         net_state_shaded, net_maximized_vert, net_maximized_horz,
+        net_state_decor, net_state_decortitle, net_state_decorhandle,
+        net_state_decorborder, net_state_aot, net_state_aab,
         net_maximized_restore, net_virtual_pos, net_desktop_viewport,
-        net_desktop_geometry, net_wm_strut, net_workarea,
-        xa_xdndaware, xa_xdndenter, xa_xdndleave;
+        net_desktop_geometry, net_wm_strut, net_workarea, xa_xdndaware,
+        xa_xdndenter, xa_xdndleave;
 
 private:
     XEvent event;

@@ -125,6 +125,32 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     wacts->push_back(new StrComp("previoustask", &WaWindow::PreviousTask));
     wacts->push_back(new StrComp("nexttask", &WaWindow::NextTask));
     wacts->push_back(new StrComp("raisefocus", &WaWindow::RaiseFocus));
+    wacts->push_back(new StrComp("decortitleon", &WaWindow::DecorTitleOn));
+    wacts->push_back(new StrComp("decorhandleon", &WaWindow::DecorHandleOn));
+    wacts->push_back(new StrComp("decorborderon", &WaWindow::DecorBorderOn));
+    wacts->push_back(new StrComp("decorallon", &WaWindow::DecorAllOn));
+    wacts->push_back(new StrComp("decortitleoff", &WaWindow::DecorTitleOff));
+    wacts->push_back(new StrComp("decorhandleoff", &WaWindow::DecorHandleOff));
+    wacts->push_back(new StrComp("decorborderoff", &WaWindow::DecorBorderOff));
+    wacts->push_back(new StrComp("decoralloff", &WaWindow::DecorAllOff));
+    wacts->push_back(new StrComp("decortitletoggle",
+                                 &WaWindow::DecorTitleToggle));
+    wacts->push_back(new StrComp("decorhandletoggle",
+                                 &WaWindow::DecorHandleToggle));
+    wacts->push_back(new StrComp("decorbordertoggle",
+                                 &WaWindow::DecorBorderToggle));
+    wacts->push_back(new StrComp("alwaysontopon",
+                                 &WaWindow::AlwaysontopOn));
+    wacts->push_back(new StrComp("alwaysatbottomon",
+                                 &WaWindow::AlwaysatbottomOn));
+    wacts->push_back(new StrComp("alwaysontopoff",
+                                 &WaWindow::AlwaysontopOff));
+    wacts->push_back(new StrComp("alwaysatbottomoff",
+                                 &WaWindow::AlwaysatbottomOff));
+    wacts->push_back(new StrComp("alwaysontoptoggle",
+                                 &WaWindow::AlwaysontopToggle));
+    wacts->push_back(new StrComp("alwaysatbottomtoggle",
+                                 &WaWindow::AlwaysatbottomToggle));
     
     racts = new list<StrComp *>;
     racts->push_back(new StrComp("focus", &WaScreen::Focus));
@@ -764,6 +790,10 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
 
     ReadDatabaseColor("borderColor", "BorderColor",
                       &wstyle->border_color, BlackPixel(display, screen), ic);
+    mstyle->border_color = wstyle->border_color;
+
+    ReadDatabaseColor("outlineColor", "OutlineColor",
+                      &wstyle->outline_color, WhitePixel(display, screen), ic);
     mstyle->border_color = wstyle->border_color;
     
     if (XrmGetResource(database, "handleWidth", "HandleWidth", &value_type,
@@ -1497,6 +1527,30 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             else if (! strcasecmp(s + 9, "STICKY")) {
                 type = MenuCBItemType;
                 cb = StickCBoxType;
+            }
+            else if (! strcasecmp(s + 9, "DECORTITLE")) {
+                type = MenuCBItemType;
+                cb = TitleCBoxType;
+            }
+            else if (! strcasecmp(s + 9, "DECORHANDLE")) {
+                type = MenuCBItemType;
+                cb = HandleCBoxType;
+            }
+            else if (! strcasecmp(s + 9, "DECORBORDER")) {
+                type = MenuCBItemType;
+                cb = BorderCBoxType;
+            }
+            else if (! strcasecmp(s + 9, "DECORALL")) {
+                type = MenuCBItemType;
+                cb = AllCBoxType;
+            }
+            else if (! strcasecmp(s + 9, "ALWAYSONTOP")) {
+                type = MenuCBItemType;
+                cb = AOTCBoxType;
+            }
+            else if (! strcasecmp(s + 9, "ALWAYSATBOTTOM")) {
+                type = MenuCBItemType;
+                cb = AABCBoxType;
             }
             else {
                 WARNING << "at line " << linenr << ": '"<< s + 9 << "'" <<

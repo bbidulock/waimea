@@ -66,6 +66,7 @@ borderColor:				#000000
 borderWidth:				2
 handleWidth:				3
 
+! outlineColor:				#ffffff
 ! menu.borderWidth:			2
 ! menu.title.height:			15
 ! menu.item.height:                     15

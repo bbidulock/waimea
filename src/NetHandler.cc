@@ -44,6 +44,20 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
     net_maximized_horz =
         XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+    net_state_decor =
+        XInternAtom(display, "_NET_WM_STATE_DECOR", False);
+    net_state_decortitle =
+        XInternAtom(display, "_NET_WM_STATE_DECOR_TITLE", False);
+    net_state_decorhandle =
+        XInternAtom(display, "_NET_WM_STATE_DECOR_HANDLE", False);
+    net_state_decorborder =
+        XInternAtom(display, "_NET_WM_STATE_DECOR_BORDER", False);
+    net_state_aot =
+        XInternAtom(display, "_NET_WM_STATE_ALWAYS_ON_TOP", False);
+    net_state_aot =
+        XInternAtom(display, "_NET_WM_STATE_ALWAYS_ON_TOP", False);
+    net_state_aab =
+        XInternAtom(display, "_NET_WM_STATE_ALWAYS_AT_BOTTOM", False);
     net_maximized_restore =
         XInternAtom(display, "_NET_MAXIMIZED_RESTORE", False);
     net_virtual_pos =
@@ -127,10 +141,7 @@ void NetHandler::GetMWMHints(WaWindow *ww) {
             }
         }
     XUngrabServer(display);
-    
-    ww->border_w = (ww->flags.border * ww->wascreen->wstyle.border_width);
-    ww->title_w  = (ww->flags.title  * ww->wascreen->wstyle.title_height);
-    ww->handle_w = (ww->flags.handle * ww->wascreen->wstyle.handle_width);
+    ww->flags.all = ww->flags.title && ww->flags.handle && ww->flags.border;
 }
 
 /**
@@ -225,25 +236,7 @@ void NetHandler::SetState(WaWindow *ww, int newstate) {
     switch (ww->state) {
         case IconicState:
         case NormalState:
-            XGrabServer(display);
-            if (validateclient(ww->id))
-                XMapWindow(display, ww->id);
-            XUngrabServer(display);
-            if (ww->title_w) {
-                XMapWindow(display, ww->title->id);
-                XMapWindow(display, ww->label->id);
-                XMapWindow(display, ww->button_min->id);
-                XMapWindow(display, ww->button_max->id);
-                XMapWindow(display, ww->button_c->id);
-            }
-            if (ww->handle_w) {
-                XMapWindow(display, ww->grip_l->id);
-                XMapWindow(display, ww->handle->id);
-                XMapWindow(display, ww->grip_r->id);
-            }
-            XMapWindow(display, ww->frame->id);
-            ww->mapped = True;
-            break;
+            ww->MapWindow();
     }
     if (ww->want_focus && ww->mapped) {
         XGrabServer(display);
@@ -277,10 +270,11 @@ void NetHandler::GetWmState(WaWindow *ww) {
     CARD32 *data;
     XEvent *e;
     WaAction *ac;
-    bool vert = False, horz = False, shaded = False;
+    bool vert = False, horz = False, shaded = False, title = False,
+        handle = False, border = False, decor = False;
     int i;
     
-    if (XGetWindowProperty(display, ww->id, net_state, 0L, 4L,
+    if (XGetWindowProperty(display, ww->id, net_state, 0L, 10L,
                            False, XA_ATOM, &real_type,
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
@@ -290,6 +284,29 @@ void NetHandler::GetWmState(WaWindow *ww) {
             else if (data[i] == net_state_shaded) shaded = True;
             else if (data[i] == net_maximized_vert) vert = True;
             else if (data[i] == net_maximized_horz) horz = True;
+            else if (data[i] == net_state_decor) decor = True;
+            else if (data[i] == net_state_decortitle) title = True;
+            else if (data[i] == net_state_decorhandle) handle = True;
+            else if (data[i] == net_state_decorborder) border = True;
+            else if (data[i] == net_state_aot) {
+                ww->flags.alwaysontop = True;
+                waimea->always_on_top_list->push_back(ww->frame->id);
+                waimea->WaRaiseWindow(0);
+            }
+            else if (data[i] == net_state_aab) {
+                ww->flags.alwaysatbottom = True;
+                waimea->always_at_bottom_list->push_back(ww->frame->id);
+                waimea->WaLowerWindow(0);
+            }
+        }
+        if (decor) {
+            ww->flags.title = ww->flags.handle = ww->flags.border = False;
+            if (title) ww->flags.title = True;
+            if (handle) ww->flags.handle = True;
+            if (border) ww->flags.border = True;
+            ww->flags.all = ww->flags.title && ww->flags.handle &&
+                ww->flags.border;
+            ww->UpdateAllAttributes();
         }
         XFree(data);
         if (vert && horz) {
@@ -321,13 +338,19 @@ void NetHandler::GetWmState(WaWindow *ww) {
  */
 void NetHandler::SetWmState(WaWindow *ww) {
     int i = 0;
-    CARD32 data[4];
+    CARD32 data[10];
     CARD32 data2[6];
 
     XGrabServer(display);
     if (validateclient(ww->id)) {
         if (ww->flags.sticky) data[i++] = net_state_sticky;
         if (ww->flags.shaded) data[i++] = net_state_shaded;
+        data[i++] = net_state_decor;
+        if (ww->flags.title) data[i++] = net_state_decortitle;
+        if (ww->flags.handle) data[i++] = net_state_decorhandle;
+        if (ww->flags.border) data[i++] = net_state_decorborder;
+        if (ww->flags.alwaysontop) data[i++] = net_state_aot;
+        if (ww->flags.alwaysatbottom) data[i++] = net_state_aab;
         if (ww->flags.max) {
             data[i++] = net_maximized_vert;
             data[i++] = net_maximized_horz;
@@ -341,14 +364,9 @@ void NetHandler::SetWmState(WaWindow *ww) {
             XChangeProperty(display, ww->id, net_maximized_restore,
                             XA_CARDINAL, 32, PropModeReplace,
                             (unsigned char *) &data2, 6);
-        } else
-            XDeleteProperty(display, ww->id, net_maximized_restore);
-        
-        if (i > 0)
-            XChangeProperty(display, ww->id, net_state, XA_ATOM, 32,
-                            PropModeReplace, (unsigned char *) &data, i);
-        else
-            XDeleteProperty(display, ww->id, net_state);
+        }
+        XChangeProperty(display, ww->id, net_state, XA_ATOM, 32,
+                        PropModeReplace, (unsigned char *) &data, i);
     }
     XUngrabServer(display);
 }

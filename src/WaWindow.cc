@@ -41,7 +41,6 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     waimea = wascreen->waimea;
     ic = wascreen->ic;
     net = waimea->net;
-    frame = NULL;
 
     if (! XFetchName(display, id, &name)) {
         name = strdup("");
@@ -62,7 +61,9 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
 
     border_w = title_w = handle_w = 0;
     has_focus = True;
-    flags.sticky = flags.shaded = flags.max = False;
+    flags.sticky = flags.shaded = flags.max = flags.title = flags.handle =
+        flags.border = flags.all = flags.alwaysontop =
+        flags.alwaysatbottom = False;
 
     net->GetWMHints(this);
     net->GetMWMHints(this);
@@ -74,29 +75,25 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     Gravitate(ApplyGravity);
     InitPosition();
     
-    frame = new WaChildWindow(this, wascreen->id, border_w, FrameType);
-    if (handle_w) {
-        handle = new WaChildWindow(this, frame->id, border_w, HandleType);
-        grip_l = new WaChildWindow(this, frame->id, border_w, LGripType);
-        grip_r = new WaChildWindow(this, frame->id, border_w, RGripType);
-        RenderHandle();
-    }
-    if (title_w)  {
-        title = new WaChildWindow(this, frame->id, border_w, TitleType);
-        label = new WaChildWindow(this, title->id, 0, LabelType);
-        button_min = new WaChildWindow(this, title->id, 0, IButtonType);
-        button_max = new WaChildWindow(this, title->id, 0, MButtonType);
-        button_c = new WaChildWindow(this, title->id, 0, CButtonType);
-        RenderLabel();
-        RenderTitle();
+    frame = new WaChildWindow(this, wascreen->id, FrameType);
+    handle = new WaChildWindow(this, frame->id, HandleType);
+    grip_l = new WaChildWindow(this, frame->id, LGripType);
+    grip_r = new WaChildWindow(this, frame->id, RGripType);
+    title = new WaChildWindow(this, frame->id, TitleType);
+    label = new WaChildWindow(this, title->id, LabelType);
+    button_min = new WaChildWindow(this, title->id, IButtonType);
+    button_max = new WaChildWindow(this, title->id, MButtonType);
+    button_c = new WaChildWindow(this, title->id, CButtonType);
+
 #ifdef XFT        
-        xftdraw = XftDrawCreate(display, (Drawable) label->id,
-                                wascreen->visual, wascreen->colormap);
+    xftdraw = XftDrawCreate(display, (Drawable) label->id,
+                            wascreen->visual, wascreen->colormap);
 #endif // XFT
-    }
-    UnFocusWin();
+    
     ReparentWin();
     UpdateGrabs();
+    UnFocusWin();
+    UpdateAllAttributes();
 
 #ifdef SHAPE    
     Shape();
@@ -120,8 +117,7 @@ WaWindow::~WaWindow(void) {
     waimea->wawindow_list->remove(this);
     
 #ifdef XFT
-    if (title_w)
-        XftDrawDestroy(xftdraw);
+    XftDrawDestroy(xftdraw);
 #endif // XFT
     
     XGrabServer(display);
@@ -136,30 +132,25 @@ WaWindow::~WaWindow(void) {
     }
     XSync(display, False);
     XUngrabServer(display);
-    if (frame) {
-        XDestroyWindow(display, frame->id);
-        delete frame;
-        if (title_w) {
-            delete title;
-            delete label;
-            delete button_min;
-            delete button_max;
-            delete button_c;
-        }
-        if (handle_w) {
-            delete handle;
-            delete grip_l;
-            delete grip_r;
-        }
-        waimea->always_on_top_list->remove(o_west);
-        waimea->always_on_top_list->remove(o_east);
-        waimea->always_on_top_list->remove(o_north);
-        waimea->always_on_top_list->remove(o_south);
-        XDestroyWindow(display, o_west);
-        XDestroyWindow(display, o_east);
-        XDestroyWindow(display, o_north);
-        XDestroyWindow(display, o_south);
-    }
+    
+    XDestroyWindow(display, frame->id);
+    delete frame;
+    delete title;
+    delete label;
+    delete button_min;
+    delete button_max;
+    delete button_c;
+    delete handle;
+    delete grip_l;
+    delete grip_r;
+    waimea->always_on_top_list->remove(o_west);
+    waimea->always_on_top_list->remove(o_east);
+    waimea->always_on_top_list->remove(o_north);
+    waimea->always_on_top_list->remove(o_south);
+    XDestroyWindow(display, o_west);
+    XDestroyWindow(display, o_east);
+    XDestroyWindow(display, o_north);
+    XDestroyWindow(display, o_south);
     XFree(name);
 }
 
@@ -210,6 +201,171 @@ void WaWindow::InitPosition(void) {
 }
 
 /**
+ * @fn    MapWindow(void)
+ * @brief Map window
+ *
+ * Map client window and all child windows.
+ */
+void WaWindow::MapWindow(void) {
+    XGrabServer(display);
+    if (validateclient(id))
+        XMapWindow(display, id);
+    XUngrabServer(display);
+    if (flags.handle) {
+        XMapRaised(display, grip_l->id);
+        XMapRaised(display, handle->id);
+        XMapRaised(display, grip_r->id);
+    } else {
+        XUnmapWindow(display, grip_l->id);
+        XUnmapWindow(display, handle->id);
+        XUnmapWindow(display, grip_r->id);
+    }
+    if (flags.title) {
+        XMapRaised(display, title->id);
+        XMapRaised(display, label->id);
+        XMapRaised(display, button_min->id);
+        XMapRaised(display, button_max->id);
+        XMapRaised(display, button_c->id);
+    } else {
+        XUnmapWindow(display, title->id);
+        XUnmapWindow(display, label->id);
+        XUnmapWindow(display, button_min->id);
+        XUnmapWindow(display, button_max->id);
+        XUnmapWindow(display, button_c->id);
+    }
+    XMapWindow(display, frame->id);
+    mapped = True;
+}
+
+/**
+ * @fn    UpdateAllAttributes(void)
+ * @brief Updates all window attrubutes
+ *
+ * Updates all positions and sizes of all windows in the frame.
+ */
+void WaWindow::UpdateAllAttributes(void) {
+    Gravitate(RemoveGravity);
+    
+    border_w = (flags.border * wascreen->wstyle.border_width);
+    title_w  = (flags.title  * wascreen->wstyle.title_height);
+    handle_w = (flags.handle * wascreen->wstyle.handle_width);
+    
+    frame->attrib.x = attrib.x - border_w;
+    frame->attrib.y = attrib.y - title_w - border_w * 2;
+    frame->attrib.width = attrib.width;
+    frame->attrib.height = attrib.height + title_w +
+        handle_w + border_w * 2;
+    
+    XSetWindowBorderWidth(display, frame->id, border_w);
+    if (! flags.shaded)
+        XResizeWindow(display, frame->id, frame->attrib.width,
+                      frame->attrib.height);
+            
+    if (flags.title) {
+        title->attrib.x = - border_w;
+        title->attrib.y = - border_w;
+        title->attrib.width  = attrib.width;
+        title->attrib.height = title_w;
+        XSetWindowBorderWidth(display, title->id, border_w);
+        XMoveResizeWindow(display, title->id, title->attrib.x,
+                          title->attrib.y, title->attrib.width,
+                          title->attrib.height);
+                
+        label->attrib.x = title_w;
+        label->attrib.y = 2;
+        label->attrib.width  = attrib.width - 3 * title_w + 2;
+        if (label->attrib.width < 1) label->attrib.width = 1;
+        label->attrib.height = title_w - 4;
+        XMoveResizeWindow(display, label->id, label->attrib.x,
+                          label->attrib.y, label->attrib.width,
+                          label->attrib.height);
+                
+        button_c->attrib.x = attrib.width - (title_w - 2);
+        button_c->attrib.y = 2;
+        button_c->attrib.width = title_w - 4;
+        button_c->attrib.height = title_w - 4;
+        XMoveResizeWindow(display, button_c->id, button_c->attrib.x,
+                          button_c->attrib.y, button_c->attrib.width,
+                          button_c->attrib.height);
+
+        button_min->attrib.x = 2;
+        button_min->attrib.y = 2;
+        button_min->attrib.width =  title_w - 4;
+        button_min->attrib.height = title_w - 4;
+        XMoveResizeWindow(display, button_min->id, button_min->attrib.x,
+                          button_min->attrib.y, button_min->attrib.width,
+                          button_min->attrib.height);
+                
+        button_max->attrib.x = attrib.width - (title_w - 2) * 2;
+        button_max->attrib.y = 2;
+        button_max->attrib.width  = title_w - 4;
+        button_max->attrib.height = title_w - 4;
+        XMoveResizeWindow(display, button_max->id, button_max->attrib.x,
+                          button_max->attrib.y, button_max->attrib.width,
+                          button_max->attrib.height);
+        RenderTitle();
+        RenderLabel();
+        DrawTitlebar();
+    }
+    if (flags.handle) {
+        handle->attrib.x = 25;
+        handle->attrib.y = attrib.height + title_w +
+            border_w;
+        handle->attrib.width = attrib.width - 50 -
+            border_w * 2;
+        if (handle->attrib.width < 1) handle->attrib.width = 1;
+        handle->attrib.height = wascreen->wstyle.handle_width;
+        XSetWindowBorderWidth(display, handle->id, border_w);
+        XMoveResizeWindow(display, handle->id, handle->attrib.x,
+                          handle->attrib.y, handle->attrib.width,
+                          handle->attrib.height);
+                
+        grip_l->attrib.x = - border_w;
+        grip_l->attrib.y = attrib.height + title_w +
+            border_w;
+        grip_l->attrib.width  = 25;
+        grip_l->attrib.height = wascreen->wstyle.handle_width;
+        XSetWindowBorderWidth(display, grip_l->id, border_w);
+        XMoveResizeWindow(display, grip_l->id, grip_l->attrib.x,
+                          grip_l->attrib.y, grip_l->attrib.width,
+                          grip_l->attrib.height);
+        
+        grip_r->attrib.x = attrib.width - 25 - border_w;
+        grip_r->attrib.y = attrib.height + title_w +
+            border_w;
+        grip_r->attrib.width  = 25;
+        grip_r->attrib.height = wascreen->wstyle.handle_width;
+        XSetWindowBorderWidth(display, grip_r->id, border_w);
+        XMoveResizeWindow(display, grip_r->id, grip_r->attrib.x,
+                          grip_r->attrib.y, grip_r->attrib.width,
+                          grip_r->attrib.height);
+        RenderHandle();
+        DrawHandlebar();
+    }
+    Gravitate(ApplyGravity);
+    XGrabServer(display);
+    if (validateclient(id))
+        XMoveWindow(display, id, 0, title_w + border_w);
+    XUngrabServer(display);
+    
+    int m_x, m_y, m_w, m_h;
+    if (flags.max) {
+        m_x = restore_max.x;
+        m_y = restore_max.y;
+        m_w = restore_max.width;
+        m_h = restore_max.height;
+        flags.max = False;
+        _Maximize(restore_max.misc0, restore_max.misc1);
+        restore_max.x = m_x;
+        restore_max.y = m_y;
+        restore_max.width = m_w;
+        restore_max.height = m_h;
+    }
+    else
+        RedrawWindow();
+}
+
+/**
  * @fn    RedrawWindow(void)
  * @brief Redraws Window
  *
@@ -239,7 +395,7 @@ void WaWindow::RedrawWindow(void) {
 
         resize = True;
 
-        if (title_w) {
+        if (flags.title) {
             title->attrib.width = attrib.width;
             label->attrib.width = attrib.width - 3 * title_w + 2;
             if (label->attrib.width < 1) label->attrib.width = 1;
@@ -260,7 +416,7 @@ void WaWindow::RedrawWindow(void) {
             RenderLabel();
             DrawTitlebar();
         }
-        if (handle_w) {
+        if (flags.handle) {
             handle->attrib.width = attrib.width - 50 - border_w * 2;
             if (handle->attrib.width < 1) handle->attrib.width = 1;
             grip_r->attrib.x = attrib.width - 25 - border_w;
@@ -280,7 +436,7 @@ void WaWindow::RedrawWindow(void) {
         old_attrib.height = attrib.height;
         
         resize = True;
-        if (handle_w) {
+        if (flags.handle) {
             handle->attrib.y = attrib.height + title_w + border_w;
             grip_l->attrib.y = attrib.height + title_w + border_w;
             grip_r->attrib.y = attrib.height + title_w + border_w;
@@ -394,8 +550,9 @@ void WaWindow::UpdateGrabs(void) {
         }
     }
     XUngrabServer(display);
-        
 }
+
+
 #ifdef SHAPE
 /**
  * @fn    Shape(void)
@@ -432,6 +589,7 @@ void WaWindow::Shape(void) {
         }
 }
 #endif // SHAPE
+
 
 /**
  * @fn    SendConfig(void)
@@ -472,7 +630,7 @@ void WaWindow::CreateOutlineWindows(void) {
     
     int create_mask = CWOverrideRedirect | CWBackPixel | CWEventMask |
         CWColormap;
-    attrib_set.background_pixel = wascreen->wstyle.border_color.getPixel();
+    attrib_set.background_pixel = wascreen->wstyle.outline_color.getPixel();
     attrib_set.colormap = wascreen->colormap;
     attrib_set.override_redirect = True;
     attrib_set.event_mask = NoEventMask;
@@ -575,11 +733,13 @@ void WaWindow::FocusWin(void) {
     b_cpic_gc  = &wascreen->wstyle.b_pic_focus_gc;
     b_ipic_gc  = &wascreen->wstyle.b_pic_focus_gc;
     b_mpic_gc  = &wascreen->wstyle.b_pic_focus_gc;
+    
 #ifdef XFT
     xftcolor = &wascreen->wstyle.xftfcolor;
 #else // ! XFT
     l_text_gc = &wascreen->wstyle.l_text_focus_gc;
 #endif // XFT
+    
     if (title_w)  DrawTitlebar();
     if (handle_w) DrawHandlebar();
 }
@@ -611,11 +771,13 @@ void WaWindow::UnFocusWin(void) {
     b_cpic_gc  = &wascreen->wstyle.b_pic_unfocus_gc;
     b_ipic_gc  = &wascreen->wstyle.b_pic_unfocus_gc;
     b_mpic_gc  = &wascreen->wstyle.b_pic_unfocus_gc;
+    
 #ifdef XFT
     xftcolor = &wascreen->wstyle.xftucolor;
 #else // ! XFT
     l_text_gc = &wascreen->wstyle.l_text_unfocus_gc;
-#endif // XFT    
+#endif // XFT
+    
     if (title_w)  DrawTitlebar();
     if (handle_w) DrawHandlebar();
 }
@@ -733,6 +895,7 @@ void WaWindow::DrawLabelFg(void) {
     
     XClearWindow(display, label->id);
     length = strlen(name);
+    
 #ifdef XFT
     XGlyphInfo extents;
     XftTextExtents8(display, wascreen->wstyle.xftfont,
@@ -741,6 +904,7 @@ void WaWindow::DrawLabelFg(void) {
 #else // ! XFT
     text_w = XTextWidth(wascreen->wstyle.font, name, length);
 #endif // XFT
+    
     if (text_w > (label->attrib.width - 10))
         x = 5;
     else {
@@ -754,6 +918,7 @@ void WaWindow::DrawLabelFg(void) {
                 break;
         }
     }
+    
 #ifdef XFT
     XftDrawString8(xftdraw, xftcolor, wascreen->wstyle.xftfont, x,
                    wascreen->wstyle.y_pos, (unsigned char *) name, length);
@@ -761,6 +926,7 @@ void WaWindow::DrawLabelFg(void) {
     XDrawString(display, (Drawable) label->id, *l_text_gc, x,
                 wascreen->wstyle.y_pos, name, length);
 #endif // XFT
+    
 }
 
 /**
@@ -1050,7 +1216,7 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
             net->SetWmState(this);
             waimea->UpdateCheckboxes(ShadeCBoxType);
         }
-        *n_h = -(handle_w + border_w * 2);
+        *n_h = -(handle_w + 1 + border_w * 2);
         return resize;
     }
     if ((height >= (attrib.height + size.height_inc)) ||
@@ -1095,12 +1261,14 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
  * foreground.
  */
 void WaWindow::Raise(XEvent *, WaAction *) {
-    waimea->WaRaiseWindow(frame->id);
-    if (title_w) {
-        DrawLabel();
-        DrawCloseButton();
-        DrawMaxButton();
-        DrawIconifyButton();							
+    if (! flags.alwaysontop && ! flags.alwaysatbottom) {
+        waimea->WaRaiseWindow(frame->id);
+        if (flags.title) {
+            DrawLabel();
+            DrawCloseButton();
+            DrawMaxButton();
+            DrawIconifyButton();							
+        }
     }
 }
 
@@ -1111,7 +1279,8 @@ void WaWindow::Raise(XEvent *, WaAction *) {
  * Lowers the window to the bottom of the display stack
  */
 void WaWindow::Lower(XEvent *, WaAction *) {
-    waimea->WaLowerWindow(frame->id);
+    if (! flags.alwaysontop && ! flags.alwaysatbottom)
+        waimea->WaLowerWindow(frame->id);
 }
 
 /**
@@ -1840,7 +2009,6 @@ void WaWindow::UnShade(XEvent *, WaAction *) {
  *
  * @param e XEvent causing function call
  * @param ac WaAction object
- *
  */
 void WaWindow::ToggleShade(XEvent *e, WaAction *ac) {
     if (flags.shaded) UnShade(e, ac);
@@ -1932,6 +2100,294 @@ void WaWindow::NextTask(XEvent *e, WaAction *ac) {
 }
 
 /**
+ * @fn    DecorTitleOn(XEvent *, WaAction *)
+ * @brief Turn on title decoration
+ *
+ * Turn on titlebar decorations for the window.
+ */
+void WaWindow::DecorTitleOn(XEvent *, WaAction *) {
+    if (flags.title) return;
+    
+    flags.title = True;
+    flags.all = flags.title && flags.handle && flags.border;
+    UpdateAllAttributes();
+    MapWindow();
+    net->SetWmState(this);
+    waimea->UpdateCheckboxes(TitleCBoxType);
+    if (flags.all) waimea->UpdateCheckboxes(AllCBoxType);
+}
+
+/**
+ * @fn    DecorHandleOn(XEvent *, WaAction *)
+ * @brief Turn on handle decoration
+ *
+ * Turn on handlebar decorations for the window.
+ */
+void WaWindow::DecorHandleOn(XEvent *, WaAction *) {
+    if (flags.handle) return;
+    
+    flags.handle = True;
+    flags.all = flags.title && flags.handle && flags.border;
+    UpdateAllAttributes();
+    MapWindow();
+    net->SetWmState(this);
+    waimea->UpdateCheckboxes(HandleCBoxType);
+    if (flags.all) waimea->UpdateCheckboxes(AllCBoxType);
+}
+
+/**
+ * @fn    DecorBorderOn(XEvent *, WaAction *)
+ * @brief Turn on border decoration
+ *
+ * Turn on border decorations for the window.
+ */
+void WaWindow::DecorBorderOn(XEvent *, WaAction *) {
+    if (flags.border) return;
+    
+    flags.border = True;
+    flags.all = flags.title && flags.handle && flags.border;
+    UpdateAllAttributes();
+    MapWindow();
+    net->SetWmState(this);
+    waimea->UpdateCheckboxes(BorderCBoxType);
+    if (flags.all) waimea->UpdateCheckboxes(AllCBoxType);
+}
+
+/**
+ * @fn    DecorAllOn(XEvent *, WaAction *)
+ * @brief Turn on all decorations
+ *
+ * Turn on all decorations for the window.
+ */
+void WaWindow::DecorAllOn(XEvent *, WaAction *) {
+    if (flags.all) return;
+
+    flags.all = True;
+    flags.border = True;
+    flags.title = True;
+    flags.handle = True;
+    UpdateAllAttributes();
+    MapWindow();
+    net->SetWmState(this);
+    waimea->UpdateCheckboxes(TitleCBoxType);
+    waimea->UpdateCheckboxes(HandleCBoxType);
+    waimea->UpdateCheckboxes(BorderCBoxType);
+    waimea->UpdateCheckboxes(AllCBoxType);
+}
+
+/**
+ * @fn    DecorTitleOff(XEvent *, WaAction *)
+ * @brief Turn off title decoration
+ *
+ * Turn off title decorations for the window.
+ */
+void WaWindow::DecorTitleOff(XEvent *, WaAction *) {
+    if (flags.shaded || ! flags.title) return;
+    
+    flags.title = False;
+    flags.all = False;
+    UpdateAllAttributes();
+    MapWindow();
+    net->SetWmState(this);
+    waimea->UpdateCheckboxes(TitleCBoxType);
+    waimea->UpdateCheckboxes(AllCBoxType);
+}
+
+/**
+ * @fn    DecorHandleOff(XEvent *, WaAction *)
+ * @brief Turn off hendle decoration
+ *
+ * Turn off handlebar decorations for the window.
+ */
+void WaWindow::DecorHandleOff(XEvent *, WaAction *) {
+    if (! flags.handle) return;
+    
+    flags.handle = False;
+    flags.all = False;
+    UpdateAllAttributes();
+    MapWindow();
+    net->SetWmState(this);
+    waimea->UpdateCheckboxes(HandleCBoxType);
+    waimea->UpdateCheckboxes(AllCBoxType);
+}
+
+/**
+ * @fn    DecorBorderOff(XEvent *, WaAction *)
+ * @brief Turn off border decoration
+ *
+ * Turn off border decorations for the window.
+ */
+void WaWindow::DecorBorderOff(XEvent *, WaAction *) {
+    if (! flags.border) return;
+    
+    flags.border = False;
+    flags.all = False;
+    UpdateAllAttributes();
+    MapWindow();
+    net->SetWmState(this);
+    waimea->UpdateCheckboxes(BorderCBoxType);
+    waimea->UpdateCheckboxes(AllCBoxType);
+}
+
+/**
+ * @fn    DecorAllOff(XEvent *, WaAction *)
+ * @brief Turn off all decorations
+ *
+ * Turn off all decorations for the window.
+ */
+void WaWindow::DecorAllOff(XEvent *, WaAction *) {
+    if (flags.shaded || ! flags.all) return;
+
+    flags.all = False;
+    flags.border = False;
+    flags.title = False;
+    flags.handle = False;
+    UpdateAllAttributes();
+    MapWindow();
+    net->SetWmState(this);
+    waimea->UpdateCheckboxes(TitleCBoxType);
+    waimea->UpdateCheckboxes(HandleCBoxType);
+    waimea->UpdateCheckboxes(BorderCBoxType);
+    waimea->UpdateCheckboxes(AllCBoxType);
+}
+
+/**
+ * @fn    DecorTitleToggle(XEvent *e, WaAction *ac)
+ * @brief Toggle title decoration
+ *
+ * Toggle titlebar decorations for the window.
+ *
+ * @param e XEvent causing function call
+ * @param ac WaAction object
+ */
+void WaWindow::DecorTitleToggle(XEvent *e, WaAction *ac) {
+    if (flags.title) DecorTitleOff(e, ac);
+    else DecorTitleOn(e, ac);
+}
+
+/**
+ * @fn    DecorHandleToggle(XEvent *e, WaAction *ac)
+ * @brief Toggle handle decoration
+ *
+ * Toggle handlebar decorations for the window.
+ *
+ * @param e XEvent causing function call
+ * @param ac WaAction object
+ */
+void WaWindow::DecorHandleToggle(XEvent *e, WaAction *ac) {
+    if (flags.handle) DecorHandleOff(e, ac);
+    else DecorHandleOn(e, ac);
+}
+
+/**
+ * @fn    DecorBorderToggle(XEvent *e, WaAction *ac)
+ * @brief Toggle border decoration
+ *
+ * Toggle border decorations for the window.
+ *
+ * @param e XEvent causing function call
+ * @param ac WaAction object
+ */
+void WaWindow::DecorBorderToggle(XEvent *e, WaAction *ac) {
+    if (flags.border) DecorBorderOff(e, ac);
+    else DecorBorderOn(e, ac);
+}
+
+/**
+ * @fn    AlwaysontopOn(XEvent *, WaAction *)
+ * @brief Make window always on top
+ *
+ * Add window to list of always on top windows and update always on top
+ * windows.
+ */
+void WaWindow::AlwaysontopOn(XEvent *, WaAction *) {
+    flags.alwaysontop = True;
+    flags.alwaysatbottom = False;
+    waimea->always_at_bottom_list->remove(frame->id);
+    waimea->always_on_top_list->push_back(frame->id);
+    waimea->WaRaiseWindow(0);
+    net->SetWmState(this);
+    waimea->UpdateCheckboxes(AOTCBoxType);
+    waimea->UpdateCheckboxes(AABCBoxType);
+}
+
+/**
+ * @fn    AlwaysatbottomOn(XEvent *, WaAction *)
+ * @brief Make window always at bottom
+ *
+ * Add window to list of always at bottom windows and update always at bottom
+ * windows.
+ */
+void WaWindow::AlwaysatbottomOn(XEvent *, WaAction *) {
+    flags.alwaysontop = False;
+    flags.alwaysatbottom = True;
+    waimea->always_on_top_list->remove(frame->id);
+    waimea->always_at_bottom_list->push_back(frame->id);
+    waimea->WaLowerWindow(0);
+    net->SetWmState(this);
+    waimea->UpdateCheckboxes(AOTCBoxType);
+    waimea->UpdateCheckboxes(AABCBoxType);
+}
+
+/**
+ * @fn    AlwaysontopOff(XEvent *, WaAction *)
+ * @brief Make window not always on top
+ *
+ * Removes window from list of always on top windows.
+ */
+void WaWindow::AlwaysontopOff(XEvent *, WaAction *) {
+    flags.alwaysontop = False;
+    waimea->always_on_top_list->remove(frame->id);
+    waimea->WaRaiseWindow(0);
+    net->SetWmState(this);
+    waimea->UpdateCheckboxes(AOTCBoxType);
+}
+
+/**
+ * @fn    AlwaysatbottomOff(XEvent *, WaAction *)
+ * @brief Make window not always at bottom
+ *
+ * Removes window from list of always at bottom windows.
+ */
+void WaWindow::AlwaysatbottomOff(XEvent *, WaAction *) {
+    flags.alwaysatbottom = False;
+    waimea->always_at_bottom_list->remove(frame->id);
+    waimea->WaLowerWindow(0);
+    net->SetWmState(this);
+    waimea->UpdateCheckboxes(AABCBoxType);
+}
+
+/**
+ * @fn    AlwaysontopToggle(XEvent *, WaAction *)
+ * @brief Toggle always on top flag
+ *
+ * If window is always on top we removed it from always on top list, or if
+ * window isn't always on top we add it to always on top list.
+ *
+ * @param e XEvent causing function call
+ * @param ac WaAction object
+ */
+void WaWindow::AlwaysontopToggle(XEvent *e, WaAction *ac) {
+    if (flags.alwaysontop) AlwaysontopOff(e, ac);
+    else AlwaysontopOn(e, ac);
+}
+
+/**
+ * @fn    AlwaysatbottomToggle(XEvent *, WaAction *)
+ * @brief Toggle always at bottom flag
+ *
+ * If window is always at bottom we removed it from always at bottom list,
+ * or if window isn't always at bottom we add it to always at bottom list.
+ *
+ * @param e XEvent causing function call
+ * @param ac WaAction object
+ */
+void WaWindow::AlwaysatbottomToggle(XEvent *e, WaAction *ac) {
+    if (flags.alwaysatbottom) AlwaysatbottomOff(e, ac);
+    else AlwaysatbottomOn(e, ac);
+}
+
+/**
  * @fn    EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
  *              int etype)
  * @brief Calls WaWindow function
@@ -1974,6 +2430,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
     }
 }
 
+
 /**
  * @fn    WaChildWindow(WaWindow *wa_win, Window parent, int bw, int type) :
  *        WindowObject(0, type)
@@ -1988,7 +2445,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
  * @param bw Border width
  * @param type Type of window
  */
-WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int bw, int type) :
+WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
     WindowObject(0, type) {
     XSetWindowAttributes attrib_set;
     
@@ -2001,6 +2458,10 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int bw, int type) 
     attrib_set.override_redirect = True;
     attrib_set.event_mask = ButtonPressMask | ButtonReleaseMask |
         EnterWindowMask | LeaveWindowMask;
+    attrib.x = 0;
+    attrib.y = 0;
+    attrib.width  = 1;
+    attrib.height = 1;
     
     switch (type) {
         case FrameType:
@@ -2011,67 +2472,23 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int bw, int type) 
             attrib.height = wa->attrib.height + wa->title_w + wa->handle_w +
                 wa->border_w * 2;
             break;
-        case TitleType:
-            attrib.x = - wa->border_w;
-            attrib.y = - wa->border_w;
-            attrib.width  = wa->attrib.width;
-            attrib.height = wa->title_w;
-            break;
         case LabelType:
-            attrib_set.event_mask |= ExposureMask;
-            attrib.x = wa->title_w;
-            attrib.y = 2;
-            attrib.width  = wa->attrib.width - 3 * wa->title_w + 2;
-            if (attrib.width < 1) attrib.width = 1;
-            attrib.height = wa->title_w - 4;
-            break;
-        case HandleType:
-            attrib.x = 25;
-            attrib.y = wa->attrib.height + wa->title_w + wa->border_w;
-            attrib.width = wa->attrib.width - 50 - wa->border_w * 2;
-            if (attrib.width < 1) attrib.width = 1;
-            attrib.height = wa->wascreen->wstyle.handle_width;
-            break;
         case CButtonType:
-            attrib_set.event_mask |= ExposureMask;
-            attrib.x = wa->attrib.width - (wa->title_w - 2);
-            attrib.y = 2;
-            attrib.width  = wa->title_w - 4;
-            attrib.height = wa->title_w - 4;
-            break;
         case IButtonType:
-            attrib_set.event_mask |= ExposureMask;
-            attrib.x = 2;
-            attrib.y = 2;
-            attrib.width  =  wa->title_w - 4;
-            attrib.height = wa->title_w - 4;
-            break;
         case MButtonType:
             attrib_set.event_mask |= ExposureMask;
-            attrib.x = wa->attrib.width - (wa->title_w - 2) * 2;
-            attrib.y = 2;
-            attrib.width  = wa->title_w - 4;
-            attrib.height = wa->title_w - 4;
             break;
         case LGripType:
-            attrib.x = - wa->border_w;
-            attrib.y = wa->attrib.height + wa->title_w + wa->border_w;
-            attrib.width  = 25;
-            attrib.height = wa->wascreen->wstyle.handle_width;
             create_mask |= CWCursor;
             attrib_set.cursor = wa->waimea->resizeleft_cursor;
             break;
         case RGripType:
-            attrib.x = wa->attrib.width - 25 - wa->border_w;
-            attrib.y = wa->attrib.height + wa->title_w + wa->border_w;
-            attrib.width  = 25;
-            attrib.height = wa->wascreen->wstyle.handle_width;
             create_mask |= CWCursor;
             attrib_set.cursor = wa->waimea->resizeright_cursor;
             break;
     }
     id = XCreateWindow(wa->display, parent, attrib.x, attrib.y,
-                       attrib.width, attrib.height, bw, wa->screen_number,
+                       attrib.width, attrib.height, 0, wa->screen_number,
                        CopyFromParent, wa->wascreen->visual, create_mask,
                        &attrib_set);
 

@@ -166,7 +166,8 @@ STYLES
                 compiled with xft support then it will use font specified by 
                 this option instead of the one specified by .font. By default
                 Waimea uses the font specified by .font option. If neither 
-                options are specified, Waimea uses 'fixed' font.
+                options are specified, Waimea uses 'fixed' font for standard X
+		core fonts and 'arial' for Xft font.
 
         *.xftSize
 		This should be a floating point number between 2.0 and 100.0
@@ -174,14 +175,16 @@ STYLES
                 used for. This option specifies the size of the xft font to 
 		use. This is not really in pixels but instead in a percentage 
 		of the screen height (read xft manual page for info about this).
-		By default the size is calculated from the height of your screen
-		(size = (17 / 2400) * screenHeight).
 
         window.button.hilite.picColor
                 This specifies the picColor to use when mouse is hovering 
                 over the titlebar buttons. By default this color is the same 
                 as window.button.focus.picColor and no hover effect will then
                 be seen. 
+
+	outlineColor
+		Color for non-opaque move and resize outlines. Default is
+		white.
 
 
 ACTIONS
@@ -309,6 +312,24 @@ ACTIONS
                 sticky
                 unsticky
                 togglesticky
+		raisefocus
+		decortitleon
+		decortitleoff
+		decortitletoggle
+		decorhandleon
+		decorhandleoff
+		decorhandletoggle
+		decorborderon
+		decorborderoff
+		decorbordertoggle
+		decorallon
+		decoralloff
+		alwaysontopon
+		alwaysontopoff
+		alwaysontoptoggle
+		alwaysatbottomon
+		alwaysatbottomoff
+		alwaysatbottomtoggle
 
         List of actions for menu.* windows:
                 unlink

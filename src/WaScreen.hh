@@ -62,7 +62,7 @@ typedef void (WaScreen::*RootActionFn)(XEvent *, WaAction *);
 
 typedef struct {
     WaColor f_focus, f_unfocus, l_text_focus, l_text_unfocus, b_pic_focus,
-        b_pic_unfocus, b_pic_hilite, border_color;
+        b_pic_unfocus, b_pic_hilite, border_color, outline_color;
     WaTexture t_focus, t_unfocus, l_focus, l_unfocus, h_focus, h_unfocus,
         b_focus, b_unfocus, b_pressed, g_focus, g_unfocus;
     GC b_pic_focus_gc, b_pic_unfocus_gc, b_pic_hilite_gc;
