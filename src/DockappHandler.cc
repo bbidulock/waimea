@@ -102,28 +102,31 @@ void DockappHandler::Update(void) {
         XUnmapWindow(display, id);
         return;
     }
-    
     list<Dockapp *>::iterator it = dockapp_list->begin();
     XGrabServer(display);
     for (; it != dockapp_list->end(); ++it) {
-        if (validateclient(id)) {
-            XMoveWindow(display, (*it)->id, dock_x, dock_y);
-            (*it)->x = dock_x;
-            (*it)->y = dock_y;
+        if (validateclient((*it)->id)) {
             switch (direction) {
                 case VerticalDock:
-                    height += (*it)->height + gridspace;
                     dock_y = height;
-                    if ((*it)->width > width)
+                    height += (*it)->height + gridspace;
+                    if (((*it)->width + gridspace * 2) > width)
                         width = (*it)->width + gridspace * 2;
+                    dock_x = (((width - gridspace * 2) - (*it)->width) / 2) +
+                        gridspace;
                     break;
                 case HorizontalDock:
-                    width += (*it)->width + gridspace;
                     dock_x = width;
-                    if ((*it)->height > height)
+                    width += (*it)->width + gridspace;
+                    if (((*it)->height + gridspace * 2) > height)
                         height = (*it)->height + gridspace * 2;
+                    dock_y = (((height - gridspace * 2) - (*it)->height) / 2) +
+                        gridspace;
                     break;
             }
+            (*it)->x = dock_x;
+            (*it)->y = dock_y;
+            XMoveWindow(display, (*it)->id, dock_x, dock_y);
         }
     }
     XUngrabServer(display);
@@ -196,16 +199,15 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
         width = height = 64;
     
     XGrabServer(display);
-    if (validateclient(id)) {
+    if (validateclient(client_id)) {
         XSetWindowBorderWidth(display, id, 0);
         XSelectInput(display, dh->id, NoEventMask);
         XSelectInput(display, id, NoEventMask);
         XReparentWindow(display, id, dh->id, dh->width, dh->height);
         XChangeSaveSet(display, id, SetModeInsert);
-        XSelectInput(display, dh->id, SubstructureRedirectMask |
-                     ButtonPressMask | EnterWindowMask | LeaveWindowMask);
-        XSelectInput(display, id, StructureNotifyMask |
-                     SubstructureNotifyMask | EnterWindowMask);
+        XSelectInput(display, dh->id, SubstructureRedirectMask);
+        XSelectInput(display, id, StructureNotifyMask | SubstructureNotifyMask);
+        XMapWindow(display, id);
     } else {
         XUngrabServer(display);
         return;
@@ -213,7 +215,6 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
     XUngrabServer(display);
     dh->waimea->window_table->insert(make_pair(id, this));
     dh->dockapp_list->push_back(this);
-    XMapWindow(display, id);
 }
 
 /**
@@ -225,7 +226,8 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
  */
 Dockapp::~Dockapp(void) {
     XGrabServer(display);
-    if ((! deleted) && validateclient(id)) {
+    if ((! deleted) && validateclient(client_id)) {
+        XMoveWindow(display, client_id, dh->map_x + x, dh->map_y + y);
         XReparentWindow(display, id, dh->wascreen->id,
                         dh->map_x + x, dh->map_y + y);
         XChangeSaveSet(display, id, SetModeDelete);
