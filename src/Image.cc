@@ -1920,8 +1920,8 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
             
             if (colors_per_channel < 2 || ncolors > (1 << screen_depth)) {
                 WARNING << "invalid colormap size " << ncolors << " (" <<
-                    colors_per_channel << "/" << colors_per_channel <<
-                    colors_per_channel << " - reducing" << endl;
+                    colors_per_channel << "/" << colors_per_channel << "/" <<
+                    colors_per_channel << ") - reducing" << endl;
                 
                 colors_per_channel = (1 << screen_depth) / 3;
             }
@@ -2029,8 +2029,8 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
             
             if (colors_per_channel < 2 || ncolors > (1 << screen_depth)) {
                 WARNING << "invalid colormap size " << ncolors << " (" <<
-                    colors_per_channel << "/" << colors_per_channel <<
-                    colors_per_channel << " - reducing" << endl;
+                    colors_per_channel << "/" << colors_per_channel << "/" <<
+                    colors_per_channel << ") - reducing" << endl;
                 
                 colors_per_channel = (1 << screen_depth) / 3;
             }

@@ -1282,7 +1282,7 @@ void NetHandler::GetWmType(WaWindow *ww) {
                     if (ww->wascreen->current_desktop->workarea.y >
                         ww->attrib.y)
                         ww->attrib.y =
-                            ww->wascreen->current_desktop->workarea.y;
+                            ww->wascreen->current_desktop->workarea.y + 1;
                 }
             }
         }
@@ -1294,7 +1294,7 @@ void NetHandler::GetWmType(WaWindow *ww) {
         }
         if (ww->attrib.y == 0) {
             if (ww->wascreen->current_desktop->workarea.y > ww->attrib.y)
-                ww->attrib.y = ww->wascreen->current_desktop->workarea.y;
+                ww->attrib.y = ww->wascreen->current_desktop->workarea.y + 1;
         }
     }
 }

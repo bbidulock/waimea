@@ -2780,14 +2780,15 @@ void WaWindow::MoveWindowToPointer(XEvent *e, WaAction *) {
  */
 void WaWindow::MoveWindowToSmartPlace(XEvent *, WaAction *) {
     int temp_h, temp_w;
+    Gravitate(RemoveGravity);
     int test_x = attrib.x - wascreen->current_desktop->workarea.x;
-    int test_y = attrib.y - (title_w + flags.title * border_w * 2) -
-        wascreen->current_desktop->workarea.y;
+    int test_y = attrib.y - wascreen->current_desktop->workarea.y - 1;
     int loc_ok = False, tw, tx, ty, th;
-    
-    temp_h = attrib.height + title_w + flags.title * border_w +
-        handle_w + flags.handle * border_w;
-    temp_w = attrib.width;
+    int bw = flags.border * border_w;
+    int titleh = title_w + flags.title * bw;
+    int handleh = handle_w + flags.handle * bw;
+    temp_h = attrib.height + bw * 2 + titleh + handleh;
+    temp_w = attrib.width + bw * 2;
 
     while (((test_y + temp_h) <
             (wascreen->current_desktop->workarea.height)) && (!loc_ok)) {
@@ -2803,21 +2804,23 @@ void WaWindow::MoveWindowToSmartPlace(XEvent *, WaAction *) {
                       (*it)->attrib.x < wascreen->width) && 
                      (((*it)->attrib.y + (*it)->attrib.height) > 0 &&
                       (*it)->attrib.y < wascreen->height))) {
-                    tw = (*it)->attrib.width;
-                    th = (*it)->attrib.height +
-                        (*it)->title_w + (*it)->flags.title * (*it)->border_w +
-                        (*it)->handle_w + (*it)->flags.handle *
-                        (*it)->border_w;
-                    tx = (*it)->attrib.x -
-                        wascreen->current_desktop->workarea.x;
-                    ty = (*it)->attrib.y - ((*it)->title_w +
-                                            (*it)->flags.title *
-                                            (*it)->border_w) -
-                        wascreen->current_desktop->workarea.y;
+                    bw = (*it)->flags.border * (*it)->border_w;
+                    titleh = (*it)->title_w + (*it)->flags.title * bw;
+                    handleh = (*it)->handle_w + (*it)->flags.handle * bw;
+                    
+                    th = (*it)->attrib.height + bw * 2 + titleh + handleh;
+                    tw = (*it)->attrib.width + bw * 2;
 
-                    if ((tx < (test_x + attrib.width)) &&
+                    (*it)->Gravitate(RemoveGravity);
+                    tx = (*it)->attrib.x -
+                        wascreen->current_desktop->workarea.x - 1;
+                    ty = (*it)->attrib.y - 
+                        wascreen->current_desktop->workarea.y - 1;
+                    (*it)->Gravitate(ApplyGravity);
+
+                    if ((tx < (test_x + temp_w)) &&
                         ((tx + tw) > test_x) &&
-                        (ty < (test_y + attrib.height)) &&
+                        (ty < (test_y + temp_h)) &&
                         ((ty + th) > test_y)) {
                         loc_ok = False;
                         test_x = tx + tw;
@@ -2829,11 +2832,13 @@ void WaWindow::MoveWindowToSmartPlace(XEvent *, WaAction *) {
         test_y += 1;
     }
     if (loc_ok != False) {
-        attrib.x = test_x + wascreen->current_desktop->workarea.x;
-        attrib.y = test_y + (title_w + flags.title * border_w) +
-            wascreen->current_desktop->workarea.y;
+        attrib.x = test_x + wascreen->current_desktop->workarea.x - 1;
+        attrib.y = test_y + wascreen->current_desktop->workarea.y;
+        Gravitate(ApplyGravity);
         RedrawWindow();
     }
+    else
+        Gravitate(ApplyGravity);
 }
 
 /**
