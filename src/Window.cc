@@ -1014,17 +1014,6 @@ void WaWindow::DrawHandlebar(void) {
 }
 
 /**
- * @fn    UpdateTitle(XEvent *, WaAction *)
- * @brief Updates titlebar text
- *
- */
-//void WaWindow::UpdateTitle(void) {
-//    if (! wascreen->db) label->Draw();
-//    else
-//}
-
-
-/**
  * @fn    FocusWin(void)
  * @brief Sets window to have the look of a focused window
  *
