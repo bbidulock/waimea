@@ -19,11 +19,8 @@ WAIMEA WINDOW MANAGER
          - Dockapp holder
          - Task switcher
          - New revolutionary of pager utility
-	 - KDE support
-	 - GNOME support
 
         Planned features:
-         - Xinerama support
          - copy/cut/paste buffers control
          - Configuration program
          - ...

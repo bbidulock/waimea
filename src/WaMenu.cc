@@ -231,7 +231,7 @@ void WaMenu::Build(WaScreen *screen) {
             ExposureMask;
 
         frame = XCreateWindow(display, wascreen->id, 0, 0, width, height,
-                              wascreen->wstyle.border_width,
+                              wascreen->mstyle.border_width,
                               wascreen->screen_number,
                               CopyFromParent, wascreen->visual,
                               CWOverrideRedirect | CWBackPixel | CWEventMask |
@@ -249,7 +249,7 @@ void WaMenu::Build(WaScreen *screen) {
     for (y = 0, lasttype = 0; it != item_list->end(); ++it) {
         x = bw = 0;
         if ((*it)->type == MenuTitleType) {
-            bw = wascreen->wstyle.border_width;
+            bw = wascreen->mstyle.border_width;
             x = -bw;
             if ((y == 0) || (lasttype == MenuTitleType))
                 y -= bw;
@@ -493,7 +493,7 @@ void WaMenu::DrawOutline(int dx, int dy) {
             (*it)->submenu->DrawOutline(dx, dy);
         }
     }
-    int bw = wascreen->wstyle.border_width;
+    int bw = wascreen->mstyle.border_width;
     XResizeWindow(display, o_west, bw, bw * 2 + height);
     XResizeWindow(display, o_east, bw, bw * 2 + height);
     XResizeWindow(display, o_north, width + bw * 2, bw);
@@ -709,7 +709,7 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *) {
             skip += (*it)->realheight;
         else break;
     }
-    submenu->Map(menu->x + menu->width + menu->wascreen->wstyle.border_width,
+    submenu->Map(menu->x + menu->width + menu->wascreen->mstyle.border_width,
                  menu->y + dy - skip);
 }
 
@@ -735,10 +735,10 @@ void WaMenuItem::ReMapSubmenu(XEvent *, WaAction *) {
     list<WaMenuItem *>::iterator it = submenu->item_list->begin();
     for (skip = 0; it != submenu->item_list->end(); ++it) {        
         if ((*it)->type == MenuTitleType)
-            skip += (*it)->height + menu->wascreen->wstyle.border_width;
+            skip += (*it)->height + menu->wascreen->mstyle.border_width;
         else break;
     }
-    submenu->ReMap(menu->x + menu->width + menu->wascreen->wstyle.border_width,
+    submenu->ReMap(menu->x + menu->width + menu->wascreen->mstyle.border_width,
                  menu->y + dy - skip);
 } 
 
