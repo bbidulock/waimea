@@ -181,7 +181,7 @@ void NetHandler::GetMWMHints(WaWindow *ww) {
                             ww->transient_for = trans;
                             ((WaWindow *)
                              (*it).second)->transients.push_back(ww->id);
-                            if (trans == waimea->eh->focused)
+                            if (waimea->eh && trans == waimea->eh->focused)
                                 ww->want_focus = true;
                         }
                     }

@@ -43,18 +43,18 @@ window.rightgrip {
 window.button0 {      
    defaultAllWindows,
    Focus : ButtonPress = AnyButton & !Mod1Mask,
-   ToggleShade : ButtonRelease = AnyButton
+   ToggleShade : ButtonRelease = Button1
 }
 window.button1 { 
    defaultAllWindows,
    Focus : ButtonPress = AnyButton & !Mod1Mask,
-   Close : ButtonRelease = AnyButton
+   Close : ButtonRelease = Button1
 }
 window.button2 {
    defaultAllWindows,
    Focus          : ButtonPress = AnyButton & !Mod1Mask,
-   ToggleMaximize : ButtonRelease = AnyButton,
-   Raise          : ButtonRelease = AnyButton
+   ToggleMaximize : ButtonRelease = Button1,
+   Raise          : ButtonRelease = Button1
 }
 window.passiveclient { 
    Raise     : ButtonPress = Button1,

@@ -4,7 +4,7 @@
 .\" This manual page may be freely distributed and modified.
 .\" Author: David Reveman <c99drn@cs.umu.se>
 .\" 
-.TH WAIMEA 1 "May 10 2002" "0.3.1" "User Manual"
+.TH WAIMEA 1 "May 18 2002" "0.3.2" "User Manual"
 
 
 .SH NAME
@@ -170,6 +170,26 @@ will set the virtual desktop size to three times screen height
 in virtual height and three times screen width in virtual width.
 Default value is 
 .I 3x3.
+
+.TP
+.B menuStacking:     StackingType
+Tells 
+.I waimea 
+what stacking type to use for menus. Can be one of: AlwaysOnTop, 
+AlwaysAtBottom or Normal.
+Default type is
+.I Normal.
+
+.TP
+.B transientAbove:     Bool
+Tells 
+.I waimea 
+to use special handling of transient windows. When turned on 
+.I waimea 
+will always keep transient windows above and focused relative to the
+the 'transient for' window.
+Default value is
+.I True.
 
 .PP
 Dockapp Holder Resources
@@ -394,14 +414,15 @@ Opacity works for all types of textures even pixmaps.
 Here are the keys 
 .I waimea 
 understands together with the kind of value they can contain. 
-The '*' in the window keys can be one of:
-.I title, label, button, button.pressed, handle 
+
+.PP
+.I Window Keys
+.br
+Controls the look of the window decorations. The '*' in the window keys can 
+be one of: 
+.I title, label, handle, button
 or 
 .I grip.
-The '*' in the menu keys can be one of:
-.I title, frame
-or 
-.I hilite.
 
 .PP
 .B window.*.focus:     Texture description
@@ -442,35 +463,6 @@ Color used for focused window label font.
 Color used for unfocused window label font.
 
 .PP
-.B menu.*:     Texture description
-.br
-.B menu.*.opacity:     Opacity level
-.br
-.B menu.*.color:     Color 
-.br
-.B menu.*.colorTo:     Color
-.br
-.B menu.*.pixmap:     Pixmap
-.RS
-Texure type, opacity level and colors used for menu textures.
-.RE
-
-.PP
-.TP
-.B menu.*.textColor:     Color
-Color used for menu fonts.
-
-.PP
-.TP 
-.B borderColor:     Color
-Color of window and menu border.
-
-.PP
-.TP 
-.B outlineColor:     Color
-Color of window outline used for non-opaque moving and resizing.
-
-.PP
 .TP 
 .B window.button.focus.picColor:    Color
 Color used for focused window button symbols.
@@ -491,11 +483,6 @@ Color used for pressed button symbols.
 Font justification for window labels.
 
 .PP
-.TP 
-.B menu.*.justify:     Font justification
-Font justification for menu items.
-
-.PP
 .B window.font:     Font
 .br
 .B window.xftFont:     XftFont
@@ -508,6 +495,61 @@ Font for window titles.
 .B window.xftFontSize:     Float
 Floating point number between 2.0 and 100.0. This option sets the 
 xft font size to used for window titles (font height in pixels, default=11).
+
+.PP
+.TP 
+.B borderWidth:     Integer
+Integer value for window border width.
+
+.PP
+.TP 
+.B borderColor:     Color
+Color of window border.
+
+.PP
+.TP 
+.B outlineColor:     Color
+Color of window outline used for non-opaque moving and resizing.
+
+.PP
+.TP 
+.B window.title.height:    Integer
+Integer value for forced titlebar height. If key isn't defined the title
+height is set by the height of the font.
+
+
+.PP
+.I Menu Keys
+.br
+Controls the look of the menus. The '*' in the menu keys can be 
+one of:
+.I title, frame
+or 
+.I hilite.
+
+.PP
+.B menu.*:     Texture description
+.br
+.B menu.*.opacity:     Opacity level
+.br
+.B menu.*.color:     Color 
+.br
+.B menu.*.colorTo:     Color
+.br
+.B menu.*.pixmap:     Pixmap
+.RS
+Texure type, opacity level and colors used for menu textures.
+.RE
+
+.PP
+.TP
+.B menu.*.textColor:     Color
+Color used for menu fonts.
+
+.PP
+.TP 
+.B menu.*.justify:     Font justification
+Font justification for menu items.
 
 .PP
 .B menu.*.font:     Font 
@@ -540,19 +582,8 @@ String or character code used for false checkboxes.
 
 .PP
 .TP 
-.B borderWidth:     Integer
-Integer value for window border width.
-
-.PP
-.TP 
 .B menu.borderWidth:     Integer
 Integer value for menu border width.
-
-.PP
-.TP 
-.B window.title.height:    Integer
-Integer value for forced titlebar height. If key isn't defined the title
-height is set by the height of the font.
 
 .PP
 .TP 
@@ -565,6 +596,15 @@ frame menu item height is set by the height of the font.
 .B menu.title.height:    Integer
 Integer value for forced menu title item height. If key isn't defined the 
 frame menu title height is set by the height of the font.
+
+
+.PP
+.I Dockappholder Keys
+.br
+Controls the look of the dockappholders. A different texture can be assigned 
+to each dockappholder. '[ID]' should be replaced by a dockappholder ID number.
+A dockappholder ID is >=0 and depends on the dockappholder configuration in 
+the rc-file.
 
 .PP
 .B dockappholder.dock[ID].frame:     Texture description
@@ -591,6 +631,120 @@ Border width used for dockappholder 'dock[ID]'s border.
 .B dockappholder.dock[ID].borderColor:     Color
 Border color used for dockappholder 'dock[ID]'s border.
 
+
+.PP
+.I Button Keys
+.br
+Controls the look of the titlebar buttons. For backwards compatibility with 
+blackbox styles 
+.I waimea 
+still understands the above mentioned window.button.* key, but 
+.I waimea
+have a much more advanced configuration system for titlebar buttons. The 
+. waimea 
+titlebar configuration system allows you to have any number of titlebar buttons
+and the position and look for each button can be specified.
+.PP
+A titlebar button works just like a checkbox. It has two states, a 'false' 
+state and a 'true' state. Which state the button is in depends on a variable 
+and the look of each of these states can be specified. The '[ID]' must be a 
+number >= 0. For
+.I waimea 
+to read button configuration with an ID of 2, there must be a 
+configuration with an ID of 0 and an ID of 1, this is because
+.I waimea 
+stops reading button configurations when it comes to missing ID.
+
+.PP
+.TP 
+.B window.button[ID].foreground:     Boolean
+True if you want waimea to draw its standard foreground graphics on the button.
+Graphics drawn depends on the buttons state configuration.
+
+.PP
+.TP 
+.B window.button[ID].state:     Checkbox State
+This specifies what variable the button should monitor for its state. Can be 
+one of these:
+.br
+MAXIMIZED
+.br
+SHADED
+.br
+STICKY
+.br
+ALWAYSONTOP
+.br
+ALWAYSATBOTTOM
+.br
+DECORTITLE
+.br
+DECORHANDLE
+.br
+DECORBORDER
+.br
+DECORALL
+.br
+None
+.br
+
+When set to None titlebar button will only have one state (false state).
+Default is None.
+
+.PP
+.TP 
+.B window.button[ID].autoplace:     Autoplace Type
+This specifies the autoplace type for the button. Can be one of Left, Right
+or False. Left will automatically place the button on the left side of the 
+titlebar so that it doesn't cover any other button and Right will automatically
+place the button on the right side. No automatic placement will be used when
+set to False. Default is False.
+
+.PP
+.TP 
+.B window.button[ID].position:     Offset
+X coordinate for button. If offset is positive, then the left side of the 
+titlebar will be used as X coordinate zero. If offset is negative, then the
+right side of the titlebar will be used as X coordinate zero. 'position' 
+resource will be ignored if not 'autoplace' resource is set to False.
+
+.PP
+.B window.button[ID].[STATE].focus:     Texture description
+.br
+.B window.button[ID].[STATE].focus.opacity:     Opacity level
+.br
+.B window.button[ID].[STATE].focus.color:     Color
+.br
+.B window.button[ID].[STATE].focus.colorTo:     Color
+.br
+.B window.button[ID].[STATE].focus.pixmap:     Pixmap
+.br
+.B window.button[ID].[STATE].unfocus:     Texture description
+.br
+.B window.button[ID].[STATE].unfocus.opacity:     Opacity level
+.br
+.B window.button[ID].[STATE].unfocus.color:     Color
+.br
+.B window.button[ID].[STATE].unfocus.colorTo:     Color
+.br
+.B window.button[ID].[STATE].unfocus.pixmap:     Pixmap
+.br
+.B window.button[ID].[STATE].pressed:     Texture description
+.br
+.B window.button[ID].[STATE].pressed.opacity:     Opacity level
+.br
+.B window.button[ID].[STATE].pressed.color:     Color
+.br
+.B window.button[ID].[STATE].pressed.colorTo:     Color
+.br
+.B window.button[ID].[STATE].pressed.pixmap:     Pixmap
+.RS
+Texture type, opacity level and colors used for titlebar button[ID]. [STATE]
+can be 'false' or 'true'. If button have more than one state then both 'false'
+and 'true' state textures should be specified. If button have only one
+state then only 'false' state needs to be specified.
+.RE
+
 .PP
 .TP 
 .B rootCommand:     Command line
@@ -598,7 +752,7 @@ This command is executed whenever this style is loaded.
 Typically it sets the root window to a nice picture.
 
 .PP
-Default style file is /usr/local/shar/Waimea/styles/Default.
+Default style file is @pkgdatadir@/styles/Default.
 You can study or edit this style to grasp how the style mechanism works.
 
 
@@ -699,13 +853,9 @@ will also be sent to the client window).
 .RE
 
 .PP
-.B window.closebutton
-.br
-.B window.iconifybutton
-.br
-.B window.maximizebutton
+.B window.button[ID]
 .RS
-        Titlebar button windows.
+Titlebar button window, [ID] will match with [ID] from style file.
 .RE
 
 .PP
@@ -1395,6 +1545,7 @@ after @TRUE.
 
 .PP
 Here is the list of flags that can be used with checkbox items:
+.br
 MAXIMIZED
 .br
 SHADED
