@@ -451,6 +451,7 @@ void restart(char *command) {
         delete waimea;
         execvp(*tmp_argv, tmp_argv);
         perror(*tmp_argv);
+        exit(EXIT_FAILURE);
     } else
         delete waimea;
     execvp(argv[0], argv);

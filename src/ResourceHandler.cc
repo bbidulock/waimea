@@ -961,7 +961,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         }
         sprintf(rc_name, "dockappholder.dock%d.borderColor", num);
         sprintf(rc_class, "Dockappholder.Dock%d.BorderColor", num);
-        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value));
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value))
             ReadDatabaseColor(rc_name, rc_class, &(*dit)->style.border_color,
                               BlackPixel(display, screen), ic);
     }
@@ -1750,6 +1750,13 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
     }
 
 #ifdef XRENDER
+
+    if (texture->getTexture() & WaImage_ParentRelative) {
+        delete [] colorclass;
+        delete [] colorname;
+        return;
+    }
+    
     int opacity;
     XRenderPictFormat *xformat;
     XRenderPictFormat Rpf;
