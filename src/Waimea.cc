@@ -104,8 +104,10 @@ Waimea::Waimea(char **av, struct waoptions *options) {
  * connection to the display.
  */
 Waimea::~Waimea(void) {
-    net->SetClientList(wascreen);
-    net->SetClientListStacking(wascreen);
+    if (eh) {
+        net->SetClientList(wascreen);
+        net->SetClientListStacking(wascreen);
+    }
     LISTCLEAR(wamenu_list);
     LISTCLEAR2(wawindow_list);
     LISTDEL(wawindow_list_map_order);

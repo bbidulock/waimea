@@ -255,11 +255,11 @@ void DockappHandler::Update(void) {
 #endif // XFT
         
     } else {
-        background = wascreen->ic->renderImage(width, height, texture,
+        background = wascreen->ic->renderImage(width, height, texture
 
 #ifdef XFT
-                                               wascreen->xrootpmap_id, map_x,
-                                               map_y, background
+                                               , wascreen->xrootpmap_id,
+                                               map_x, map_y, background
 #endif // XFT
                                                
                                                );

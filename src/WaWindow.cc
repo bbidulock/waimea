@@ -2627,9 +2627,6 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
     if (type == LabelType)
         xftdraw = XftDrawCreate(display, (Drawable) id,
                                 wascreen->visual, wascreen->colormap);
-#else // ! XFT
-    if (type == LabelType)
-        gc = &wascreen->wstyle.l_text_focus_gc;
 #endif // XFT
     
     wa->waimea->window_table->insert(make_pair(id, this));
@@ -2721,10 +2718,11 @@ void WaChildWindow::Render(void) {
         
     } else
         *pixmap = ic->renderImage(attrib.width,
-                                  attrib.height, texture,
+                                  attrib.height, texture
                                   
 #ifdef XFT
-                                  wascreen->xrootpmap_id, pos_x, pos_y, *pixmap
+                                  , wascreen->xrootpmap_id, pos_x, pos_y,
+                                  *pixmap
 #endif // XFT                                 
                                   
                                   );
@@ -2746,12 +2744,12 @@ void WaChildWindow::Draw(void) {
     switch (type) {
         case LabelType:
             int x, length, text_w;
-            XftColor *xftcolor;
             GC *gc;
             x = 0;
             length = strlen(wa->name);
     
 #ifdef XFT
+            XftColor *xftcolor;
             xftcolor = (wa->has_focus)? wascreen->wstyle.xftfcolor:
                 wascreen->wstyle.xftucolor;
             XGlyphInfo extents;
@@ -2782,7 +2780,7 @@ void WaChildWindow::Draw(void) {
                            wascreen->wstyle.y_pos, (unsigned char *) wa->name,
                            length);
 #else // ! XFT
-            XDrawString(display, (Drawable) label->id, *gc, x,
+            XDrawString(display, (Drawable) id, *gc, x,
                         wascreen->wstyle.y_pos, wa->name, length);
 #endif // XFT
             break;

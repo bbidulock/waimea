@@ -464,9 +464,9 @@ void NetHandler::SetClientList(WaScreen *ws) {
     for (; it != waimea->wawindow_list_map_order->end(); ++it) {
         data[i++] = (*it)->id;
     }
-    
-    XChangeProperty(display, ws->id, net_client_list, XA_WINDOW, 32,
-                    PropModeReplace, (unsigned char *) &data, i);
+    if (i > 0)
+        XChangeProperty(display, ws->id, net_client_list, XA_WINDOW, 32,
+                        PropModeReplace, (unsigned char *) &data, i);
 }
 
 /**
@@ -492,9 +492,10 @@ void NetHandler::SetClientListStacking(WaScreen *ws) {
     rit = waimea->wawindow_list_stacking_aot->rbegin();
     for (; rit != waimea->wawindow_list_stacking_aot->rend(); ++rit)
       data[i++] = (*rit)->id;
-    
-    XChangeProperty(display, ws->id, net_client_list_stacking, XA_WINDOW, 32,
-                    PropModeReplace, (unsigned char *) &data, i);
+
+    if (i > 0)
+        XChangeProperty(display, ws->id, net_client_list_stacking, XA_WINDOW,
+                        32, PropModeReplace, (unsigned char *) &data, i);
 }
 
 /**

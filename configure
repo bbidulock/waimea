@@ -4409,10 +4409,13 @@ fi
       CPPFLAGS="$CPPFLAGS `imlib2-config --cflags`"
     fi
   fi
+else
+  echo "$as_me:4413: result: no" >&5
+echo "${ECHO_T}no" >&6
 fi
 
 if test $USE_IMLIB -eq 1 ; then
-  echo "$as_me:4415: checking for dlopen in -ldl" >&5
+  echo "$as_me:4418: checking for dlopen in -ldl" >&5
 echo $ECHO_N "checking for dlopen in -ldl... $ECHO_C" >&6
 if test "${ac_cv_lib_dl_dlopen+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -4420,7 +4423,7 @@ else
   ac_check_lib_save_LIBS=$LIBS
 LIBS="-ldl  $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
-#line 4423 "configure"
+#line 4426 "configure"
 #include "confdefs.h"
 
 /* Override any gcc2 internal prototype to avoid an error.  */
@@ -4439,16 +4442,16 @@ dlopen ();
 }
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:4442: \"$ac_link\"") >&5
+if { (eval echo "$as_me:4445: \"$ac_link\"") >&5
   (eval $ac_link) 2>&5
   ac_status=$?
-  echo "$as_me:4445: \$? = $ac_status" >&5
+  echo "$as_me:4448: \$? = $ac_status" >&5
   (exit $ac_status); } &&
          { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:4448: \"$ac_try\"") >&5
+  { (eval echo "$as_me:4451: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:4451: \$? = $ac_status" >&5
+  echo "$as_me:4454: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   ac_cv_lib_dl_dlopen=yes
 else
@@ -4459,10 +4462,10 @@ fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-echo "$as_me:4462: result: $ac_cv_lib_dl_dlopen" >&5
+echo "$as_me:4465: result: $ac_cv_lib_dl_dlopen" >&5
 echo "${ECHO_T}$ac_cv_lib_dl_dlopen" >&6
 if test $ac_cv_lib_dl_dlopen = yes; then
-  echo "$as_me:4465: checking for TT_Init_FreeType in -lttf" >&5
+  echo "$as_me:4468: checking for TT_Init_FreeType in -lttf" >&5
 echo $ECHO_N "checking for TT_Init_FreeType in -lttf... $ECHO_C" >&6
 if test "${ac_cv_lib_ttf_TT_Init_FreeType+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -4470,7 +4473,7 @@ else
   ac_check_lib_save_LIBS=$LIBS
 LIBS="-lttf  $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
-#line 4473 "configure"
+#line 4476 "configure"
 #include "confdefs.h"
 
 /* Override any gcc2 internal prototype to avoid an error.  */
@@ -4489,16 +4492,16 @@ TT_Init_FreeType ();
 }
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:4492: \"$ac_link\"") >&5
+if { (eval echo "$as_me:4495: \"$ac_link\"") >&5
   (eval $ac_link) 2>&5
   ac_status=$?
-  echo "$as_me:4495: \$? = $ac_status" >&5
+  echo "$as_me:4498: \$? = $ac_status" >&5
   (exit $ac_status); } &&
          { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:4498: \"$ac_try\"") >&5
+  { (eval echo "$as_me:4501: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:4501: \$? = $ac_status" >&5
+  echo "$as_me:4504: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   ac_cv_lib_ttf_TT_Init_FreeType=yes
 else
@@ -4509,10 +4512,10 @@ fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-echo "$as_me:4512: result: $ac_cv_lib_ttf_TT_Init_FreeType" >&5
+echo "$as_me:4515: result: $ac_cv_lib_ttf_TT_Init_FreeType" >&5
 echo "${ECHO_T}$ac_cv_lib_ttf_TT_Init_FreeType" >&6
 if test $ac_cv_lib_ttf_TT_Init_FreeType = yes; then
-  echo "$as_me:4515: checking for imlib_create_image in -lImlib2" >&5
+  echo "$as_me:4518: checking for imlib_create_image in -lImlib2" >&5
 echo $ECHO_N "checking for imlib_create_image in -lImlib2... $ECHO_C" >&6
 if test "${ac_cv_lib_Imlib2_imlib_create_image+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -4520,7 +4523,7 @@ else
   ac_check_lib_save_LIBS=$LIBS
 LIBS="-lImlib2  $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
-#line 4523 "configure"
+#line 4526 "configure"
 #include "confdefs.h"
 
 /* Override any gcc2 internal prototype to avoid an error.  */
@@ -4539,16 +4542,16 @@ imlib_create_image ();
 }
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:4542: \"$ac_link\"") >&5
+if { (eval echo "$as_me:4545: \"$ac_link\"") >&5
   (eval $ac_link) 2>&5
   ac_status=$?
-  echo "$as_me:4545: \$? = $ac_status" >&5
+  echo "$as_me:4548: \$? = $ac_status" >&5
   (exit $ac_status); } &&
          { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:4548: \"$ac_try\"") >&5
+  { (eval echo "$as_me:4551: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:4551: \$? = $ac_status" >&5
+  echo "$as_me:4554: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   ac_cv_lib_Imlib2_imlib_create_image=yes
 else
@@ -4559,28 +4562,28 @@ fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-echo "$as_me:4562: result: $ac_cv_lib_Imlib2_imlib_create_image" >&5
+echo "$as_me:4565: result: $ac_cv_lib_Imlib2_imlib_create_image" >&5
 echo "${ECHO_T}$ac_cv_lib_Imlib2_imlib_create_image" >&6
 if test $ac_cv_lib_Imlib2_imlib_create_image = yes; then
   PIXMAP="-DPIXMAP"; Imlib2_lib="-lImlib2"
 else
-  echo "$as_me:4567: result: ** WARNING: Could not find imlib_create_imaget in -lImlib2" >&5
+  echo "$as_me:4570: result: ** WARNING: Could not find imlib_create_imaget in -lImlib2" >&5
 echo "${ECHO_T}** WARNING: Could not find imlib_create_imaget in -lImlib2" >&6
-        echo "$as_me:4569: result: ** WARNING: Disabled pixmap support" >&5
+        echo "$as_me:4572: result: ** WARNING: Disabled pixmap support" >&5
 echo "${ECHO_T}** WARNING: Disabled pixmap support" >&6
 fi
 
 else
-  echo "$as_me:4574: result: ** WARNING: Could not find TT_Init_FreeType in -lttf" >&5
+  echo "$as_me:4577: result: ** WARNING: Could not find TT_Init_FreeType in -lttf" >&5
 echo "${ECHO_T}** WARNING: Could not find TT_Init_FreeType in -lttf" >&6
-      echo "$as_me:4576: result: ** WARNING: Disabled pixmap support" >&5
+      echo "$as_me:4579: result: ** WARNING: Disabled pixmap support" >&5
 echo "${ECHO_T}** WARNING: Disabled pixmap support" >&6
 fi
 
 else
-  echo "$as_me:4581: result: ** WARNING: Could not find dlopen in -ldl" >&5
+  echo "$as_me:4584: result: ** WARNING: Could not find dlopen in -ldl" >&5
 echo "${ECHO_T}** WARNING: Could not find dlopen in -ldl" >&6
-    echo "$as_me:4583: result: ** WARNING: Disabled pixmap support" >&5
+    echo "$as_me:4586: result: ** WARNING: Disabled pixmap support" >&5
 echo "${ECHO_T}** WARNING: Disabled pixmap support" >&6
 fi
 
@@ -4702,7 +4705,7 @@ rm -f confdef2opt.sed
 : ${CONFIG_STATUS=./config.status}
 ac_clean_files_save=$ac_clean_files
 ac_clean_files="$ac_clean_files $CONFIG_STATUS"
-{ echo "$as_me:4705: creating $CONFIG_STATUS" >&5
+{ echo "$as_me:4708: creating $CONFIG_STATUS" >&5
 echo "$as_me: creating $CONFIG_STATUS" >&6;}
 cat >$CONFIG_STATUS <<_ACEOF
 #! $SHELL
@@ -4870,7 +4873,7 @@ cat >>$CONFIG_STATUS <<\EOF
     echo "$ac_cs_version"; exit 0 ;;
   --he | --h)
     # Conflict between --help and --header
-    { { echo "$as_me:4873: error: ambiguous option: $1
+    { { echo "$as_me:4876: error: ambiguous option: $1
 Try \`$0 --help' for more information." >&5
 echo "$as_me: error: ambiguous option: $1
 Try \`$0 --help' for more information." >&2;}
@@ -4898,12 +4901,12 @@ Try \`$0 --help' for more information." >&2;}
   'doc/Makefile' ) CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
 
   # This is an error.
-  -*) { { echo "$as_me:4901: error: unrecognized option: $1
+  -*) { { echo "$as_me:4904: error: unrecognized option: $1
 Try \`$0 --help' for more information." >&5
 echo "$as_me: error: unrecognized option: $1
 Try \`$0 --help' for more information." >&2;}
    { (exit 1); exit 1; }; } ;;
-  *) { { echo "$as_me:4906: error: invalid argument: $1" >&5
+  *) { { echo "$as_me:4909: error: invalid argument: $1" >&5
 echo "$as_me: error: invalid argument: $1" >&2;}
    { (exit 1); exit 1; }; };;
   esac
@@ -5145,7 +5148,7 @@ done; }
   esac
 
   if test x"$ac_file" != x-; then
-    { echo "$as_me:5148: creating $ac_file" >&5
+    { echo "$as_me:5151: creating $ac_file" >&5
 echo "$as_me: creating $ac_file" >&6;}
     rm -f "$ac_file"
   fi
@@ -5163,7 +5166,7 @@ echo "$as_me: creating $ac_file" >&6;}
       -) echo $tmp/stdin ;;
       [\\/$]*)
          # Absolute (can't be DOS-style, as IFS=:)
-         test -f "$f" || { { echo "$as_me:5166: error: cannot find input file: $f" >&5
+         test -f "$f" || { { echo "$as_me:5169: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          echo $f;;
@@ -5176,7 +5179,7 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
            echo $srcdir/$f
          else
            # /dev/null tree
-           { { echo "$as_me:5179: error: cannot find input file: $f" >&5
+           { { echo "$as_me:5182: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          fi;;

@@ -440,7 +440,7 @@ void ResourceHandler::LoadConfig(void) {
     
     if (XrmGetResource(database, "virtualSize", "ViriualSize",
                      &value_type, &value)) {
-        if (sscanf(value.addr, "%dx%d", &virtual_x, &virtual_y) != 2) {
+        if (sscanf(value.addr, "%ux%u", &virtual_x, &virtual_y) != 2) {
             virtual_x = virtual_y = 3;
         }
     } else
@@ -544,6 +544,9 @@ void ResourceHandler::LoadConfig(void) {
                     have_u = true;
                     dockstyle->order->push_back(wastrdup("U"));
                     token = token + 7;
+                }
+                else {
+                    token = token + strlen(token) + 1;
                 }
             }
         }
@@ -1977,9 +1980,9 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             type = MenuSubType;
         }
         else {
-            delete [] s;
             WARNING << "at line " << linenr << ": [" << s << "]" <<
                 " invalid statement" << endl;
+            delete [] s;
             continue;
         }
         if (! cb) line1 = line;

@@ -2118,17 +2118,30 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
     
     Pixmap pixmap = searchCache(width, height, texture->getTexture(),
                                 texture->getColor(), texture->getColorTo());
-    if (pixmap)
-      return xrender(pixmap, width, height, texture, parent, src_x, src_y,
-                     dest);
+    if (pixmap) {
+        
+#ifdef XFT
+        return xrender(pixmap, width, height, texture, parent, src_x, src_y,
+                       dest);
+#else // !XFT
+        return pixmap;
+#endif // XFT
+        
+    }
 
     WaImage image(this, width, height);
     pixmap = image.render(texture);
 
 #ifdef PIXMAP        
     if (texture->getTexture() & WaImage_Pixmap) {
-        return xrender(pixmap, width, height, texture,
-                       parent, src_x, src_y, dest);
+                
+#ifdef XFT
+        return xrender(pixmap, width, height, texture, parent, src_x, src_y,
+                       dest);
+#else // !XFT
+        return pixmap;
+#endif // XFT
+        
     }
 #endif // PIXMAP
 
@@ -2151,9 +2164,14 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
         
         if ((unsigned) cache->size() > cache_max)
             timeout();
-
-        return xrender(pixmap, width, height, texture,
-                         parent, src_x, src_y, dest);
+                
+#ifdef XFT
+        return xrender(pixmap, width, height, texture, parent, src_x, src_y,
+                       dest);
+#else // !XFT
+        return pixmap;
+#endif // XFT
+        
     }
     return None;
 }

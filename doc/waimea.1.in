@@ -311,7 +311,7 @@ A texture description consists of up to five fields, which are as follows:
 gives the component either a flat, raised or sunken appearance.
 .nf 
 
-.I Gradient / Solid
+.I Gradient / Solid / Pixmap
 .fi
 tells 
 .I waimea 
@@ -325,6 +325,18 @@ to draw either a solid color or a gradiented texture.
 Select one of these texture types. They only work when also
 .I Gradient
 is specified!
+.nf
+
+.fi
+.I Tiled / Scaled / Stretched
+.nf
+.fi
+Select one of these resizing methods. They only work when also
+.I Pixmap
+is specified!. Tiled resizing does not resize the image just tiles it, 
+fastest method. Scaled resizing performs a normal scaling of image, all parts
+of the image are scaled equally. Stretched resizing only scales the middle
+part of the image, all borders are preserved.
 .nf
  
 .I Interlaced
@@ -363,10 +375,20 @@ mode, the
 .I colorTo
 resource is used to find the interlacing color.
 
+.fi
+A image file must be specified for all pixmap textures.
+.IR pixmap 
+resources is used for finding the image file. Must be either a complete
+file path, a Waimea start directory relative file path or an image file
+in the same directory as the style file.
+
 .TP
 .B Opacity level
 Texture opacity level. Integer value from 0 to 100, where 0 is the default 
 non translucent opacity level and and 100 makes it a fully transparent texture.
+This requires that the program setting the background image has support for
+setting _XROOTPMAP_ID property on root window. Esetroot does this.
+Opacity works for all types of textures even pixmaps.
 
 .PP
 Here are the keys 
@@ -389,8 +411,10 @@ or
 .B window.*.focus.color:     Color
 .br
 .B window.*.focus.colorTo:     Color
+.br
+.B window.*.focus.pixmap:     Pixmap
 .RS
-Texure type, opacity level and colors used for focused window textures.
+Texure type, opacity level, colors and pixmap used for focused window textures.
 .RE
 
 .PP
@@ -401,6 +425,8 @@ Texure type, opacity level and colors used for focused window textures.
 .B window.*.unfocus.color:     Color
 .br
 .B window.*.unfocus.colorTo:     Color
+.RS
+.B window.*.unfocus.pixmap:     Pixmap
 .RS
 Texure type, opacity level and colors used for unfocused window textures.
 .RE
@@ -423,6 +449,9 @@ Color used for unfocused window label font.
 .B menu.*.color:     Color 
 .br
 .B menu.*.colorTo:     Color
+.RS
+.B menu.*.pixmap:     Pixmap
+.RS
 .RS
 Texure type, opacity level and colors used for menu textures.
 .RE
@@ -546,6 +575,8 @@ frame menu title height is set by the height of the font.
 .B dockappholder.dock[ID].frame.color:     Color
 .br
 .B dockappholder.dock[ID].frame.colorTo:     Color
+.RS
+.B dockappholder.dock[ID].frame.pixmap:     Pixmap
 .RS
 Texure type, opacity level and colors used for dockappholder 'dock[ID]'s frame 
 texture.

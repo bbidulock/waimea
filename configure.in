@@ -162,6 +162,8 @@ if test x$enableval = "xyes"; then
       CPPFLAGS="$CPPFLAGS `imlib2-config --cflags`"
     fi
   fi
+else
+  AC_MSG_RESULT([no])
 fi
 
 if test $USE_IMLIB -eq 1 ; then
