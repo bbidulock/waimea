@@ -56,7 +56,7 @@ public:
     Display *display;
     bool deleted;
     DockappHandler *dh;
-    int x, y, client_x, client_y;
+    int x, y;
     unsigned int width, height;
 };
 
