@@ -157,21 +157,33 @@ XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
  * to find the WaWindow managing the the window who sent the event. If a
  * WaWindow was found, we update the stuff indicated by the event. If the 
  * name should be updated we also redraw the label foreground for the
- * WaWindow. 
+ * WaWindow. If atom is _NET_WM_STRUT we update the strut list and workarea.
  *
  * @param e	The PropertyEvent
  */
 void EventHandler::EvProperty(XPropertyEvent *e) {
     WaWindow *ww;
 
-    if (e->state == PropertyDelete) return;
-
-    hash_map<Window, WindowObject *>::iterator it;
-    if ((it = waimea->window_table->find(e->window)) !=
-        waimea->window_table->end()) {
-        if (((*it).second)->type == WindowType) {
-            ww = (WaWindow *) (*it).second;
-            if (e->atom == XA_WM_NAME) {
+    if (e->state == PropertyDelete) {
+        if (e->atom == waimea->wascreen->net->net_wm_strut) {
+            list<WMstrut *>::iterator s_it =
+                waimea->wascreen->strut_list->begin();
+            for (; s_it != waimea->wascreen->strut_list->end(); ++s_it) {
+                if ((*s_it)->window == e->window) {
+                    waimea->wascreen->strut_list->remove(*s_it);
+                    free(*s_it);
+                    waimea->wascreen->UpdateWorkarea();
+                }
+            }
+        }
+    } else if (e->atom == waimea->wascreen->net->net_wm_strut) {
+        waimea->wascreen->net->GetWmStrut(e->window, waimea->wascreen);
+    } else if (e->atom == XA_WM_NAME) {
+        hash_map<Window, WindowObject *>::iterator it;
+        if ((it = waimea->window_table->find(e->window)) !=
+            waimea->window_table->end()) {
+            if (((*it).second)->type == WindowType) {
+                ww = (WaWindow *) (*it).second;
                 XGrabServer(e->display);
                 if (validateclient(ww->id))
                     XFetchName(ww->display, ww->id, &(ww->name));

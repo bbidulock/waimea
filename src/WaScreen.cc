@@ -95,6 +95,12 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     shape = XShapeQueryExtension(display, &shape_event, &dummy);
 #endif // SHAPE
 
+    strut_list = new list<WMstrut *>;
+    workarea = (Workarea *) malloc(sizeof(Workarea));
+    workarea->x = workarea->y = 0;
+    workarea->width = width;
+    workarea->height = height;
+    
     dock = new DockappHandler(this);
     
     WaWindow *newwin;
@@ -390,6 +396,40 @@ void WaScreen::CreateXftColor(WaColor *wac, XftColor *xftc) {
     XFreeGC(display, tmp_gc);
 }
 #endif // XFT
+
+/**
+ * @fn    UpdateWorkarea(void)
+ * @brief Update workarea
+ *
+ * Updates workarea, all maximized windows are maximizied to the new
+ * workarea.
+ */
+void WaScreen::UpdateWorkarea(void) {
+    int old_x = workarea->x, old_y = workarea->y,
+        old_width = workarea->width, old_height = workarea->height;
+    
+    list<WMstrut *>::iterator it = strut_list->begin();
+    for (; it != strut_list->end(); ++it) {
+        if ((*it)->left > workarea->x) workarea->x = (*it)->left;
+        if ((width - (*it)->right) < workarea->width)
+            workarea->width = width - (*it)->right;
+        if ((*it)->top > workarea->y) workarea->y = (*it)->top;
+        if ((height - (*it)->bottom) < workarea->height)
+            workarea->height = height - (*it)->bottom;
+    }
+    XEvent *e;
+    WaAction *ac;
+    if (old_x != workarea->x || old_y != workarea->y ||
+        old_width != workarea->width || old_height != workarea->height) {
+        net->SetWorkarea(this);
+
+        list<WaWindow *>::iterator wa_it = waimea->wawindow_list->begin();
+        for (; wa_it != waimea->wawindow_list->end(); ++wa_it) {
+            if ((*wa_it)->flags.max_h) (*wa_it)->MaximizeHorzIgn(e, ac);
+            if ((*wa_it)->flags.max_v) (*wa_it)->MaximizeVertIgn(e, ac);
+        }
+    }
+}
 
 /**
  * @fn    MoveViewportTo(int x, int y)

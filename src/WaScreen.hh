@@ -27,6 +27,20 @@
 #include <X11/extensions/shape.h>
 #endif //SHAPE
 
+typedef struct {
+    Window window;
+    int left;
+    int right;
+    int top;
+    int bottom;
+} WMstrut;
+
+typedef struct {
+    int x;
+    int y;
+    int width;
+    int height;
+} Workarea;
 
 class WaScreen;
 class ScreenEdge;
@@ -96,6 +110,7 @@ public:
     void MenuMap(XEvent *, WaAction *, bool);
     void MenuRemap(XEvent *, WaAction *, bool);
     void MenuUnmap(XEvent *, WaAction *, bool);
+    void UpdateWorkarea(void);
     
     inline void MenuMap(XEvent *e, WaAction *ac) {
         MenuMap(e, ac, False);
@@ -189,6 +204,8 @@ public:
         ugrip_pixel;
     char displaystring[1024];
     ScreenEdge *west, *east, *north, *south;
+    list<WMstrut *> *strut_list;
+    Workarea *workarea;
 
 #ifdef SHAPE
     int shape, shape_event;

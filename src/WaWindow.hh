@@ -127,9 +127,11 @@ public:
     void UnMaximize(XEvent *, WaAction *);
     void ToggleMaximize(XEvent *, WaAction *);
     void MaximizeHorz(XEvent *, WaAction *);
+    void MaximizeHorzIgn(XEvent *, WaAction *);
     void UnMaximizeHorz(XEvent *, WaAction *);
     void ToggleMaximizeHorz(XEvent *, WaAction *);
     void MaximizeVert(XEvent *, WaAction *);
+    void MaximizeVertIgn(XEvent *, WaAction *);
     void UnMaximizeVert(XEvent *, WaAction *);
     void ToggleMaximizeVert(XEvent *, WaAction *);
     void Close(XEvent *, WaAction *);

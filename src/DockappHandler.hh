@@ -43,6 +43,7 @@ public:
     unsigned int width, height, gridspace;
     Pixmap background;
     unsigned long background_pixel;
+    WMstrut *wm_strut;
 
     list<Dockapp *> *dockapp_list;
 };

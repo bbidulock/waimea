@@ -62,6 +62,8 @@ public:
 
     void wXDNDMakeAwareness(Window);
     void wXDNDClearAwareness(Window);
+    void GetWmStrut(Window, WaScreen *);
+    void SetWorkarea(WaScreen *);
     
     Waimea *waimea;
     Display *display;
@@ -71,7 +73,8 @@ public:
 
     Atom mwm_hints_atom, wm_state, net_state_sticky, net_state_shaded,
         net_virtual_pos, net_desktop_viewport, net_desktop_geometry,
-        xa_xdndaware, xa_xdndenter, xa_xdndleave;
+        net_wm_strut, net_workarea, xa_xdndaware, xa_xdndenter,
+        xa_xdndleave;
 
 private:
     XEvent event;

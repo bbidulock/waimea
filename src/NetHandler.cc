@@ -44,11 +44,14 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_DESKTOP_VIEWPORT", False);
     net_desktop_geometry =
         XInternAtom(display, "_NET_DESKTOP_GEOMETRY", False);
+    net_wm_strut =
+        XInternAtom(display, "_NET_WM_STRUT", False);
+    net_workarea =
+        XInternAtom(display, "_NET_WORKAREA", False);
     
     xa_xdndaware = XInternAtom(display, "XdndAware", False);
     xa_xdndenter = XInternAtom(display, "XdndEnter", False);
     xa_xdndleave = XInternAtom(display, "XdndLeave", False);
-
 
     event.type = ClientMessage;
     event.xclient.display = display;
@@ -493,6 +496,72 @@ void NetHandler::SetDesktopGeometry(WaScreen *ws) {
     
     XChangeProperty(display, ws->id, net_desktop_geometry, XA_CARDINAL, 32,
                     PropModeReplace, (unsigned char *) &data, 2);
+}
+
+/**
+ * @fn    GetWmStrut(Window window, WaScreen *ws)
+ * @brief Reads WM_STRUT hint
+ *
+ * Reads WM_STRUT hint for a window, adds it to the strut list and updates
+ * workarea.
+ *
+ * @param window Window to read WM_STRUT hint from
+ * @param ws WaScreen to add WM_STRUT hints to
+ */
+void NetHandler::GetWmStrut(Window window, WaScreen *ws) {
+    CARD32 *data;
+    WMstrut *wm_strut;
+    bool found = False;
+    
+    if (XGetWindowProperty(display, window, net_wm_strut, 0L, 2L, 
+                           False, XA_CARDINAL, &real_type,
+                           &real_format, &items_read, &items_left, 
+                           (unsigned char **) &data) == Success && 
+        items_read >= 4) {
+        list<WMstrut *>::iterator it = ws->strut_list->begin();
+        for (; it != ws->strut_list->end(); ++it) {
+            if ((*it)->window == window) {
+                (*it)->left = data[0];
+                (*it)->right = data[1];
+                (*it)->top = data[2];
+                (*it)->bottom = data[3];
+                found = True;
+                ws->UpdateWorkarea();
+            }
+        }
+        if (! found) {
+            wm_strut = (WMstrut *) malloc(sizeof(WMstrut));
+            wm_strut->window = window;
+            wm_strut->left = data[0];
+            wm_strut->right = data[1];
+            wm_strut->top = data[2];
+            wm_strut->bottom = data[3];
+            ws->strut_list->push_back(wm_strut);
+            ws->UpdateWorkarea();
+        }
+        XFree(data);
+    }
+}
+
+/**
+ * @fn    SetWorkarea(Workarea *workarea)
+ * @brief Sets window manager workarea
+ *
+ * Sets the window manager workarea, used for placing icons and maximizing
+ * windows.
+ *
+ * @param workarea Structure containing workarea parameters
+ */
+void NetHandler::SetWorkarea(WaScreen *ws) {
+    CARD32 data[4];
+
+    data[0] = ws->workarea->x;
+    data[1] = ws->workarea->y;
+    data[2] = ws->workarea->width;
+    data[3] = ws->workarea->height;
+    
+    XChangeProperty(waimea->display, ws->id, net_workarea, XA_ATOM,
+                    32, PropModeAppend, (unsigned char *) &data, 4);
 }
 
 /**

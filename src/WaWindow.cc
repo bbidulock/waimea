@@ -1560,12 +1560,33 @@ void WaWindow::ToggleMaximize(XEvent *e, WaAction *ac) {
 void WaWindow::MaximizeHorz(XEvent *, WaAction *) {
     int n_w, n_h, new_width;
     
-    new_width = wascreen->width - (flags.border * border_w * 2);
+    new_width = wascreen->workarea->width - (flags.border * border_w * 2);
         
     if (IncSizeCheck(new_width, attrib.height, &n_w, &n_h)) {
         restore_max.x = attrib.x;
         restore_max.width = attrib.width;
-        attrib.x = border_w;
+        attrib.x = wascreen->workarea->x + border_w;
+        attrib.width = n_w;
+        RedrawWindow();
+        flags.max_h = True;
+        DrawMaxButtonFg();
+    }
+}
+
+/**
+ * @fn    MaximizeHorzIgn(XEvent *, WaAction *)
+ * @brief Maximize the window horizontally
+ *
+ * Maximizes the window so that the window with it's decorations fills up
+ * the hole screen, don't save old size.
+ */
+void WaWindow::MaximizeHorzIgn(XEvent *, WaAction *) {
+    int n_w, n_h, new_width;
+    
+    new_width = wascreen->workarea->width - (flags.border * border_w * 2);
+        
+    if (IncSizeCheck(new_width, attrib.height, &n_w, &n_h)) {
+        attrib.x = wascreen->workarea->x + border_w;
         attrib.width = n_w;
         RedrawWindow();
         flags.max_h = True;
@@ -1609,7 +1630,7 @@ void WaWindow::ToggleMaximizeHorz(XEvent *e, WaAction *ac) {
 }
 
 /**
- * @fn    MaximizeHorz(XEvent *, WaAction *)
+ * @fn    MaximizeVert(XEvent *, WaAction *)
  * @brief Maximize the window vertically
  *
  * Maximizes the window so that the window with it's decorations fills up
@@ -1618,7 +1639,7 @@ void WaWindow::ToggleMaximizeHorz(XEvent *e, WaAction *ac) {
 void WaWindow::MaximizeVert(XEvent *, WaAction *) {
     int n_w, n_h, new_height;
 
-    new_height = wascreen->height - (flags.border * border_w * 2) -
+    new_height = wascreen->workarea->height - (flags.border * border_w * 2) -
         title_w - handle_w - (border_w * flags.title) -
         (border_w * flags.handle);
 
@@ -1626,7 +1647,32 @@ void WaWindow::MaximizeVert(XEvent *, WaAction *) {
     if (IncSizeCheck(attrib.width, new_height, &n_w, &n_h)) {
         restore_max.y = attrib.y;
         restore_max.height = attrib.height;
-        attrib.y = title_w + border_w + (border_w * flags.title);
+        attrib.y = wascreen->workarea->y + title_w + border_w +
+            (border_w * flags.title);
+        attrib.height = n_h;
+        RedrawWindow();
+        flags.max_v = True;
+        DrawMaxButtonFg();
+    }
+}
+
+/**
+ * @fn    MaximizeVertIgn(XEvent *, WaAction *)
+ * @brief Maximize the window vertically
+ *
+ * Maximizes the window so that the window with it's decorations fills up
+ * the hole screen, don't save old size.
+ */
+void WaWindow::MaximizeVertIgn(XEvent *, WaAction *) {
+    int n_w, n_h, new_height;
+
+    new_height = wascreen->workarea->height - (flags.border * border_w * 2) -
+        title_w - handle_w - (border_w * flags.title) -
+        (border_w * flags.handle);
+
+    if (IncSizeCheck(attrib.width, new_height, &n_w, &n_h)) {
+        attrib.y = wascreen->workarea->y + title_w + border_w +
+            (border_w * flags.title);
         attrib.height = n_h;
         RedrawWindow();
         flags.max_v = True;

@@ -68,6 +68,14 @@ DockappHandler::DockappHandler(WaScreen *scrn) {
         waimea->always_on_top_list->push_back(id);
     else
         waimea->always_at_bottom_list->push_back(id);
+
+    wm_strut = (WMstrut *) malloc(sizeof(WMstrut));
+    wm_strut->window = id;
+    wm_strut->left = 0;
+    wm_strut->right = 0;
+    wm_strut->top = 0;
+    wm_strut->bottom = 0;
+    wascreen->strut_list->push_back(wm_strut);
 }
 
 /**
@@ -84,6 +92,9 @@ DockappHandler::~DockappHandler(void) {
     while (! dockapp_list->empty())
         delete dockapp_list->front();
     XDestroyWindow(display, id);
+    wascreen->strut_list->remove(wm_strut);
+    free(wm_strut);
+    wascreen->UpdateWorkarea();
 }
 
 
@@ -151,13 +162,30 @@ void DockappHandler::Update(void) {
     XClearWindow(display, id);    
     XResizeWindow(display, id, width, height);
 
-    if (geometry & XNegative)
-        map_x = wascreen->width - wascreen->wstyle.border_width * 2 - width + x;
-    if (geometry & YNegative)
-        map_y = wascreen->height - wascreen->wstyle.border_width * 2 - height + y;
+    wm_strut->left = wm_strut->right = wm_strut->top = wm_strut->bottom = 0;
+    if (geometry & XNegative) {
+        map_x = wascreen->width - wascreen->wstyle.border_width * 2 -
+            width + x;
+        wm_strut->right = wascreen->width - map_x;
+    } else
+        wm_strut->left = map_x + wascreen->wstyle.border_width * 2 + width;
+    
+    if (geometry & YNegative) {
+        map_y = wascreen->height - wascreen->wstyle.border_width * 2 -
+            height + y;
+        if (direction == HorizontalDock) {
+            wm_strut->bottom = wascreen->height - map_y;
+            wm_strut->right = wm_strut->left = 0;
+        }
+    } else
+        if (direction == HorizontalDock) {
+            wm_strut->top = map_y + wascreen->wstyle.border_width * 2 + height;
+            wm_strut->right = wm_strut->left = 0;
+        }
     
     XMoveWindow(display, id, map_x, map_y);
     XMapWindow(display, id);
+    wascreen->UpdateWorkarea();
 }
 
 /**
