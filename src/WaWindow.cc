@@ -1773,8 +1773,8 @@ void WaWindow::Resize(XEvent *e, int how) {
                 waimea->eh->HandleEvent(&event);
                 if (waimea->eh->move_resize != EndMoveResizeType) break;
                 if (started) ToggleOutline();
-                attrib.width = width;
-                attrib.height = height;
+                attrib.width = n_w;
+                attrib.height = n_h;
                 attrib.x = n_x;
                 RedrawWindow();
                 while (! maprequest_list->empty()) {
