@@ -232,7 +232,6 @@ if test x$enableval = "xyes"; then
       AC_MSG_RESULT([** WARNING: Disabled pixmap support])
       CPPFLAGS="$save_cppflags"
       LDFLAGS="$save_ldflags"),
-    AC_MSG_RESULT([no])
     AC_MSG_RESULT([** WARNING: Could not find imlib_create_imaget in -lImlib2])
     AC_MSG_RESULT([** WARNING: Disabled pixmap support])
     CPPFLAGS="$save_cppflags"
