@@ -289,6 +289,8 @@ void WaMenu::Build(WaScreen *screen) {
         (*it)->height = (*it)->realheight = f_height;
         
         if ((*it)->type == MenuTitleType) {
+            height -= f_height;
+            height += t_height;
             (*it)->height = (*it)->realheight = t_height;
             height += wascreen->mstyle.border_width * 2;
             (*it)->realheight = t_height + wascreen->mstyle.border_width * 2;
