@@ -459,9 +459,9 @@ void WaWindow::RedrawWindow(void) {
         
         resize = True;
         if (flags.handle) {
-            handle->attrib.y = attrib.height + title_w + border_w;
-            grip_l->attrib.y = attrib.height + title_w + border_w;
-            grip_r->attrib.y = attrib.height + title_w + border_w;
+            handle->attrib.y = frame->attrib.height - handle_w - border_w;
+            grip_l->attrib.y = frame->attrib.height - handle_w - border_w;
+            grip_r->attrib.y = frame->attrib.height - handle_w - border_w;
 
             XMoveWindow(display, handle->id, handle->attrib.x,
                         handle->attrib.y);
