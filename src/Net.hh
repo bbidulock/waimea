@@ -14,8 +14,10 @@
 #ifndef __NetHandler_hh
 #define __NetHandler_hh
 
+extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xproto.h>
+}
 
 class NetHandler;
 
@@ -85,9 +87,9 @@ public:
     void SetWorkarea(WaScreen *);
     void DeleteSupported(WaScreen *);
 
-#ifdef XRENDER
+#ifdef RENDER
     void GetXRootPMapId(WaScreen *);
-#endif // XRENDER
+#endif // RENDER
 
     void GetWmType(WaWindow *);
     
@@ -114,9 +116,9 @@ public:
         net_number_of_desktops, net_close_window, net_wm_visible_name,
         net_desktop_names, utf8_string, net_wm_desktop, net_wm_desktop_mask;
     
-#ifdef XRENDER
+#ifdef RENDER
     Atom xrootpmap_id;
-#endif // XRENDER
+#endif // RENDER
 
 private:
     XEvent event;

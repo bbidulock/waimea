@@ -21,6 +21,7 @@
 
 #include "Menu.hh"
 
+extern "C" {
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
 #endif // HAVE_STDIO_H
@@ -28,9 +29,9 @@
 #ifdef    STDC_HEADERS
 #  include <string.h>
 #endif // STDC_HEADERS
+}
 
 #include <iostream>
-
 using std::cerr;
 using std::cout;
 using std::endl;
@@ -58,10 +59,10 @@ WaMenu::WaMenu(char *n) : WindowObject((Window) 0, MenuType) {
     rf = NULL;
     mf = NULL;
 
-#ifdef XRENDER
+#ifdef RENDER
     pixmap = None;
     render_if_opacity = false;
-#endif // XRENDER
+#endif // RENDER
     
 }
 
@@ -82,12 +83,12 @@ WaMenu::~WaMenu(void) {
             wascreen->wa_list_stacking.remove(this);
         XDestroyWindow(display, frame);
 
-#ifdef XRENDER
+#ifdef RENDER
         if (pixmap) {
             XSync(display, false);
             XFreePixmap(wascreen->pdisplay, pixmap);
         }
-#endif // XRENDER
+#endif // RENDER
 
     }
     delete [] name;
@@ -261,10 +262,10 @@ void WaMenu::Build(WaScreen *screen) {
             db = true;
     }
     
-#ifdef XRENDER
+#ifdef RENDER
     pixmap = XCreatePixmap(wascreen->pdisplay, wascreen->id, width,
                            height, wascreen->screen_depth);
-#endif // XRENDER
+#endif // RENDER
     
     texture = &wascreen->mstyle.title;
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
@@ -325,10 +326,10 @@ void WaMenu::Build(WaScreen *screen) {
                                        wascreen->colormap);
 #endif // XFT
 
-#ifdef XRENDER
+#ifdef RENDER
         (*it)->pixmap = XCreatePixmap(wascreen->pdisplay, wascreen->id, width,
                                       (*it)->height, wascreen->screen_depth);
-#endif // XRENDER
+#endif // RENDER
         
         if ((*it)->type == MenuTitleType) {
             (*it)->actionlist = &wascreen->config.mtacts;
@@ -360,7 +361,7 @@ void WaMenu::Render(void) {
         ((y + height) > 0 && y < wascreen->height)) {
         WaTexture *texture = &wascreen->mstyle.back_frame;
         
-#ifdef XRENDER
+#ifdef RENDER
         if (render_if_opacity && ! texture->getOpacity()) return;
         if (texture->getOpacity()) {
             pixmap = wascreen->ic->xrender(pbackframe, width, height, texture,
@@ -387,7 +388,7 @@ void WaMenu::Render(void) {
                 XClearWindow(display, frame);
             }
         } else {
-#endif // XRENDER
+#endif // RENDER
 
             Pixmap p_tmp;
             if (db) {
@@ -420,9 +421,9 @@ void WaMenu::Render(void) {
             }
             XClearWindow(display, frame);
             
-#ifdef XRENDER
+#ifdef RENDER
         }
-#endif // XRENDER
+#endif // RENDER
         
         list<WaMenuItem *>::iterator it = item_list.begin();
         for (; it != item_list.end(); ++it) {
@@ -533,13 +534,13 @@ void WaMenu::Move(int dx, int dy, bool render) {
     y += dy;
     XMoveWindow(display, frame, x, y);
 
-#ifdef XRENDER
+#ifdef RENDER
     if (render) {
         render_if_opacity = true;
         Render();
         render_if_opacity = false;
     }
-#endif // XRENDER
+#endif // RENDER
     
 }
 
@@ -839,9 +840,9 @@ WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     xftdraw = (Drawable) 0;
 #endif // XFT
 
-#ifdef XRENDER
+#ifdef RENDER
     pixmap = None;
-#endif // XRENDER
+#endif // RENDER
     
 }
 
@@ -872,9 +873,9 @@ WaMenuItem::~WaMenuItem(void) {
     if (xftdraw) XftDrawDestroy(xftdraw);
 #endif // XFT
 
-#ifdef XRENDER    
+#ifdef RENDER    
     if (pixmap != None) XFreePixmap(menu->wascreen->pdisplay, pixmap);
-#endif // XRENDER
+#endif // RENDER
     
     if (id) {
         menu->waimea->window_table.erase(id);
@@ -904,7 +905,7 @@ void WaMenuItem::Render(void) {
         ((menu->y + dy + height) > 0 && (menu->y + dy) <
          menu->wascreen->height)) {
         if (type == MenuTitleType) {
-#ifdef XRENDER
+#ifdef RENDER
             if (menu->render_if_opacity && ! texture->getOpacity()) return;
             if (texture->getOpacity()) {
                 pixmap = menu->wascreen->ic->xrender(menu->ptitle, menu->width,
@@ -926,7 +927,7 @@ void WaMenuItem::Render(void) {
                     Draw();
                 }
             }
-#endif // XRENDER
+#endif // RENDER
             if (menu->wascreen->config.db) {
                 db = true;
                 if (menu->ptitle) Draw(menu->ptitle);
@@ -945,7 +946,7 @@ void WaMenuItem::Render(void) {
             }
         }
         else if (hilited) {
-#ifdef XRENDER
+#ifdef RENDER
             if (menu->render_if_opacity && ! texture->getOpacity()) return;
             if (texture->getOpacity()) {
                 pixmap = menu->wascreen->ic->xrender(menu->philite,
@@ -969,7 +970,7 @@ void WaMenuItem::Render(void) {
                     return;
                 }
             }
-#endif // XRENDER
+#endif // RENDER
             
             if (menu->wascreen->config.db) {
                 db = true;
@@ -1007,9 +1008,9 @@ void WaMenuItem::Draw(Drawable drawable, bool frame, int y) {
     char *l;
     int org_y = y;
 
-#ifdef XRENDER
+#ifdef RENDER
     if (menu->render_if_opacity && ! texture->getOpacity()) return;
-#endif // XRENDER
+#endif // RENDER
 
     WaFont *wafont = (hilited)? &menu->wascreen->mstyle.wa_fh_font:
         &menu->wascreen->mstyle.wa_f_font;
@@ -1429,12 +1430,21 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
                   &py, &i, &i, &ui);
     
     maprequest_list = new list<XEvent *>;
-    XGrabPointer(menu->display, id, true, ButtonReleaseMask |
-                 ButtonPressMask | PointerMotionMask | EnterWindowMask |
-                 LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
-                 menu->waimea->move_cursor, CurrentTime);
-    XGrabKeyboard(menu->display, id, true, GrabModeAsync, GrabModeAsync,
-                  CurrentTime);
+    if (XGrabPointer(menu->display, id, true, ButtonReleaseMask |
+                     ButtonPressMask | PointerMotionMask | EnterWindowMask |
+                     LeaveWindowMask, GrabModeAsync, GrabModeAsync,
+                     menu->wascreen->id, menu->waimea->move_cursor,
+                     CurrentTime) != GrabSuccess) {
+        move_resize = false;
+        menu->waimea->eh->move_resize = EndMoveResizeType;
+        return;
+    }
+    if (XGrabKeyboard(menu->display, id, true, GrabModeAsync, GrabModeAsync,
+                      CurrentTime) != GrabSuccess) {
+        move_resize = false;
+        menu->waimea->eh->move_resize = EndMoveResizeType;
+        return;
+    }
     for (;;) {
         menu->waimea->eh->EventLoop(
             menu->waimea->eh->menu_viewport_move_return_mask, &event);
@@ -1460,7 +1470,18 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
                     menu->wascreen->north->id == event.xcrossing.window ||
                     menu->wascreen->south->id == event.xcrossing.window) {
                     menu->waimea->eh->HandleEvent(&event);
-                } 
+                } else if (event.type == EnterNotify &&
+                           event.xany.window != id) {
+                    int cx, cy;
+                    XQueryPointer(menu->display, menu->wascreen->id,
+                                  &w, &w, &cx,
+                                  &cy, &i, &i, &ui);
+                    nx += cx - px;
+                    ny += cy - py;
+                    px = cx;
+                    py = cy;
+                    menu->DrawOutline(nx - menu->x, ny - menu->y);
+                }
                 break;
             case MapRequest:
                 maprequest_list->push_front(&event); break;
@@ -1513,12 +1534,21 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                   &py, &i, &i, &ui);
     
     maprequest_list = new list<XEvent *>;
-    XGrabPointer(menu->display, id, true, ButtonReleaseMask |
-                 ButtonPressMask | PointerMotionMask | EnterWindowMask |
-                 LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
-                 menu->waimea->move_cursor, CurrentTime);
-    XGrabKeyboard(menu->display, id, true, GrabModeAsync, GrabModeAsync,
-                  CurrentTime);
+    if (XGrabPointer(menu->display, id, true, ButtonReleaseMask |
+                     ButtonPressMask | PointerMotionMask | EnterWindowMask |
+                     LeaveWindowMask, GrabModeAsync, GrabModeAsync,
+                     menu->wascreen->id, menu->waimea->move_cursor,
+                     CurrentTime) != GrabSuccess) {
+        move_resize = false;
+        menu->waimea->eh->move_resize = EndMoveResizeType;
+        return;
+    }
+    if (XGrabKeyboard(menu->display, id, true, GrabModeAsync, GrabModeAsync,
+                      CurrentTime) != GrabSuccess) {
+        move_resize = false;
+        menu->waimea->eh->move_resize = EndMoveResizeType;
+        return;
+    }
     for (;;) {
         menu->waimea->eh->EventLoop(
             menu->waimea->eh->menu_viewport_move_return_mask, &event);
@@ -1532,13 +1562,12 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                 px = event.xmotion.x_root;
                 py = event.xmotion.y_root;
                 menu->Move(nx - menu->x, ny - menu->y
-                           
-#ifdef XRENDER
+                         
+#ifdef RENDER
                            , !menu->wascreen->config.lazy_trans
-#endif // XRENDER
-
+#endif // RENDER
+                           
                            );
-
                 break;
             case LeaveNotify:
             case EnterNotify:
@@ -1547,7 +1576,24 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                     menu->wascreen->north->id == event.xcrossing.window ||
                     menu->wascreen->south->id == event.xcrossing.window) {
                     menu->waimea->eh->HandleEvent(&event);
-                } 
+                } else if (event.type == EnterNotify &&
+                           event.xany.window != id) {
+                    int cx, cy;
+                    XQueryPointer(menu->display, menu->wascreen->id,
+                                  &w, &w, &cx,
+                                  &cy, &i, &i, &ui);
+                    nx += cx - px;
+                    ny += cy - py;
+                    px = cx;
+                    py = cy;
+                    menu->Move(nx - menu->x, ny - menu->y
+                         
+#ifdef RENDER
+                               , !menu->wascreen->config.lazy_trans
+#endif // RENDER
+                                   
+                               );
+                }
                 break;
             case MapRequest:
                 map_ev = new XEvent;

@@ -14,17 +14,18 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
-#include "Waimea.hh"
-
+extern "C" {
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
 #endif // HAVE_STDIO_H
+}
 
 #include <iostream>
-
 using std::cerr;
 using std::cout;
 using std::endl;
+
+#include "Waimea.hh"
 
 void usage(void);
 void help(void);

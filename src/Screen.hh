@@ -15,15 +15,21 @@
 #ifndef __Screen_hh
 #define __Screen_hh
 
+extern "C" {
 #include <X11/Xlib.h>
 
-#ifdef    XRENDER
+#ifdef    RENDER
 #  include <X11/extensions/Xrender.h>
-#endif // XRENDER
+#endif // RENDER
+
+#ifdef    XINERAMA
+#  include <X11/extensions/Xinerama.h>
+#endif // XINERAMA
 
 #ifdef    XFT
 #  include <X11/Xft/Xft.h>
 #endif // XFT
+}
 
 class WaScreen;
 class ScreenEdge;
@@ -61,7 +67,7 @@ public:
         workarea.width = w;
         workarea.height = h;
     }
-    int number;
+    unsigned int number;
     Workarea workarea;
 };
 
@@ -106,9 +112,9 @@ typedef struct {
     long unsigned int cache_max;
     bool image_dither, transient_above, db;
 
-#ifdef XRENDER
+#ifdef RENDER
     bool lazy_trans;
-#endif // XRENDER
+#endif // RENDER
     
     list<WaAction *> frameacts, awinacts, pwinacts, titleacts, labelacts,
         handleacts, rgacts, lgacts, rootacts, weacts, eeacts, neacts,
@@ -209,14 +215,19 @@ public:
     Pixmap fgrip, ugrip;
     Display *pdisplay;
     
-#ifdef XRENDER
+#ifdef RENDER
     bool render_extension;
     Pixmap xrootpmap_id;
-#endif // XRENDER
+#endif // RENDER
 
 #ifdef PIXMAP
     Imlib_Context imlib_context;
 #endif // PIXMAP
+
+#ifdef XINERAMA
+    XineramaScreenInfo *xinerama_info;
+    int xinerama_info_num;
+#endif // XINERAMA
 
     unsigned long fbutton_pixel, ubutton_pixel, pbutton_pixel, fgrip_pixel,
         ugrip_pixel;

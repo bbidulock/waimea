@@ -15,13 +15,15 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
+extern "C" {
 #include <X11/Xatom.h>
-
-#include "Event.hh"
 
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
-#endif // HAVE_STDIO_H
+#endif // HAVE_STDIO_H    
+}
+
+#include "Event.hh"
 
 /**
  * @fn    EventHandler(Waimea *wa)
@@ -94,7 +96,7 @@ void EventHandler::EventLoop(set<int> *return_mask, XEvent *event) {
         XNextEvent(waimea->display, event);
         
         if (return_mask->find(event->type) != return_mask->end()) return;
-
+        
         HandleEvent(event);
     }
 }
@@ -267,7 +269,7 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
                 ww->label->Draw();
         }
     }
-#ifdef XRENDER
+#ifdef RENDER
     else if (e->atom == waimea->net->xrootpmap_id) {
         if (WaScreen *ws = (WaScreen *) waimea->FindWin(e->window, RootType)) {
             waimea->net->GetXRootPMapId(ws);
@@ -287,7 +289,7 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
             }
         }
     }
-#endif // XRENDER
+#endif // RENDER
     
 }
 
@@ -550,7 +552,7 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
     else if (e->xclient.message_type == waimea->net->net_state) {
         if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
                                                WindowType))) {
-            if (e->xclient.data.l[0] == 0xffffffff) {
+            if ((unsigned int) e->xclient.data.l[0] == 0xffffffff) {
                 ww->desktop_mask = (1L << 16) - 1;
                 ww->Show();
                 ww->net->SetDesktop(ww);

@@ -17,9 +17,8 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
+extern "C" {
 #include <X11/Xlib.h>
-
-#include "Resources.hh"
 
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
@@ -48,13 +47,16 @@ inline char *basename(char *name) {
 #ifdef    PIXMAP
 #  include <Imlib2.h>
 #endif // PIXMAP
+}
 
 #include <iostream>
-
 using std::cerr;
 using std::cout;
 using std::endl;
 
+#include "Resources.hh"
+
+    
 /**
  * @fn    ResourceHandler(void)
  * @brief Constructor for ResourceHandler class
@@ -318,6 +320,11 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     bdetails.push_back(new StrComp("button5", Button5));
     bdetails.push_back(new StrComp("button6", 6));
     bdetails.push_back(new StrComp("button7", 7));
+    bdetails.push_back(new StrComp("button8", 8));
+    bdetails.push_back(new StrComp("button9", 9));
+    bdetails.push_back(new StrComp("button10", 10));
+    bdetails.push_back(new StrComp("button11", 11));
+    bdetails.push_back(new StrComp("button12", 12));
     
     mods.push_back(new StrComp("shiftmask", ShiftMask));
     mods.push_back(new StrComp("lockmask", LockMask));
@@ -534,7 +541,7 @@ void ResourceHandler::LoadConfig(WaScreen *wascreen) {
     } else
         sc->db = true;
 
-#ifdef XRENDER
+#ifdef RENDER
     sprintf(rc_name, "screen%d.lazyTransparency", sn);
     sprintf(rc_class, "Screen%d.LazyTransparency", sn);
     if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
@@ -544,7 +551,7 @@ void ResourceHandler::LoadConfig(WaScreen *wascreen) {
             sc->lazy_trans = false;
     } else
         sc->lazy_trans = true;
-#endif // XRENDER
+#endif // RENDER
 
     sprintf(rc_name, "screen%d.colorsPerChannel", sn);
     sprintf(rc_class, "Screen%d.ColorsPerChannel", sn);
@@ -1978,7 +1985,7 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
         delete [] colortoname;
     }
 
-#ifdef XRENDER
+#ifdef RENDER
     if (texture->getTexture() & WaImage_ParentRelative) {
         delete [] colorclass;
         delete [] colorname;
@@ -2048,7 +2055,7 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
             XFreePixmap(ic->getDisplay(), solidPixmap);
         }
     }
-#endif // XRENDER
+#endif // RENDER
         
     delete [] colorclass;
     delete [] colorname;

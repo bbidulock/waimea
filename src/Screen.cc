@@ -17,9 +17,8 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
+extern "C" {
 #include <X11/cursorfont.h>
-
-#include "Screen.hh"
 
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
@@ -38,12 +37,14 @@
 #ifdef    HAVE_SIGNAL_H
 #  include <signal.h>
 #endif // HAVE_SIGNAL_H
+}
 
 #include <iostream>
-
 using std::cerr;
 using std::cout;
 using std::endl;
+
+#include "Screen.hh"
 
 /**
  * @fn    WaScreen(Display *d, int scrn_number, Waimea *wa)
@@ -122,11 +123,11 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
 	
     v_x = v_y = 0;
 
-#ifdef XRENDER
+#ifdef RENDER
     int event_basep, error_basep;
     render_extension =
       XRenderQueryExtension(pdisplay, &event_basep, &error_basep);
-#endif // XRENDER
+#endif // RENDER
 
     rh->LoadConfig(this);
     
@@ -178,12 +179,12 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     net->GetDesktopViewPort(this);
     net->SetDesktopViewPort(this);
 
-#ifdef XRENDER
+#ifdef RENDER
     if (render_extension) {
       net->GetXRootPMapId(this);
       ic->setXRootPMapId((xrootpmap_id)? true: false);
     }
-#endif // XRENDER
+#endif // RENDER
 
     list<DockStyle *>::iterator dit = wstyle.dockstyles.begin();
     for (; dit != wstyle.dockstyles.end(); ++dit) {
@@ -924,6 +925,32 @@ void WaScreen::UpdateWorkarea(void) {
     }
 }
 
+//  int WaScreen::WSwidth(int x) {
+    
+//  #ifdef XINERAMA
+//      for (int i = 0; i < xinerama_info_num; ++i) {
+//          xinerama_info[i].x_org
+//              xinerama_info[i].y_org,
+//              xinerama_info[i].width
+//              xinerama_info[i].height));
+        
+//  #endif // XINERAMA
+    
+//      return current_desktop->workarea.width;
+//  }
+
+//  int WaScreen::WSx(int x) {
+//      current_desktop->workarea.x;
+//  }
+
+//  int WaScreen::WSheight(int y) {
+//      current_desktop->workarea.height;
+//  }
+
+//  int WaScreen::WSy(int y) {
+//      current_desktop->workarea.y;
+//  }
+
 /**
  * @fn    MoveViewportTo(int x, int y)
  * @brief Move viewport to position
@@ -1147,9 +1174,9 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                     if ((*it2)->mapped && (! (*it2)->root_menu))
                         (*it2)->Move(x_move, y_move
 
-#ifdef XRENDER
+#ifdef RENDER
                                      , !config.lazy_trans
-#endif // XRENDER
+#endif // RENDER
 
                                      );
                 }
@@ -1184,20 +1211,20 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                         (((*it)->attrib.y + (*it)->attrib.height) > 0 &&
                          (*it)->attrib.y < height)) {
                         
-#ifdef XRENDER
+#ifdef RENDER
                         if (config.lazy_trans) {
                             (*it)->render_if_opacity = true;
                             (*it)->DrawTitlebar();
                             (*it)->DrawHandlebar();
                             (*it)->render_if_opacity = false;
                         }
-#endif // XRENDER
+#endif // RENDER
 
                         (*it)->SendConfig();
                     }
                 }
 
-#ifdef XRENDER
+#ifdef RENDER
                 if (config.lazy_trans) {
                     list<WaMenu *>::iterator it2 = wamenu_list.begin();
                     for (; it2 != wamenu_list.end(); ++it2) {
@@ -1205,7 +1232,7 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                             (*it2)->Move(0, 0, true);
                     }
                 }
-#endif // XRENDER
+#endif // RENDER
 
                 net->SetDesktopViewPort(this);
                 XUngrabKeyboard(display, CurrentTime);
@@ -1546,7 +1573,7 @@ void WaScreen::NextDesktop(XEvent *, WaAction *) {
  * @param ac WaAction object
  */
 void WaScreen::PreviousDesktop(XEvent *, WaAction *) {
-        if (current_desktop->number - 1 == -1)
+    if (current_desktop->number == 0)
         GoToDesktop(config.desktops - 1);
     else
         GoToDesktop(current_desktop->number - 1);

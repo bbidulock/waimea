@@ -273,17 +273,17 @@ void DockappHandler::Update(void) {
 void DockappHandler::Render(void) {
     WaTexture *texture = &style->style.texture;
     
-#ifdef XRENDER
+#ifdef RENDER
     if (texture->getOpacity()) {
         background = XCreatePixmap(wascreen->pdisplay, wascreen->id, width,
                                    height, wascreen->screen_depth);
     }
-#endif // XRENDER
+#endif // RENDER
     
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         background = None;
         background_pixel = texture->getColor()->getPixel();
-#ifdef XRENDER        
+#ifdef RENDER        
         if (texture->getOpacity()) {
             background = wascreen->ic->xrender(None, width, height, texture,
                                                wascreen->xrootpmap_id,
@@ -295,30 +295,30 @@ void DockappHandler::Render(void) {
             XSetWindowBackgroundPixmap(display, id, background);
         } else
             XSetWindowBackground(display, id, background_pixel);
-#else // ! XRENDER
+#else // ! RENDER
         XSetWindowBackground(display, id, background_pixel);
-#endif // XRENDER
+#endif // RENDER
         
     } else {
         background = wascreen->ic->renderImage(width, height, texture
 
-#ifdef XRENDER
+#ifdef RENDER
                                                , wascreen->xrootpmap_id,
                                                map_x +
                                                style->style.border_width,
                                                map_y +
                                                style->style.border_width,
                                                background
-#endif // XRENDER
+#endif // RENDER
                                                
                                                );
         XSetWindowBackgroundPixmap(display, id, background);
     }
     XClearWindow(display, id);
     
-#ifdef XRENDER    
+#ifdef RENDER    
     if (texture->getOpacity()) XFreePixmap(wascreen->pdisplay, background);
-#endif // XRENDER
+#endif // RENDER
 }
     
 /**

@@ -17,6 +17,7 @@
 
 #include "Timer.hh"
 
+extern "C" {
 #ifdef    HAVE_SIGNAL_H
 #  include <signal.h>
 #endif // HAVE_SIGNAL_H
@@ -24,7 +25,8 @@
 #ifdef    HAVE_UNISTD_H
 #  include <unistd.h>
 #endif // HAVE_UNISTD_H
-
+}
+    
 Timer *timer;
 
 /**

@@ -14,11 +14,13 @@
 #ifndef __Font_hh
 #define __Font_hh
 
+extern "C" {
 #include <X11/Xlib.h>
 
 #ifdef    XFT
 #  include <X11/Xft/Xft.h>
 #endif // XFT
+}
 
 class WaColor;
 

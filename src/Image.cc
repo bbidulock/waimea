@@ -22,8 +22,7 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
-#include "Image.hh"
-
+extern "C" {
 #ifdef    HAVE_SYS_TYPES_H
 #  include <sys/types.h>
 #endif // HAVE_SYS_TYPES_H
@@ -52,12 +51,14 @@ typedef unsigned int u_int32_t;
 #ifdef    HAVE_CTYPE_H
 #  include <ctype.h>
 #endif // HAVE_CTYPE_H
+}
 
 #include <iostream>
-
 using std::cerr;
 using std::cout;
 using std::endl;
+
+#include "Image.hh"
 
 static unsigned long bsqrt(unsigned long x) {
     if (x <= 0) return 0;
@@ -73,7 +74,7 @@ static unsigned long bsqrt(unsigned long x) {
     }
 }
 
-#ifdef XRENDER
+#ifdef RENDER
 bool have_root_pmap = true;
 
 int WaTexture::getOpacity(void) {
@@ -82,16 +83,16 @@ int WaTexture::getOpacity(void) {
     
     return 0;
 }
-#endif // XRENDER
+#endif // RENDER
 
 void WaColor::setRGB(unsigned short r, unsigned short g, unsigned short b) {
     
-#ifdef XRENDER
+#ifdef RENDER
     xrenderc.red = r;
     xrenderc.green = g;
     xrenderc.blue = b;
     xrenderc.alpha = 0xFFFF;
-#endif // XRENDER
+#endif // RENDER
     
     if (r == 65535) red = 0xff;
     else red = (r / 0xff);
@@ -2188,12 +2189,12 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
                                 texture->getColor(), texture->getColorTo());
     if (pixmap) {
         
-#ifdef XRENDER
+#ifdef RENDER
         retp = xrender(pixmap, width, height, texture, parent, src_x, src_y,
                        dest);
-#else // !XRENDER
+#else // !RENDER
         retp = pixmap;
-#endif // XRENDER
+#endif // RENDER
         
         XSync(wascreen->display, false);
         XSync(wascreen->pdisplay, false);
@@ -2206,12 +2207,12 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
 #ifdef PIXMAP
     if (texture->getTexture() & WaImage_Pixmap) {
         
-#ifdef XRENDER
+#ifdef RENDER
         retp = xrender(pixmap, width, height, texture, parent, src_x, src_y,
                        dest);
-#else // !XRENDER
+#else // !RENDER
         retp = pixmap;
-#endif // XRENDER
+#endif // RENDER
 
         XSync(wascreen->display, false);
         XSync(wascreen->pdisplay, false);
@@ -2239,12 +2240,12 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
         if ((unsigned) cache->size() > cache_max)
             timeout();
                 
-#ifdef XRENDER
+#ifdef RENDER
         retp = xrender(pixmap, width, height, texture, parent, src_x, src_y,
                        dest);
-#else // !XRENDER
+#else // !RENDER
         retp = pixmap;
-#endif // XRENDER
+#endif // RENDER
 
         XSync(wascreen->display, false);
         XSync(wascreen->pdisplay, false);
@@ -2507,7 +2508,7 @@ void WaImageControl::timeout(void) {
     }
 }
 
-#ifdef XRENDER
+#ifdef RENDER
 Pixmap WaImageControl::xrender(Pixmap p, unsigned int width,
                                unsigned int height, WaTexture *texture,
                                Pixmap parent, unsigned int src_x,
@@ -2549,4 +2550,4 @@ Pixmap WaImageControl::xrender(Pixmap p, unsigned int width,
 
 void WaImageControl::setXRootPMapId(bool hrp) { have_root_pmap = hrp; }
 
-#endif // XRENDER
+#endif // RENDER

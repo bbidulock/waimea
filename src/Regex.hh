@@ -14,6 +14,7 @@
 #ifndef __Regex_hh
 #define __Regex_hh
 
+extern "C" {
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
 #endif // HAVE_STDIO_H
@@ -25,6 +26,7 @@
 #ifdef    HAVE_REGEX_H
 #  include <regex.h>
 #endif // HAVE_REGEX_H
+}
 
 class Regex {
 public:

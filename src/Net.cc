@@ -15,7 +15,9 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
+extern "C" {
 #include <X11/Xatom.h>
+}
 
 #include "Net.hh"
 
@@ -125,10 +127,10 @@ NetHandler::NetHandler(Waimea *wa) {
     net_wm_desktop_mask =
         XInternAtom(display, "_NET_WM_DESKTOP_MASK", false);
 
-#ifdef XRENDER
+#ifdef RENDER
     xrootpmap_id =
         XInternAtom(display, "_XROOTPMAP_ID", false);
-#endif // XRENDER    
+#endif // RENDER    
     
     xa_xdndaware = XInternAtom(display, "XdndAware", false);
     xa_xdndenter = XInternAtom(display, "XdndEnter", false);
@@ -544,9 +546,9 @@ void NetHandler::SetSupported(WaScreen *ws) {
     data[i++] = net_state_aot;
     data[i++] = net_state_aab;
 
-#ifdef XRENDER
+#ifdef RENDER
     data[i++] = net_state_parentrelative_background;
-#endif // XRENDER
+#endif // RENDER
     
     data[i++] = net_maximized_restore;
     data[i++] = net_virtual_pos;
@@ -1169,7 +1171,7 @@ void NetHandler::DeleteSupported(WaScreen *ws) {
     XDeleteProperty(display, ws->id, net_supported);
 }
 
-#ifdef XRENDER
+#ifdef RENDER
 /**
  * @fn    GetXRootPMapId(WaScreen *ws)
  * @brief Reads XROOTPMAPID hint
@@ -1197,7 +1199,7 @@ void NetHandler::GetXRootPMapId(WaScreen *ws) {
     XSync(ws->display, false);
     XSync(ws->pdisplay, false);
 }
-#endif // XRENDER
+#endif // RENDER
 
 /**
  * @fn    GetType(WaWindow *ww)

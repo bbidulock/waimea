@@ -14,15 +14,15 @@
 #ifndef __Waimea_hh
 #define __Waimea_hh
 
+extern "C" {
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
+}
 
 #include <list>
-
 using std::list;
 
 #include <map>
-
 using std::map;
 using std::make_pair;
 
@@ -175,6 +175,14 @@ public:
 #ifdef SHAPE
     int shape, shape_event;
 #endif // SHAPE
+
+#ifdef XINERAMA
+    int xinerama, xinerama_event;
+#endif // XINERAMA
+
+#ifdef RANDR
+    int randr, randr_event;
+#endif // RANDR
     
 };
 

@@ -15,20 +15,21 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
-
+extern "C" {
+#include <X11/Xutil.h>
+    
 #ifdef    SHAPE
-#  include <X11/Xutil.h>
 #  include <X11/extensions/shape.h>
 #endif // SHAPE
 
-#include "Waimea.hh"
+#ifdef    XINERAMA
+#  include <X11/extensions/Xinerama.h>
+#endif // XINERAMA
 
-#include <iostream>
-
-using std::cerr;
-using std::cout;
-using std::endl;
-
+#ifdef    RANDR
+#  include <X11/extensions/Xrandr.h>
+#endif // RANDR
+    
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
 #endif // HAVE_STDIO_H
@@ -42,10 +43,18 @@ using std::endl;
 #  include <sys/wait.h>
 #  include <unistd.h>
 #endif // HAVE_UNISTD_H
-
+    
 #ifdef    HAVE_SIGNAL_H
 #  include <signal.h>
 #endif // HAVE_SIGNAL_H
+}
+
+#include <iostream>
+using std::cerr;
+using std::cout;
+using std::endl;
+
+#include "Waimea.hh"
 
 Waimea *waimea;
 char **argv;
@@ -68,6 +77,7 @@ int errors;
  */
 Waimea::Waimea(char **av, struct waoptions *_options) {
     struct sigaction action;
+    int dummy;
 
     argv = av;
     options = _options;
@@ -97,10 +107,37 @@ Waimea::Waimea(char **av, struct waoptions *_options) {
     resizeright_cursor = XCreateFontCursor(display, XC_lr_angle);
 
 #ifdef SHAPE
-    int dummy;
     shape = XShapeQueryExtension(display, &shape_event, &dummy);
 #endif // SHAPE
 
+#ifdef XINERAMA
+    xinerama = XineramaQueryExtension(display, &xinerama_event, &dummy);
+    if (xinerama)
+        xinerama = XineramaIsActive(display);
+    else
+        xinerama = false;
+
+//    if (xinerama) {
+//          int num;
+//          XineramaScreenInfo *info = XineramaQueryScreens(display, &num);
+//          if (num > 0 && info) {
+//              for (int i = 0; i < num; ++i) {
+//                  cout << i << ":" << endl;
+//                  cout << "\tx: " << info[i].x_org << endl;
+//                  cout << "\ty: " << info[i].y_org << endl;
+//                  cout << "\tw: " << info[i].width << endl;
+//                  cout << "\th: " << info[i].height << endl;
+//              }
+//              XFree(info);
+//          }
+//      }
+#endif // XINERAMA
+
+#ifdef RANDR
+    randr = XRRQueryExtension(display, &randr_event, &dummy);
+    //cout << "randr: " << randr << endl;
+#endif // RANDR
+    
     rh = new ResourceHandler(this, options);
     net = new NetHandler(this);
 

@@ -15,6 +15,7 @@
 #ifndef __Window_hh
 #define __Window_hh
 
+extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xmd.h>
@@ -22,6 +23,7 @@
 #ifdef    SHAPE
 #  include <X11/extensions/shape.h>
 #endif // SHAPE
+}
 
 class WaWindow;
 class WaChildWindow;
@@ -235,11 +237,11 @@ public:
     list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
         *handleacts, *lgacts, *rgacts;
     list<WaAction *> **bacts;
-    long int desktop_mask;
+    unsigned int desktop_mask;
 
-#ifdef XRENDER
+#ifdef RENDER
     bool render_if_opacity;
-#endif // XRENDER
+#endif // RENDER
     
 private:
     void ReparentWin(void);

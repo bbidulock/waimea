@@ -15,7 +15,9 @@
 #ifndef __Menu_hh
 #define __Menu_hh
 
+extern "C" {
 #include <X11/Xlib.h>
+}
 
 class WaMenu;
 class WaMenuItem;
@@ -74,10 +76,10 @@ public:
     WaScreen *rf;
     WaMenuItem *mf;
     
-#ifdef XRENDER
+#ifdef RENDER
     Pixmap pixmap;
     bool render_if_opacity;
-#endif // XRENDER
+#endif // RENDER
   
 private:
     int f_height, t_height, s_height;
@@ -197,9 +199,9 @@ public:
     XftDraw *xftdraw;
 #endif // XFT
     
-#ifdef XRENDER
+#ifdef RENDER
     Pixmap pixmap;
-#endif // XRENDER
+#endif // RENDER
 
 };
 

@@ -14,6 +14,7 @@
 #ifndef __Event_hh
 #define __Event_hh
 
+extern "C" {
 #include <X11/Xlib.h>
 
 #ifdef    TIME_WITH_SYS_TIME
@@ -26,9 +27,9 @@
 #    include <time.h>
 #  endif // HAVE_SYS_TIME_H
 #endif // TIME_WITH_SYS_TIME
+}
 
 #include <set>
-
 using std::set;
 
 class EventHandler;

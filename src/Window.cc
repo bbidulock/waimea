@@ -17,8 +17,7 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
-#include "Window.hh"
-
+extern "C" {
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
 #endif // HAVE_STDIO_H
@@ -26,6 +25,9 @@
 #ifdef    STDC_HEADERS
 #  include <string.h>
 #endif // STDC_HEADERS
+}
+
+#include "Window.hh"
 
 /**
  * @fn    WaWindow(Window win_id, WaScreen *scrn) :
@@ -75,9 +77,9 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     shaped = false;
 #endif //SHAPE
 
-#ifdef XRENDER
+#ifdef RENDER
     render_if_opacity = false;
-#endif // XRENDER
+#endif // RENDER
 
     
     border_w = title_w = handle_w = 0;
@@ -682,7 +684,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
         }
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
         
-#ifdef XRENDER
+#ifdef RENDER
         if (! resize && ! force_if_viewable) {
             if (! wascreen->config.lazy_trans) {
                 render_if_opacity = true;
@@ -691,7 +693,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
                 render_if_opacity = false;
             }
         }
-#endif // XRENDER
+#endif // RENDER
 
     }
     if (force_if_viewable) {
@@ -729,14 +731,14 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
     }
     if ((move || resize) && (! flags.shaded) && (! dontsend)) {
         
-#ifdef XRENDER
+#ifdef RENDER
         if (wascreen->config.lazy_trans) {
             render_if_opacity = true;
             DrawTitlebar();
             DrawHandlebar();
             render_if_opacity = false;
         }
-#endif // XRENDER
+#endif // RENDER
 
         net->SetVirtualPos(this);
         SendConfig();
@@ -1240,47 +1242,47 @@ void WaWindow::Focus(bool vis) {
     if (! flags.focusable || ((! vis) && hidden)) return;
     
     if (mapped) {
+        if (vis) {
+            if (! (desktop_mask &
+                   (1L << wascreen->current_desktop->number))) {
+                list<Desktop *>::iterator dit =
+                    wascreen->desktop_list.begin();
+                for (; dit != wascreen->desktop_list.end(); dit++)
+                    if (desktop_mask & (1L << (*dit)->number)) {
+                        wascreen->GoToDesktop((*dit)->number);
+                        break;
+                    }
+            }
+            if (attrib.x >= wascreen->width ||
+                attrib.y >= wascreen->height ||
+                (attrib.x + attrib.width) <= 0 ||
+                (attrib.y + attrib.height) <= 0) {
+                x = wascreen->v_x + attrib.x;
+                y = wascreen->v_y + attrib.y;
+                newvx = (x / wascreen->width) * wascreen->width;
+                newvy = (y / wascreen->height) * wascreen->height;
+                wascreen->MoveViewportTo(newvx, newvy);
+                XSync(display, false);
+                while (XCheckTypedEvent(display, EnterNotify, &e));
+            }
+        }
+        XInstallColormap(display, attrib.colormap);
         XGrabServer(display);
         if (validateclient_mapped(id)) {
-            if (vis) {
-                if (! (desktop_mask &
-                       (1L << wascreen->current_desktop->number))) {
-                    list<Desktop *>::iterator dit =
-                        wascreen->desktop_list.begin();
-                    for (; dit != wascreen->desktop_list.end(); dit++)
-                        if (desktop_mask & (1L << (*dit)->number)) {
-                            wascreen->GoToDesktop((*dit)->number);
-                            break;
-                        }
-                }
-                if (attrib.x >= wascreen->width ||
-                    attrib.y >= wascreen->height ||
-                    (attrib.x + attrib.width) <= 0 ||
-                    (attrib.y + attrib.height) <= 0) {
-                    x = wascreen->v_x + attrib.x;
-                    y = wascreen->v_y + attrib.y;
-                    newvx = (x / wascreen->width) * wascreen->width;
-                    newvy = (y / wascreen->height) * wascreen->height;
-                    wascreen->MoveViewportTo(newvx, newvy);
-                    XSync(display, false);
-                    while (XCheckTypedEvent(display, EnterNotify, &e));
-                }
-            }
-            XInstallColormap(display, attrib.colormap);
             XSetInputFocus(display, id, RevertToPointerRoot, CurrentTime);
-            if (transient_for) {
-                map<Window, WindowObject *>::iterator hit;
-                if ((hit = waimea->window_table.find(transient_for)) !=
-                    waimea->window_table.end()) {
-                    if (((*hit).second)->type == WindowType) {
-                        ((WaWindow *) (*hit).second)->transients.remove(id);
-                        ((WaWindow *)
-                         (*hit).second)->transients.push_front(id);
-                    }
+        } else DELETED;
+        XUngrabServer(display);
+        if (transient_for) {
+            map<Window, WindowObject *>::iterator hit;
+            if ((hit = waimea->window_table.find(transient_for)) !=
+                waimea->window_table.end()) {
+                if (((*hit).second)->type == WindowType) {
+                    ((WaWindow *) (*hit).second)->transients.remove(id);
+                    ((WaWindow *)
+                     (*hit).second)->transients.push_front(id);
                 }
             }
         }
-        XUngrabServer(display);
     } else
         want_focus = true;
 }
@@ -1320,12 +1322,23 @@ void WaWindow::Move(XEvent *e, WaAction *) {
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id)) {
-        XGrabPointer(display, (mapped) ? id: wascreen->id, true,
-                     ButtonReleaseMask | ButtonPressMask | PointerMotionMask |
-                     EnterWindowMask | LeaveWindowMask, GrabModeAsync,
-                     GrabModeAsync, None, waimea->move_cursor, CurrentTime);
-        XGrabKeyboard(display, (mapped) ? id: wascreen->id, true,
-                      GrabModeAsync, GrabModeAsync, CurrentTime);
+        if (XGrabPointer(display, (mapped && !hidden) ? id: wascreen->id, true,
+                         ButtonReleaseMask | ButtonPressMask |
+                         PointerMotionMask | EnterWindowMask |
+                         LeaveWindowMask, GrabModeAsync, GrabModeAsync,
+                         None, waimea->move_cursor, CurrentTime)
+            != GrabSuccess) {
+            move_resize = false;
+            waimea->eh->move_resize = EndMoveResizeType;
+            return;
+        }
+        if (XGrabKeyboard(display, (mapped && !hidden) ? id: wascreen->id,
+                          true, GrabModeAsync, GrabModeAsync, CurrentTime)
+            != GrabSuccess) {
+            move_resize = false;
+            waimea->eh->move_resize = EndMoveResizeType;
+            return;
+        }
     } else DELETED;
     XUngrabServer(display);
     for (;;) {
@@ -1351,7 +1364,20 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                     wascreen->north->id == event.xcrossing.window ||
                     wascreen->south->id == event.xcrossing.window) {
                     waimea->eh->HandleEvent(&event);
-                } 
+                } else if (event.type == LeaveNotify) {
+                    int cx, cy;
+                    XQueryPointer(display, wascreen->id, &w, &w, &cx, &cy, &i,
+                                  &i, &ui);
+                    nx += cx - px;
+                    ny += cy - py;
+                    px = cx;
+                    py = cy;
+                    if (! started) {
+                        CreateOutline();
+                        started = true;
+                    }
+                    DrawOutline(nx, ny, attrib.width, attrib.height);
+                }
                 break;
             case DestroyNotify:
             case UnmapNotify:
@@ -1443,12 +1469,23 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id)) {
-        XGrabPointer(display, (mapped) ? id: wascreen->id, true,
-                     ButtonReleaseMask | ButtonPressMask | PointerMotionMask |
-                     EnterWindowMask | LeaveWindowMask, GrabModeAsync,
-                     GrabModeAsync, None, waimea->move_cursor, CurrentTime);
-        XGrabKeyboard(display, (mapped) ? id: wascreen->id, true,
-                      GrabModeAsync, GrabModeAsync, CurrentTime);
+        if (XGrabPointer(display, (mapped && !hidden) ? id: wascreen->id, true,
+                         ButtonReleaseMask | ButtonPressMask |
+                         PointerMotionMask | EnterWindowMask |
+                         LeaveWindowMask, GrabModeAsync, GrabModeAsync,
+                         None, waimea->move_cursor, CurrentTime)
+            != GrabSuccess) {
+            move_resize = false;
+            waimea->eh->move_resize = EndMoveResizeType;
+            return;
+        }
+        if (XGrabKeyboard(display, (mapped && !hidden) ? id: wascreen->id,
+                          true, GrabModeAsync, GrabModeAsync, CurrentTime)
+            != GrabSuccess) {
+            move_resize = false;
+            waimea->eh->move_resize = EndMoveResizeType;
+            return;
+        }
     } else DELETED;
     XUngrabServer(display);
     for (;;) {
@@ -1472,7 +1509,18 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                     wascreen->north->id == event.xcrossing.window ||
                     wascreen->south->id == event.xcrossing.window) {
                     waimea->eh->HandleEvent(&event);
-                } 
+                } else if (event.type == LeaveNotify) {
+                    int cx, cy;
+                    XQueryPointer(display, wascreen->id, &w, &w, &cx, &cy, &i,
+                                  &i, &ui);
+                    nx += cx - px;
+                    ny += cy - py;
+                    px = cx;
+                    py = cy;
+                    attrib.x = nx;
+                    attrib.y = ny;
+                    RedrawWindow();
+                }
                 break;
             case DestroyNotify:
             case UnmapNotify:
@@ -1511,14 +1559,14 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                 if (waimea->eh->move_resize != EndMoveResizeType) break;
                 if (attrib.x != sx || attrib.y != sy) {
 
-#ifdef XRENDER
+#ifdef RENDER
                     if (wascreen->config.lazy_trans) {
                         render_if_opacity = true;
                         DrawTitlebar();
                         DrawHandlebar();
                         render_if_opacity = false;
                     }
-#endif // XRENDER
+#endif // RENDER
 
                     SendConfig();
                     net->SetVirtualPos(this);
@@ -1576,14 +1624,24 @@ void WaWindow::Resize(XEvent *e, int how) {
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id)) {
-        XGrabPointer(display, (mapped) ? id: wascreen->id, true,
-                     ButtonReleaseMask | ButtonPressMask | PointerMotionMask |
-                     EnterWindowMask | LeaveWindowMask, GrabModeAsync,
-                     GrabModeAsync, None, (how > 0) ?
-                     waimea->resizeright_cursor: waimea->resizeleft_cursor,
-                     CurrentTime);
-        XGrabKeyboard(display, (mapped) ? id: wascreen->id, true,
-                      GrabModeAsync, GrabModeAsync, CurrentTime);
+        if (XGrabPointer(display, (mapped && !hidden) ? id: wascreen->id, true,
+                         ButtonReleaseMask | ButtonPressMask |
+                         PointerMotionMask | EnterWindowMask |
+                         LeaveWindowMask, GrabModeAsync, GrabModeAsync,
+                         None, (how > 0) ? waimea->resizeright_cursor:
+                         waimea->resizeleft_cursor, CurrentTime)
+            != GrabSuccess) {
+            move_resize = false;
+            waimea->eh->move_resize = EndMoveResizeType;
+            return;
+        }
+        if (XGrabKeyboard(display, (mapped && !hidden) ? id: wascreen->id,
+                          true, GrabModeAsync, GrabModeAsync, CurrentTime)
+            != GrabSuccess) {
+            move_resize = false;
+            waimea->eh->move_resize = EndMoveResizeType;
+            return;
+        }
     } else DELETED;
     XUngrabServer(display);
     for (;;) {
@@ -1622,7 +1680,26 @@ void WaWindow::Resize(XEvent *e, int how) {
                     n_x = attrib.x;
                     if (how == WestType) n_x -= n_w - attrib.width;
                     DrawOutline(n_x, attrib.y, n_w, n_h);
-                } 
+                } else if (event.type == LeaveNotify) {
+                    int cx, cy;
+                    XQueryPointer(display, wascreen->id, &w, &w, &cx, &cy, &i,
+                                  &i, &ui);
+                    width  += (cx - px) * how;
+                    height += cy - py;
+                    px = cx;
+                    py = cy;
+                    if (IncSizeCheck(width, height, &n_w, &n_h)) {
+                        if (how == WestType) n_x -= n_w - o_w;
+                        if (! started) {
+                            CreateOutline();
+                            started = true;
+                        }
+                        o_x = n_x;
+                        o_w = n_w;
+                        o_h = n_h;
+                        DrawOutline(n_x, attrib.y, n_w, n_h);
+                    }
+                }
                 break;
             case DestroyNotify:
             case UnmapNotify:
@@ -1719,14 +1796,24 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id)) {
-        XGrabPointer(display, (mapped) ? id: wascreen->id, true,
-                     ButtonReleaseMask | ButtonPressMask | PointerMotionMask |
-                     EnterWindowMask | LeaveWindowMask, GrabModeAsync,
-                     GrabModeAsync, None, (how > 0) ?
-                     waimea->resizeright_cursor: waimea->resizeleft_cursor,
-                     CurrentTime);
-        XGrabKeyboard(display, (mapped) ? id: wascreen->id, true,
-                      GrabModeAsync, GrabModeAsync, CurrentTime);
+        if (XGrabPointer(display, (mapped && !hidden) ? id: wascreen->id, true,
+                         ButtonReleaseMask | ButtonPressMask |
+                         PointerMotionMask | EnterWindowMask |
+                         LeaveWindowMask, GrabModeAsync, GrabModeAsync,
+                         None, (how > 0) ? waimea->resizeright_cursor:
+                         waimea->resizeleft_cursor, CurrentTime)
+            != GrabSuccess) {
+            move_resize = false;
+            waimea->eh->move_resize = EndMoveResizeType;
+            return;
+        }
+        if (XGrabKeyboard(display, (mapped && !hidden) ? id: wascreen->id,
+                          true, GrabModeAsync, GrabModeAsync, CurrentTime)
+            != GrabSuccess) {
+            move_resize = false;
+            waimea->eh->move_resize = EndMoveResizeType;
+            return;
+        }
     } else DELETED;
     XUngrabServer(display);
     for (;;) {
@@ -1757,7 +1844,22 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                     waimea->eh->HandleEvent(&event);
                     px -= (wascreen->v_x - old_vx);
                     py -= (wascreen->v_y - old_vy);
-                } 
+                } else if (event.type == LeaveNotify) {
+                    int cx, cy;
+                    XQueryPointer(display, wascreen->id, &w, &w, &cx, &cy, &i,
+                                  &i, &ui);
+                    width  += (cx - px) * how;
+                    height += cy - py;
+                    px = cx;
+                    py = cy;
+                    if (IncSizeCheck(width, height, &n_w, &n_h)) {
+                        if (how == WestType)
+                            attrib.x -= n_w - attrib.width;
+                        attrib.width  = n_w;
+                        attrib.height = n_h;
+                        RedrawWindow();
+                    }
+                }
                 break;
             case DestroyNotify:
             case UnmapNotify:
@@ -2852,7 +2954,7 @@ void WaWindow::DesktopMask(XEvent *, WaAction *ac) {
             desktop_mask = 0;
             char *token = strtok(ac->param, " \t");
             while (token) {
-                int desk = (unsigned int) atoi(token);
+                unsigned int desk = (unsigned int) atoi(token);
                 if (desk < wascreen->config.desktops)
                     desktop_mask |= (1L << desk);
                 token = strtok(NULL, " \t");
@@ -3194,7 +3296,7 @@ void WaChildWindow::Render(void) {
     WaTexture *texture = (wa->has_focus)? f_texture: u_texture;
     Pixmap pixmap = None;
 
-#ifdef XRENDER
+#ifdef RENDER
     Pixmap xpixmap;
     int pos_x = wa->attrib.x + attrib.x + wa->border_w;
     int pos_y = wa->attrib.y - wa->title_w + attrib.y;
@@ -3203,7 +3305,7 @@ void WaChildWindow::Render(void) {
                                 attrib.width, attrib.height,
                                 wascreen->screen_depth);
     } else if (wa->render_if_opacity && IsDrawable()) return;
-#endif // XRENDER
+#endif // RENDER
     
     switch (type) {
         case ButtonType: {
@@ -3236,18 +3338,18 @@ void WaChildWindow::Render(void) {
                      &bstyle->t_unfocused);
             }
 
-#ifdef XRENDER
+#ifdef RENDER
             if (texture->getOpacity())
                 pixmap = ic->xrender(pixmap, attrib.width, attrib.height,
                                      texture, wascreen->xrootpmap_id, pos_x,
                                      pos_y, xpixmap);
-#endif // XRENDER
+#endif // RENDER
                 
         } break;
         case LGripType:
         case RGripType:
             done = true;
-#ifdef XRENDER
+#ifdef RENDER
             if (texture->getOpacity())
                 pixmap = ic->xrender((wa->has_focus)? wascreen->fgrip:
                                      wascreen->ugrip,
@@ -3255,7 +3357,7 @@ void WaChildWindow::Render(void) {
                                      texture, wascreen->xrootpmap_id, pos_x,
                                      pos_y, xpixmap);
             else
-#endif // XRENDER
+#endif // RENDER
                 pixmap = (wa->has_focus)? wascreen->fgrip: wascreen->ugrip;
             
             break;
@@ -3263,21 +3365,21 @@ void WaChildWindow::Render(void) {
     if (! done) {
         if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
             pixmap = None;
-#ifdef XRENDER
+#ifdef RENDER
             if (texture->getOpacity())
                 pixmap = ic->xrender(None, attrib.width, attrib.height,
                                      texture, wascreen->xrootpmap_id, pos_x,
                                      pos_y, xpixmap);
-#endif // XRENDER
+#endif // RENDER
             
         } else
             pixmap = ic->renderImage(attrib.width,
                                      attrib.height, texture
                                       
-#ifdef XRENDER
+#ifdef RENDER
                                      , wascreen->xrootpmap_id, pos_x, pos_y,
                                      xpixmap
-#endif // XRENDER
+#endif // RENDER
                                       
                                      );
     }
@@ -3289,9 +3391,9 @@ void WaChildWindow::Render(void) {
 #ifdef PIXMAP
         if (
             
-#ifdef XRENDER        
+#ifdef RENDER        
             (! texture->getOpacity()) &&
-#endif // XRENDER
+#endif // RENDER
             
             (texture->getTexture() & WaImage_Pixmap)) {
             XSync(display, false);
@@ -3311,12 +3413,12 @@ void WaChildWindow::Render(void) {
 
     if (! wascreen->config.db) Draw();
 
-#ifdef XRENDER
+#ifdef RENDER
     if (pixmap && texture->getOpacity()) {
         XSync(display, false);
         XFreePixmap(wascreen->pdisplay, pixmap);
     }
-#endif // XRENDER
+#endif // RENDER
     
 }
 
