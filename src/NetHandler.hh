@@ -53,10 +53,6 @@ public:
     void SetStateSticky(WaWindow *, int);
     void GetStateShaded(WaWindow *);
     void SetStateShaded(WaWindow *, int);
-    void GetStateMaxH(WaWindow *);
-    void SetStateMaxH(WaWindow *, int);
-    void GetStateMaxV(WaWindow *);
-    void SetStateMaxV(WaWindow *, int);
     void SetVirtualPos(WaWindow *);
     void GetVirtualPos(WaWindow *);
 
@@ -74,9 +70,8 @@ public:
     MwmHints *mwm_hints;
 
     Atom mwm_hints_atom, wm_state, net_state_sticky, net_state_shaded,
-        net_state_max_v, net_state_max_h, net_virtual_pos,
-        net_desktop_viewport, net_desktop_geometry, xa_xdndaware,
-        xa_xdndenter, xa_xdndleave;
+        net_virtual_pos, net_desktop_viewport, net_desktop_geometry,
+        xa_xdndaware, xa_xdndenter, xa_xdndleave;
 
 private:
     XEvent event;

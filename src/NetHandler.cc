@@ -38,10 +38,6 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_WM_STATE_STICKY", False);
     net_state_shaded =
         XInternAtom(display, "_NET_WM_STATE_SHADED", False);
-    net_state_max_v =
-        XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
-    net_state_max_h =
-        XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
     net_virtual_pos =
         XInternAtom(display, "_NET_VIRTUAL_POS", False);
     net_desktop_viewport =
@@ -325,21 +321,19 @@ void NetHandler::GetStateShaded(WaWindow *ww) {
                                  &n_w, &n_h)) {
                 ww->attrib.width = n_w;
                 ww->attrib.height = n_h;
-                if (ww->flags.max_v) mv = True;
-                if (ww->flags.max_h) mh = True;
+                ww->flags.max_h = False;
                 ww->RedrawWindow();
-                if (mv) ww->flags.max_v = True;
-                if (mh) ww->flags.max_h = True;
             }
         } else {
             if (ww->flags.shaded) {
                 ww->flags.shaded = False;
-                ww->attrib.height = ww->restore_shade.height;
-                if (ww->flags.max_v) mv = True;
-                if (ww->flags.max_h) mh = True;
+                if (ww->restore_shade.width) {
+                    ww->attrib.height = ww->restore_shade.width;
+                    ww->restore_shade.width = 0;
+                } else
+                    ww->attrib.height = ww->restore_shade.height;
+                
                 ww->RedrawWindow();
-                if (mv) ww->flags.max_v = True;
-                if (mh) ww->flags.max_h = True;
             }
         }
         XFree(data); 
@@ -366,21 +360,19 @@ void NetHandler::SetStateShaded(WaWindow *ww, int newstate) {
                              &n_w, &n_h)) {
             ww->attrib.width = n_w;
             ww->attrib.height = n_h;
-            if (ww->flags.max_v) mv = True;
-            if (ww->flags.max_h) mh = True;
+            ww->flags.max_h = False;
             ww->RedrawWindow();
-            if (mv) ww->flags.max_v = True;
-            if (mh) ww->flags.max_h = True;
         }
     } else {
         if (ww->flags.shaded) {
             ww->flags.shaded = False;
-            ww->attrib.height = ww->restore_shade.height;
-            if (ww->flags.max_v) mv = True;
-            if (ww->flags.max_h) mh = True;
+            if (ww->restore_shade.width) {
+                ww->attrib.height = ww->restore_shade.width;
+                ww->restore_shade.width = 0;
+            } else
+                ww->attrib.height = ww->restore_shade.height;
+            
             ww->RedrawWindow();
-            if (mv) ww->flags.max_v = True;
-            if (mh) ww->flags.max_h = True;
         }
     }
     data[0] = ww->flags.shaded;
@@ -388,181 +380,6 @@ void NetHandler::SetStateShaded(WaWindow *ww, int newstate) {
     XGrabServer(display);
     if (validateclient(ww->id))
         XChangeProperty(display, ww->id, net_state_shaded, XA_CARDINAL, 32,
-                        PropModeReplace, (unsigned char *) &data, 1);
-    XUngrabServer(display);
-}
-
-
-/**
- * @fn    GetStateMaxH(WaWindow *ww)
- * @brief Reads maximized horizotally state
- *
- * Reads WaWindows maximized horizotally state.
- *
- * @param ww WaWindow object
- */
-void NetHandler::GetStateMaxH(WaWindow *ww) {
-    CARD32 *data;
-    int n_w, n_h, width;
-    
-    if (XGetWindowProperty(display, ww->id, net_state_max_h, 0L, 2L, 
-                           False, XA_CARDINAL, &real_type,
-                           &real_format, &items_read, &items_left, 
-                           (unsigned char **) &data) == Success && 
-        items_read) {
-        if (*data) {
-            width = ww->wascreen->width -
-                (ww->flags.border * ww->border_w * 2);
-            
-            if (ww->IncSizeCheck(width, ww->attrib.height, &n_w, &n_h)) {
-                ww->restore_max.x = ww->attrib.x;
-                ww->restore_max.width = ww->attrib.width;
-                ww->attrib.x = ww->border_w;
-                ww->attrib.width = n_w;
-                ww->RedrawWindow();
-            }
-            ww->flags.max_h = True;
-        } 
-        XFree(data); 
-    }
-}
-
-/**
- * @fn    SetStateMaxH(WaWindow *ww, int newstate)
- * @brief Sets maximized horizotally state
- *
- * Sets WaWindows maximized horizotally state.
- *
- * @param ww WaWindow object
- * @param newstate New maximized horizotally state
- */
-void NetHandler::SetStateMaxH(WaWindow *ww, int newstate) {
-    CARD32 data[1];
-    int n_w, n_h, width;
-
-    switch (newstate) {
-        case 0:
-             if (ww->flags.max_h) {
-                 if (ww->IncSizeCheck(ww->restore_max.width,
-                                      ww->attrib.height, &n_w, &n_h)) {
-                     ww->attrib.x = ww->restore_max.x;
-                     ww->attrib.width = n_w;
-                     ww->RedrawWindow();
-                 }
-             }
-             break;
-        case 1:
-            width = ww->wascreen->width -
-                (ww->flags.border * ww->border_w * 2);
-        
-            if (ww->IncSizeCheck(width, ww->attrib.height, &n_w, &n_h)) {
-                ww->restore_max.x = ww->attrib.x;
-                ww->restore_max.width = ww->attrib.width;
-                ww->attrib.x = ww->border_w;
-                ww->attrib.width = n_w;
-                ww->RedrawWindow();
-                ww->flags.max_h = True;
-            }
-            break;
-        default:
-            ww->flags.max_h = False;
-    }
-    data[0] = ww->flags.max_h;
-    
-    XGrabServer(display);
-    if (validateclient(ww->id))
-        XChangeProperty(display, ww->id, net_state_max_h, XA_CARDINAL, 32,
-                        PropModeReplace, (unsigned char *) &data, 1);
-    XUngrabServer(display);
-}
-
-/**
- * @fn    GetStateMaxV(WaWindow *ww)
- * @brief Reads maximized vertically state
- *
- * Reads WaWindows maximized vertically state.
- *
- * @param ww WaWindow object
- */
-void NetHandler::GetStateMaxV(WaWindow *ww) {
-    CARD32 *data;
-    int n_w, n_h, height;
-    
-    if (XGetWindowProperty(display, ww->id, net_state_max_v, 0L, 2L, 
-                           False, XA_CARDINAL, &real_type,
-                           &real_format, &items_read, &items_left, 
-                           (unsigned char **) &data) == Success && 
-        items_read) {
-        if (*data) {
-            height = ww->wascreen->height -
-                (ww->flags.border * ww->border_w * 2) -
-                ww->title_w - ww->handle_w -
-                (ww->border_w * ww->flags.title) -
-                (ww->border_w * ww->flags.handle);
-            
-            if (ww->IncSizeCheck(ww->attrib.width, height, &n_w, &n_h)) {
-                ww->restore_max.y = ww->attrib.y;
-                ww->restore_max.height = ww->attrib.height;
-                ww->attrib.y = ww->title_w + ww->border_w +
-                    (ww->border_w * ww->flags.title);
-                ww->attrib.height = n_h;
-                ww->RedrawWindow();
-            }
-            ww->flags.max_v = True;
-        }
-        XFree(data); 
-    }
-}
-
-/**
- * @fn    SetStateMaxV(WaWindow *ww, int newstate)
- * @brief Sets maximized vertically state
- *
- * Sets WaWindows maximized vertically state.
- *
- * @param ww WaWindow object
- * @param newstate New maximized vertically state
- */
-void NetHandler::SetStateMaxV(WaWindow *ww, int newstate) {
-    CARD32 data[1];
-    int n_w, n_h, height, shaded;
-
-    switch (newstate) {
-        case 0:
-            if (ww->flags.max_v) {
-                if (ww->IncSizeCheck(ww->attrib.width,
-                                     ww->restore_max.height, &n_w, &n_h)) {
-                    ww->attrib.height = n_h;
-                    ww->attrib.y = ww->restore_max.y;
-                    ww->RedrawWindow();
-                }
-            }
-            break;
-        case 1:
-            height = ww->wascreen->height -
-                (ww->flags.border * ww->border_w * 2) -
-                ww->title_w - ww->handle_w -
-                (ww->border_w * ww->flags.title) -
-                (ww->border_w * ww->flags.handle);
-            if (ww->IncSizeCheck(ww->attrib.width, height, &n_w, &n_h)) {
-                ww->restore_max.y = ww->attrib.y;
-                ww->restore_max.height = ww->attrib.height;
-                ww->attrib.y = ww->title_w + ww->border_w +
-                    (ww->border_w * ww->flags.title);
-                ww->attrib.height = n_h;
-                ww->RedrawWindow();
-                ww->flags.max_v = True;
-            }
-            break;
-        default:
-            ww->flags.max_v = False;
-    }
-    
-    data[0] = ww->flags.max_v;
-
-    XGrabServer(display);
-    if (validateclient(ww->id))
-        XChangeProperty(display, ww->id, net_state_max_v, XA_CARDINAL, 32,
                         PropModeReplace, (unsigned char *) &data, 1);
     XUngrabServer(display);
 }
