@@ -41,12 +41,12 @@
 ! Window Menu
 !
 [start] (window)
-  [title] (Window Ops)
+  [title] (Window Menu)
   [item]  (Raise)         "raise"
   [item]  (Lower)         "lower"
   [item]  (Un-/ Maximize) "togglemaximize"
   [item]  (Un-/ Shade)    "toggleshade"
   [item]  (Un-/ Sticky)   "togglesticky"
+  [item]  (Kill Client)   "kill"
   [item]  (Close)         "close"
-  [item]  (Kill)          "kill"
 [end]
