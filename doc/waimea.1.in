@@ -102,28 +102,28 @@ switch. Below is a list of configuration options that
 understands.
 
 .TP
-.B  styleFile
+.B  styleFile:     Filepath
 Path to alternate
 .I STYLEFILE
 instead of
 .I @pkgdatadir@/styles/Default.
 
 .TP
-.B  menuFile
+.B  menuFile:     Filepath
 Path to alternate
 .I MENUFILE
 instead of
 .I @pkgdatadir@/menu.
 
 .TP
-.B actionFile
+.B actionFile:     Filepath
 Path to alternate
 .I ACTIONFILE
 instead of
 .IR @pkgdatadir@/actions/action.
 	
 .TP
-.B colorsPerChannel
+.B colorsPerChannel:     Integer
 This tells 
 .I waimea
 how many colors to take from the X
@@ -138,7 +138,7 @@ Default value is
 .I 4.
 
 .TP
-.B  cacheMax
+.B  cacheMax:     Integer
 This tells 
 .I waimea 
 how much memory (in Kb) it may use to store cached pixmaps on the X server.
@@ -147,21 +147,21 @@ Default value is
 .I 200.
 
 .TP
-.B  imageDither
+.B  imageDither:     Boolean
 Tells 
 .I waimea
 to dither images on none TrueColor screens. Default value is 
 .I True.
 
 .TP
-.B doubleClickInterval
+.B doubleClickInterval:     Integer
 Adjust the delay (in ms) between mouse clicks for 
 .I waimea
 to consider it a double click. Default value is 
 .I 300.
 
 .TP
-.B virtualSize
+.B virtualSize:     IntegerxInteger
 Tells 
 .I waimea 
 what virtual desktop size to use. Example:
@@ -186,13 +186,13 @@ line in your
 or not.
 
 .TP
-.B dock[num].geometry
+.B dock[num].geometry:     OffsetString
 Define dockapp holder position, X11 offset string of form:
 [{+-}<xoffset>{+-}<yoffset>]. See 
 .BR X(1).
 
 .TP
-.B dock[num].order
+.B dock[num].order:     OrderList
 A whitespace separated list describing how to order the
 dockapps in the dockapp holder. Dockapps can be ordered
 by window name and class. For window name use 
@@ -220,11 +220,11 @@ string MUST exist in ONE AND ONLY ONE of the
 dockapp holder order resources.
 
 .TP
-.B dock[num].direction
+.B dock[num].direction:     Direction
 Dockapp holder direction {Vertical, Horizontal}
 
 .TP
-.B dock[num].centered
+.B dock[num].centered:     Boolean
 True if you want the dockapp holder to be centered. If
 direction is Vertical, yoffset from geometry resource will
 be ignored and dockapp holder will be centered vertically.
@@ -233,12 +233,18 @@ will be ignored and dockapp holder will be centered
 horizontally.
 
 .TP
-.B dock[num].gridSpace
+.B dock[num].gridSpace:     Integer
 Number of pixels spacing between dockapps in dockapp holder.
 
 .TP
-.B dock[num].stacking
+.B dock[num].stacking:     StackingType
 Stacking order for dockapp holder {AlwaysOnTop, AlwaysAtBottom}.
+
+.TP
+.B dock[num].inworkspace:     Boolean
+True if you don't wont dockappholder to alter the workarea. Maximizied windows
+will be maximized over the dockappholder when this is set to true. Default
+is False.
 
 
 .SH STYLES
@@ -356,6 +362,12 @@ is used in
 mode, the
 .I colorTo
 resource is used to find the interlacing color.
+
+.TP
+.B Opacity level
+Texture opacity level. Integer value from 0 to 100, where 0 is the default 
+non translucent opacity level and and 100 makes it a fully transparent texture.
+
 .PP
 Here are the keys 
 .I waimea 
@@ -370,48 +382,60 @@ or
 .I hilite.
 
 .PP
+.B window.*.focus:     Texture description
+.br
+.B window.*.focus.opacity:     Opacity level
+.br
 .B window.*.focus.color:     Color
 .br
 .B window.*.focus.colorTo:     Color
 .RS
-Colors used for focused window textures.
+Texure type, opacity level and colors used for focused window textures.
 .RE
 
 .PP
-.TP
-.B window.*.focus.textColor:     Color
-Color used for focused window fonts.
-
-.PP
+.B window.*.unfocus:     Texture description
+.br
+.B window.*.unfocus.opacity:     Opacity level
+.br
 .B window.*.unfocus.color:     Color
 .br
 .B window.*.unfocus.colorTo:     Color
 .RS
-Colors used for unfocused window textures.
+Texure type, opacity level and colors used for unfocused window textures.
 .RE
 
 .PP
-.TP 
-.B window.*.unfocus.textColor:     Color
-Color used for unfocused window fonts.
+.TP
+.B window.label.focus.textColor:     Color
+Color used for focused window label font.
 
 .PP
+.TP 
+.B window.label.unfocus.textColor:     Color
+Color used for unfocused window label font.
+
+.PP
+.B menu.*:     Texture description
+.br
+.B menu.*.opacity:     Opacity level
+.br
 .B menu.*.color:     Color 
 .br
 .B menu.*.colorTo:     Color
 .RS
-Colors used for menu textures.
+Texure type, opacity level and colors used for menu textures.
 .RE
 
 .PP
-.TP 
+.TP
 .B menu.*.textColor:     Color
 Color used for menu fonts.
 
 .PP
 .TP 
 .B borderColor:     Color
-Color of window border.
+Color of window and menu border.
 
 .PP
 .TP 
@@ -440,12 +464,12 @@ Color used for hilited button symbols.
 
 .PP
 .TP 
-.B window.justify:     Font Justification
+.B window.justify:     Font justification
 Font justification for window labels.
 
 .PP
 .TP 
-.B menu.justify:     Font Justification
+.B menu.*.justify:     Font justification
 Font justification for menu items.
 
 .PP
@@ -518,6 +542,29 @@ frame menu item height is set by the height of the font.
 .B menu.title.height:    Integer
 Integer value for forced menu title item height. If key isn't defined the 
 frame menu title height is set by the height of the font.
+
+.PP
+.B dockappholder.dock[ID].frame:     Texture description
+.br
+.B dockappholder.dock[ID].frame.opacity:     Opacity level
+.br
+.B dockappholder.dock[ID].frame.color:     Color
+.br
+.B dockappholder.dock[ID].frame.colorTo:     Color
+.RS
+Texure type, opacity level and colors used for dockappholder 'dock[ID]'s frame 
+texture.
+.RE
+
+.PP
+.TP 
+.B dockappholder.dock[ID].borderWidth:     Integer
+Border width used for dockappholder 'dock[ID]'s border.
+
+.PP
+.TP 
+.B dockappholder.dock[ID].borderColor:     Color
+Border color used for dockappholder 'dock[ID]'s border.
 
 .PP
 .TP 
@@ -1228,6 +1275,8 @@ Here is the list of event modifiers that can used in the modifier mask:
 .B mod[1-5]mask
 .br
 .B button[1-5]mask
+.br
+.B moveresizemask
 
 .PP
 Default action file is @pkgdatadir@/actions/action.sloppy-focus.

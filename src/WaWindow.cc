@@ -1882,9 +1882,9 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                     }
                     delete maprequest_list;
                     XPutBackEvent(display, &event);
-                    return;
                     XUngrabKeyboard(display, CurrentTime);
                     XUngrabPointer(display, CurrentTime);
+                    return;
                 }
                 waimea->eh->EvUnmapDestroy(&event);
                 break;

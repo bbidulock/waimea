@@ -1219,7 +1219,6 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                     event.xkey.window = id;
                 menu->waimea->eh->HandleEvent(&event);
                 if (menu->waimea->eh->move_resize != EndMoveResizeType) break;
-                XUngrabPointer(menu->display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(menu->display, maprequest_list->front());
                     delete maprequest_list->front();

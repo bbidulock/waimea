@@ -1,0 +1,157 @@
+DEF defaultAllWindows {
+   Raise                  : ButtonPress = Button1 & Mod1Mask,
+   Focus                  : ButtonPress = Button1 & Mod1Mask,
+   Focus                  : ButtonPress = Button3 & Mod1Mask,
+   StartOpaqueMove        : ButtonPress = Button1 & Mod1Mask,
+   StartOpaqueResizeRight : ButtonPress = Button3 & Mod1Mask,
+   Lower                  : ButtonPress = Button2 & Mod1Mask,
+   EndMoveResize          : ButtonRelease = Button1 & MoveResizeMask,
+   EndMoveResize          : ButtonRelease = Button3 & MoveResizeMask
+}
+
+DEF defaultAllDecor {
+	defaultAllWindows,
+   Raise             : ButtonPress = Button1 & !Mod1Mask,
+   Lower             : ButtonPress = Button2 & !Mod1Mask,
+   MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask,
+   MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask,
+   MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
+}
+
+DEF defaultAllTitle {
+   defaultAllDecor,
+   Focus           : ButtonPress = Button1 & !Mod1Mask,
+   Focus           : ButtonPress = Button3 & !Mod1Mask,
+   StartOpaqueMove : ButtonPress = Button1 & !Mod1Mask,
+   ToggleShade     : DoubleClick = Button1 & !Mod1Mask
+}
+
+window.frame { defaultAllDecor }
+window.title { defaultAllTitle }
+window.label { defaultAllTitle }
+window.handle { defaultAllDecor }
+window.leftgrip { 
+   defaultAllWindows,
+   Focus                 : ButtonPress = AnyButton & !Mod1Mask,
+   StartOpaqueResizeLeft : ButtonPress = Button1 & !Mod1Mask
+}
+window.rightgrip { 
+   defaultAllWindows,
+   Focus                  : ButtonPress = AnyButton & !Mod1Mask,
+   StartOpaqueResizeRight : ButtonPress = Button1 & !Mod1Mask
+}
+window.closebutton { 
+   defaultAllWindows,
+   Focus : ButtonPress = AnyButton & !Mod1Mask,
+   Close : ButtonRelease = AnyButton
+}
+window.iconifybutton { 
+   defaultAllWindows,
+   Focus : ButtonPress = AnyButton & !Mod1Mask,
+   ToggleShade : ButtonRelease = AnyButton
+}
+window.maximizebutton {
+   defaultAllWindows,
+   Focus          : ButtonPress = AnyButton & !Mod1Mask,
+   ToggleMaximize : ButtonRelease = AnyButton,
+   Raise          : ButtonRelease = AnyButton
+}
+window.passiveclient { 
+   Raise     : ButtonPress = Button1,
+   Focus     : ButtonPress = Button1,
+   Focus     : ButtonPress = Button3,
+   defaultAllWindows,
+   Raise     : MapRequest,
+   StartMove : MapRequest & ControlMask,
+   Focus     : MapRequest & ControlMask  
+}
+window.activeclient {
+   *Raise                     : ButtonPress = Button1,
+   defaultAllWindows,
+   ToggleShade                : KeyPress = F1 & Mod1Mask,
+   ToggleMaximize             : KeyPress = F2 & Mod1Mask,
+   Raise                      : KeyPress = F2 & Mod1Mask,
+   MenuRemapFocused(window)   : KeyPress = F3 & Mod1Mask,
+   Close                      : KeyPress = F4 & Mod1Mask,
+   Kill                       : KeyPress = F10 & Mod1Mask,
+   TaskSwitcher               : KeyPress = Tab & Mod1Mask,
+   MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+}
+
+root {
+   MenuRemap(rootmenu)        : ButtonPress = Button3,
+   MenuUnmap(rootmenu)        : ButtonPress = Button1,
+   StartViewportMove          : ButtonPress = Button2,
+   EndMoveResize              : ButtonRelease = Button2 & MoveResizeMask,
+   TaskSwitcher               : KeyPress = Tab & Mod1Mask,
+   MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+}
+
+westedge {
+   ViewportLeft           : EnterNotify & !ControlMask,
+   ScrollViewportLeft(25) : EnterNotify & ControlMask
+}
+
+eastedge {
+   ViewportRight           : EnterNotify & !ControlMask,
+   ScrollViewportRight(25) : EnterNotify & ControlMask
+}
+
+northedge {
+   ViewportUp           : EnterNotify & !ControlMask,
+   ScrollViewportUp(20) : EnterNotify & ControlMask
+}
+
+southedge {
+   ViewportDown           : EnterNotify & !ControlMask,
+   ScrollViewportDown(20) : EnterNotify & ControlMask
+}
+
+DEF allMenuWindows {
+   Raise              : ButtonPress = Button1 & Mod1Mask,
+   StartOpaqueMove    : ButtonPress = Button1 & Mod1Mask,
+   UnLink             : ButtonPress = Button1 & Mod1Mask,
+   EndMoveResize      : ButtonRelease = Button1 & MoveResizeMask
+}
+
+DEF allMenuItems {
+   allMenuWindows,
+   UnmapSubs    : EnterNotify,
+   Exec         : ButtonRelease = AnyButton,
+   Func         : ButtonRelease = AnyButton,
+   NextItem     : KeyPress = Tab,
+   NextItem     : KeyPress = Down,
+   PreviousItem : KeyPress = Up,
+   UnmapSubs    : KeyPress = Left,
+   UnmapFocused : KeyPress = Left,
+   UnmapTree    : KeyPress = Escape,
+   Exec         : KeyPress = Return,
+   Func         : KeyPress = Return
+} 
+
+menu.title {
+   allMenuWindows,
+   UnLink          : ButtonPress = Button1 & !Mod1Mask,
+   StartOpaqueMove : ButtonPress = Button1 & !Mod1Mask,
+   UnmapSubs       : ButtonPress = Button3,
+   Unmap           : ButtonPress = Button3
+}
+menu.item {
+   allMenuItems,
+   UnmapTree    : ButtonRelease = AnyButton,
+   UnmapFocused : KeyRelease = Alt_L,
+   Func         : KeyRelease = Alt_L,
+   UnmapTree    : KeyPress = Return
+}
+menu.checkbox {
+   allMenuItems,
+   Exec : KeyPress = space,
+   Func : KeyPress = space
+}
+menu.sub {
+   allMenuItems,
+   MapSub          : EnterNotify,
+   RemapSub        : ButtonPress = AnyButton,
+   RemapSubFocused : KeyPress = Right,
+   RemapSubFocused : KeyPress = Return
+}
