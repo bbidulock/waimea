@@ -630,7 +630,7 @@ WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     wf = (Window) 0;
 #ifdef XFT
     xftdraw = (Drawable) 0;
-#endif // XFT    
+#endif // XFT
 }
 
 /**
@@ -660,7 +660,14 @@ WaMenuItem::~WaMenuItem(void) {
  */
 void WaMenuItem::DrawFg(void) {
     int x, y, justify;
-    
+
+#ifdef XFT
+    cbox_xft_font = menu->wascreen->mstyle.cf_xftfont;
+#else // ! XFT
+    cbox_gc = &menu->wascreen->mstyle.cf_text_gc;
+#endif // XFT
+    cb_y = menu->wascreen->mstyle.cf_y_pos;
+    cbox = menu->wascreen->mstyle.checkbox_false;								    
     if (cb) UpdateCBox();
 #ifdef XFT    
     XGlyphInfo extents;
@@ -822,8 +829,7 @@ void WaMenuItem::UnmapMenu(XEvent *, WaAction *, bool focus) {
  */
 void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus) {
     int skip;
-
-    if (cb) UpdateCBox();
+    
     if ((! (func_mask & MenuSubMask)) || submenu->mapped) return;
     
     Hilite();
@@ -856,9 +862,8 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus) {
  * @param bool True if we should focus first item in submenu
  */
 void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
-    int skip;
-    
-    if (cb) UpdateCBox();
+    int skip;    
+
     if (! (func_mask & MenuSubMask)) return;
     
     Hilite();
@@ -937,11 +942,6 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
         ((*(menu->rf)).*(rfunc))(e, ac);
     else if ((func_mask & MenuMFuncMask) && (menu->ftype == MenuMFuncMask))
         ((*(menu->mf)).*(mfunc))(e, ac);
-
-    if (cb) {
-        UpdateCBox();
-        DrawFg();
-    }
 }
 
 /**

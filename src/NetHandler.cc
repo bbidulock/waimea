@@ -277,7 +277,7 @@ void NetHandler::GetWmState(WaWindow *ww) {
     CARD32 *data;
     XEvent *e;
     WaAction *ac;
-    bool vert = False, horz = False, shade = False;
+    bool vert = False, horz = False, shaded = False;
     int i;
     
     if (XGetWindowProperty(display, ww->id, net_state, 0L, 4L,
@@ -287,27 +287,27 @@ void NetHandler::GetWmState(WaWindow *ww) {
         items_read) {
         for (i = 0; i < items_read; i++) {
             if (data[i] == net_state_sticky) ww->flags.sticky = True;
-            else if (data[i] == net_state_shaded) shade = True;
+            else if (data[i] == net_state_shaded) shaded = True;
             else if (data[i] == net_maximized_vert) vert = True;
             else if (data[i] == net_maximized_horz) horz = True;
         }
         XFree(data);
         if (vert && horz) {
             if (XGetWindowProperty(display, ww->id, net_maximized_restore,
-                                   0L, 7L, False, XA_CARDINAL, &real_type,
+                                   0L, 6L, False, XA_CARDINAL, &real_type,
                                    &real_format, &items_read, &items_left, 
                                    (unsigned char **) &data) ==
-                Success && items_read >= 7) {
+                Success && items_read >= 6) {
+                ww->_Maximize(data[4], data[5]);
                 ww->restore_max.x = data[0];
                 ww->restore_max.y = data[1];
                 ww->restore_max.width = data[2];
                 ww->restore_max.height = data[3];
-                ww->restore_shade_2 = data[4];
-                ww->_Maximize(False, data[5], data[6]);
                 XFree(data);
             }
         }
-        if (shade) ww->Shade(e, ac);
+        if (shaded)
+            ww->Shade(e, ac);
     }
 }
 
@@ -322,7 +322,7 @@ void NetHandler::GetWmState(WaWindow *ww) {
 void NetHandler::SetWmState(WaWindow *ww) {
     int i = 0;
     CARD32 data[4];
-    CARD32 data2[7];
+    CARD32 data2[6];
 
     XGrabServer(display);
     if (validateclient(ww->id)) {
@@ -336,12 +336,11 @@ void NetHandler::SetWmState(WaWindow *ww) {
             data2[1] = ww->restore_max.y;
             data2[2] = ww->restore_max.width;
             data2[3] = ww->restore_max.height;
-            data2[4] = ww->restore_shade_2;
-            data2[5] = ww->restore_max.misc0;
-            data2[6] = ww->restore_max.misc1;
+            data2[4] = ww->restore_max.misc0;
+            data2[5] = ww->restore_max.misc1;
             XChangeProperty(display, ww->id, net_maximized_restore,
                             XA_CARDINAL, 32, PropModeReplace,
-                            (unsigned char *) &data2, 7);
+                            (unsigned char *) &data2, 6);
         } else
             XDeleteProperty(display, ww->id, net_maximized_restore);
         

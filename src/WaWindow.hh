@@ -98,7 +98,7 @@ public:
     void MenuRemap(XEvent *, WaAction *, bool);
     void MenuUnmap(XEvent *, WaAction *, bool);
     void Focus(XEvent *, WaAction *, bool);
-    void _Maximize(bool, int, int);
+    void _Maximize(int, int);
 
 #ifdef SHAPE
     void Shape(void);
@@ -126,7 +126,7 @@ public:
     inline void ResizeLeftOpaque(XEvent *e, WaAction *) {
         ResizeOpaque(e, WestType);
     }
-    inline void Maximize(XEvent *, WaAction *) { _Maximize(True, -1, -1); } 
+    inline void Maximize(XEvent *, WaAction *) { _Maximize(-1, -1); } 
     void UnMaximize(XEvent *, WaAction *);
     void ToggleMaximize(XEvent *, WaAction *);
     void Close(XEvent *, WaAction *);
@@ -188,8 +188,7 @@ public:
     Display *display;
     Waimea *waimea;
     WaScreen *wascreen;
-    int border_w, title_w, handle_w, screen_number, state, restore_shade_1,
-                   restore_shade_2;
+    int border_w, title_w, handle_w, screen_number, state, restore_shade;
     WaChildWindow *frame, *title, *label, *handle, *button_c, *button_max,
                    *button_min, *grip_r, *grip_l;
     WaWindowAttributes attrib, old_attrib, restore_max;

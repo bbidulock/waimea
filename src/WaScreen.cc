@@ -102,10 +102,15 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     workarea->height = height;
 
     docks = new list<DockappHandler *>;
-    list<DockStyle *>::iterator it = waimea->rh->dockstyles->begin();
-    for (; it != waimea->rh->dockstyles->end(); ++it) {
-        docks->push_back(new DockappHandler(this, *it));
+    list<DockStyle *>::iterator dit = waimea->rh->dockstyles->begin();
+    for (; dit != waimea->rh->dockstyles->end(); ++dit) {
+        docks->push_back(new DockappHandler(this, *dit));
     }
+
+    waimea->taskswitch->Build(this);
+    list<WaMenu *>::iterator mit = waimea->wamenu_list->begin();
+    for (; mit != waimea->wamenu_list->end(); ++mit)
+    	(*mit)->Build(this);    
     
     WaWindow *newwin;
     XWMHints *wm_hints;
@@ -488,7 +493,7 @@ void WaScreen::UpdateWorkarea(void) {
         list<WaWindow *>::iterator wa_it = waimea->wawindow_list->begin();
         for (; wa_it != waimea->wawindow_list->end(); ++wa_it) {
             if ((*wa_it)->flags.max)
-                (*wa_it)->_Maximize(False, (*wa_it)->restore_max.misc0,
+                (*wa_it)->_Maximize((*wa_it)->restore_max.misc0,
                                     (*wa_it)->restore_max.misc1);
         }
     }

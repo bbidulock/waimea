@@ -94,11 +94,6 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     net = new NetHandler(this);
     wascreen = new WaScreen(display, DefaultScreen(display), this);
 
-    taskswitch->Build(wascreen);
-    list<WaMenu *>::iterator it = wamenu_list->begin();
-    for (; it != wamenu_list->end(); ++it)
-        (*it)->Build(wascreen);
-
     WaRaiseWindow((Window) 0);
     eh = new EventHandler(this);
 }
@@ -202,6 +197,26 @@ void Waimea::WaLowerWindow(Window win) {
                 XLowerWindow(display, win);
             XUngrabServer(display);
         }
+}
+
+/**
+ * @fn    UpdateCheckboxes(int type)
+ * @brief Updates menu checkboxes
+ *
+ * Redraws all checkbox menu items to make sure they are synchronized with
+ * their given flag.
+ *
+ * @param type Type of checkboxes to update
+ */
+void Waimea::UpdateCheckboxes(int type) {
+    list<WaMenuItem *>::iterator miit;
+    list<WaMenu *>::iterator mit = wamenu_list->begin();
+    for (; mit != wamenu_list->end(); ++mit) {
+        miit = (*mit)->item_list->begin();
+        for (; miit != (*mit)->item_list->end(); ++miit) {
+            if ((*miit)->cb == type) (*miit)->DrawFg();
+        }
+    }
 }
 
 /**

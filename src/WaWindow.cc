@@ -128,7 +128,7 @@ WaWindow::~WaWindow(void) {
     if ((! deleted) && validateclient(id)) {
         XRemoveFromSaveSet(display, id);
         Gravitate(RemoveGravity);
-        if (flags.shaded) attrib.height = restore_shade_1;
+        if (flags.shaded) attrib.height = restore_shade;
         XReparentWindow(display, id, wascreen->id, attrib.x -
                         (attrib.x / wascreen->width) * wascreen->width,
                         attrib.y -
@@ -204,9 +204,9 @@ void WaWindow::InitPosition(void) {
     old_attrib.x = restore_max.x = attrib.x;
     old_attrib.y = restore_max.y = attrib.y;
     old_attrib.width = restore_max.width = attrib.width;
-    old_attrib.height = restore_shade_1  =
+    old_attrib.height = restore_shade =
         restore_max.height = attrib.height;
-    restore_max.misc0 = restore_max.misc1 = restore_shade_2 = 0;
+    restore_max.misc0 = restore_max.misc1 = 0;
 }
 
 /**
@@ -302,16 +302,18 @@ void WaWindow::RedrawWindow(void) {
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
     }
     if (resize) {
-        if (flags.max && old_attrib.width != attrib.width && !restore_shade_2) {
+        if (flags.max && (old_attrib.width != attrib.width || ! flags.shaded)) {
             flags.max = False;
             net->SetWmState(this);
             DrawMaxButtonFg();
+            waimea->UpdateCheckboxes(MaxCBoxType);
         }
         XGrabServer(display);
         if (validateclient(id)) {    
-            if (flags.shaded) XResizeWindow(display, id, attrib.width,
-                                            restore_shade_1);
-            else XResizeWindow(display, id, attrib.width, attrib.height);
+            if (flags.shaded)
+                XResizeWindow(display, id, attrib.width, restore_shade);
+            else
+                XResizeWindow(display, id, attrib.width, attrib.height);
             XResizeWindow(display, frame->id, frame->attrib.width,
                           frame->attrib.height);
         }
@@ -1043,9 +1045,10 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
     }
     if ((height <= -(handle_w + border_w * 2)) && title_w) {
         if (! flags.shaded) {
-            resize = True;
             flags.shaded = True;
-            restore_shade_1 = attrib.height;
+            restore_shade = attrib.height;
+            net->SetWmState(this);
+            waimea->UpdateCheckboxes(ShadeCBoxType);
         }
         *n_h = -(handle_w + border_w * 2);
         return resize;
@@ -1057,7 +1060,9 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
             resize = True;
             if (! flags.shaded) {
                 flags.shaded = True;
-                restore_shade_1 = attrib.height;
+                restore_shade = attrib.height;
+                net->SetWmState(this);
+                waimea->UpdateCheckboxes(ShadeCBoxType);
             }
             if (size.height_inc == 1)
                 *n_h = height;
@@ -1067,8 +1072,11 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
         }
         else if (height >= size.min_height && height <= size.max_height) {
             resize = True;
-            flags.shaded = False;
-            net->SetWmState(this);
+            if (flags.shaded) {
+                flags.shaded = False;
+                net->SetWmState(this);
+                waimea->UpdateCheckboxes(ShadeCBoxType);
+            }
             if (size.height_inc == 1)
                 *n_h = height;
             else
@@ -1558,17 +1566,16 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
 }
 
 /**
- * @fn    _Maximize(bool save_old, int x, int y)
+ * @fn    _Maximize(int x, int y)
  * @brief Maximize the window
  *
  * Maximizes the window so that the window with it's decorations fills up
  * the hole workarea.
  *
- * @param save_old True if we should save old position and size.
  * @param x Virtual x pos where window should be maximized, ignored if negative
  * @param y Virtual y pos where window should be maximized, ignored if negative
  */
-void WaWindow::_Maximize(bool save_old, int x, int y) {
+void WaWindow::_Maximize(int x, int y) {
     int n_w, n_h, new_width, new_height;
 
     if (flags.max) return;
@@ -1578,14 +1585,17 @@ void WaWindow::_Maximize(bool save_old, int x, int y) {
         title_w - handle_w - (border_w * flags.title) -
         (border_w * flags.handle);
 
-    if (flags.shaded) restore_shade_2 = restore_shade_1;
+    restore_max.x = attrib.x;
+    restore_max.y = attrib.y;
+    restore_max.width = attrib.width;
+    restore_max.height = attrib.height;
+    
+    if (flags.shaded) {
+        restore_max.height = restore_shade;
+        restore_shade = new_height;
+        new_height = attrib.height;
+    }
     if (IncSizeCheck(new_width, new_height, &n_w, &n_h)) {
-        if (save_old) {
-            restore_max.x = attrib.x;
-            restore_max.y = attrib.y;
-            restore_max.width = attrib.width;
-            restore_max.height = attrib.height;
-        }
         attrib.x = wascreen->workarea->x + border_w;
         attrib.y = wascreen->workarea->y + title_w + border_w +
             (border_w * flags.title);
@@ -1604,6 +1614,7 @@ void WaWindow::_Maximize(bool save_old, int x, int y) {
         flags.max = True;
         if (title_w) DrawMaxButtonFg();
         net->SetWmState(this);
+        waimea->UpdateCheckboxes(MaxCBoxType);
     }
 }
 
@@ -1614,12 +1625,12 @@ void WaWindow::_Maximize(bool save_old, int x, int y) {
  * Restores size and position of maximized window.
  */
 void WaWindow::UnMaximize(XEvent *, WaAction *) {
-    int n_w, n_h, rest_height;
+    int n_w, n_h, rest_height, tmp_shade_height;
     
     if (flags.max) {
-        if (flags.shaded && !restore_shade_2) {
+        if (flags.shaded) {
             rest_height = attrib.height;
-            restore_shade_2 = restore_max.height;
+            tmp_shade_height = restore_max.height;
         }
         else rest_height = restore_max.height;
         if (IncSizeCheck(restore_max.width, rest_height, &n_w, &n_h)) {
@@ -1629,9 +1640,10 @@ void WaWindow::UnMaximize(XEvent *, WaAction *) {
             attrib.height = n_h;
             flags.max = False;
             RedrawWindow();
+            if (flags.shaded) restore_shade = tmp_shade_height;
             if (title_w) DrawMaxButtonFg();
-            restore_shade_1 = restore_shade_2;
             net->SetWmState(this);
+            waimea->UpdateCheckboxes(MaxCBoxType);
         }
     }
 }
@@ -1798,8 +1810,9 @@ void WaWindow::Shade(XEvent *, WaAction *) {
         attrib.width = n_w;
         attrib.height = n_h;
         RedrawWindow();
+        net->SetWmState(this);
+        waimea->UpdateCheckboxes(ShadeCBoxType);
     }
-    net->SetWmState(this);
 }
 
 /**
@@ -1810,16 +1823,12 @@ void WaWindow::Shade(XEvent *, WaAction *) {
  */
 void WaWindow::UnShade(XEvent *, WaAction *) {
     if (flags.shaded) {
-        if (restore_shade_2 && !flags.max) {
-            attrib.height = restore_shade_2;
-            restore_shade_2 = 0;
-        } else
-            attrib.height = restore_shade_1;
-
-        flags.shaded = False;
+        attrib.height = restore_shade;
         RedrawWindow();
+        flags.shaded = False;
+        net->SetWmState(this);
+        waimea->UpdateCheckboxes(ShadeCBoxType);
     }
-    net->SetWmState(this);
 }
 
 /**
@@ -1848,6 +1857,7 @@ void WaWindow::ToggleShade(XEvent *e, WaAction *ac) {
 void WaWindow::Sticky(XEvent *, WaAction *) {
     flags.sticky = True;
     net->SetWmState(this);
+    waimea->UpdateCheckboxes(StickCBoxType);
 }
 
 /**
@@ -1860,6 +1870,7 @@ void WaWindow::Sticky(XEvent *, WaAction *) {
 void WaWindow::UnSticky(XEvent *, WaAction *) {
     flags.sticky = False;
     net->SetWmState(this);
+    waimea->UpdateCheckboxes(StickCBoxType);
 }
 
 /**
@@ -1871,6 +1882,7 @@ void WaWindow::UnSticky(XEvent *, WaAction *) {
 void WaWindow::ToggleSticky(XEvent *, WaAction *) {
     flags.sticky = !flags.sticky;
     net->SetWmState(this);
+    waimea->UpdateCheckboxes(StickCBoxType);
 }
 
 /**

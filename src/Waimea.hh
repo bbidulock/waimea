@@ -90,6 +90,7 @@ public:
 
     void WaRaiseWindow(Window);
     void WaLowerWindow(Window);
+    void UpdateCheckboxes(int);
     
     Display *display;
     WaScreen *wascreen;
