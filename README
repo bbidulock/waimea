@@ -90,6 +90,10 @@ CONFIG FILE
 	dock0.gridSpace
 		Number of pixels spacing between dockapps in dockapp holder.
 
+	dock0.stacking:
+		Stacking order for dockapp holder
+		{AlwaysOnTop, AlwaysAtBottom}.
+
 STYLES
 
         In this section I only describe the new options added in Waimea, for 

@@ -44,6 +44,7 @@ typedef struct {
     int y;
     int geometry;
     int direction;
+    int stacking;
     unsigned int gridspace;
 } DockStyle;
 

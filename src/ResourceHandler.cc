@@ -412,6 +412,14 @@ void ResourceHandler::LoadConfig(void) {
     
     if (dockstyle.gridspace > 50) dockstyle.gridspace = 50;
 
+    if (XrmGetResource(database, "dock0.stacking", "Dock0.Stacking",
+                       &value_type, &value)) {
+        if (! strncasecmp("AlwaysOnTop", value.addr, value.size))
+            dockstyle.stacking = AlwaysOnTop;
+        else
+            dockstyle.stacking = AlwaysAtBottom;
+    } else
+        dockstyle.stacking = AlwaysAtBottom;
     
     XrmDestroyDatabase(database);
 } 

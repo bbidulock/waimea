@@ -10,3 +10,7 @@ actionFile:		@pkgdatadir@/actions/action
 colorsPerChannel:	4
 cacheMax:		200
 virtualSize:		3x3
+dock0.geometry:         -0+350
+dock0.direction:        Vertical
+dock0.gridSpace:        2
+dock0.stacking:		AlwaysAtBottom

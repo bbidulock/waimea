@@ -23,7 +23,9 @@ class Dockapp;
 
 enum {
     VerticalDock,
-    HorizontalDock
+    HorizontalDock,
+    AlwaysOnTop,
+    AlwaysAtBottom
 };
 
 class DockappHandler {
@@ -37,7 +39,7 @@ public:
     Display *display;
     Waimea *waimea;
     WaScreen *wascreen;
-    int x, y, geometry, direction;
+    int x, y, geometry, direction, stacking, map_x, map_y;
     unsigned int width, height, gridspace;
     Pixmap background;
     unsigned long background_pixel;
