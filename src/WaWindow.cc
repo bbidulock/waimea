@@ -1344,8 +1344,9 @@ void WaWindow::Resize(XEvent *e, int how) {
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id))
-        XGrabPointer(display, id, False, ButtonReleaseMask |
-                     ButtonMotionMask, GrabModeAsync, GrabModeAsync, None,
+        XGrabPointer(display, id, True, ButtonReleaseMask |
+                     ButtonMotionMask | EnterWindowMask | LeaveWindowMask,
+                     GrabModeAsync, GrabModeAsync, None,
                      (how > 0) ? waimea->resizeright_cursor:
                      waimea->resizeleft_cursor, CurrentTime);
     XUngrabServer(display);
@@ -1366,6 +1367,23 @@ void WaWindow::Resize(XEvent *e, int how) {
                     o_x = n_x;
                     o_w = n_w;
                     o_h = n_h;
+                    DrawOutline(n_x, attrib.y, n_w, n_h);
+                }
+                break;
+            case LeaveNotify:
+            case EnterNotify:
+                if (wascreen->west->id == event->xcrossing.window ||
+                    wascreen->east->id == event->xcrossing.window ||
+                    wascreen->north->id == event->xcrossing.window ||
+                    wascreen->south->id == event->xcrossing.window) {
+                    waimea->eh->ed.type = event->type;
+                    waimea->eh->ed.mod = event->xcrossing.state;
+                    waimea->eh->ed.detail = 0;
+                    waimea->eh->EvAct(event, event->xcrossing.window);
+                    XQueryPointer(display, wascreen->id, &w, &w, &px, &py,
+                                  &i, &i, &ui);
+                    n_x = attrib.x;
+                    if (how == WestType) n_x -= n_w - attrib.width;
                     DrawOutline(n_x, attrib.y, n_w, n_h);
                 }
                 break;
