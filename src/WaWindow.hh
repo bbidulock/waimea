@@ -83,6 +83,7 @@ public:
 
     void MapWindow(void);
     void UpdateAllAttributes(void);
+    void SetActionLists(void);
     void RedrawWindow(void);
     void SendConfig(void);
     void Gravitate(int);

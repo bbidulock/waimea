@@ -71,18 +71,8 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     frameacts = awinacts = pwinacts = titleacts = labelacts = handleacts =
         cbacts = ibacts = mbacts = lgacts = rgacts = NULL;
 
-    frameacts = GetActionList(&waimea->rh->ext_frameacts);
-    awinacts = GetActionList(&waimea->rh->ext_awinacts);
-    pwinacts = GetActionList(&waimea->rh->ext_pwinacts);
-    titleacts = GetActionList(&waimea->rh->ext_titleacts);
-    labelacts = GetActionList(&waimea->rh->ext_labelacts);
-    handleacts = GetActionList(&waimea->rh->ext_handleacts);
-    cbacts = GetActionList(&waimea->rh->ext_cbacts);
-    ibacts = GetActionList(&waimea->rh->ext_ibacts);
-    mbacts = GetActionList(&waimea->rh->ext_mbacts);
-    lgacts = GetActionList(&waimea->rh->ext_lgacts);
-    rgacts = GetActionList(&waimea->rh->ext_rgacts);
-
+    SetActionLists();
+    
     net->GetWMHints(this);
     net->GetMWMHints(this);
     net->GetWMNormalHints(this);
@@ -210,6 +200,26 @@ list <WaAction *> *WaWindow::GetActionList(list<WaActionExtList *> *e) {
         }
     }
     return NULL;
+}
+
+/**
+ * @fn    SetActionLists(void)
+ * @brief Set all actions lists
+ *
+ * Updates all action lists for the window.
+ */
+void WaWindow::SetActionLists(void) {
+    frameacts = GetActionList(&waimea->rh->ext_frameacts);
+    awinacts = GetActionList(&waimea->rh->ext_awinacts);
+    pwinacts = GetActionList(&waimea->rh->ext_pwinacts);
+    titleacts = GetActionList(&waimea->rh->ext_titleacts);
+    labelacts = GetActionList(&waimea->rh->ext_labelacts);
+    handleacts = GetActionList(&waimea->rh->ext_handleacts);
+    cbacts = GetActionList(&waimea->rh->ext_cbacts);
+    ibacts = GetActionList(&waimea->rh->ext_ibacts);
+    mbacts = GetActionList(&waimea->rh->ext_mbacts);
+    lgacts = GetActionList(&waimea->rh->ext_lgacts);
+    rgacts = GetActionList(&waimea->rh->ext_rgacts);
 }
 
 /**

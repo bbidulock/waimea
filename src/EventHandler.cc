@@ -112,6 +112,7 @@ void EventHandler::HandleEvent(XEvent *event) {
         case PropertyNotify:
             EvProperty(&event->xproperty); break;
         case UnmapNotify:
+            if(event->xunmap.event != event->xunmap.window) return;
         case DestroyNotify:
             EvUnmapDestroy(event); break;
         case FocusOut:
@@ -252,7 +253,8 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
                 if (validateclient(ww->id)) {
                     if (XFetchName(ww->display, ww->id, &tmp_name)) {
                         delete [] ww->name;
-                        ww->name = wastrdup(tmp_name);                        
+                        ww->name = wastrdup(tmp_name);
+                        ww->SetActionLists();
                         if (ww->title_w) ww->label->Draw();
                         XFree(tmp_name);
                     }
