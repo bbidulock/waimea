@@ -1328,12 +1328,15 @@ void WaWindow::Lower(XEvent *, WaAction *) {
 }
 
 /**
- * @fn    Focus(XEvent *, WaAction *)
+ * @fn    Focus(bool vis)
  * @brief Sets input focus to the window
  *
- * Gives window keyboard input focus.
+ * Gives window keyboard input focus. If vis parameter is true we make sure
+ * the window is viewable.
+ *
+ * @param vis True if we should make sure the window is viewable
  */
-void WaWindow::Focus(XEvent *, WaAction *, bool vis) {
+void WaWindow::Focus(bool vis) {
     int newvx, newvy, x, y;
     XEvent e;
     
@@ -1350,7 +1353,6 @@ void WaWindow::Focus(XEvent *, WaAction *, bool vis) {
                     newvx = (x / wascreen->width) * wascreen->width;
                     newvy = (y / wascreen->height) * wascreen->height;
                     wascreen->MoveViewportTo(newvx, newvy);
-                    // Bad!!!
                     XSync(display, False);
                     while (XCheckTypedEvent(display, EnterNotify, &e));
                 }

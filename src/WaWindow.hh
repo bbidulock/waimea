@@ -98,11 +98,11 @@ public:
     void UnFocusWin(void);
     void ButtonHilite(int);
     void ButtonDehilite(int);
+    void Focus(bool);
+    void _Maximize(int, int);
     void MenuMap(XEvent *, WaAction *, bool);
     void MenuRemap(XEvent *, WaAction *, bool);
     void MenuUnmap(XEvent *, WaAction *, bool);
-    void Focus(XEvent *, WaAction *, bool);
-    void _Maximize(int, int);
 
 #ifdef SHAPE
     void Shape(void);
@@ -111,10 +111,10 @@ public:
     void Raise(XEvent *, WaAction *);
     void Lower(XEvent *, WaAction *);
     inline void Focus(XEvent *e, WaAction *ac) {
-        Focus(e, ac, False);
+        Focus(False);
     }
     inline void FocusVis(XEvent *e, WaAction *ac) {
-        Focus(e, ac, True);
+        Focus(True);
     }
     void Move(XEvent *, WaAction *);
     void MoveOpaque(XEvent *, WaAction *);
@@ -199,7 +199,7 @@ public:
     void AlwaysatbottomToggle(XEvent *, WaAction *);
     inline void RaiseFocus(XEvent *e, WaAction *ac) {
         Raise(e, ac);
-        Focus(e, ac, True);
+        Focus(True);
     }
 
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
