@@ -100,8 +100,12 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     workarea->x = workarea->y = 0;
     workarea->width = width;
     workarea->height = height;
-    
-    dock = new DockappHandler(this);
+
+    docks = new list<DockappHandler *>;
+    list<DockStyle *>::iterator it = waimea->rh->dockstyles->begin();
+    for (; it != waimea->rh->dockstyles->end(); ++it) {
+        docks->push_back(new DockappHandler(this, *it));
+    }
     
     WaWindow *newwin;
     XWMHints *wm_hints;
@@ -139,7 +143,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
  * Deletes all created colors and fonts.
  */
 WaScreen::~WaScreen(void) {
-    delete dock;
+    LISTCLEAR(docks);
     delete west;
     delete east;
     delete north;
@@ -818,48 +822,52 @@ void WaScreen::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
 void WaScreen::AddDockapp(Window window) {
     XClassHint *c_hint;
     Dockapp *da;
-    bool found = False;
     int have_hints;
 
     c_hint = XAllocClassHint();
     have_hints = XGetClassHint(display, window, c_hint);
 
-    list<char *>::iterator it = waimea->rh->dockstyle.order->begin();
+    list<char *>::iterator it;
+    list<DockappHandler *>::iterator dock_it;
     if (have_hints) {
-        for (; it != waimea->rh->dockstyle.order->end(); ++it) {
-            if ((**it == 'N') &&
-                (! strcmp(*it + 2, c_hint->res_name))) {
-                da = new Dockapp(window, dock);
-                da->c_hint = c_hint;
-                dock->Update();
-                found = True;
+        dock_it = docks->begin();
+        for (; dock_it != docks->end(); ++dock_it) {
+            it = (*dock_it)->style->order->begin();
+            for (; it != (*dock_it)->style->order->end(); ++it) {
+                if ((**it == 'N') &&
+                    (! strcmp(*it + 2, c_hint->res_name))) {
+                    da = new Dockapp(window, *dock_it);
+                    da->c_hint = c_hint;
+                    (*dock_it)->Update();
+                    return;
+                }
             }
-        }
-        if (! found) {
-            it = waimea->rh->dockstyle.order->begin();
-            for (; it != waimea->rh->dockstyle.order->end(); ++it) {
+            it = (*dock_it)->style->order->begin();
+            for (; it != (*dock_it)->style->order->end(); ++it) {
                 if ((**it == 'C') &&
                     (! strcmp(*it + 2, c_hint->res_class))) {
-                    da = new Dockapp(window, dock);
+                    da = new Dockapp(window, *dock_it);
                     da->c_hint = c_hint;
-                    dock->Update();
-                    found = True;
+                    (*dock_it)->Update();
+                    return;
                 }
             }
         }
     }
-    if (! found) {
-        it = waimea->rh->dockstyle.order->begin();
-        for (; it != waimea->rh->dockstyle.order->end(); ++it) {
+    dock_it = docks->begin();
+    for (; dock_it != docks->end(); ++dock_it) {
+        it = (*dock_it)->style->order->begin();
+        for (; it != (*dock_it)->style->order->end(); ++it) {
             if (**it == 'U') {
-                da = new Dockapp(window, dock);
+                da = new Dockapp(window, *dock_it);
                 da->c_hint = NULL;
-                dock->Update();
+                (*dock_it)->Update();
                 if (have_hints) {
                     XFree(c_hint->res_name);
                     XFree(c_hint->res_class);
                 }
                 XFree(c_hint);
+                return;
             }
         }
     }

@@ -197,7 +197,6 @@ public:
     NetHandler *net;
     ResourceHandler *rh;
     WaImageControl *ic;
-    DockappHandler *dock;
     WindowStyle wstyle;
     MenuStyle mstyle;
     Pixmap fbutton, ubutton, pbutton, fgrip, ugrip;
@@ -205,8 +204,10 @@ public:
         ugrip_pixel;
     char displaystring[1024];
     ScreenEdge *west, *east, *north, *south;
-    list<WMstrut *> *strut_list;
     Workarea *workarea;
+    
+    list<WMstrut *> *strut_list;
+    list<DockappHandler *> *docks;
 
 #ifdef SHAPE
     int shape, shape_event;

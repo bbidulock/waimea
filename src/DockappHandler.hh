@@ -30,7 +30,7 @@ enum {
 
 class DockappHandler {
 public:
-    DockappHandler(WaScreen *);
+    DockappHandler(WaScreen *, DockStyle *);
     virtual ~DockappHandler(void);
 
     void Update(void);
@@ -39,11 +39,12 @@ public:
     Display *display;
     Waimea *waimea;
     WaScreen *wascreen;
-    int x, y, geometry, direction, stacking, map_x, map_y;
-    unsigned int width, height, gridspace;
+    int x, y, map_x, map_y;
+    unsigned int width, height;
     Pixmap background;
     unsigned long background_pixel;
     WMstrut *wm_strut;
+    DockStyle *style;
 
     list<Dockapp *> *dockapp_list;
 };

@@ -21,30 +21,27 @@
  * Creates the dockapp handler window.
  *
  * @param scrn WaScreen to create dockapp handler window on.
+ * @param ds Style structure to use when creating this dockapphandler
  */
-DockappHandler::DockappHandler(WaScreen *scrn) {
+DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) {
     XSetWindowAttributes attrib_set;
-    
+
+    style = ds;
     wascreen = scrn;
     waimea = wascreen->waimea;
     display = waimea->display;
     x = 0;
     y = 0;
-    stacking = waimea->rh->dockstyle.stacking;
-    if (waimea->rh->dockstyle.geometry & XValue ||
-        waimea->rh->dockstyle.geometry & YValue) {
-        geometry = waimea->rh->dockstyle.geometry;
-        if (waimea->rh->dockstyle.geometry & XValue) {
-            x = waimea->rh->dockstyle.x;
+    if (style->geometry & XValue ||
+        style->geometry & YValue) {
+        if (style->geometry & XValue) {
+            x = style->x;
         }
-        if (waimea->rh->dockstyle.geometry & YValue) {
-            y = waimea->rh->dockstyle.y;
+        if (style->geometry & YValue) {
+            y = style->y;
         }
     } else
-        geometry = XValue | YValue | XNegative;
-    
-    direction = waimea->rh->dockstyle.direction;
-    gridspace = waimea->rh->dockstyle.gridspace;
+        style->geometry = XValue | YValue | XNegative;
     
     width = 0;
     height = 0;
@@ -64,7 +61,7 @@ DockappHandler::DockappHandler(WaScreen *scrn) {
                        wascreen->visual, CWOverrideRedirect | CWBackPixel |
                        CWEventMask | CWColormap | CWBorderPixel, &attrib_set);
 
-    if (stacking == AlwaysOnTop)
+    if (style->stacking == AlwaysOnTop)
         waimea->always_on_top_list->push_back(id);
     else
         waimea->always_at_bottom_list->push_back(id);
@@ -85,7 +82,7 @@ DockappHandler::DockappHandler(WaScreen *scrn) {
  * Removes all dockapps and destroys the dockapp handler window.
  */
 DockappHandler::~DockappHandler(void) {
-    if (stacking == AlwaysOnTop)
+    if (style->stacking == AlwaysOnTop)
         waimea->always_on_top_list->remove(id);
     else
         waimea->always_at_bottom_list->remove(id);
@@ -105,64 +102,58 @@ DockappHandler::~DockappHandler(void) {
  * Repositions all dockapps. Moves and resizes dockapp handler.
  */
 void DockappHandler::Update(void) {
-    int dock_x = gridspace;
-    int dock_y = gridspace;
-    list<Dockapp *>::iterator it;
-    bool found_pos;
-    Dockapp *tmp_dock;
+    int dock_x = style->gridspace;
+    int dock_y = style->gridspace;
     
     map_x = x;
     map_y = y;
-    width = gridspace;
-    height = gridspace;
+    width = style->gridspace;
+    height = style->gridspace;
     
     if (dockapp_list->empty()) {
         XUnmapWindow(display, id);
         return;
     }
-    
-    list<char *>::reverse_iterator r_it = waimea->rh->dockstyle.order->rbegin();
-    for (; r_it != waimea->rh->dockstyle.order->rend(); ++r_it) {
-        it = dockapp_list->begin();
-        if (**r_it == 'U') {
-            for (; it != dockapp_list->end(); ++it) {
-                if (! (*it)->c_hint) {
-                    tmp_dock = *it;
-                    dockapp_list->erase(it);
-                    dockapp_list->push_front(tmp_dock);
-                }
+
+    list<Dockapp *>::reverse_iterator d_it;
+    list<Dockapp *> *tmp_list = new list<Dockapp *>;
+    list<char *>::reverse_iterator s_it = style->order->rbegin();
+    for (; s_it != style->order->rend(); ++s_it) {
+        d_it = dockapp_list->rbegin();
+        if (**s_it == 'U') {
+            for (; d_it != dockapp_list->rend(); ++d_it) {
+                if (! (*d_it)->c_hint)
+                    tmp_list->push_front(*d_it);
             }
-        } else if (**r_it == 'N') {
-            for (; it != dockapp_list->end(); ++it) {
-                if ((*it)->c_hint &&
-                    (! strcmp(*r_it + 2, (*it)->c_hint->res_name))) {
-                    tmp_dock = *it;
-                    dockapp_list->erase(it);
-                    dockapp_list->push_front(tmp_dock);
-                }
+        } else if (**s_it == 'N') {
+            for (; d_it != dockapp_list->rend(); ++d_it) {
+                if ((*d_it)->c_hint &&
+                    (! strcmp(*s_it + 2, (*d_it)->c_hint->res_name)))
+                    tmp_list->push_front(*d_it);
             }
-        } else if (**r_it == 'C') {
-            for (; it != dockapp_list->end(); ++it) {
-                if ((*it)->c_hint &&
-                    (! strcmp(*r_it + 2, (*it)->c_hint->res_class))) {
-                    tmp_dock = *it;
-                    dockapp_list->erase(it);
-                    dockapp_list->push_front(tmp_dock);
-                }
+        } else if (**s_it == 'C') {
+            for (; d_it != dockapp_list->rend(); ++d_it) {
+                if ((*d_it)->c_hint &&
+                    (! strcmp(*s_it + 2, (*d_it)->c_hint->res_class)))
+                    tmp_list->push_front(*d_it);
             }
         }
-    }    
+    }
+    while (! dockapp_list->empty())
+        dockapp_list->pop_back();
+    delete dockapp_list;
+    dockapp_list = tmp_list;
     
-    it = dockapp_list->begin();
+    list<Dockapp *>::iterator it = dockapp_list->begin();
     for (; it != dockapp_list->end(); ++it) {
-        switch (direction) {
+        switch (style->direction) {
             case VerticalDock:
-                if (((*it)->width + gridspace * 2) > width)
-                        width = (*it)->width + gridspace * 2;
+                if (((*it)->width + style->gridspace * 2) > width)
+                        width = (*it)->width + style->gridspace * 2;
                 break;
             case HorizontalDock:
-                if (((*it)->height + gridspace * 2) > height)
-                    height = (*it)->height + gridspace * 2;
+                if (((*it)->height + style->gridspace * 2) > height)
+                    height = (*it)->height + style->gridspace * 2;
                 break;
         }
     }
@@ -170,18 +161,18 @@ void DockappHandler::Update(void) {
     XGrabServer(display);
     for (; it != dockapp_list->end(); ++it) {
         if (validateclient((*it)->id)) {
-            switch (direction) {
+            switch (style->direction) {
                 case VerticalDock:
                     dock_y = height;
-                    height += (*it)->height + gridspace;
-                    dock_x = (((width - gridspace * 2) - (*it)->width) / 2) +
-                        gridspace;
+                    height += (*it)->height + style->gridspace;
+                    dock_x = (((width - style->gridspace * 2) -
+                               (*it)->width) / 2) + style->gridspace;
                     break;
                 case HorizontalDock:
                     dock_x = width;
-                    width += (*it)->width + gridspace;
-                    dock_y = (((height - gridspace * 2) - (*it)->height) / 2) +
-                        gridspace;
+                    width += (*it)->width + style->gridspace;
+                    dock_y = (((height - style->gridspace * 2) -
+                               (*it)->height) / 2) + style->gridspace;
                     break;
             }
             (*it)->x = dock_x;
@@ -190,9 +181,9 @@ void DockappHandler::Update(void) {
         }
     }
     XUngrabServer(display);
-    switch (direction) {
-        case VerticalDock: height += gridspace; break;
-        case HorizontalDock: width += gridspace; break;
+    switch (style->direction) {
+        case VerticalDock: height += style->gridspace; break;
+        case HorizontalDock: width += style->gridspace; break;
     }
 
     WaTexture *texture = &wascreen->wstyle.t_focus;
@@ -208,22 +199,22 @@ void DockappHandler::Update(void) {
     XResizeWindow(display, id, width, height);
 
     wm_strut->left = wm_strut->right = wm_strut->top = wm_strut->bottom = 0;
-    if (geometry & XNegative) {
+    if (style->geometry & XNegative) {
         map_x = wascreen->width - wascreen->wstyle.border_width * 2 -
             width + x;
         wm_strut->right = wascreen->width - map_x;
     } else
         wm_strut->left = map_x + wascreen->wstyle.border_width * 2 + width;
     
-    if (geometry & YNegative) {
+    if (style->geometry & YNegative) {
         map_y = wascreen->height - wascreen->wstyle.border_width * 2 -
             height + y;
-        if (direction == HorizontalDock) {
+        if (style->direction == HorizontalDock) {
             wm_strut->bottom = wascreen->height - map_y;
             wm_strut->right = wm_strut->left = 0;
         }
     } else
-        if (direction == HorizontalDock) {
+        if (style->direction == HorizontalDock) {
             wm_strut->top = map_y + wascreen->wstyle.border_width * 2 + height;
             wm_strut->right = wm_strut->left = 0;
         }

@@ -23,6 +23,7 @@
 class ResourceHandler;
 class StrComp;
 typedef struct _WaAction WaAction;
+typedef struct _DockStyle DockStyle;
 
 #include "Waimea.hh"
 #include "WaWindow.hh"
@@ -39,7 +40,7 @@ struct _WaAction {
     unsigned int type, detail, mod, nmod;
 };
 
-typedef struct {
+struct _DockStyle {
     int x;
     int y;
     int geometry;
@@ -48,7 +49,7 @@ typedef struct {
     unsigned int gridspace;
     list<char *> *order;
     bool centered;
-} DockStyle;
+};
 
 #define LeftJustify   1
 #define RightJustify  2
@@ -78,7 +79,7 @@ public:
         *cbacts, *ibacts, *mbacts, *rgacts, *lgacts, *rootacts, *weacts,
         *eeacts, *neacts, *seacts, *mtacts, *miacts, *msacts;
 
-    DockStyle dockstyle;
+    list<DockStyle *> *dockstyles;
     
 private:
     void ReadDatabaseColor(char *, char *, WaColor *, unsigned long,

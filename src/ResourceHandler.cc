@@ -278,6 +278,8 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     mtacts     = new list<WaAction *>;
     miacts     = new list<WaAction *>;
     msacts     = new list<WaAction *>;
+
+    dockstyles = new list<DockStyle *>;
 }
 
 /**
@@ -378,65 +380,100 @@ void ResourceHandler::LoadConfig(void) {
 
     unsigned int dummy;
     char *token;
-    dockstyle.order = new list<char *>;
-    
-    if (XrmGetResource(database, "dock0.geometry", "Dock0.Geometry",
-                       &value_type, &value))
-        dockstyle.geometry = XParseGeometry(value.addr, &dockstyle.x,
-                                            &dockstyle.y, &dummy, &dummy);
+    int dock_num;
+    bool d_exists = True, have_u = False;
+    DockStyle *dockstyle;
+    char rc_name[20], rc_class[20];
 
-    if (XrmGetResource(database, "dock0.order", "Dock0.Order",
-                       &value_type, &value)) {
-      token = strtok(value.addr, " ");
-      if (strlen(token) >= 3 && (token[0] == 'C' || token[0] == 'N') &&
-          token[1] == '_')
-        dockstyle.order->push_back(strdup(token));
-      while (token = strtok(NULL, " "))
-        if (strlen(token) >= 3 && (token[0] == 'C' || token[0] == 'N') &&
-            token[1] == '_')
-          dockstyle.order->push_back(strdup(token));
+    for (dock_num = 0; d_exists && dock_num < 100; ++dock_num) {
+        d_exists = False;
+        dockstyle = (DockStyle *) malloc(sizeof(DockStyle));
+    
+        sprintf(rc_name, "dock%d.geometry", dock_num);
+        sprintf(rc_class, "Dock%d.Geometry", dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+            dockstyle->geometry = XParseGeometry(value.addr, &dockstyle->x,
+                                                &dockstyle->y, &dummy, &dummy);
+            d_exists = True;
+        }
+
+        dockstyle->order = new list<char *>;
+        sprintf(rc_name, "dock%d.order", dock_num);
+        sprintf(rc_class, "Dock%d.Order", dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+            d_exists = True;
+            token = strtok(value.addr, " ");
+            if (strlen(token) >= 3 && (token[0] == 'C' || token[0] == 'N') &&
+                token[1] == '_')
+                dockstyle->order->push_back(strdup(token));
+            while (token = strtok(NULL, " ")) {
+                if (strlen(token) >= 3 &&
+                    (token[0] == 'C' || token[0] == 'N') &&
+                    token[1] == '_')
+                    dockstyle->order->push_back(strdup(token));
+                else if (! strcasecmp("unknown", token) && !have_u) {
+                    have_u = True;
+                    dockstyle->order->push_back(strdup("U"));
+                }
+            }
+        }
+
+        sprintf(rc_name, "dock%d.centered", dock_num);
+        sprintf(rc_class, "Dock%d.Centered", dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+            d_exists = True;
+            if (! strncasecmp("true", value.addr, value.size))
+                dockstyle->centered = True;
+            else
+                dockstyle->centered = False;
+        } else
+            dockstyle->centered = True;
+
+        sprintf(rc_name, "dock%d.direction", dock_num);
+        sprintf(rc_class, "Dock%d.Direction", dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+            d_exists = True;
+            if (! strncasecmp("Horizontal", value.addr, value.size))
+                dockstyle->direction = HorizontalDock;
+            else
+                dockstyle->direction = VerticalDock;
+        } else
+            dockstyle->direction = VerticalDock;
+
+        sprintf(rc_name, "dock%d.gridSpace", dock_num);
+        sprintf(rc_class, "Dock%d.GridSpace", dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+            d_exists = True;
+            if (sscanf(value.addr, "%lu", &dockstyle->gridspace) != 1)
+                dockstyle->gridspace = 2;
+        } else
+            dockstyle->gridspace = 2;
+        
+        if (dockstyle->gridspace > 50) dockstyle->gridspace = 50;
+
+        sprintf(rc_name, "dock%d.stacking", dock_num);
+        sprintf(rc_class, "Dock%d.Stacking", dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+            d_exists = True;
+            if (! strncasecmp("AlwaysAtBottom", value.addr, value.size))
+                dockstyle->stacking = AlwaysAtBottom;
+            else
+                dockstyle->stacking = AlwaysOnTop;
+        } else
+            dockstyle->stacking = AlwaysOnTop;
+        
+        if (d_exists || ! dock_num)
+            dockstyles->push_back(dockstyle);
+        else {
+            delete dockstyle->order;
+            free(dockstyle);
+        }
     }
-    dockstyle.order->push_back(strdup("U"));
-
-    if (XrmGetResource(database, "dock0.centered", "Dock0.Centered",
-                       &value_type, &value)) {
-        if (! strncasecmp("true", value.addr, value.size))
-            dockstyle.centered = True;
-        else
-            dockstyle.centered = False;
-    } else
-        dockstyle.centered = True;
-
-    if (XrmGetResource(database, "dock0.direction", "Dock0.Direction",
-                       &value_type, &value)) {
-        if (! strncasecmp("Horizontal", value.addr, value.size))
-            dockstyle.direction = HorizontalDock;
-        else
-            dockstyle.direction = VerticalDock;
-    } else
-        dockstyle.direction = VerticalDock;
-
-    if (XrmGetResource(database, "dock0.gridSpace", "Dock0.GridSpace",
-                     &value_type, &value)) {
-        if (sscanf(value.addr, "%lu", &dockstyle.gridspace) != 1)
-            dockstyle.gridspace = 2;
-    } else
-        dockstyle.gridspace = 2;
-    
-    if (dockstyle.gridspace > 50) dockstyle.gridspace = 50;
-
-    if (XrmGetResource(database, "dock0.stacking", "Dock0.Stacking",
-                       &value_type, &value)) {
-        if (! strncasecmp("AlwaysAtBottom", value.addr, value.size))
-            dockstyle.stacking = AlwaysAtBottom;
-        else
-            dockstyle.stacking = AlwaysOnTop;
-    } else
-        dockstyle.stacking = AlwaysOnTop;
+    if (! have_u) dockstyles->back()->order->push_back(strdup("U"));
     
     XrmDestroyDatabase(database);
 } 
-
+    
 /**
  * @fn    LoadStyle(WaScreen *scrn)
  * @brief Reads style file

@@ -316,7 +316,7 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
             if (validateclient(da->id))
                 XConfigureWindow(e->display, da->id, e->value_mask, &wc);
             XUngrabServer(e->display);
-            waimea->wascreen->dock->Update();
+            da->dh->Update();
         }
     }
     
@@ -391,6 +391,8 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
  * @param e	The UnmapEvent
  */
 void EventHandler::EvUnmapDestroy(XEvent *e) {
+    DockappHandler *dh;
+    
     hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find((e->type == UnmapNotify)?
                                           e->xunmap.window:
@@ -404,8 +406,9 @@ void EventHandler::EvUnmapDestroy(XEvent *e) {
         else if (((*it).second)->type == DockAppType) {
             if (e->type == DestroyNotify)
                 ((Dockapp *) (*it).second)->deleted = True;
+            dh = ((Dockapp *) (*it).second)->dh;
             delete ((Dockapp *) (*it).second);
-            waimea->wascreen->dock->Update();
+            dh->Update();
         }
     }
 }
