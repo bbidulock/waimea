@@ -52,6 +52,7 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     waimea = this;
     hush = false;
     errors = 0;
+    eh = NULL;
 
     action.sa_handler = signalhandler;
     action.sa_mask = sigset_t();
@@ -216,6 +217,9 @@ void Waimea::WaLowerWindow(Window win) {
  */
 void Waimea::UpdateCheckboxes(int type) {
     list<WaMenuItem *>::iterator miit;
+
+    if (! eh) return;
+    
     list<WaMenu *>::iterator mit = wamenu_list->begin();
     for (; mit != wamenu_list->end(); ++mit) {
         miit = (*mit)->item_list->begin();

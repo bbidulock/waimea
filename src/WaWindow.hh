@@ -279,7 +279,7 @@ private:
     unsigned long *title_pixel, *handle_pixel, *label_pixel, *grip_pixel,
         *button_pixel;
     
-#ifdef XFT        
+#ifdef XFT
     XftDraw *xftdraw;
     XftColor *xftcolor;
 #else // ! XFT
