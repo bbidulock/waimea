@@ -85,6 +85,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     default_font.xft = false;
     default_font.font = "fixed";
 
+    XSync(display, false);
     if (! (pdisplay = XOpenDisplay(wa->options->display))) {
         ERROR << "can't open display: " << wa->options->display << endl;
         exit(1);
