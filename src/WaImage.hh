@@ -24,6 +24,10 @@
 #include <X11/Xft/Xft.h>
 #endif // XFT
 
+#ifdef PIXMAP
+#include <Imlib2.h>
+#endif // PIXMAP
+
 class WaImage;
 class WaImageControl;
 
@@ -72,6 +76,10 @@ private:
     int opacity;
 #endif // XFT
 
+#ifdef PIXMAP
+    Imlib_Image pixmap;
+#endif // PIXMAP
+
 public:
     WaTexture(void) {
         texture = 0;
@@ -101,6 +109,11 @@ public:
     inline Picture getAlphaPicture(void) { return alphaPicture; }
     inline Picture getSolidPicture(void) { return solidPicture; }
 #endif // XFT
+
+#ifdef PIXMAP
+    inline void setPixmap(Imlib_Image p) { pixmap = p; }
+    inline Imlib_Image getPixmap(void) { return pixmap; }
+#endif // PIXMAP
 
 };
 
@@ -137,6 +150,17 @@ public:
 // fake interlaced image
 #  define WaImage_Interlaced   (1l<<18)
 #endif // INTERLACE
+
+#ifdef PIXMAP
+// pixmap image
+#define WaImage_Pixmap		   (1l<<19)
+
+// scaling methods
+#define WaImage_Tile		   (1l<<20)
+#define WaImage_Scale	       (1l<<21)
+#define WaImage_Stretch		   (1l<<22)
+#endif // PIXMAP
+
 
 template <typename Z> inline Z wamin(Z a, Z b) { return ((a < b) ? a : b); }
 template <typename Z> inline Z wamax(Z a, Z b) { return ((a > b) ? a : b); }
@@ -182,6 +206,11 @@ public:
     Pixmap render(WaTexture *);
     Pixmap render_solid(WaTexture *);
     Pixmap render_gradient(WaTexture *);
+
+#ifdef PIXMAP
+    Pixmap render_pixmap(WaTexture *);
+#endif // PIXMAP
+    
 };
 
 #include <list.h>

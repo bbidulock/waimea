@@ -20,23 +20,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-
-/** 
- * @fn    WindowObject(Window win_id, int win_type)
- * @brief Constructor for WindowObject class
- *
- * Creates a simple window object with a window id and type value. All windows
- * we want to be able to search for should inherit this class.
- *
- * @param win_id Resource ID of window
- * @param win_type Type of WindowObject
- */
-WindowObject::WindowObject(Window win_id, int win_type) {
-    id = win_id;
-    type = win_type;
-}
-
-
 Waimea *waimea;
 char **argv;
 bool hush;
@@ -130,6 +113,7 @@ Waimea::~Waimea(void) {
     LISTDEL(wawindow_list_stacking);
     LISTDEL(wawindow_list_stacking_aot);
     LISTDEL(wawindow_list_stacking_aab);
+    XSetErrorHandler(NULL);
     delete wascreen;
     delete net;
     delete rh;

@@ -16,6 +16,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <X11/Xlib.h>
+
+#ifdef PIXMAP
+#include <Imlib2.h>
+#endif // PIXMAP
 
 #include "ResourceHandler.hh"
 
@@ -163,6 +168,8 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaWindow::MoveResizeVirtual));
     wacts->push_back(new StrComp("movetopointer",
                                  &WaWindow::MoveWindowToPointer));
+    wacts->push_back(new StrComp("restart", &WaWindow::Restart));
+    wacts->push_back(new StrComp("exit", &WaWindow::Exit));
     wacts->push_back(new StrComp("nop", &WaWindow::Nop));
     
     racts = new list<StrComp *>;
@@ -274,6 +281,8 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     macts->push_back(new StrComp("nextitem", &WaMenuItem::NextItem));
     macts->push_back(new StrComp("previousitem", &WaMenuItem::PreviousItem));
     macts->push_back(new StrComp("pointerwarp", &WaMenuItem::PointerWarp));
+    macts->push_back(new StrComp("restart", &WaMenuItem::Restart));
+    macts->push_back(new StrComp("exit", &WaMenuItem::Exit));
     macts->push_back(new StrComp("nop", &WaMenuItem::Nop));
     
     types = new list<StrComp *>;
@@ -629,6 +638,10 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         ERROR << "can't open stylefile\"" << style_file << "\" for reading" <<
             endl; exit(1);
     }
+    int slen = strlen(style_file) - 1;
+    for (; slen >= 1 && style_file[slen] != '/'; slen--);
+    style_file[slen] = '\0';
+
     ReadDatabaseFont("window.font", "Window.Font", &wstyle->fontname, "fixed");
     ReadDatabaseFont("menu.frame.font", "Menu.Frame.Font",
                      &mstyle->f_fontname, wstyle->fontname);
@@ -1354,6 +1367,50 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
     int clen = strlen(rclass) + 32, nlen = strlen(rname) + 32;
     char *colorclass = new char[clen], *colorname = new char[nlen];
 
+#ifdef PIXMAP
+    if (texture->getTexture() & WaImage_Pixmap) {
+        int clen = strlen(rclass) + 10, nlen = strlen(rname) + 10;
+        char *pixmapclass = new char[clen], *pixmapname = new char[nlen];
+        char pixmap_path[1024];
+        
+        Imlib_Border bd;
+        Imlib_Image image = NULL;
+
+        sprintf(pixmapclass, "%s.Pixmap", rclass);
+        sprintf(pixmapname,  "%s.pixmap", rname);
+        if (XrmGetResource(database, pixmapname, pixmapclass, &value_type,
+                           &value)) {
+            if (strstr(value.addr, "/")) {
+                if (! (image = imlib_load_image(value.addr)))
+                WARNING << "failed loading image \"" << value.addr << "\"\n";
+            }
+            else {
+                sprintf(pixmap_path, "%s/%s", style_file, value.addr);
+                if (! (image = imlib_load_image(pixmap_path))) {
+                    WARNING << "failed loading image \"" << value.addr <<
+                        "\"\n";
+                }
+            }
+        }
+        if (image) {
+            texture->setPixmap(image);
+            if (texture->getTexture() & WaImage_Stretch) {
+                imlib_context_set_image(image);
+                bd.left = imlib_image_get_width() / 2;
+                bd.right = imlib_image_get_width() - bd.left - 1;
+                bd.top = imlib_image_get_height() / 2;
+                bd.bottom = imlib_image_get_height() - bd.top - 1;
+                imlib_image_set_border(&bd);
+            }
+        }
+        else
+            texture->setTexture(WaImage_Solid | WaImage_Flat);
+        
+        delete [] pixmapclass;
+        delete [] pixmapname;
+    }
+#endif // PIXMAP
+        
     if (texture->getTexture() & WaImage_Solid) {
         
         sprintf(colorclass, "%s.Color", rclass);
@@ -1379,7 +1436,8 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
             if (xcol.red >= 0xff) xcol.red = 0xffff;
             else xcol.red *= 0xff;
             xcol.green = (unsigned int) (texture->getColor()->getGreen() +
-                                         (texture->getColor()->getGreen() >> 1));
+                                         (texture->getColor()->getGreen() >>
+                                          1));
             if (xcol.green >= 0xff) xcol.green = 0xffff;
             else xcol.green *= 0xff;
             xcol.blue = (unsigned int) (texture->getColor()->getBlue() +

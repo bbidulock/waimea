@@ -1176,10 +1176,11 @@ void WaWindow::DrawIconifyButton(void) {
  * Draws iconify button foreground graphics in iconify button window.
  */
 void WaWindow::DrawIconifyButtonFg(void) {
+    WaTexture *texture = (has_focus) ? &(wascreen->wstyle.b_focus) :
+        &(wascreen->wstyle.b_unfocus);
 
 #ifdef XFT    
-    if (! ((has_focus) ? wascreen->wstyle.b_focus.getOpacity() :
-           wascreen->wstyle.b_unfocus.getOpacity()))
+    if (! texture->getOpacity())
 #endif // ! XFT
 
         XClearWindow(display, button_min->id);
@@ -1192,14 +1193,12 @@ void WaWindow::DrawIconifyButtonFg(void) {
                           &(wascreen->wstyle.t_unfocus), 2, 2);
     else
         ic->XRenderRedraw(button_min->id, *pbutton, button_min->attrib.width,
-                          button_min->attrib.height,
-                          (has_focus) ? &(wascreen->wstyle.b_focus) :
-                          &(wascreen->wstyle.b_unfocus));
+                          button_min->attrib.height, texture);
 
 #endif // ! XFT
 
-    XDrawRectangle(display, button_min->id, *b_ipic_gc,
-                   2, title_w - 9, title_w - 9, 2);
+    XDrawRectangle(display, button_min->id, *b_ipic_gc, 2, title_w - 9,
+                   title_w - 9, 2);
 }
 
 /**
@@ -1235,12 +1234,13 @@ void WaWindow::DrawMaxButton(void) {
  * we draw normal maximize foreground graphics in maximize button window.
  */
 void WaWindow::DrawMaxButtonFg(void) {
+    WaTexture *texture = (has_focus) ? &(wascreen->wstyle.b_focus) :
+        &(wascreen->wstyle.b_unfocus);
 
 #ifdef XFT    
-    if (! ((has_focus) ? wascreen->wstyle.b_focus.getOpacity() :
-           wascreen->wstyle.b_unfocus.getOpacity()))
+    if (! texture->getOpacity())
 #endif // ! XFT
-
+        
         XClearWindow(display, button_max->id);
 
 #ifdef XFT
@@ -1252,9 +1252,7 @@ void WaWindow::DrawMaxButtonFg(void) {
                           attrib.width - (title_w - 2) * 2, 2);
     else
         ic->XRenderRedraw(button_max->id, *pbutton, button_max->attrib.width,
-                          button_max->attrib.height,
-                          (has_focus) ? &(wascreen->wstyle.b_focus) :
-                          &(wascreen->wstyle.b_unfocus));
+                          button_max->attrib.height, texture);
 #endif // ! XFT
 
     if (flags.max) {
@@ -1271,8 +1269,8 @@ void WaWindow::DrawMaxButtonFg(void) {
         XDrawLine(display, button_max->id, *b_mpic_gc, 2 + w, 2 + h, x + w,
                   2 + h);
     } else {
-        XDrawRectangle(display, button_max->id, *b_mpic_gc,
-                       2, 2, title_w - 9, title_w - 9);
+        XDrawRectangle(display, button_max->id, *b_mpic_gc, 2, 2,
+                       title_w - 9, title_w - 9);
         XDrawLine(display, button_max->id, *b_mpic_gc, 2, 3, title_w - 8, 3);
     }
 }
@@ -1309,10 +1307,11 @@ void WaWindow::DrawCloseButton(void) {
  * Draws close button foreground graphics in close button window.
  */
 void WaWindow::DrawCloseButtonFg(void) {
+    WaTexture *texture = (has_focus) ? &(wascreen->wstyle.b_focus) :
+        &(wascreen->wstyle.b_unfocus);
 
 #ifdef XFT    
-    if (! ((has_focus) ? wascreen->wstyle.b_focus.getOpacity() :
-           wascreen->wstyle.b_unfocus.getOpacity()))
+    if (! texture->getOpacity())
 #endif // ! XFT
 
         XClearWindow(display, button_c->id);
@@ -1326,15 +1325,13 @@ void WaWindow::DrawCloseButtonFg(void) {
                           attrib.width - (title_w - 2), 2);
     else
         ic->XRenderRedraw(button_c->id, *pbutton, button_c->attrib.width,
-                          button_c->attrib.height,
-                          (has_focus) ? &(wascreen->wstyle.b_focus) :
-                          &(wascreen->wstyle.b_unfocus));
+                          button_c->attrib.height, texture);
 #endif // ! XFT
 
     XDrawLine(display, button_c->id, *b_cpic_gc, 2, 2, title_w - 7,
               title_w - 7);
-    XDrawLine(display, button_c->id, *b_cpic_gc, 2, title_w - 7, title_w - 7,
-              2);
+    XDrawLine(display, button_c->id, *b_cpic_gc, 2, title_w - 7,
+              title_w - 7, 2);
 }
 
 /**
@@ -3238,7 +3235,7 @@ WaChildWindow::~WaChildWindow(void) {
 
 
 /**
- * Viewport wrapper functions.
+ * Wrapper functions
  */
 void WaWindow::ViewportMove(XEvent *e, WaAction *wa) {
     wascreen->ViewportMove(e, wa);
@@ -3291,11 +3288,12 @@ void WaWindow::ScrollViewportUpNoWarp(XEvent *, WaAction *ac) {
 void WaWindow::ScrollViewportDownNoWarp(XEvent *, WaAction *ac) {
     wascreen->ScrollViewport(SouthDirection, false, ac);
 }
-
-/**
- * PointerWarp wrapper function.
- */
 void WaWindow::PointerWarp(XEvent *e, WaAction *ac) {
     wascreen->PointerWarp(e, ac);
 }
-
+void WaWindow::Restart(XEvent *e, WaAction *ac) {
+    wascreen->Restart(e, ac);
+}
+void WaWindow::Exit(XEvent *e, WaAction *ac) {
+    wascreen->Exit(e, ac);
+}

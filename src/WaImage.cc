@@ -113,8 +113,27 @@ Pixmap WaImage::render(WaTexture *texture) {
     else if (texture->getTexture() & WaImage_Gradient)
         return render_gradient(texture);
     
+#ifdef PIXMAP
+    else if (texture->getTexture() & WaImage_Pixmap)
+        return render_pixmap(texture);
+#endif // PIXMAP
+    
     return None;
 }
+
+#ifdef PIXMAP
+Pixmap WaImage::render_pixmap(WaTexture *texture) {
+    Pixmap pixmap, mask;
+
+    imlib_context_set_image(texture->getPixmap());
+    if (texture->getTexture() & WaImage_Tile)
+        imlib_render_pixmaps_for_whole_image(&pixmap, &mask);
+    else 
+       imlib_render_pixmaps_for_whole_image_at_size(&pixmap, &mask, width,
+                                                    height); 
+    return pixmap;   
+}
+#endif // PIXMAP
 
 
 Pixmap WaImage::render_solid(WaTexture *texture) {
@@ -609,7 +628,8 @@ XImage *WaImage::renderXImage(void) {
 Pixmap WaImage::renderPixmap(void) {
     Pixmap pixmap =
         XCreatePixmap(control->getDisplay(),
-                      control->getDrawable(), width, height, control->getDepth());
+                      control->getDrawable(), width, height,
+                      control->getDepth());
     
     if (pixmap == None) {
         WARNING << "error creating pixmap" << endl;
@@ -2084,7 +2104,12 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
 
     WaImage image(this, width, height);
     pixmap = image.render(texture);
-    
+
+#ifdef PIXMAP        
+    if (texture->getTexture() & (WaImage_Pixmap | WaImage_Tile))
+        return pixmap;
+#endif // PIXMAP
+
     if (pixmap) {
         Cache *tmp = new Cache;
         
@@ -2262,9 +2287,22 @@ void WaImageControl::parseTexture(WaTexture *texture, char *t) {
     // convert to lower case
     for (i = 0; i < t_len; i++)
         *(ts + i) = tolower(*(t + i));
-    
+
     if (strstr(ts, "parentrelative")) {
         texture->setTexture(WaImage_ParentRelative);
+        
+#ifdef PIXMAP
+    } else if (strstr(ts, "pixmap")) {
+        texture->setTexture(0);
+        texture->addTexture(WaImage_Pixmap);
+        if (strstr(ts, "scaled"))
+            texture->addTexture(WaImage_Scale);
+        else if (strstr(ts, "stretched"))
+            texture->addTexture(WaImage_Stretch);
+        else
+            texture->addTexture(WaImage_Tile);
+#endif // PIXMAP
+        
     } else {
         texture->setTexture(0);
         

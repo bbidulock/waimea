@@ -739,11 +739,11 @@ void WaMenuItem::DrawFg(void) {
         case LeftJustify: x = 10; break;
         case CenterJustify:
             if (type == MenuTitleType)
-                x = (menu->width / 2) - ((width - 20) / 2);
+                x = (menu->width / 2) - ((width - 10) / 2);
             else if (type == MenuCBItemType)
-                x = ((menu->width - menu->cb_width) / 2) - ((width - 20) / 2);
+                x = ((menu->width - menu->cb_width) / 2) - ((width - 10) / 2);
             else x = ((menu->width - menu->extra_width) / 2) -
-                     ((width - 20) / 2);
+                     ((width - 10) / 2);
             break;
         default:
             if (type == MenuTitleType)
@@ -1564,7 +1564,7 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
 
 
 /**
- * Viewport functions.
+ * Wrapper functions.
  */
 void WaMenuItem::ViewportMove(XEvent *e, WaAction *wa) {
     menu->wascreen->ViewportMove(e, wa);
@@ -1617,10 +1617,12 @@ void WaMenuItem::ScrollViewportUpNoWarp(XEvent *, WaAction *ac) {
 void WaMenuItem::ScrollViewportDownNoWarp(XEvent *, WaAction *ac) {
     menu->wascreen->ScrollViewport(SouthDirection, false, ac);
 }
-
-/**
- * PointerWarp wrapper function.
- */
 void WaMenuItem::PointerWarp(XEvent *e, WaAction *ac) {
     menu->wascreen->PointerWarp(e, ac);
+}
+void WaMenuItem::Restart(XEvent *e, WaAction *ac) {
+    menu->wascreen->Restart(e, ac);
+}
+void WaMenuItem::Exit(XEvent *e, WaAction *ac) {
+    menu->wascreen->Exit(e, ac);
 }

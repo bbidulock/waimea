@@ -62,9 +62,9 @@ LIBS="$LIBS $Xext_lib"
 
 dnl Checks for Xft extension support
 XFT=""
-AC_MSG_CHECKING([whether to build support for the Xft extension])
+AC_MSG_CHECKING([whether to build support for the Xft library])
 AC_ARG_ENABLE(
-  xft, [  --enable-xft            enable xft extension if available [default=yes]])
+  xft, [  --enable-xft            enable Xft library if available [default=yes]])
 
 : ${enableval="yes"}
 if test x$enableval = "xyes"; then
@@ -79,11 +79,11 @@ if test x$enableval = "xyes"; then
     AC_CHECK_HEADER(freetype/freetype.h, 
       have_freetype="true",
       AC_MSG_RESULT([** WARNING: freetype/freetype.h is missing])
-      AC_MSG_RESULT([** WARNING: Disabled xft extension support])
+      AC_MSG_RESULT([** WARNING: Disabled Xft library support])
       CPPFLAGS="$save_cppflags")
   else
     AC_MSG_RESULT([** WARNING: freetype/freetype.h is missing])
-    AC_MSG_RESULT([** WARNING: Disabled xft extension support])
+    AC_MSG_RESULT([** WARNING: Disabled Xft library support])
   fi
 
   dnl Checks for Xft/XRender
@@ -92,13 +92,13 @@ if test x$enableval = "xyes"; then
       [AC_CHECK_LIB(Xft, XftFontOpen,
         [AC_CHECK_HEADER(X11/Xft/Xft.h, XFT="-DXFT"; Xft_lib="-lXft",
           AC_MSG_RESULT([** WARNING: X11/Xft/Xft.h is missing])
-          AC_MSG_RESULT([** WARNING: Disabled xft extension support]
+          AC_MSG_RESULT([** WARNING: Disabled Xft library support]
           CPPFLAGS="$save_cppflags"))],
         AC_MSG_RESULT([** WARNING: Could not find XftFontOpen in -lXft])
-        AC_MSG_RESULT([** WARNING: Disabled xft extension support])
+        AC_MSG_RESULT([** WARNING: Disabled Xft library support])
         CPPFLAGS="$save_cppflags")],
       AC_MSG_RESULT([** WARNING: Could not find XRenderFindFormat in -lXrender])
-      AC_MSG_RESULT([** WARNING: Disabled xft extension support])
+      AC_MSG_RESULT([** WARNING: Disabled Xft library support])
       CPPFLAGS="$save_cppflags")
   fi
 else
@@ -138,6 +138,54 @@ AC_ARG_ENABLE(ordered-pseudo,
   AC_MSG_RESULT([no])
 )
 AC_SUBST(ORDEREDPSEUDO)
+
+save_cppflags="$CPPFLAGS"
+dnl Check for pixmap support
+PIXMAP=""
+USE_IMLIB=0
+AC_MSG_CHECKING([whether to include pixmap support])
+AC_ARG_ENABLE(
+  pixmap, [  --enable-pixmap         include code for pixmap textures [default=yes]])
+
+: ${enableval="yes"}
+if test x$enableval = "xyes"; then
+  AC_MSG_RESULT([yes])
+  USE_IMLIB=1
+  AC_ARG_WITH(imlib2dir,
+  [  --with-imlib2dir[=DIR]    Imlib2 in DIR],,withval=no)
+
+  if test "x$withval" != "xno" && test "x$withval" != "xyes"; then 
+    CPPFLAGS="$CPPFLAGS -I${withval}/include"
+  else
+    AC_PATH_PROG(IMLIB2_CONFIG_IN_PATH, imlib2-config, no)
+    if test "x$IMLIB2_CONFIG_IN_PATH" != "xno"; then
+      CPPFLAGS="$CPPFLAGS `imlib2-config --cflags`"
+    fi
+  fi
+fi
+
+if test $USE_IMLIB -eq 1 ; then
+  AC_CHECK_LIB(dl, dlopen,
+    AC_CHECK_LIB(ttf, TT_Init_FreeType,
+      AC_CHECK_LIB(Imlib2, imlib_create_image,
+        PIXMAP="-DPIXMAP"; Imlib2_lib="-lImlib2",
+        AC_MSG_RESULT([** WARNING: Could not find imlib_create_imaget in -lImlib2])
+        AC_MSG_RESULT([** WARNING: Disabled pixmap support]),)
+      ,
+      AC_MSG_RESULT([** WARNING: Could not find TT_Init_FreeType in -lttf])
+      AC_MSG_RESULT([** WARNING: Disabled pixmap support]),)
+    ,
+    AC_MSG_RESULT([** WARNING: Could not find dlopen in -ldl])
+    AC_MSG_RESULT([** WARNING: Disabled pixmap support]),)
+fi
+
+if test "$PIXMAP" != "-DPIXMAP" ; then
+  CPPFLAGS="$save_cppflags"
+fi
+
+AC_SUBST(PIXMAP)
+
+LIBS="$LIBS $Imlib2_lib"
 
 AC_CONFIG_FILES([Makefile 
 src/Makefile

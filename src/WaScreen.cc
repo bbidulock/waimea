@@ -52,6 +52,15 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     net = waimea->net;
     rh = wa->rh;
     focus = true;
+
+#ifdef PIXMAP
+    imlib_context_set_display(display);
+    imlib_context_set_colormap(colormap);
+    imlib_context_set_visual(visual);
+    imlib_context_set_mask(0);
+    imlib_context_set_drawable(id);
+    imlib_context_set_anti_alias(1);
+#endif // PIXMAP
     
     eventmask = SubstructureRedirectMask | StructureNotifyMask |
         PropertyChangeMask | ColormapChangeMask | KeyPressMask |
@@ -67,8 +76,8 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     
     attrib_set.override_redirect = true;
     wm_check = XCreateWindow(display, id, 0, 0, 1, 1, 0,
-                       CopyFromParent, InputOnly, CopyFromParent,
-                       CWOverrideRedirect, &attrib_set);
+                             CopyFromParent, InputOnly, CopyFromParent,
+                             CWOverrideRedirect, &attrib_set);
     net->SetSupported(this);
     net->SetSupportedWMCheck(this, wm_check);
    

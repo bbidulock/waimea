@@ -158,6 +158,8 @@ public:
     void NextItem(XEvent *, WaAction *);
     void PreviousItem(XEvent *, WaAction *);
     void PointerWarp(XEvent *, WaAction *);
+    void Restart(XEvent *, WaAction *);
+    void Exit(XEvent *, WaAction *);
     inline void Nop(XEvent *, WaAction *) {}
     
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);

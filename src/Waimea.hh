@@ -31,7 +31,10 @@ class Waimea;
 
 class WindowObject {
 public:
-    WindowObject(Window, int);
+    inline WindowObject(Window win_id, int win_type) {
+        id = win_id;
+        type = win_type;
+    }
     
     Window id;
     int type;

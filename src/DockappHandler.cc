@@ -192,10 +192,6 @@ void DockappHandler::Update(void) {
         }
     }
     XUngrabServer(display);
-    switch (style->direction) {
-        case VerticalDock: height += style->gridspace; break;
-        case HorizontalDock: width += style->gridspace; break;
-    }
 
     if (! style->inworkspace)
         wm_strut->left = wm_strut->right = wm_strut->top =
