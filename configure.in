@@ -249,5 +249,6 @@ src/Makefile
 data/Makefile
 data/actions/Makefile
 data/styles/Makefile
+data/scripts/Makefile
 data/backgrounds/Makefile
 doc/Makefile])

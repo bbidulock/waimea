@@ -140,6 +140,7 @@ public:
     char *style_file;
     char *menu_file;
     char *action_file;
+    char *pathenv;
     unsigned int virtual_x;
     unsigned int virtual_y;
     int colors_per_channel, menu_stacking;

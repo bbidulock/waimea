@@ -34,7 +34,7 @@ WaMenu::WaMenu(char *n) {
     
     height = 0;
     width = 0;
-    mapped = has_focus = built = tasksw = dynamic = false;
+    mapped = has_focus = built = tasksw = dynamic = ignore = false;
     root_menu = NULL;
     root_item = NULL;
     wf = (Window) 0;
@@ -499,7 +499,8 @@ void WaMenu::Move(int dx, int dy) {
         if (((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
             (*it)->submenu->root_menu &&
             (*it)->submenu->mapped) {
-            (*it)->submenu->Move(dx, dy);
+            if (! (*it)->submenu->ignore)
+                (*it)->submenu->Move(dx, dy);
         }
     }
     x += dx;
@@ -524,6 +525,7 @@ void WaMenu::Unmap(bool focus) {
     XEvent e;
 
     XUnmapWindow(display, frame);
+    root_menu = NULL;
 
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
@@ -532,8 +534,7 @@ void WaMenu::Unmap(bool focus) {
                 if ((! (*it)->submenu) || ((*it)->submenu->root_menu &&
                                            (*it)->submenu->mapped))
                     (*it)->DeHilite();
-            }
-            else
+            } else 
                 (*it)->DeHilite();
         }
     }
@@ -553,8 +554,12 @@ void WaMenu::Unmap(bool focus) {
     }
     if (dynamic) {
        waimea->wamenu_list->remove(this);
-       delete this;
        if (root_item) root_item->submenu = NULL;
+       it = item_list->begin();
+       for (; it != item_list->end(); ++it) {
+           if ((*it)->submenu) (*it)->submenu->root_item = NULL;
+       }
+       delete this;
     }
     else {
        root_item = NULL;
@@ -572,16 +577,20 @@ void WaMenu::Unmap(bool focus) {
  * @param focus True if we should set focus to root item
  */
 void WaMenu::UnmapSubmenus(bool focus) {
+    ignore = true;
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
         if ((*it)->func_mask & MenuSubMask) {
             if (! (*it)->submenu) (*it)->DeHilite();
-            else if ((*it)->submenu->root_menu && (*it)->submenu->mapped) {
-                (*it)->submenu->UnmapSubmenus(focus);
-                (*it)->submenu->Unmap(focus);
+            else if ((*it)->submenu->mapped && (*it)->submenu->root_menu) {
+                if (! (*it)->submenu->ignore) {
+                    (*it)->submenu->UnmapSubmenus(focus);
+                    (*it)->submenu->Unmap(focus);
+                }
             }
         }
     }
+    ignore = false;
 }
 
 /**
@@ -1055,7 +1064,7 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus) {
     if (! in_window) return;
     if (! (func_mask & MenuSubMask)) return;
     if (sdyn && (! submenu)) {
-        if (! (submenu = menu->waimea->CreateDynamicMenu(sub))) return;
+        if (! (submenu = menu->waimea->GetMenuNamed(sub))) return;
     }
     if (submenu->mapped) return;
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
@@ -1094,11 +1103,12 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
 
     if (! in_window) return;
     if (! (func_mask & MenuSubMask)) return;
+    if (submenu && (submenu == menu)) return; 
     if (sdyn) {
        if (submenu) {
            submenu->Unmap(submenu->has_focus);
         }
-        if (! (submenu = menu->waimea->CreateDynamicMenu(sub))) return;
+        if (! (submenu = menu->waimea->GetMenuNamed(sub))) return;
     }
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     
@@ -1116,8 +1126,10 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
             skip += (*it)->height + menu->wascreen->mstyle.border_width;
         else break;
     }
+    menu->ignore = true;
     submenu->ReMap(menu->x + menu->width + menu->wascreen->mstyle.border_width,
                    menu->y + dy - skip);
+    menu->ignore = false;
     if (focus) submenu->FocusFirst();
 } 
 

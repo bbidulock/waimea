@@ -124,6 +124,14 @@ Path to alternate
 .I ACTIONFILE
 instead of
 .IR @pkgdatadir@/actions/action.
+
+.TP
+.B scriptDir:     Dirpath
+Path to alternate scripts directory
+instead of
+.IR @pkgdatadir@/scripts.
+.I scriptDir 
+is used execution of dynamic menu scripts.
 	
 .TP
 .B colorsPerChannel:     Integer
@@ -1073,7 +1081,9 @@ string as parameter:
 [{+-}<xoffset>{+-}<yoffset>] See
 .BR X(1).
 The xoffset and yoffset values defines the number of pixels to move the
-viewport.
+viewport. A 'W' character in the OffsetString is replaced with 
+screenwidth. A 'H' character in the OffsetString is replace with 
+screenheight.
 
 .PP
 .TP
@@ -1083,7 +1093,9 @@ string as parameter:
 [{+-}<xoffset>{+-}<yoffset>] See 
 .BR X(1).
 The xoffset and yoffset values defines the new viewport position.
-{+-} signs defines viewport gravity.
+{+-} signs defines viewport gravity. A 'W' character in the OffsetString
+is replaced with screenwidth. A 'H' character in the OffsetString is 
+replace with screenheight.
 
 .PP
 .TP
@@ -1238,6 +1250,7 @@ ending with 'focused' will set input focus to the first
 focusable menu item in the menu when being mapped.
 A menu must be given as parameter to all these 
 .I actions.
+Menu can be a dynamic menu.
 .RE
 
 .PP
@@ -1610,8 +1623,9 @@ menu system is compatible with
 .I blackbox(1)
 menu system so higher level tags as [begin], [exec], [submenu], 
 [nop], [restart] and [exit] are supported. 
-.I blackbox(1) also support [styledir], [reconfig] and [config] tags, 
-these tags are not supported by
+.I blackbox(1) 
+also support [styledir], [reconfig] and [config] tags, these tags are 
+not supported by
 .I Waimea.
 
 .PP
@@ -1648,21 +1662,35 @@ e.g.:
 [end]
 
 .fi
+
+.PP
+[include] tags can be used anywhere in a menu file to include
+the contains of another file. e.g.:
+.nf
+
+[include] (/home/user/.waimea/rootmenu)
+
+.fi
+
+
+.B Environment Variables
+.br
 Menu item titles and include filenames can contain environment 
 variables. e.g.:
 .nf
 [item] (Logout $USER) "exit"
 .fi
-$USER will be replaced with USER environment variable.
-
-All special characters need to be escaped (with a `\\') to protect
-them from expansion. Special characters are:
+$USER will be replaced with USER environment variable. All special 
+characters need to be escaped (with a `\\') to protect them from 
+expansion. Special characters are:
 .nf
 ( ) { } < > [ ] " $ 
 
 .fi
 
 .PP
+.B Checkboxes
+.br
 A checkbox item is a item that have two states and a flag decides which
 state the item is in. e.g.:
 .nf
@@ -1700,18 +1728,38 @@ DECORALL
 .PP
 
 .PP
-[include] tags can be used anywhere in a menu file to include
-the contains of another file. e.g.:
-.nf
-
-[include] (/home/user/.waimea/rootmenu)
-
-.fi
-
-
-.PP
+.B Taskswitcher
+.br
 Predefined menu named "__windowlist__" can be used in menu file
 and action file to access the taskswitcher menu.
+
+.PP
+.B Dynamic menus
+.br
+Waimea supports dynamic menus. A Dynamic menu is a menu that is 
+generated when mapped. Compared to a normal static menu that must be fully
+defined in the 
+.I MENUFILE
+the definition of a dynamic menu only consists of a command line. 
+The command line is executed when the menu is to be mapped and the 
+standard output from the command is parsed in the same way as the
+.I MENUFILE
+to generate the dynamic menu. Every time the menu is remapped the command
+line is executed and a new menu is generated. A dynamic menu is defined 
+as a submenu link in the
+.I MENUFILE
+or as a menu_name parameter to one of the 
+.I MenuMap actions.
+A dynamic menu definition must start with a '!' character and be
+followed by a command line. e.g.:
+.nf
+
+[sub] (Styles) <!styledir.pl>
+
+.fi
+Creates a submenu item with title 'Styles' and the submenu for the item 
+is dynamic menu created by execution of styledir.pl script. Dynamic 
+menus can contain definitions of other dynamic menus.
 
 .PP
 Default menu file is @pkgdatadir@/menu.

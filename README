@@ -59,7 +59,7 @@ CONFIGURATION
    cp WAIMEA_DATA_INSTALL_DIR/actions/* ~/.waimea/actions/
    cp WAIMEA_DATA_INSTALL_DIR/styles/* ~/.waimea/styles/
 
-   Copy  the example  configuration file  to  '.waimearc' in 
+   Copy the system wide configuration file to '.waimearc' in 
    your homedir.
    cp WAIMEA_DATA_INSTALL_DIR/config ~/.waimearc
 

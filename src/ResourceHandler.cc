@@ -319,6 +319,15 @@ ResourceHandler::~ResourceHandler(void) {
     }
     delete dockstyles;
     delete buttonstyles;
+
+    delete [] pathenv;
+
+    LISTCLEAR(wacts);
+    LISTCLEAR(racts);
+    LISTCLEAR(macts);
+    LISTCLEAR(types);
+    LISTCLEAR(bdetails);
+    LISTCLEAR(mods);
     
     ACTLISTCLEAR(frameacts);
     ACTLISTCLEAR(awinacts);
@@ -393,6 +402,17 @@ void ResourceHandler::LoadConfig(void) {
             delete [] menu_file;
             menu_file = wastrdup(value.addr);
         }
+   
+    char *path = getenv("PATH");
+    if (XrmGetResource(database, "scriptDir", "ScriptDir",
+                       &value_type, &value)) {
+        pathenv = new char[strlen(path) + strlen(value.addr) + 7];
+        sprintf(pathenv, "PATH=%s:%s", value.addr, path);
+    }
+    else { 
+        pathenv = new char[strlen(path) + strlen(DEFAULTSCRIPTDIR) + 7];
+        sprintf(pathenv, "PATH=%s:%s", DEFAULTSCRIPTDIR, path);
+    }
     
     if (XrmGetResource(database, "virtualSize", "ViriualSize",
                        &value_type, &value)) {
@@ -1153,12 +1173,6 @@ void ResourceHandler::LoadActions(void) {
         if (ret == EOF) {
             fclose(file);
             LISTCLEAR(defs);
-            LISTCLEAR(wacts);
-            LISTCLEAR(racts);
-            LISTCLEAR(macts);
-            LISTCLEAR(types);
-            LISTCLEAR(bdetails);
-            LISTCLEAR(mods);
             delete buffer;
             delete buffer2;
             return;
@@ -1962,7 +1976,7 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         cb = 0;
         
         if (! (s = strwithin(line, '[', ']'))) {
-            WARNING << basename(menu_file) << ":" << linenr << 
+            WARNING << "(" << basename(menu_file) << ":" << linenr << "):" <<
                 " missing tag" << endl;
             continue;
         }

@@ -1,4 +1,4 @@
-SUBDIRS = actions styles backgrounds
+SUBDIRS = actions styles scripts backgrounds
 CLEANFILES = config
 pkgdata_DATA = menu config
 

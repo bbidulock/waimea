@@ -56,7 +56,7 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     eh = NULL;
     timer = NULL;
     wascreen = NULL;
-
+    
     action.sa_handler = signalhandler;
     action.sa_mask = sigset_t();
     action.sa_flags = SA_NOCLDSTOP | SA_NODEFER; 
@@ -306,6 +306,7 @@ WaMenu *Waimea::CreateDynamicMenu(char *name) {
             dup2(m_pipe[1], STDOUT_FILENO);
             close(m_pipe[0]);
             close(m_pipe[1]);
+            putenv(rh->pathenv);
             if (execvp(*tmp_argv, tmp_argv) < 0)
                 WARNING << *tmp_argv << ": command not found" << endl;
             close(STDOUT_FILENO);
@@ -314,7 +315,8 @@ WaMenu *Waimea::CreateDynamicMenu(char *name) {
         close(m_pipe[1]);
         rh->linenr = 0;
         delete [] rh->menu_file;
-        rh->menu_file = wastrdup("PIPE");
+        rh->menu_file = new char[strlen(*tmp_argv) + 8];
+        sprintf(rh->menu_file, "%s:STDOUT", *tmp_argv);
         dmenu = new WaMenu(wastrdup(name));
         dmenu->dynamic = true;
         dmenu = rh->ParseMenu(dmenu, fdopen(m_pipe[0], "r"));
@@ -604,6 +606,6 @@ char *basename(char *name) {
    int i = strlen(name);
 
    for (; i >= 0 && name[i] != '/'; i--);
-   if (name[i] != '/') i--;
+   if (name[i] == '/') i++;
    return &name[i];
 }
