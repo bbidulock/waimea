@@ -9,92 +9,92 @@ INFO
    features a very advanced configuration system  with which
    it's  possible  to make waimea behave as almost any other
    window manager.
- 
+
    Features already included are:
-         Virtual desktop
-         Blackbox image rendering engine (blackbox style support)
-         Translucent textures using Xrender extension
-         Action Configuration System
-         Advanced Menu System
-         Standard X core fonts
-         Xft fonts (anti-aliased fonts)
-         Dockapp handler system
-         Task switcher	     
+      Virtual desktop
+      Blackbox image rendering engine (blackbox style support)
+      Translucent textures using Xrender extension
+      Action Configuration System
+      Advanced Menu System
+      Standard X core fonts
+      Xft fonts (anti-aliased fonts)
+      Dockapp handler system
+      Task switcher	     
 
 INSTALLATION
 
-	1. Run './configure' script. By default Waimea configures 
-	to  compile  with  Xft/Xrender  support for  anti-aliased 
-	fonts  if support  for it  could be  found  (Need Xfree86 
-	4.0.3  or  later).  If  you  don't  want  Xft  fonts  use 
-	'--disable-xft' switch when running configure script. For
-	a list of all available  configure  script  options  type 
-	'./configure --help'.
+   1. Run './configure' script. By default Waimea configures 
+   to  compile  with  Xft/Xrender  support for  anti-aliased 
+   fonts  if support  for it  could be  found  (Need Xfree86 
+   4.0.3  or  later).  If  you  don't  want  Xft  fonts  use 
+   '--disable-xft' switch when running configure script. For
+   a list of all available  configure  script  options  type 
+   './configure --help'.
 
-	2. Run 'make'. Should compile without errors.
+   2. Run 'make'. Should compile without errors.
 
-	3. Run 'make install' to install binary and data files.
+   3. Run 'make install' to install binary and data files.
 	
-	That should be it,  Waimea  installs itself in /usr/local 
-	as default.
+   That should be it,  Waimea  installs itself in /usr/local 
+   as default.
 
 CONFIGURATION
 
-	You can run Waimea without doing any of these configurat-
-	ion steps but you are then stuck with the default config-
-	uration  options. If  you  wish to  have  your  own  user 
-	configuration, do the following steps. 
+   You can run Waimea without doing any of these configurat-
+   ion steps but you are then stuck with the default config-
+   uration  options. If  you  wish to  have  your  own  user 
+   configuration, do the following steps. 
 
-	Create a '.waimea' directory structure in your home dire-
-	ctory.
-	mkdir ~/.waimea
-	mkdir ~/.waimea/actions
-	mkdir ~/.waimea/styles
+   Create a '.waimea' directory structure in your home dire-
+   ctory.
+   mkdir ~/.waimea
+   mkdir ~/.waimea/actions
+   mkdir ~/.waimea/styles
 
-	Copy default data files into directory structure.
-	cp WAIMEA_DATA_INSTALL_DIR/menu ~/.waimea/menu
-	cp WAIMEA_DATA_INSTALL_DIR/actions/* ~/.waimea/actions/
-	cp WAIMEA_DATA_INSTALL_DIR/styles/* ~/.waimea/styles/
+   Copy default data files into directory structure.
+   cp WAIMEA_DATA_INSTALL_DIR/menu ~/.waimea/menu
+   cp WAIMEA_DATA_INSTALL_DIR/actions/* ~/.waimea/actions/
+   cp WAIMEA_DATA_INSTALL_DIR/styles/* ~/.waimea/styles/
 
-	Copy  the example  configuration file  to  '.waimearc' in 
-	your homedir.
-	cp WAIMEA_DATA_INSTALL_DIR/waimearc.example ~/.waimearc
+   Copy  the example  configuration file  to  '.waimearc' in 
+   your homedir.
+   cp WAIMEA_DATA_INSTALL_DIR/waimearc.example ~/.waimearc
 
-	Edit '.waimearc'. 
-	Set the styleFile option  to the full  path of the  style 
-	you wish to use, 'HOME_DIR/.waimea/styles/Default' to use
-	default style. Set the  menuFile  option to the full path 
-	of the menu file, 'HOME_DIR/.waimea/menu' if you followed 
-	the instructions above.  Set the actionFile option to the 
-	full path of the action file you wish to use. At the  top 
-	of the action  files there's a  description  for how they 
-	work, read the descriptions and decide which action  file 
-	you wish to use.  'HOME_DIR/.waimea/actions.sloppy-focus' 
-	to use default sloppy-focus action.
+   Edit '.waimearc'. 
+   Set the styleFile option  to the full  path of the  style 
+   you wish to use, 'HOME_DIR/.waimea/styles/Default' to use
+   default style. Set the  menuFile  option to the full path 
+   of the menu file, 'HOME_DIR/.waimea/menu' if you followed 
+   the instructions above.  Set the actionFile option to the 
+   full path of the action file you wish to use. At the  top 
+   of the action  files there's a  description  for how they 
+   work, read the descriptions and decide which action  file 
+   you wish to use.  'HOME_DIR/.waimea/actions.sloppy-focus' 
+   to use default sloppy-focus action.
 
-	'HOME_DIR'  must be the full path to your home  directory 
-	'~' doesn't work.
- 
-	For info on how to edit the action, menu and style  files 
-	see waimea(1) manual page.
+   'HOME_DIR'  must be the full path to your home  directory 
+   '~' doesn't work.
+
+   For info on how to edit the action, menu and style  files 
+   see waimea(1) manual page.
 
 RUNNING
 
-	This can be different from system to system but the foll-
-	oing should work on most systems. 
+   This can be different from system to system but the foll-
+   oing should work on most systems. 
 
-	If you're running xdm, modify the '~.xsession' by  adding
-	'exec waimea' as the last executed command of the script.
+   If you're running xdm, modify the '~.xsession' by  adding
+   'exec waimea' as the last executed command of the script.
 
-	If you use startx script to start X, modify the '~.xinit-
-	rx' by adding 'exec waimea' as the last executed  command 
-	of the script.
+   If you use startx script to start X, modify the '~.xinit-
+   rx' by adding 'exec waimea' as the last executed  command 
+   of the script.
 
 BUGS
-	Bug reports, patches and suggestions are much appreciated,
-	send them to the author.
+   Bug reports, patches and suggestions are much appreciated,
+   send them to the author.
 
 AUTHOR
-	David Reveman <c99drn@cs.umu.se>
+   David Reveman <c99drn@cs.umu.se>
 
-	The Waimea website: http://waimea.sourceforge.net
+   The Waimea website: http://waimea.sourceforge.net
