@@ -427,7 +427,7 @@ void WaMenu::Unmap(bool focus) {
         else
             root_item->DeHilite();
     }
-    else if (! tasksw)
+    else
         waimea->wawindow_list->front()->Focus(False);
     
     root_item = NULL;
