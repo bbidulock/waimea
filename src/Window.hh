@@ -94,8 +94,8 @@ public:
     void UpdateGrabs(void);
     void ButtonPressed(WaChildWindow *);
     bool IncSizeCheck(int, int, int *, int *);
-    void DrawTitlebar(void);
-    void DrawHandlebar(void);
+    void DrawTitlebar(bool = false);
+    void DrawHandlebar(bool = false);
     void FocusWin(void);
     void UnFocusWin(void);
     void Focus(bool);

@@ -80,7 +80,6 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
 #ifdef RENDER
     render_if_opacity = false;
 #endif // RENDER
-
     
     border_w = title_w = handle_w = 0;
     has_focus = false;
@@ -515,11 +514,7 @@ void WaWindow::UpdateAllAttributes(void) {
                               (*bit)->attrib.y, (*bit)->attrib.width,
                               (*bit)->attrib.height);
         }
-        title->Render();
-        label->Render();
-        bit = buttons.begin();
-        for (; bit != buttons.end(); ++bit)
-            (*bit)->Render();
+        DrawTitlebar(true);
     }
     if (flags.handle) {
         handle->attrib.x = 25;
@@ -550,9 +545,7 @@ void WaWindow::UpdateAllAttributes(void) {
         XMoveResizeWindow(display, grip_r->id, grip_r->attrib.x,
                           grip_r->attrib.y, grip_r->attrib.width,
                           grip_r->attrib.height);
-        handle->Render();
-        grip_r->Render();
-        grip_l->Render();
+        DrawHandlebar(true);
     }
 
     XGrabServer(display);
@@ -986,16 +979,19 @@ void WaWindow::DrawOutline(int x, int y, int width, int height) {
 }
 
 /**
- * @fn    DrawTitlebar(void)
+ * @fn    DrawTitlebar(bool force)
  * @brief Draw window titlebar
  *
  * Renders titlebar pixmaps and draws titlebar foreground.
+ *
+ * @param force True if rendering should be forced
  */
-void WaWindow::DrawTitlebar(void) {
-    if (title_w &&
-        ((attrib.x + attrib.width) > 0 && attrib.x < wascreen->width) &&
-        ((attrib.y - border_w) > 0 &&
-         (attrib.y - border_w - title_w) < wascreen->height)) {
+void WaWindow::DrawTitlebar(bool force) {
+    if (force || (title_w &&
+                  ((attrib.x + attrib.width) > 0 &&
+                   attrib.x < wascreen->width) &&
+                  ((attrib.y - border_w) > 0 &&
+                   (attrib.y - border_w - title_w) < wascreen->height))) {
         title->Render();
         label->Render();
         list<WaChildWindow *>::iterator bit = buttons.begin();
@@ -1005,16 +1001,19 @@ void WaWindow::DrawTitlebar(void) {
 }
 
 /**
- * @fn    DrawHandlebar(void)
+ * @fn    DrawHandlebar(bool force)
  * @brief Draw window handlebar
  *
- * Renders handlebar pixmaps and draws handlebar foreground
+ * Renders handlebar pixmaps and draws handlebar foreground.
+ *
+ * @param force True if rendering should be forced
  */
-void WaWindow::DrawHandlebar(void) {
-    if (handle_w &&
-        ((attrib.x + attrib.width) > 0 && attrib.x < wascreen->width) &&
-        (attrib.y + attrib.height + border_w + handle_w) > 0 &&
-        (attrib.y + attrib.height + border_w) < wascreen->height) {
+void WaWindow::DrawHandlebar(bool force) {
+    if (force || (handle_w &&
+                  ((attrib.x + attrib.width) > 0 &&
+                   attrib.x < wascreen->width) &&
+                  (attrib.y + attrib.height + border_w + handle_w) > 0 &&
+                  (attrib.y + attrib.height + border_w) < wascreen->height)) {
         handle->Render();
         grip_r->Render();
         grip_l->Render();
@@ -1031,8 +1030,8 @@ void WaWindow::DrawHandlebar(void) {
 void WaWindow::FocusWin(void) {
     if (has_focus) return;
     has_focus = true;
-    if (title_w)  DrawTitlebar();
-    if (handle_w) DrawHandlebar();
+    if (title_w) DrawTitlebar(true);
+    if (handle_w) DrawHandlebar(true);
 }
 
 /**
@@ -1045,8 +1044,8 @@ void WaWindow::FocusWin(void) {
 void WaWindow::UnFocusWin(void) {
     if (! has_focus) return;
     has_focus = false;
-    if (title_w)  DrawTitlebar();
-    if (handle_w) DrawHandlebar();
+    if (title_w)  DrawTitlebar(true);
+    if (handle_w) DrawHandlebar(true);
 }
 
 /**     
