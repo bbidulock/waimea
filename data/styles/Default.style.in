@@ -5,17 +5,22 @@ menu.title:                     flat gradient crossdiagonal
   menu.title.textShadowColor:   #000000
   menu.title.textShadowXOffset: 1
   menu.title.textShadowYOffset: 1
-
+  menu.title.opacity:           40
 
 menu.frame:             flat gradient crossdiagonal
   menu.frame.color:     #ffffff
-  menu.frame.colorTo:   #8090c0
+  menu.frame.colorTo:   #ffffff
   menu.frame.textColor: #000000
+  menu.frame.opacity:   40
 
-menu.hilite:             flat gradient horizontal
-  menu.hilite.color:     #606878
-  menu.hilite.colorTo:   #000000
-  menu.hilite.textColor: #e0f0ff
+menu.hilite:                     flat gradient horizontal
+  menu.hilite.color:             #cccccc
+  menu.hilite.colorTo:           #000000
+  menu.hilite.textColor:         #ffffff
+  menu.hilite.textShadowColor:   #000000
+  menu.hilite.textShadowXOffset: 1
+  menu.hilite.textShadowYOffset: 1
+  menu.hilite.opacity:           40
 
 menu.bullet.look:         >
 menu.justify:             right
@@ -24,12 +29,12 @@ menu.checkbox.false.look: [ ]
 
 window.title.focus:           flat gradient crossdiagonal
   window.title.focus.color:   #5060a0
-  window.title.focus.colorTo: #afafaf
+  window.title.focus.colorTo: #dfdfdf
   
 window.title.unfocus:           flat gradient crossdiagonal
   window.title.unfocus.color:   #5060a0
-  window.title.unfocus.colorTo: #afafaf
-  window.title.unfocus.opacity: 50
+  window.title.unfocus.colorTo: #7f7f7f
+  window.title.unfocus.opacity: 40
   
 window.justify: right
 
@@ -41,14 +46,14 @@ window.label.focus:                     parentrelative
   
 window.label.unfocus:                     parentrelative
   window.label.unfocus.textColor:         #222222
-  window.label.unfocus.textColor.opacity: 50
+  window.label.unfocus.textColor.opacity: 40
 
 window.handle.focus:           flat gradient crossdiagonal
   window.handle.focus.color:   #90b098
   window.handle.focus.colorTo: #506058
   
 window.handle.unfocus:           flat gradient crossdiagonal
-  window.handle.unfocus.color:   #90b098
+  window.handle.unfocus.color:   #708078
   window.handle.unfocus.colorTo: #506058
   window.handle.unfocus.opacity: 50
 
@@ -57,7 +62,7 @@ window.grip.focus:           flat gradient crossdiagonal
   window.grip.focus.colorTo: #c0a040
   
 window.grip.unfocus:           flat gradient crossdiagonal
-  window.grip.unfocus.color:   #fff0a0
+  window.grip.unfocus.color:   #dfd080
   window.grip.unfocus.colorTo: #c0a040
   window.grip.unfocus.opacity: 50
 
@@ -94,22 +99,23 @@ window.button2.*.unfocus:            parentrelative
 window.button2.*.pressed:            parentrelative
   window.button2.*.pressed.picColor: #506058
 
-dockappholder.*.frame:           raised gradient crossdiagonal
-  dockappholder.*.frame.color:   #7080b0
-  dockappholder.*.frame.colorTo: #405080
+dockappholder.*.frame:           flat gradient crossdiagonal
+  dockappholder.*.frame.color:   #8090c0
+  dockappholder.*.frame.colorTo: #405070
+  dockappholder.*.frame.opacity: 40
 
-dockappholder.*.borderWidth: 2
+dockappholder.*.borderWidth: 1
 dockappholder.*.borderColor: #000000
 
 borderColor: #000000
-borderWidth: 2
+borderWidth: 1
 handleWidth: 3
 
 ! outlineColor:      #ffffff
-! menu.borderWidth:  2
+! menu.borderWidth:  1
 ! menu.title.height: 15
 ! menu.item.height:  15
 
-! *.font:        arial:pixelsize=12 [xft]
+! *.font: arial:pixelsize=12 [xft]
 
 rootCommand: Esetroot -s @pkgdatadir@/backgrounds/waimea.png

@@ -71,6 +71,16 @@ public:
     Workarea workarea;
 };
 
+class SystrayWindow : public WindowObject {
+public:
+    inline SystrayWindow(Window id, WaScreen *_ws) :
+        WindowObject(id, SystrayType) {
+        ws = _ws;
+    }
+    
+    WaScreen *ws;
+};
+
 #define WestDirection  1
 #define EastDirection  2
 #define NorthDirection 3
@@ -251,6 +261,7 @@ public:
     list<WaMenu *> wamenu_list_stacking_aab;
     list<WMstrut *> strut_list;
     list<DockappHandler *> docks;
+    list<Window> systray_window_list;
 
 private:
     void CreateVerticalEdges(void);

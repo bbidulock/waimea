@@ -220,9 +220,24 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
         XUngrabServer(display);
         if (status && (! attr.override_redirect) &&
             (attr.map_state == IsViewable)) {
+            if (net->IsSystrayWindow(children[i])) {
+                if (! (waimea->FindWin(children[i], SystrayType))) {
+                    XGrabServer(display);
+                    if (validatedrawable(children[i])) {
+                        XSelectInput(display, children[i],
+                                     StructureNotifyMask);
+                    }
+                    XUngrabServer(display);
+                    SystrayWindow *stw = new SystrayWindow(children[i], this);
+                    waimea->window_table.insert(make_pair(children[i], stw));
+                    systray_window_list.push_back(children[i]);
+                    net->SetSystrayWindows(this);
+                }
+                continue;
+            }
             XWMHints *wm_hints = NULL;
             XGrabServer(display);
-            if (validatedrawable(id)) {
+            if (validatedrawable(children[i])) {
                 wm_hints = XGetWMHints(display, children[i]);
             }
             XUngrabServer(display);

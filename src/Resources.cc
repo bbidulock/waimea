@@ -1869,7 +1869,10 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
                 if (XrmGetResource(database, pixmapname, pixmapclass,
                                    &value_type, &value)) {
                     sscanf(value.addr, "{ %u, %u, %u, %u }",
-                           &bd.left, &bd.right, &bd.top, &bd.bottom);
+                           (unsigned int *) &bd.left,
+                           (unsigned int *) &bd.right,
+                           (unsigned int *) &bd.top,
+                           (unsigned int *) &bd.bottom);
                     if (bd.left > imlib_image_get_width())
                         bd.left = imlib_image_get_width();
                     if (bd.right > imlib_image_get_width())

@@ -92,6 +92,9 @@ public:
 #endif // RENDER
 
     void GetWmType(WaWindow *);
+
+    bool IsSystrayWindow(Window);
+    void SetSystrayWindows(WaScreen *);
     
     Waimea *waimea;
     Display *display;
@@ -114,7 +117,8 @@ public:
         net_wm_window_type_dialog, net_wm_window_type_utility,
         net_wm_window_type_normal, net_current_desktop,
         net_number_of_desktops, net_close_window, net_wm_visible_name,
-        net_desktop_names, utf8_string, net_wm_desktop, net_wm_desktop_mask;
+        net_desktop_names, utf8_string, net_wm_desktop, net_wm_desktop_mask,
+        kde_net_system_tray_windows, kde_net_wm_system_tray_window_for;
     
 #ifdef RENDER
     Atom xrootpmap_id;

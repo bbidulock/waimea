@@ -472,7 +472,7 @@ void EventHandler::EvColormap(XColormapEvent *e) {
  * @fn    EvMapRequest(XMapRequestEvent *e)
  * @brief MapRequestEvent handler
  *
- * We receive this event then a window wants to be mapped-> If the window 
+ * We receive this event then a window wants to be mapped. If the window 
  * isn't in our window hash_map already it's a new window and we create 
  * a WaWindow for it. If the window already is managed we just set its
  * state to NormalState.
@@ -488,20 +488,34 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
     }
     else if (WaScreen *ws =
              (WaScreen *) waimea->FindWin(e->parent, RootType)) {
-        wm_hints = XAllocWMHints();
-        XGetWindowAttributes(e->display, e->window, &attr);
-        if (! attr.override_redirect) {
-            if ((wm_hints = XGetWMHints(e->display, e->window)) &&
-                (wm_hints->flags & StateHint) &&
-                (wm_hints->initial_state == WithdrawnState)) {
-                ws->AddDockapp(e->window);
-            } else {
-                new WaWindow(e->window, ws);
-                ws->net->SetClientList(ws);
-                ws->net->SetClientListStacking(ws);
+        if (ws->net->IsSystrayWindow(e->window)) {
+            if (! waimea->FindWin(e->window, SystrayType)) {
+                XGrabServer(ws->display);
+                if (validatedrawable(e->window)) {
+                    XSelectInput(ws->display, e->window, StructureNotifyMask);
+                }
+                XUngrabServer(ws->display);
+                SystrayWindow *stw = new SystrayWindow(e->window, ws);
+                waimea->window_table.insert(make_pair(e->window, stw));
+                ws->systray_window_list.push_back(e->window);
+                ws->net->SetSystrayWindows(ws);
             }
+        } else {
+            wm_hints = XAllocWMHints();
+            XGetWindowAttributes(e->display, e->window, &attr);
+            if (! attr.override_redirect) {
+                if ((wm_hints = XGetWMHints(e->display, e->window)) &&
+                    (wm_hints->flags & StateHint) &&
+                    (wm_hints->initial_state == WithdrawnState)) {
+                    ws->AddDockapp(e->window);
+                } else {
+                    new WaWindow(e->window, ws);
+                    ws->net->SetClientList(ws);
+                    ws->net->SetClientListStacking(ws);
+                }
+            }
+            XFree(wm_hints);
         }
-        XFree(wm_hints);
     }
 }
 
@@ -522,11 +536,11 @@ void EventHandler::EvUnmapDestroy(XEvent *e) {
     WindowObject *wo;
 
     if ((wo = waimea->FindWin((e->type == UnmapNotify)?
-                             e->xunmap.window:
-                             (e->type == DestroyNotify)?
-                             e->xdestroywindow.window:
-                             e->xreparent.window,
-                             WindowType | DockAppType))) {
+                              e->xunmap.window:
+                              (e->type == DestroyNotify)?
+                              e->xdestroywindow.window:
+                              e->xreparent.window,
+                              WindowType | DockAppType | SystrayType))) {
         if (wo->type == WindowType) {
             if (e->type == DestroyNotify)
                 ((WaWindow *) wo)->deleted = true;
@@ -538,6 +552,18 @@ void EventHandler::EvUnmapDestroy(XEvent *e) {
             dh = ((Dockapp *) wo)->dh;
             delete ((Dockapp *) wo);
             dh->Update();
+        }
+        else if (wo->type == SystrayType && (e->type == DestroyNotify)) {
+            SystrayWindow *stw = (SystrayWindow *) wo;
+            waimea->window_table.erase(stw->id);
+            XGrabServer(stw->ws->display);
+            if (validatedrawable(stw->id)) {
+                XSelectInput(stw->ws->display, stw->id, NoEventMask);
+            }
+            XUngrabServer(stw->ws->display);
+            stw->ws->systray_window_list.remove(stw->id);
+            stw->ws->net->SetSystrayWindows(stw->ws);
+            delete stw;
         }
     }
 }
@@ -601,8 +627,9 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
     else if (e->xclient.message_type == waimea->net->net_wm_desktop_mask) {
         if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
                                                WindowType))) {
-            if ((unsigned int) e->xclient.data.l[0] <
-                ((1L << ww->wascreen->config.desktops) - 1)) {
+            if (e->xclient.data.l[0] <
+                ((1L << ww->wascreen->config.desktops) - 1) &&
+                e->xclient.data.l[0] >= 0) {
                 ww->desktop_mask = e->xclient.data.l[0];
                 if (ww->desktop_mask &
                     (1L << ww->wascreen->current_desktop->number))

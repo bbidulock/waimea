@@ -126,6 +126,10 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_WM_DESKTOP", false);
     net_wm_desktop_mask =
         XInternAtom(display, "_NET_WM_DESKTOP_MASK", false);
+    kde_net_system_tray_windows =
+        XInternAtom(display, "_KDE_NET_SYSTEM_TRAY_WINDOWS", false);
+    kde_net_wm_system_tray_window_for =
+        XInternAtom(display, "_KDE_NET_WM_SYSTEM_TRAY_WINDOW_FOR", false);
 
 #ifdef RENDER
     xrootpmap_id =
@@ -1107,7 +1111,7 @@ void NetHandler::SetDesktopNames(WaScreen *ws, char *names) {
 }
 
 /**
- * @fn    SetWorkarea(Workarea *workarea)
+ * @fn    SetWorkarea(WaScreen *ws)
  * @brief Sets window manager workarea
  *
  * Sets the window manager workarea, used for placing icons and maximizing
@@ -1397,4 +1401,58 @@ void NetHandler::GetDesktop(WaWindow *ww) {
         }
     } else ww->deleted = true;
     XUngrabServer(display);
+}
+
+/**
+ * @fn    IsSystrayWindow(Window w)
+ * @brief Checks if window is systray window
+ *
+ * Reads _KDE_NET_WM_SYSTEM_TRAY_WINDOW_FOR hint to see if window is a systray
+ * window.
+ *
+ * @param w Window to check
+ *
+ * @return True if window is systray window, otherwise false
+ */
+bool NetHandler::IsSystrayWindow(Window w) {
+    CARD32 *data;
+    
+    items_read = 0;
+    XGrabServer(display);
+    if (validatedrawable(w)) {
+        if (XGetWindowProperty(display, w, kde_net_wm_system_tray_window_for,
+                               0L, 1L, false, XA_WINDOW, &real_type,
+                               &real_format, &items_read, &items_left,
+                               (unsigned char **) &data) != Success) {
+            items_read = 0;
+        }
+    }
+    XUngrabServer(display);
+
+    return ((items_read)? true: false);
+}
+
+/**
+ * @fn    SetSystrayWindows(WaScreen *ws)
+ * @brief Write kde_net_system_tray_windows hint
+ *
+ * Sets _KDE_NET_SYSTEM_TRAY_WINDOWS hint to the current list of systray
+ * windows.
+ *
+ * @param ws WaScreen object
+ */
+void NetHandler::SetSystrayWindows(WaScreen *ws) {
+    CARD32 *data;
+    int i = 0;
+
+    data = new CARD32[ws->systray_window_list.size() + 1];
+
+    list<Window>::iterator it = ws->systray_window_list.begin();
+    for (; it != ws->systray_window_list.end(); it++)
+        data[i++] = *it;
+
+    XChangeProperty(display, ws->id, kde_net_system_tray_windows, XA_WINDOW,
+                    32, PropModeReplace, (unsigned char *) data, i);
+
+    delete [] data;
 }

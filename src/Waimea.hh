@@ -126,6 +126,7 @@ struct waoptions {
 #define DockHandlerType (1L << 18)
 #define DockAppType     (1L << 19)
 #define MenuType        (1L << 20)
+#define SystrayType     (1L << 21)
 
 enum {
     MoveType,

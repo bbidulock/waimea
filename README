@@ -15,13 +15,13 @@ INTRODUCTION
    before possible.
 
    Features already included are:
-      Virtual desktop
+      Virtual desktop sizes
 		Multiple desktops
       Blackbox image rendering engine (blackbox style support)
 		Pixmap styles
       Translucent textures using Xrender extension
-      Action Configuration System
-      Advanced Menu System (with dynamic menus support)
+      Action configuration system
+      Advanced menu system (with dynamic menus support)
       Standard X core fonts
       Xft fonts (anti-aliased fonts)
 		Double buffered text
@@ -44,15 +44,26 @@ INSTALLATION
 	Install waimea by running the following commands:
 
 	----- cut here -----
-	./configure --prefix=/usr --enable-xrender --enable-xft --enable-pixmap &&
+	./configure --prefix=/usr --enable-shape --enable-xinerama \
+		--enable-render --enable-randr --enable-xft \
+		--enable-pixmap &&
 	make &&
 	make install
 	----- cut here -----
 
 	Command explanations
 
-	--enable-xrender   :   This  command  activates  waimea's 
-	ability to render transparent textures
+	--enable-shape  : This command activates waimea's ability 
+	to support non-rectangular windows.
+
+	--enable-xinerama   :  This  command  activates  waimea's 
+	ability to support Xinerama screens.
+
+	--enable-render   :   This  command  activates   waimea's 
+	ability to render transparent textures.
+
+	--enable-randr  : This command activates waimea's ability
+	to handle dynamic screen size changes.
 
 	--enable-xft : This command activates waimea's ability to
 	render anti-aliased text.

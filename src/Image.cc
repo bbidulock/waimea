@@ -2533,7 +2533,8 @@ Pixmap WaImageControl::xrender(Pixmap p, unsigned int width,
         return p;
     }
 
-    if (w < wascreen->width || h < wascreen->height) {
+    if (w < (unsigned int) wascreen->width ||
+        h < (unsigned int) wascreen->height) {
         gc = XCreateGC(display, wascreen->id, 0, NULL);
         XSetTile(display, gc, parent);
         XSetTSOrigin(display, gc, w - (src_x % w), h - (src_y % h));
