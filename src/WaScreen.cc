@@ -146,30 +146,35 @@ WaScreen::~WaScreen(void) {
  */
 void WaScreen::CreateFonts(void) {
 #ifdef XFT
+    double default_font_size = (8.5 / 1200.0) * (double) height;
+    if (wstyle.xftsize < 2.0) wstyle.xftsize = default_font_size;
     if (! (wstyle.xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
                                         XftTypeString, wstyle.xftfontname,
-                                        XFT_SIZE, XftTypeInteger,
+                                        XFT_SIZE, XftTypeDouble,
                                         wstyle.xftsize, 0))) {
         ERROR << "couldn't load font \"" << wstyle.xftfontname << "\"" << endl;
         quit(1);
     }
+    if (mstyle.f_xftsize < 2.0) mstyle.f_xftsize = default_font_size;
     if (! (mstyle.f_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
                                           XftTypeString, mstyle.f_xftfontname,
-                                          XFT_SIZE, XftTypeInteger,
+                                          XFT_SIZE, XftTypeDouble,
                                           mstyle.f_xftsize, 0))) {
         ERROR << "couldn't load font \"" << mstyle.f_xftfontname << "\"" << endl;
         quit(1);
     }
+    if (mstyle.t_xftsize < 2.0) mstyle.t_xftsize = default_font_size;
     if (! (mstyle.t_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
                                           XftTypeString, mstyle.t_xftfontname,
-                                          XFT_SIZE, XftTypeInteger,
+                                          XFT_SIZE, XftTypeDouble,
                                           mstyle.t_xftsize, 0))) {
         ERROR << "couldn't load font \"" << mstyle.t_xftfontname << "\"" << endl;
         quit(1);
     }
+    if (mstyle.b_xftsize < 2.0) mstyle.b_xftsize = default_font_size;
     if (! (mstyle.b_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
                                           XftTypeString, mstyle.b_xftfontname,
-                                          XFT_SIZE, XftTypeInteger,
+                                          XFT_SIZE, XftTypeDouble,
                                           mstyle.b_xftsize, 0))) {
         ERROR << "couldn't load font \"" << mstyle.b_xftfontname << "\"" << endl;
         quit(1);

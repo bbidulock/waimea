@@ -422,44 +422,44 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
 #ifdef XFT
     if (XrmGetResource(database, "window.xftfontsize",
                        "Window.XftFontSize", &value_type, &value)) {
-        if (sscanf(value.addr, "%d", &wstyle->xftsize) != 1) {
-            wstyle->xftsize = 7;
+        if (sscanf(value.addr, "%f", &wstyle->xftsize) != 1) {
+            wstyle->xftsize = 0.0;
         } else {
-            if (wstyle->xftsize < 2) wstyle->xftsize = 2;
-            if (wstyle->xftsize > 100) wstyle->xftsize = 100;
+            if (wstyle->xftsize < 2.0) wstyle->xftsize = 2.0;
+            if (wstyle->xftsize > 100.0) wstyle->xftsize = 100.0;
         }
     } else
-        wstyle->xftsize = 7;
+        wstyle->xftsize = 0.0;
     
     if (XrmGetResource(database, "menu.frame.xftfontsize",
                        "Menu.Frame.XftFontSize", &value_type, &value)) {
-        if (sscanf(value.addr, "%d", &mstyle->f_xftsize) != 1) {
+        if (sscanf(value.addr, "%f", &mstyle->f_xftsize) != 1) {
             mstyle->f_xftsize = wstyle->xftsize;
         } else {
-            if (mstyle->f_xftsize < 2) mstyle->f_xftsize = 2;
-            if (mstyle->f_xftsize > 100) mstyle->f_xftsize = 100;
+            if (mstyle->f_xftsize < 2.0) mstyle->f_xftsize = 2.0;
+            if (mstyle->f_xftsize > 100.0) mstyle->f_xftsize = 100.0;
         }
     } else
         mstyle->f_xftsize = wstyle->xftsize;
 
     if (XrmGetResource(database, "menu.title.xftfontsize",
                        "Menu.Title.XftFontSize", &value_type, &value)) {
-        if (sscanf(value.addr, "%d", &mstyle->t_xftsize) != 1) {
+        if (sscanf(value.addr, "%f", &mstyle->t_xftsize) != 1) {
             mstyle->t_xftsize = mstyle->f_xftsize;
         } else {
-            if (mstyle->t_xftsize < 2) mstyle->t_xftsize = 2;
-            if (mstyle->t_xftsize > 100) mstyle->t_xftsize = 100;
+            if (mstyle->t_xftsize < 2.0) mstyle->t_xftsize = 2.0;
+            if (mstyle->t_xftsize > 100.0) mstyle->t_xftsize = 100.0;
         }
     } else
         mstyle->t_xftsize = mstyle->f_xftsize;
 
     if (XrmGetResource(database, "menu.bullet.xftfontsize",
                        "Menu.Bullet.XftFontSize", &value_type, &value)) {
-        if (sscanf(value.addr, "%d", &mstyle->b_xftsize) != 1) {
+        if (sscanf(value.addr, "%f", &mstyle->b_xftsize) != 1) {
             mstyle->b_xftsize = mstyle->f_xftsize;
         } else {
-            if (mstyle->b_xftsize < 2) mstyle->b_xftsize = 2;
-            if (mstyle->b_xftsize > 100) mstyle->b_xftsize = 100;
+            if (mstyle->b_xftsize < 2.0) mstyle->b_xftsize = 2.0;
+            if (mstyle->b_xftsize > 100.0) mstyle->b_xftsize = 100.0;
         }
     } else
         mstyle->b_xftsize = mstyle->f_xftsize;

@@ -63,12 +63,12 @@ window.grip.unfocus:			sunken gradient crossdiagonal
 borderColor:				#000000
 borderWidth:				2
 handleWidth:				3
-menu.borderWidth:			2
-!menu.title.height:			15
-!menu.item.height:                      15
+! menu.borderWidth:			2
+! menu.title.height:			15
+! menu.item.height:                     15
 
-*.font:		fixed
-*.xftfont:	arial
-*.xftfontsize:	8
+*.font:					fixed
+*.xftfont:				arial
+! *.xftfontsize:			8.0
 
 rootCommand: xv -rmode 2 -root -quit @pkgdatadir@/backgrounds/waimea.png

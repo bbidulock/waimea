@@ -31,9 +31,8 @@ INSTALLATION
         1. Run './configure' script. By default Waimea configures to compile 
         with Xft/Xrender support for anti-aliased fonts if support for it 
         could be found (Need Xfree86 4.0.3 or later). If you don't want 
-        Xft/Xrender for rendering fonts use '--disable-xft' switch with 
-        configure script. For all configure script options type './configure
-         --help'.
+        Xft fonts use '--disable-xft' switch when running configure script. 
+	For all configure script options type './configure --help'.
 
         2. Run 'make'. Should compile without errors.
 
@@ -100,23 +99,24 @@ STYLES
                 Border width of all menus, By default 2.
 
         titleWidth
-                Forces title with to number of pixels. By default the title 
+                Forces title width to a number of pixels. By default the title 
                 width is set by the height of the font.
 
         *.xftFont
                 This option can be used for all items that the .font option 
                 can be used for, plus the new menu.bullet item. If Waimea is 
-                compiled with xft support when it will use font specified by 
+                compiled with xft support then it will use font specified by 
                 this option instead of the one specified by .font. By default
                 Waimea uses the font specified by .font option. If neither 
                 options are specified, Waimea uses 'fixed' font.
 
         *.xftSize
-                This can be used for all items as the above option can be 
-                used and specifies the size of the xft font to use. This is 
-                not really in pixels but instead in a percentage of the 
-                screen height (read xft manual page for info about this). By
-                default size 7 is used.
+		This should be a floating point number between 2.0 and 100.0
+                and can be used for all items as the above option can be 
+                used for. This option specifies the size of the xft font to 
+		use. This is not really in pixels but instead in a percentage 
+		of the screen height (read xft manual page for info about this). 		By default the size is calculated from the height of your screen
+		(size = (17 / 2400) * screenHeight).
 
         window.button.hilite.picColor
                 This specifies the picColor to use when mouse is hovering 
@@ -131,7 +131,7 @@ ACTIONS
         it to. As default Waimea reads the action file specified in the 
         config file and if not specified in config file the global system 
         action file. If you want to force Waimea to read a specified action 
-        file use '--actionfile' switch. The idea is that you could specify 
+        file use '--actionfile' switch. The idea is that you could specify
         an 'action' for every X event received. The file is read as an X 
         resource file. First you use a resource line ending with a priority 
         number to specify the window that you want to assign an 'action' for.
@@ -145,8 +145,8 @@ ACTIONS
         If you want to specify a detail for the event use a '=' after the 
         event. The '&' character is used for specifying a modifier mask. 
         Action and event must always be specified. Here's an example (the 
-        best way to learn how this work is to look at the standard action 
-        file 'data/action').
+        best way to learn how this work is to look at the action files in 
+	'data/actions/' directory).
 
         window.label.1: Move : ButtonPress = Button1 & Mod1Mask | ControlMask
         window.label.2: Resize : ButtonPress = Button1 & Mod1Mask | \

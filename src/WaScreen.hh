@@ -57,7 +57,7 @@ typedef struct {
     char *xftfontname;
     XftFont *xftfont;
     XftColor xftfcolor, xftucolor;
-    int xftsize;
+    double xftsize;
 #else // ! XFT
     GC l_text_focus_gc, l_text_unfocus_gc;
     XFontStruct *font;
@@ -75,7 +75,7 @@ typedef struct {
     char *f_xftfontname, *t_xftfontname, *b_xftfontname;
     XftFont *f_xftfont, *t_xftfont, *b_xftfont;
     XftColor f_xftcolor, fh_xftcolor, t_xftcolor;
-    int f_xftsize, t_xftsize, b_xftsize;
+    double f_xftsize, t_xftsize, b_xftsize;
 #else // ! XFT
     GC f_text_gc, fh_text_gc, t_text_gc, b_text_gc, bh_text_gc;
     XFontStruct *f_font, *t_font, *b_font;
