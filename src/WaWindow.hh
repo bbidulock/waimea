@@ -87,8 +87,8 @@ public:
     void RedrawWindow(void);
     void SendConfig(void);
     void Gravitate(int);
-    void ButtonPressed(int);
     void UpdateGrabs(void);
+    void ButtonPressed(int);
     bool IncSizeCheck(int, int, int *, int *);
     void DrawTitlebar(void);
     void DrawHandlebar(void);

@@ -887,12 +887,12 @@ void WaWindow::UnFocusWin(void) {
     if (handle_w) DrawHandlebar();
 }
 
-/**
+/**     
  * @fn    ButtonPressed(int type)
  * @brief Titlebar buttonpress
- *
+ *      
  * Performes button press animation on one of the titlebar buttons.
- *
+ *      
  * @param type Type of button to press
  */
 void WaWindow::ButtonPressed(int type) {
@@ -900,17 +900,22 @@ void WaWindow::ButtonPressed(int type) {
     bool in_window = true;
     WaChildWindow *button;
     
-    switch (type) {
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
+
+    XUngrabButton(display, AnyButton, AnyModifier, id);
+    XUngrabKey(display, AnyKey, AnyModifier, id);
+    
+    switch (type) {                     
         case CButtonType: button = button_c; break;
         case IButtonType: button = button_min; break;
-        case MButtonType: button = button_max; break;
+        default: button = button_max; break;
     }
     button->pressed = true;
     button->Render();
     button->Draw();
     for (;;) {
         XMaskEvent(display, ButtonReleaseMask | EnterWindowMask |
-                   LeaveWindowMask, &e);        
+                   LeaveWindowMask, &e);
         switch (e.type) {
             case EnterNotify:
                 in_window = true;
@@ -928,8 +933,9 @@ void WaWindow::ButtonPressed(int type) {
                 button->pressed = false;
                 button->Render();
                 button->Draw();
-                if (in_window) XSendEvent(display, e.xany.window, true,
-                                          ButtonReleaseMask, &e);
+                if (in_window) XPutBackEvent(display, &e);
+                UpdateGrabs();
+                waimea->eh->move_resize = EndMoveResizeType;
                 return;
         }
     }
