@@ -466,11 +466,6 @@ void WaMenu::ReMap(int mx, int my) {
  * @param dy Move in y coordinate relative to old position
  */
 void WaMenu::Move(int dx, int dy) {
-
-#ifdef XRENDER
-    Render();
-#endif // XRENDER
-
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
         if (((*it)->func_mask & MenuSubMask) && (*it)->submenu->root_menu &&
@@ -481,6 +476,11 @@ void WaMenu::Move(int dx, int dy) {
     x += dx;
     y += dy;
     XMoveWindow(display, frame, x, y);
+
+#ifdef XRENDER
+    Render();
+#endif // XRENDER
+    
 }
 
 /**
