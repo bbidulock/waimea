@@ -98,7 +98,6 @@ DEF allMenuWindows {
 
 DEF allMenuItems {
    allMenuWindows,
-   UnmapSubs    : EnterNotify,
    Exec         : ButtonRelease = AnyButton,
    Func         : ButtonRelease = AnyButton,
    NextItem     : KeyPress = Tab,
@@ -120,19 +119,21 @@ menu.title {
 }
 menu.item {
    allMenuItems,
+   UnmapSubs    : EnterNotify,
    UnmapTree    : ButtonRelease = AnyButton,
    UnmapFocused : KeyRelease = Alt_L,
    Func         : KeyRelease = Alt_L,
    UnmapTree    : KeyPress = Return
 }
 menu.checkbox {
-   allMenuItems,
-   Exec : KeyPress = space,
-   Func : KeyPress = space
+   allMenuIteims,
+   UnmapSubs : EnterNotify,
+   Exec      : KeyPress = space,
+   Func      : KeyPress = space
 }
 menu.sub {
    allMenuItems,
-   MapSub          : EnterNotify,
+   MapSubOnly      : EnterNotify,
    RemapSub        : ButtonPress = AnyButton,
    RemapSubFocused : KeyPress = Right,
    RemapSubFocused : KeyPress = Return

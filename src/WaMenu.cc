@@ -286,23 +286,21 @@ void WaMenu::Build(WaScreen *screen) {
         
         if (((*it)->width + extra_width) > width)
             width = (*it)->width + extra_width;
+
+        height += f_height;
+        (*it)->height = (*it)->realheight = f_height;
         
         if ((*it)->type == MenuTitleType) {
-            if ((i == 1) || (i == item_list->size()) ||
-                (lasttype == MenuTitleType)) {
-                height += t_height + wascreen->wstyle.border_width;
-                (*it)->realheight = t_height + wascreen->wstyle.border_width;
+            height += wascreen->mstyle.border_width * 2;
+            (*it)->realheight = t_height + wascreen->mstyle.border_width * 2;
+            if ((lasttype == MenuTitleType) || (i == 1)) {
+                height -= wascreen->mstyle.border_width;
+                (*it)->realheight -= wascreen->mstyle.border_width;
             }
-            else {
-                height += t_height + wascreen->wstyle.border_width * 2;
-                (*it)->realheight = t_height + wascreen->wstyle.border_width *
-                    2;
+            if (i == item_list->size()) {
+                height -= wascreen->mstyle.border_width;
+                (*it)->realheight -= wascreen->mstyle.border_width;
             }
-            (*it)->height = t_height;
-        }
-        else {
-            height += f_height;
-            (*it)->height = (*it)->realheight = f_height;
         }
         lasttype = (*it)->type;
     }
@@ -543,12 +541,14 @@ void WaMenu::Unmap(bool focus) {
     XUnmapWindow(display, frame);
     root_menu = NULL;
 
+    if (dynamic) UnmapSubmenus(focus);
+
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
         if ((*it)->hilited) {
             if ((*it)->func_mask & MenuSubMask) {
-                if ((! (*it)->submenu) || ((*it)->submenu->root_menu &&
-                                           (*it)->submenu->mapped))
+                if ((!(*it)->submenu) || (!((*it)->submenu->root_menu &&
+                                            (*it)->submenu->mapped)))
                     (*it)->DeHilite();
             } else 
                 (*it)->DeHilite();
@@ -1005,12 +1005,12 @@ void WaMenuItem::Render(void) {
  * menu item and redraws foreground.
  */
 void WaMenuItem::Hilite(void) {
-    if (type == MenuTitleType) return;
+    if (type == MenuTitleType || hilited) return;
     
     list<WaMenuItem *>::iterator it = menu->item_list->begin();
     for (; it != menu->item_list->end(); ++it) {        
         if ((*it)->hilited && menu->has_focus)
-            if (!(((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
+            if (!(((*it)->func_mask & MenuSubMask) && (*it)->submenu && 
                   (*it)->submenu->mapped))
                 (*it)->DeHilite();
     }
@@ -1042,7 +1042,7 @@ void WaMenuItem::Hilite(void) {
  * hilited menu item and redraws foreground.
  */
 void WaMenuItem::DeHilite(void) {
-    if (type == MenuTitleType) return;
+    if (type == MenuTitleType || !hilited) return;
     hilited = false;
     texture = &menu->wascreen->mstyle.back_frame;
     
@@ -1066,26 +1066,41 @@ void WaMenuItem::UnmapMenu(XEvent *, WaAction *, bool focus) {
 }
 
 /**
- * @fn    MapSubmenu(XEvent *, WaAction *)
+ * @fn    MapSubmenu(XEvent *, WaAction *, bool focus, bool only)
  * @brief Maps Submenu
  *
  * Maps menu items submenu, if there is one, at a good position close to the
  * menu item. If the submenu is already mapped then we do nothing.
  *
- * @param bool True if we should focus first item in submenu
+ * @param focus True if we should focus first item in submenu
+ * @param only True if we should unmap all other submenus before mapping this
  */
-void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus) {
+void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus, bool only) {
     int skip;
 
     if (! in_window) return;
+    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     if (! (func_mask & MenuSubMask)) return;
+    
+    Hilite();
+    if (only) {
+        list<WaMenuItem *>::iterator it = menu->item_list->begin();
+        for (; it != menu->item_list->end(); ++it) {        
+            if ((*it)->hilited && *it != this) {
+                if (((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
+                    (*it)->submenu->mapped && (*it)->submenu->root_menu) {
+                    (*it)->submenu->Unmap(false);
+                    (*it)->DeHilite();
+                }
+            }
+        }
+    }
     if (sdyn && (! submenu)) {
+        XSync(menu->display, false);
         if (! (submenu = menu->waimea->GetMenuNamed(sub))) return;
     }
     if (submenu->mapped) return;
-    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     
-    Hilite();
     if (submenu->tasksw) menu->waimea->taskswitch->Build(menu->wascreen);
     submenu->root_menu = menu;
     submenu->root_item = this;
@@ -1105,30 +1120,34 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus) {
 }
 
 /**
- * @fn    RemapSubmenu(XEvent *, WaAction * )
+ * @fn    RemapSubmenu(XEvent *, WaAction *, bool focus)
  * @brief Remaps Submenu
  *
  * Maps menu items submenu, if there is one, at a good position close to the
  * menu item. If the submenu is already mapped then we just move it to
  * the position we want to remap it to.
  *
- * @param bool True if we should focus first item in submenu
+ * @param focus True if we should focus first item in submenu
  */
 void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
     int skip;
 
     if (! in_window) return;
     if (! (func_mask & MenuSubMask)) return;
-    if (submenu && (submenu == menu)) return; 
+    if (submenu && (submenu == menu)) return;
+    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;     
+    
+    Hilite();
     if (sdyn) {
+        XSync(menu->display, false);
         if (submenu) {
+            hilited = false;
             submenu->Unmap(submenu->has_focus);
+            hilited = true;
         }
         if (! (submenu = menu->waimea->GetMenuNamed(sub))) return;
     }
-    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     
-    Hilite();
     if (submenu->tasksw) menu->waimea->taskswitch->Build(menu->wascreen);
     submenu->root_menu = menu;
     submenu->root_item = this;
@@ -1554,6 +1573,17 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
         if (xp < 0 || yp < 0 || xp > menu->width || yp > height)
             in_window = false;
     }
+
+    if (ed->type == EnterNotify) {
+        if (XCheckTypedWindowEvent(menu->display, e->xany.window, 
+                                   LeaveNotify, e)) {
+            XPutBackEvent(menu->display, e);
+            return;
+        }
+        Hilite();
+        if (menu->has_focus && type != MenuTitleType) Focus();
+        XSync(menu->display, false);
+    }
    
     if (menu->waimea->eh->move_resize != EndMoveResizeType)
         ed->mod |= MoveResizeMask;
@@ -1572,15 +1602,12 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
             }
         }
     }
-    if (ed->type == EnterNotify) {
-        Hilite();
-        if (menu->has_focus && type != MenuTitleType) Focus();
-    }
-    else if (ed->type == LeaveNotify) {
+    if (ed->type == LeaveNotify) {
         if (func_mask & MenuSubMask) {
-            if (submenu && (! submenu->mapped)) 
+            if ((! submenu) || (! submenu->mapped)) 
                 DeHilite();
-        } else DeHilite();
+        } else 
+            DeHilite();
     }
 }
 

@@ -98,7 +98,7 @@ public:
     void Hilite(void);
     void DeHilite(void);
     void Focus(void);
-    void MapSubmenu(XEvent *, WaAction *, bool);
+    void MapSubmenu(XEvent *, WaAction *, bool, bool = false);
     void RemapSubmenu(XEvent *, WaAction *, bool);
     void UnmapMenu(XEvent *, WaAction *, bool);
     
@@ -106,8 +106,14 @@ public:
     inline void MapSubmenu(XEvent *e, WaAction *ac) {
         MapSubmenu(e, ac, false);
     }
+    inline void MapSubmenuOnly(XEvent *e, WaAction *ac) {
+        MapSubmenu(e, ac, false, true);
+    }
     inline void MapSubmenuFocused(XEvent *e, WaAction *ac) {
         MapSubmenu(e, ac, true);
+    }
+    inline void MapSubmenuFocusedOnly(XEvent *e, WaAction *ac) {
+        MapSubmenu(e, ac, true, true);
     }
     inline void RemapSubmenu(XEvent *e, WaAction *ac) {
         RemapSubmenu(e, ac, false);

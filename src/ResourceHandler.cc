@@ -71,8 +71,6 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     homedir = getenv("HOME");
 
     style_file = wastrdup((char *) DEFAULTSTYLE);
-    WARNING << DEFAULTSTYLE << endl;
-     WARNING << style_file << endl;
     action_file = wastrdup((char *) DEFAULTACTION);
     menu_file = wastrdup((char *) DEFAULTMENU);
     rc_forced = style_forced = action_forced = menu_forced = false;
@@ -226,9 +224,12 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     macts = new list<StrComp *>;
     macts->push_back(new StrComp("unlink", &WaMenuItem::UnLinkMenu));
     macts->push_back(new StrComp("mapsub", &WaMenuItem::MapSubmenu));
+    macts->push_back(new StrComp("mapsubonly", &WaMenuItem::MapSubmenuOnly));
     macts->push_back(new StrComp("remapsub", &WaMenuItem::RemapSubmenu));
     macts->push_back(new StrComp("mapsubfocused",
                                  &WaMenuItem::MapSubmenuFocused));
+    macts->push_back(new StrComp("mapsubfocusedonly",
+                                 &WaMenuItem::MapSubmenuFocusedOnly));
     macts->push_back(new StrComp("remapsubfocused",
                                  &WaMenuItem::RemapSubmenuFocused));
     macts->push_back(new StrComp("unmap", &WaMenuItem::UnmapMenu));

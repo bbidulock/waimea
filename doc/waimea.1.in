@@ -1431,9 +1431,13 @@ Ends a move or resize process.
 .PP
 .B mapsub
 .br
+.B mapsubonly
+.br
 .B remapsub
 .br
 .B mapsubfocused
+.br
+.B mapsubfocusedonly
 .br
 .B remapsubfocused
 .br
@@ -1449,6 +1453,8 @@ mapped submenu to the new mapping position.
 .I Actions 
 ending with 'focused' will set input focus to the first
 focusable window in the submenu when being mapped.
+.I Actions 
+ending with 'only' will unmap all other submenus before mapping submenu.
 .RE
 
 .PP
