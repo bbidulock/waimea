@@ -57,6 +57,8 @@ char *errfunc;
  * @param options Parsed command line options
  */
 Waimea::Waimea(char **av, struct waoptions *options) {
+    struct sigaction action;
+
     argv = av;
     XSetErrorHandler((XErrorHandler) xerrorhandler);
     if (! (display = XOpenDisplay(options->display))) {
@@ -64,11 +66,17 @@ Waimea::Waimea(char **av, struct waoptions *options) {
         exit(1);
     }
     waimea = this;
-    
-    signal(SIGTERM, signalhandler);
-    signal(SIGINT, signalhandler);
-    signal(SIGHUP, signalhandler);
-    signal(SIGCHLD, signalhandler);
+
+    action.sa_handler = signalhandler;
+    action.sa_mask = sigset_t();
+    action.sa_flags = SA_NOCLDSTOP | SA_NODEFER;
+
+    sigaction(SIGSEGV, &action, NULL);
+    sigaction(SIGFPE, &action, NULL);
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
+    sigaction(SIGCHLD, &action, NULL);
+    sigaction(SIGHUP, &action, NULL);
     
     window_table = new hash_map<Window, WindowObject *>;
     always_on_top_list = new list<Window>;
@@ -348,7 +356,7 @@ int wmrunningerror(Display *d, XErrorEvent *) {
 }
 
 /**
- * @fn    signalhandler(int signal)
+ * @fn    signalhandler(int sig)
  * @brief Signal handler function
  *
  * When one of the signals we handle arrives this function is called. Depending
@@ -362,12 +370,13 @@ void signalhandler(int sig) {
     switch(sig) {
         case SIGINT:
         case SIGTERM:
-        case SIGHUP:
             quit(EXIT_SUCCESS);
+            break;
+        case SIGHUP:
+            restart(NULL);
             break;
         case SIGCHLD:
             waitpid(-1, &status, WNOHANG | WUNTRACED);
-            signal(SIGCHLD, signalhandler);
             break;
         default:
             quit(EXIT_FAILURE);
