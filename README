@@ -13,6 +13,7 @@ INFO
    Features already included are:
          Virtual desktop
          Blackbox image rendering engine (blackbox style support)
+         Translucent textures using Xrender extension
          Action Configuration System
          Advanced Menu System
          Standard X core fonts

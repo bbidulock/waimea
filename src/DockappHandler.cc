@@ -244,10 +244,15 @@ void DockappHandler::Update(void) {
         XSetWindowBackgroundPixmap(display, id, background);
     }
     XClearWindow(display, id);
+    
+#ifdef XFT    
     DrawFg();
+#endif // XFT
+    
     wascreen->UpdateWorkarea();
 }
 
+#ifdef XFT
 /**
  * @fn    DrawFg(void)
  * @brief Draws dockapp holder foreground
@@ -258,6 +263,7 @@ void DockappHandler::DrawFg(void) {
     wascreen->ic->XRenderRedraw(id, background, width, height,
                                 &style->style.texture); 
 }
+#endif // XFT
     
 /**
  * @fn    Dockapp(Window win, DockappHandler *dhand)

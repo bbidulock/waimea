@@ -285,12 +285,19 @@ void WaMenu::Build(WaScreen *screen) {
             waimea->always_at_bottom_list->push_back(frame);
     } else XResizeWindow(display, frame, width, height);
 
+#ifdef XFT
     if (! wascreen->mstyle.back_frame.getOpacity()) {
+#endif // XFT    
+
         if (pbackframe)
             XSetWindowBackgroundPixmap(display, frame, pbackframe);
         else
             XSetWindowBackground(display, frame, backframe_pixel);
+
+#ifdef XFT
     }
+#endif // XFT
+    
     XClearWindow(display, frame);
 
     int y, x, bw;

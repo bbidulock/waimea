@@ -32,7 +32,10 @@ private:
     int allocated;
     unsigned char red, green, blue;
     unsigned long pixel;
+
+#ifdef XFT
     XftColor xftc;
+#endif // XFT    
 
 public:
     WaColor(char r = 0, char g = 0, char b = 0)
