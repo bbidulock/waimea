@@ -542,9 +542,9 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
  * @brief Event action handler
  *
  * The eventloop will call this function whenever a event that could
- * be controlled by the actionlists occur. This function finds the WindowObject
- * for the window, gets the actionlist for that type of WindowObject and
- * executes all functions in the list that match the received event.
+ * be controlled by the action lists occur. This function finds the
+ * WindowObject for the window, gets the action list for that type of
+ * WindowObject and calls the WindowObjects EvAct function.
  *
  * @param e	The Event
  * @param win The window we should use in the WindowObject search
@@ -552,6 +552,7 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
  */
 void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
     WindowObject *wo;
+    WaWindow *wa;
 
     hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(win)) !=
@@ -559,39 +560,63 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
         wo = (*it).second;
         
         switch (wo->type) {
+            
             case FrameType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->frameacts,
-                                                    wo->type); break;
+                wa = ((WaChildWindow *) wo)->wa;
+                if (wa->frameacts) wa->EvAct(e, ed, wa->frameacts, wo->type);
+                else wa->EvAct(e, ed, rh->frameacts, wo->type);
+                break;
             case WindowType:
-                if (((WaWindow *) wo)->has_focus)
-                    ((WaWindow *) wo)->EvAct(e, ed, rh->awinacts, wo->type);
-                else
-                    ((WaWindow *) wo)->EvAct(e, ed, rh->pwinacts, wo->type);
+                wa = (WaWindow *) wo;
+                if (wa->has_focus) {
+                    if (wa->awinacts) wa->EvAct(e, ed, wa->awinacts, wo->type);
+                    else wa->EvAct(e, ed, rh->awinacts, wo->type);
+                }
+                else {
+                    if (wa->pwinacts) wa->EvAct(e, ed, wa->pwinacts, wo->type);
+                    else wa->EvAct(e, ed, rh->pwinacts, wo->type);
+                } 
                 break;
             case TitleType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->titleacts,
-                                                    wo->type); break;
+                wa = ((WaChildWindow *) wo)->wa;
+                if (wa->titleacts) wa->EvAct(e, ed, wa->titleacts, wo->type);
+                else wa->EvAct(e, ed, rh->titleacts, wo->type);
+                break;
             case LabelType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->labelacts,
-                                                    wo->type); break;
+                wa = ((WaChildWindow *) wo)->wa;
+                if (wa->labelacts) wa->EvAct(e, ed, wa->labelacts, wo->type);
+                else wa->EvAct(e, ed, rh->labelacts, wo->type);
+                break;
             case HandleType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->handleacts,
-                                                    wo->type); break;
+                wa = ((WaChildWindow *) wo)->wa;
+                if (wa->handleacts) wa->EvAct(e, ed, wa->handleacts, wo->type);
+                else wa->EvAct(e, ed, rh->handleacts, wo->type);
+                break;
             case CButtonType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->cbacts,
-                                                    wo->type); break;
+                wa = ((WaChildWindow *) wo)->wa;
+                if (wa->cbacts) wa->EvAct(e, ed, wa->cbacts, wo->type);
+                else wa->EvAct(e, ed, rh->cbacts, wo->type);
+                break;
             case IButtonType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->ibacts,
-                                                    wo->type); break;
+                wa = ((WaChildWindow *) wo)->wa;
+                if (wa->ibacts) wa->EvAct(e, ed, wa->ibacts, wo->type);
+                else wa->EvAct(e, ed, rh->ibacts, wo->type);
+                break;
             case MButtonType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->mbacts,
-                                                    wo->type); break;
+                wa = ((WaChildWindow *) wo)->wa;
+                if (wa->mbacts) wa->EvAct(e, ed, wa->mbacts, wo->type);
+                else wa->EvAct(e, ed, rh->mbacts, wo->type);
+                break;
             case LGripType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->lgacts,
-                                                    wo->type); break;
+                wa = ((WaChildWindow *) wo)->wa;
+                if (wa->lgacts) wa->EvAct(e, ed, wa->lgacts, wo->type);
+                else wa->EvAct(e, ed, rh->lgacts, wo->type);
+                break;
             case RGripType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->rgacts,
-                                                    wo->type); break;
+                wa = ((WaChildWindow *) wo)->wa;
+                if (wa->rgacts) wa->EvAct(e, ed, wa->rgacts, wo->type);
+                else wa->EvAct(e, ed, rh->rgacts, wo->type);
+                break;
             case MenuTitleType:
                 ((WaMenuItem *) wo)->EvAct(e, ed, rh->mtacts); break;
             case MenuItemType:

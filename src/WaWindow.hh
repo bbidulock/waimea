@@ -220,6 +220,8 @@ public:
     SizeStruct size;
     NetHandler *net;
     WMstrut *wm_strut;
+    list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
+        *handleacts, *cbacts, *ibacts, *mbacts, *lgacts, *rgacts;
     
 private:
     void ReparentWin(void);

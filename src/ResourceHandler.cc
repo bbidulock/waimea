@@ -466,7 +466,7 @@ void ResourceHandler::LoadConfig(void) {
 
     unsigned int dummy;
     char *token;
-    int dock_num;
+    int dock_num, i;
     bool d_exists = true, have_u = false;
     DockStyle *dockstyle;
     char rc_name[20], rc_class[20];
@@ -488,20 +488,31 @@ void ResourceHandler::LoadConfig(void) {
         sprintf(rc_class, "Dock%d.Order", dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
             d_exists = true;
-            token = strtok(value.addr, " ");
-            if (strlen(token) >= 3 && (token[0] == 'C' || token[0] == 'N') &&
-                token[1] == '_') {
-                dockstyle->order->push_back(wastrdup(token));
-            }
-            while ((token = strtok(NULL, " "))) {
-                if (strlen(token) >= 3 &&
-                    (token[0] == 'C' || token[0] == 'N') &&
-                    token[1] == '_') {
-                    dockstyle->order->push_back(wastrdup(token));
+            token = value.addr;
+            while (strlen(token) > 6) {
+                token = strtrim(token);
+                if (! strncasecmp("name", token, 4)) {
+                    for (i = 0; token[i] != '\0' && token[i] != ']'; i++);
+                    if (token[i] == '\0') break;
+                    token[i] = '\0';
+                    token[3] = 'N';
+                    token[4] = '_';
+                    dockstyle->order->push_back(wastrdup(&token[3]));
+                    token = token + strlen(token) + 1;
                 }
-                else if (! strcasecmp("unknown", token) && !have_u) {
+                else if (! strncasecmp("class", token, 5)) {
+                    for (i = 0; token[i] != '\0' && token[i] != ']'; i++);
+                    if (token[i] == '\0') break;
+                    token[i] = '\0';
+                    token[4] = 'N';
+                    token[5] = '_';
+                    dockstyle->order->push_back(wastrdup(&token[4]));
+                    token = token + strlen(token) + 1;
+                }
+                else if (! strncasecmp("unknown", token, 7) && !have_u) {
                     have_u = true;
                     dockstyle->order->push_back(wastrdup("U"));
+                    token = token + 7;
                 }
             }
         }

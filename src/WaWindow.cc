@@ -69,6 +69,8 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     flags.sticky = flags.shaded = flags.max = flags.title = flags.handle =
         flags.border = flags.all = flags.alwaysontop =
         flags.alwaysatbottom = false;
+    frameacts = awinacts = pwinacts = titleacts = labelacts = handleacts =
+        cbacts = ibacts = mbacts = lgacts = rgacts = NULL;
 
     net->GetWMHints(this);
     net->GetMWMHints(this);
