@@ -68,6 +68,7 @@ PIXMAP = @PIXMAP@
 SHAPE = @SHAPE@
 VERSION = @VERSION@
 XFT = @XFT@
+XRENDER = @XRENDER@
 regex_cmd = @regex_cmd@
 
 CLEANFILES = waimea.1

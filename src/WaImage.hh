@@ -20,6 +20,10 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#ifdef XRENDER
+#include <X11/extensions/Xrender.h>
+#endif // XRENDER
+
 #ifdef XFT
 #include <X11/Xft/Xft.h>
 #endif // XFT
@@ -36,7 +40,11 @@ private:
     int allocated;
     unsigned char red, green, blue;
     unsigned long pixel;
-
+    
+#ifdef XRENDER
+    XRenderColor xrenderc;
+#endif // XRENDER
+    
 #ifdef XFT
     XftColor xftc;
 #endif // XFT    
@@ -57,8 +65,13 @@ public:
     }
     inline void setPixel(unsigned long p) { pixel = p; }
 
+#ifdef XRENDER
+    void XRenderCreateColor(Display *, Window, Colormap);
+    inline XRenderColor *getXRenderColor(void) { return &xrenderc; }
+#endif // XRENDER
+    
 #ifdef XFT
-    void createXftColor(Display *, Window, Colormap);
+    void XftCreateColor(Display *, Window, Colormap);
     inline XftColor *getXftColor(void) { return &xftc; }
 #endif // XFT
 
@@ -70,11 +83,11 @@ private:
     WaColor color, colorTo, hiColor, loColor;
     unsigned long texture;
     
-#ifdef XFT
+#ifdef XRENDER
     Picture alphaPicture;
     Picture solidPicture;
     int opacity;
-#endif // XFT
+#endif // XRENDER
 
 #ifdef PIXMAP
     Imlib_Image pixmap;
@@ -84,11 +97,11 @@ public:
     WaTexture(void) {
         texture = 0;
         
-#ifdef XFT
+#ifdef XRENDER
         opacity = 0;
         alphaPicture = (Picture) 0;
         solidPicture = (Picture) 0;
-#endif // XFT
+#endif // XRENDER
         
     }
     inline WaColor *getColor(void) { return &color; }
@@ -101,14 +114,14 @@ public:
     inline void setTexture(unsigned long t) { texture = t; }
     inline void addTexture(unsigned long t) { texture |= t; }
     
-#ifdef XFT
+#ifdef XRENDER
     int getOpacity(void);
     inline void setOpacity(int o) { opacity = o; }
     inline void setAlphaPicture(Picture p) { alphaPicture = p; }
     inline void setSolidPicture(Picture p) { solidPicture = p; }
     inline Picture getAlphaPicture(void) { return alphaPicture; }
     inline Picture getSolidPicture(void) { return solidPicture; }
-#endif // XFT
+#endif // XRENDER
 
 #ifdef PIXMAP
     inline void setPixmap(Imlib_Image p) { pixmap = p; }
@@ -282,11 +295,11 @@ public:
     
     virtual void timeout(void);
     
-#ifdef XFT
+#ifdef XRENDER
     Pixmap xrender(Pixmap, unsigned int, unsigned int, WaTexture *,
                    Pixmap = None, unsigned int = 0, unsigned int = 0,
                    Pixmap = None);
-#endif // XFT
+#endif // XRENDER
     
 };
 

@@ -52,7 +52,6 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     net = waimea->net;
     rh = wa->rh;
     focus = true;
-    xrootpmap_id = (Pixmap) 0;
 
 #ifdef PIXMAP
     imlib_context_set_display(display);
@@ -63,7 +62,10 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     imlib_context_set_anti_alias(1);    
 #endif // PIXMAP
 
+#ifdef XRENDER
+    xrootpmap_id = (Pixmap) 0;
     net->GetXRootPMapId(this);
+#endif // XRENDER
     
     eventmask = SubstructureRedirectMask | StructureNotifyMask |
         PropertyChangeMask | ColormapChangeMask | KeyPressMask |

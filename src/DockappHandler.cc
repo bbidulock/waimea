@@ -233,16 +233,16 @@ void DockappHandler::Update(void) {
 
     WaTexture *texture = &style->style.texture;
     
-#ifdef XFT
+#ifdef XRENDER
     if (texture->getOpacity())
         background = XCreatePixmap(display, wascreen->id, width,
                                    height, wascreen->screen_depth);
-#endif // XFT
+#endif // XRENDER
     
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         background = None;
         background_pixel = texture->getColor()->getPixel();
-#ifdef XFT        
+#ifdef XRENDER        
         if (texture->getOpacity()) {
             background = wascreen->ic->xrender(None, width, height, texture,
                                                wascreen->xrootpmap_id, map_x,
@@ -250,17 +250,17 @@ void DockappHandler::Update(void) {
             XSetWindowBackgroundPixmap(display, id, background);
         } else
             XSetWindowBackground(display, id, background_pixel);
-#else // ! XFT
+#else // ! XRENDER
         XSetWindowBackground(display, id, background_pixel);
-#endif // XFT
+#endif // XRENDER
         
     } else {
         background = wascreen->ic->renderImage(width, height, texture
 
-#ifdef XFT
+#ifdef XRENDER
                                                , wascreen->xrootpmap_id,
                                                map_x, map_y, background
-#endif // XFT
+#endif // XRENDER
                                                
                                                );
         
@@ -268,9 +268,9 @@ void DockappHandler::Update(void) {
     }
     XClearWindow(display, id);
     
-#ifdef XFT    
+#ifdef XRENDER    
     if (texture->getOpacity()) XFreePixmap(display, background);
-#endif // XFT
+#endif // XRENDER
     
     wascreen->UpdateWorkarea();
 }

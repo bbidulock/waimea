@@ -530,10 +530,10 @@ void WaWindow::RedrawWindow(void) {
         }
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
         
-#ifdef XFT
+#ifdef XRENDER
         if (title_w) DrawTitlebar();
         if (handle_w) DrawHandlebar();
-#endif // XFT
+#endif // XRENDER
 
     }
     if (resize) {
@@ -2622,8 +2622,12 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
                        attrib.width, attrib.height, 0, CopyFromParent,
                        CopyFromParent, CopyFromParent, create_mask,
                        &attrib_set);
-#ifdef XFT
+    
+#ifdef XRENDER
     pix_alloc_f = pix_alloc_u = false;
+#endif // XRENDER    
+
+#ifdef XFT
     if (type == LabelType)
         xftdraw = XftDrawCreate(display, (Drawable) id,
                                 wascreen->visual, wascreen->colormap);
@@ -2640,11 +2644,14 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
  * window_table hash_map.
  */
 WaChildWindow::~WaChildWindow(void) {
+
+#ifdef XRENDER    
+    if (pix_alloc_f) XFreePixmap(display, f_pixmap);
+    if (pix_alloc_u) XFreePixmap(display, u_pixmap);
+#endif // XRENDER
     
 #ifdef XFT
     if (type == LabelType) XftDrawDestroy(xftdraw);
-    if (pix_alloc_f) XFreePixmap(display, f_pixmap);
-    if (pix_alloc_u) XFreePixmap(display, u_pixmap);
 #endif // XFT
     
     wa->waimea->window_table->erase(id);
@@ -2663,7 +2670,7 @@ void WaChildWindow::Render(void) {
     int pos_x = wa->attrib.x + attrib.x;
     int pos_y = wa->attrib.y - wa->title_w - wa->border_w + attrib.y;
 
-#ifdef XFT
+#ifdef XRENDER
     if (texture->getOpacity()) {
         if (pix_alloc_f) XFreePixmap(display, f_pixmap);
         if (pix_alloc_u) XFreePixmap(display, u_pixmap);
@@ -2673,13 +2680,13 @@ void WaChildWindow::Render(void) {
         if (wa->has_focus) pix_alloc_f = true;
         else pix_alloc_u = true;
     }
-#endif // XFT
+#endif // XRENDER
     
     switch (type) {
         case CButtonType:
         case IButtonType:
         case MButtonType:
-#ifdef XFT
+#ifdef XRENDER
             if (texture->getOpacity())
                 *pixmap = ic->xrender((pressed) ? wascreen->pbutton :
                                       ((wa->has_focus)? wascreen->fbutton:
@@ -2688,13 +2695,13 @@ void WaChildWindow::Render(void) {
                                       texture, wascreen->xrootpmap_id, pos_x,
                                       pos_y, *pixmap);
             else
-#endif // XFT
+#endif // XRENDER
                 *pixmap = (pressed)? wascreen->pbutton :
                     ((wa->has_focus)? wascreen->fbutton: wascreen->ubutton);
             break;
         case LGripType:
         case RGripType:
-#ifdef XFT
+#ifdef XRENDER
             if (texture->getOpacity())
                 *pixmap = ic->xrender((wa->has_focus)? wascreen->fgrip:
                                       wascreen->ugrip,
@@ -2702,28 +2709,28 @@ void WaChildWindow::Render(void) {
                                       texture, wascreen->xrootpmap_id, pos_x,
                                       pos_y, *pixmap);
             else
-#endif // XFT
+#endif // XRENDER
                 *pixmap = (wa->has_focus)? wascreen->fgrip: wascreen->ugrip;
             break;
             
     }
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         *pixmap = None;
-#ifdef XFT
+#ifdef XRENDER
         if (texture->getOpacity())
             *pixmap = ic->xrender(None, attrib.width, attrib.height,
                                   texture, wascreen->xrootpmap_id, pos_x,
                                   pos_y, *pixmap);
-#endif // XFT
+#endif // XRENDER
         
     } else
         *pixmap = ic->renderImage(attrib.width,
                                   attrib.height, texture
                                   
-#ifdef XFT
+#ifdef XRENDER
                                   , wascreen->xrootpmap_id, pos_x, pos_y,
                                   *pixmap
-#endif // XFT                                 
+#endif // XRENDER                                 
                                   
                                   );
 

@@ -70,7 +70,10 @@ public:
     void SetWorkarea(WaScreen *);
     void DeleteSupported(WaScreen *);
 
+#ifdef XRENDER
     void GetXRootPMapId(WaScreen *);
+#endif // XRENDER
+
     
     Waimea *waimea;
     Display *display;
@@ -86,8 +89,11 @@ public:
         net_state_aab, net_state_parentrelative_background,
         net_maximized_restore, net_virtual_pos, net_desktop_viewport,
         net_desktop_geometry, net_wm_strut, net_workarea, xa_xdndaware,
-        xa_xdndenter, xa_xdndleave, net_wm_name, net_restart, net_shutdown,
-        xrootpmap_id;
+        xa_xdndenter, xa_xdndleave, net_wm_name, net_restart, net_shutdown;
+    
+#ifdef XRENDER
+    Atom xrootpmap_id;
+#endif // XRENDER
 
 private:
     XEvent event;

@@ -87,8 +87,11 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_RESTART", false);
     net_shutdown =
         XInternAtom(display, "_NET_SHUTDOWN", false);
+
+#ifdef XRENDER
     xrootpmap_id =
         XInternAtom(display, "_XROOTPMAP_ID", false);
+#endif // XRENDER    
     
     xa_xdndaware = XInternAtom(display, "XdndAware", false);
     xa_xdndenter = XInternAtom(display, "XdndEnter", false);
@@ -399,33 +402,38 @@ void NetHandler::SetWmState(WaWindow *ww) {
  */
 void NetHandler::SetSupported(WaScreen *ws) {
     CARD32 data[23];
+    int i = 0;
 
-    data[0]  = net_state;
-    data[1]  = net_state_sticky;
-    data[2]  = net_state_shaded;
-    data[3]  = net_maximized_vert;
-    data[4]  = net_maximized_horz;
-    data[5]  = net_desktop_geometry;
-    data[6]  = net_desktop_viewport;
-    data[7]  = net_wm_strut;
-    data[8]  = net_workarea;
-    data[9]  = net_client_list;
-    data[10] = net_client_list_stacking;
-    data[11] = net_active_window;
+    data[i++] = net_state;
+    data[i++] = net_state_sticky;
+    data[i++] = net_state_shaded;
+    data[i++] = net_maximized_vert;
+    data[i++] = net_maximized_horz;
+    data[i++] = net_desktop_geometry;
+    data[i++] = net_desktop_viewport;
+    data[i++] = net_wm_strut;
+    data[i++] = net_workarea;
+    data[i++] = net_client_list;
+    data[i++] = net_client_list_stacking;
+    data[i++] = net_active_window;
 
-    data[12] = net_state_decor;
-    data[13] = net_state_decortitle;
-    data[14] = net_state_decorhandle;
-    data[15] = net_state_decorborder;
-    data[16] = net_state_aot;
-    data[17] = net_state_aab;
-    data[18] = net_state_parentrelative_background;
-    data[19] = net_maximized_restore;
-    data[20] = net_virtual_pos;
-    data[21] = net_restart;
-    data[22] = net_shutdown;
+    data[i++] = net_state_decor;
+    data[i++] = net_state_decortitle;
+    data[i++] = net_state_decorhandle;
+    data[i++] = net_state_decorborder;
+    data[i++] = net_state_aot;
+    data[i++] = net_state_aab;
+
+#ifdef XRENDER
+    data[i++] = net_state_parentrelative_background;
+#endif // XRENDER
+    
+    data[i++] = net_maximized_restore;
+    data[i++] = net_virtual_pos;
+    data[i++] = net_restart;
+    data[i++] = net_shutdown;
     XChangeProperty(display, ws->id, net_supported, XA_ATOM, 32,
-                    PropModeReplace, (unsigned char *) &data, 23);
+                    PropModeReplace, (unsigned char *) &data, i);
 }
 
 /**
@@ -827,6 +835,7 @@ void NetHandler::DeleteSupported(WaScreen *ws) {
     XDeleteProperty(display, ws->id, net_supported);
 }
 
+#ifdef XRENDER
 /**
  * @fn    GetXRootPMapId(WaScreen *ws)
  * @brief Reads XROOTPMAPID hint
@@ -848,3 +857,4 @@ void NetHandler::GetXRootPMapId(WaScreen *ws) {
         XFree(data);
     }
 }
+#endif // XRENDER

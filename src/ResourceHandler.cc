@@ -1331,8 +1331,12 @@ void ResourceHandler::ReadDatabaseColor(char *rname, char *rclass,
         color->setPixel(default_pixel);
     }
     
+#ifdef XRENDER
+    color->XRenderCreateColor(display, wascreen->id, wascreen->colormap);
+#endif // XRENDER
+    
 #ifdef XFT
-    color->createXftColor(display, wascreen->id, wascreen->colormap);
+    color->XftCreateColor(display, wascreen->id, wascreen->colormap);
 #endif // XFT
     
 }
@@ -1487,7 +1491,7 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
         delete [] colortoname;
     }
 
-#ifdef XFT
+#ifdef XRENDER
     int opacity;
     XRenderPictFormat *xformat;
     XRenderPictFormat Rpf;
@@ -1537,13 +1541,13 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
             solidPicture = XRenderCreatePicture(wascreen->display, solidPixmap,
                                                 xformat, CPRepeat, &Rpa);
             XRenderFillRectangle(wascreen->display, PictOpSrc, solidPicture,
-                                 &texture->getColor()->getXftColor()->color,
+                                 texture->getColor()->getXRenderColor(),
                                  0, 0, 1, 1);
             texture->setSolidPicture(solidPicture);
             XFreePixmap(wascreen->display, solidPixmap);
         }
     }
-#endif // XFT
+#endif // XRENDER
         
     delete [] colorclass;
     delete [] colorname;

@@ -55,7 +55,7 @@ static unsigned long bsqrt(unsigned long x) {
     }
 }
 
-#ifdef XFT
+#ifdef XRENDER
 int WaTexture::getOpacity(void) {
     if (rootpix && *rootpix)
         return opacity;
@@ -63,7 +63,8 @@ int WaTexture::getOpacity(void) {
     return 0;
 }
 
-void WaColor::createXftColor(Display *display, Window id, Colormap colormap) {
+void WaColor::XRenderCreateColor(Display *display, Window id,
+                                 Colormap colormap) {
     XGCValues gcv;
     XColor tmp_color;
     GC tmp_gc;
@@ -73,13 +74,22 @@ void WaColor::createXftColor(Display *display, Window id, Colormap colormap) {
     XGetGCValues(display, tmp_gc, GCForeground, &gcv);
     tmp_color.pixel = gcv.foreground;
     XQueryColor(display, colormap, &tmp_color);
-    xftc.color.red = tmp_color.red;
-    xftc.color.green = tmp_color.green;
-    xftc.color.blue = tmp_color.blue;
-    xftc.color.alpha = 0xffff;
-    xftc.pixel = gcv.foreground;
+    xrenderc.red = tmp_color.red;
+    xrenderc.green = tmp_color.green;
+    xrenderc.blue = tmp_color.blue;
+    xrenderc.alpha = 0xffff;
 
     XFreeGC(display, tmp_gc);
+}
+#endif // XRENDER
+
+#ifdef XFT
+void WaColor::XftCreateColor(Display *display, Window id, Colormap colormap) {
+    xftc.color.red = xrenderc.red;
+    xftc.color.green = xrenderc.green;
+    xftc.color.blue = xrenderc.blue;
+    xftc.color.alpha = xrenderc.alpha;
+    xftc.pixel = getPixel();
 }
 #endif // XFT
 
@@ -2120,12 +2130,12 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
                                 texture->getColor(), texture->getColorTo());
     if (pixmap) {
         
-#ifdef XFT
+#ifdef XRENDER
         return xrender(pixmap, width, height, texture, parent, src_x, src_y,
                        dest);
-#else // !XFT
+#else // !XRENDER
         return pixmap;
-#endif // XFT
+#endif // XRENDER
         
     }
 
@@ -2135,12 +2145,12 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
 #ifdef PIXMAP        
     if (texture->getTexture() & WaImage_Pixmap) {
                 
-#ifdef XFT
+#ifdef XRENDER
         return xrender(pixmap, width, height, texture, parent, src_x, src_y,
                        dest);
-#else // !XFT
+#else // !XRENDER
         return pixmap;
-#endif // XFT
+#endif // XRENDER
         
     }
 #endif // PIXMAP
@@ -2165,12 +2175,12 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
         if ((unsigned) cache->size() > cache_max)
             timeout();
                 
-#ifdef XFT
+#ifdef XRENDER
         return xrender(pixmap, width, height, texture, parent, src_x, src_y,
                        dest);
-#else // !XFT
+#else // !XRENDER
         return pixmap;
-#endif // XFT
+#endif // XRENDER
         
     }
     return None;
@@ -2430,7 +2440,7 @@ void WaImageControl::timeout(void) {
     }
 }
 
-#ifdef XFT
+#ifdef XRENDER
 Pixmap WaImageControl::xrender(Pixmap p, unsigned int width,
                                unsigned int height, WaTexture *texture,
                                Pixmap parent, unsigned int src_x,
@@ -2462,4 +2472,4 @@ Pixmap WaImageControl::xrender(Pixmap p, unsigned int width,
     return dest;
 }
 
-#endif // XFT
+#endif // XRENDER

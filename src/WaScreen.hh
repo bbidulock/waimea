@@ -17,14 +17,18 @@
 
 #include <X11/Xlib.h>
 
-#ifdef XFT
-#include <X11/Xft/Xft.h>
-#endif // XFT
-
 #ifdef SHAPE
 #include <X11/Xutil.h>
 #include <X11/extensions/shape.h>
 #endif //SHAPE
+
+#ifdef XRENDER
+#include <X11/extensions/Xrender.h>
+#endif // XRENDER
+
+#ifdef XFT
+#include <X11/Xft/Xft.h>
+#endif // XFT
 
 class WaScreen;
 class ScreenEdge;
@@ -206,7 +210,12 @@ public:
     WindowStyle wstyle;
     MenuStyle mstyle;
 
-    Pixmap fbutton, ubutton, pbutton, fgrip, ugrip, xrootpmap_id;
+    Pixmap fbutton, ubutton, pbutton, fgrip, ugrip;
+    
+#ifdef XRENDER
+    Pixmap xrootpmap_id;
+#endif // XRENDER
+
     unsigned long fbutton_pixel, ubutton_pixel, pbutton_pixel, fgrip_pixel,
         ugrip_pixel;
     char displaystring[1024];

@@ -87,9 +87,9 @@ public:
     WaScreen *rf;
     WaMenuItem *mf;
     
-#ifdef XFT
+#ifdef XRENDER
     Pixmap pixmap;
-#endif // XFT
+#endif // XRENDER
   
 private:
     int f_height, t_height, s_height;
@@ -188,10 +188,13 @@ public:
 #ifdef XFT        
     XftDraw *xftdraw;
     XftFont *cbox_xft_font;
-    Pixmap pixmap;
 #else // !XFT
     GC *cbox_gc;
 #endif // XFT
+
+#ifdef XRENDER
+        Pixmap pixmap;
+#endif // XRENDER
 
 };
 

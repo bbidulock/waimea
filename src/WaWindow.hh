@@ -88,23 +88,9 @@ public:
     void Gravitate(int);
     void ButtonPressed(int);
     void UpdateGrabs(void);
-    bool IncSizeCheck(int, int, int *, int *);
-    void DrawIconifyButtonFg(void);
-    void DrawCloseButtonFg(void);
-    void DrawMaxButtonFg(void);
-    void DrawLabelFg(bool = false);
-    
-#ifdef XFT
-    void DrawTitleFg(void);
-    void DrawHandleFg(void);
-    void DrawLeftGripFg(void);
-    void DrawRightGripFg(void);
-#endif // XFT
-    
+    bool IncSizeCheck(int, int, int *, int *);    
     void FocusWin(void);
     void UnFocusWin(void);
-    void ButtonHilite(int);
-    void ButtonDehilite(int);
     void Focus(bool);
     void _Maximize(int, int);
     void MenuMap(XEvent *, WaAction *, bool);
@@ -258,6 +244,7 @@ private:
 #ifdef SHAPE
     bool shaped;
 #endif // SHAPE
+    
 };
 
 class WaChildWindow : public WindowObject {
@@ -274,8 +261,11 @@ public:
     Pixmap f_pixmap, u_pixmap;
     bool pressed;
 
-#ifdef XFT
+#ifdef XRENDER
     bool pix_alloc_f, pix_alloc_u;
+#endif // XRENDER
+
+#ifdef XFT
     XftDraw *xftdraw;
 #endif // XFT
 
