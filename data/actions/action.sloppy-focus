@@ -66,7 +66,11 @@ window.activeclient {
    Close                      : KeyPress = F4 & Mod1Mask,
    Kill                       : KeyPress = F10 & Mod1Mask,
    TaskSwitcher               : KeyPress = Tab & Mod1Mask,
-   MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+   MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask,
+   ViewportLeftNoWarp         : KeyPress = Left & ControlMask & Mod1Mask,
+   ViewportRightNoWarp        : KeyPress = Right & ControlMask & Mod1Mask,
+   ViewportUpNoWarp           : KeyPress = Up & ControlMask & Mod1Mask,
+   ViewportDownNoWarp         : KeyPress = Down & ControlMask & Mod1Mask
 }
 
 root {
