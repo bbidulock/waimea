@@ -1,4 +1,4 @@
-INFO
+INTRODUCTION
 
    The design goal for waimea is to create the most efficie-
    nt desktop  working  environment  available.  To  achieve
@@ -15,89 +15,112 @@ INFO
       Blackbox image rendering engine (blackbox style support)
       Translucent textures using Xrender extension
       Action Configuration System
-      Advanced Menu System
+      Advanced Menu System (with dynamic menus support)
       Standard X core fonts
       Xft fonts (anti-aliased fonts)
       Dockapp handler system
       Task switcher
       Pixmap styles
       Configurable titlebar buttons
+		KDE3/GNOME2 support
+
+
+DEPENDENCIES
+
+	waimea depends on:
+		xfree86-4.2.1
+	waimea will utilize:
+		imlib2-1.0.6
 
 
 INSTALLATION
 
-   1. Run './configure' script. By default Waimea configures 
-   to  compile  with  Xft/Xrender  support for  anti-aliased 
-   fonts  if support  for it  could be  found  (Need Xfree86 
-   4.0.3  or  later).  If  you  don't  want  Xft  fonts  use 
-   '--disable-xft' switch when running configure script. For
-   a list of all available  configure  script  options  type 
-   './configure --help'.
+	Install waimea by running the following commands:
 
-   2. Run 'make'. Should compile without errors.
+	----- cut here -----
+	./configure --prefix=/usr --enable-xrender --enable-xft --enable-pixmap &&
+	make &&
+	make install
+	----- cut here -----
 
-   3. Run 'make install' to install binary and data files.
-	
-   That should be it,  Waimea  installs itself in /usr/local 
-   as default.
+	Command explanations
+
+	--enable-xrender   :   This  command  activates  waimea's 
+	ability to render transparent textures
+
+	--enable-xft : This command activates waimea's ability to
+	render anti-aliased text.
+
+	--enable-pixmap : This command activates waimea's ability
+	to use pixmap styles.
+
 
 CONFIGURATION
 
-   You can run Waimea without doing any of these configurat-
-   ion steps but you are then stuck with the default config-
-   uration  options. If  you  wish to  have  your  own  user 
-   configuration, do the following steps. 
+	Config files
 
-   Create a '.waimea' directory structure in your home dire-
-   ctory.
-   mkdir ~/.waimea
-   mkdir ~/.waimea/actions
-   mkdir ~/.waimea/styles
+	~/.waimearc, ~/.waimea/actions/action, 
+	~/.waimea/styles/Default.style, ~/.waimea/menu
 
-   Copy default data files into directory structure.
-   cp WAIMEA_DATA_INSTALL_DIR/menu ~/.waimea/menu
-   cp WAIMEA_DATA_INSTALL_DIR/actions/* ~/.waimea/actions/
-   cp WAIMEA_DATA_INSTALL_DIR/styles/* ~/.waimea/styles/
+	Configuration Information
 
-   Copy the system wide configuration file to '.waimearc' in 
-   your homedir.
-   cp WAIMEA_DATA_INSTALL_DIR/config ~/.waimearc
+	Be sure to backup your current .xinitrc before proceeding.
 
-   Edit '.waimearc'. 
-   Set the styleFile option  to the full  path of the  style 
-   you wish to use, 'HOME_DIR/.waimea/styles/Default' to use
-   default style. Set the  menuFile  option to the full path 
-   of the menu file, 'HOME_DIR/.waimea/menu' if you followed 
-   the instructions above.  Set the actionFile option to the 
-   full path of the action file you wish to use. At the  top 
-   of the action  files there's a  description  for how they 
-   work, read the descriptions and decide which action  file 
-   you wish to use.  'HOME_DIR/.waimea/actions.sloppy-focus' 
-   to use default sloppy-focus action.
+   ----- cut here -----
+	cat >> ~/.xinitrc << "EOF"
+	exec waimea
+	EOF
+   ----- cut here -----
 
-   'HOME_DIR'  must be the full path to your home  directory 
-   '~' doesn't work.
+	----- cut here -----
+	cat >> ~/.waimearc << "EOF"
+	screenMask:          0 1 2 3
+	doubleClickInterval: 300
 
-   For info on how to edit the action, menu and style  files 
-   see waimea(1) manual page.
+	screen0.styleFile:         ~/.waimea/styles/Default.style
+	screen0.menuFile:          ~/.waimea/menu
+	screen0.actionFile:        ~/.waimea/actions/action
+	screen0.colorsPerChannel:  8
+	screen0.cacheMax:          200
+	screen0.imageDither:       True
+	screen0.virtualSize:       3x3
+	screen0.menuStacking:      Normal
+	screen0.transientAbove:    True
+	screen0.dock0.geometry:    -0+0
+	screen0.dock0.order:       n/.*/
+	screen0.dock0.centered:    False
+	screen0.dock0.direction:   Vertical
+	screen0.dock0.gridSpace:   2
+	screen0.dock0.stacking:    AlwaysOnTop
+	screen0.dock0.inworkspace: False
+	EOF
+	----- cut here -----
 
-RUNNING
+	----- cut here -----
+	mkdir ~/.waimea &&
+	mkdir ~/.waimea/styles &&
+	mkdir ~/.waimea/actions &&
+	cp /usr/share/waimea/styles/Default.style ~/.waimea/styles/Default.style &&
+	cp /usr/share/waimea/actions/action ~/.waimea/actions/action &&
+	cp /usr/share/waimea/menu ~/.waimea/menu
+	----- cut here -----
 
-   This can be different from system to system but the foll-
-   oing should work on most systems. 
+	Configuration  options are set by  editing `~/.waimearc'. 
+	Available options  and syntax is  explained in the waimea 
+	man page.
 
-   If you're running xdm, modify the '~.xsession' by  adding
-   'exec waimea' as the last executed command of the script.
+	Key and mouse bindings are set by editing `~/.waimea/act-
+	ions/action'.  The syntax is explained in the  waimea man 
+	page.
 
-   If you use startx script to start X, modify the '~.xinit-
-   rx' by adding 'exec waimea' as the last executed  command 
-   of the script.
+	Menu  Items are  added by  editing `~/.waimea/menu'.  The 
+	syntax is explained in the waimea man page.
 
 BUGS
    Bug reports, patches and suggestions are much appreciated,
    send them to the author.
 
 AUTHOR
-   David Reveman <c99drn@cs.umu.se>
+   David Reveman ( c99drn@cs.umu.se )
 
-   The Waimea website: http://waimea.sourceforge.net
+   The waimea website: http://waimea.sf.net

@@ -154,13 +154,19 @@ n/^desktop_window$/.activeclient {
    *MenuUnmap(rootmenu) : ButtonPress = Button1
 }
 
+n/^desktop_window$/.frame {}
+
 n/^panel_window$/.passiveclient {
   *Focus : ButtonPress = Button1
 }
 
-n/^desktop_window$/.frame {}
+n/^panel_window$/.activeclient {}
 
 n/^panel_window$/.frame {}
+
+n/^kicker$/.passiveclient {}
+
+n/^kicker$/.activeclient {}
 
 n/^kicker$/.frame {}
 

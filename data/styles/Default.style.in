@@ -23,18 +23,21 @@ menu.checkbox.true.look:  [x]
 menu.checkbox.false.look: [ ]
 
 window.title.focus:           flat gradient crossdiagonal
-  window.title.focus.color:   #7080b0
-  window.title.focus.colorTo: #ffffff
+  window.title.focus.color:   #5060a0
+  window.title.focus.colorTo: #afafaf
   
 window.title.unfocus:           flat gradient crossdiagonal
-  window.title.unfocus.color:   #7080b0
-  window.title.unfocus.colorTo: #ffffff
+  window.title.unfocus.color:   #5060a0
+  window.title.unfocus.colorTo: #afafaf
   window.title.unfocus.opacity: 50
   
 window.justify: right
 
 window.label.focus:                     parentrelative
-  window.label.focus.textColor:         #000000
+  window.label.focus.textColor:         #ffffff
+  window.label.focus.textShadowColor:   #000000
+  window.label.focus.textShadowXOffset: 1
+  window.label.focus.textShadowYOffset: 1
   
 window.label.unfocus:                     parentrelative
   window.label.unfocus.textColor:         #222222

@@ -70,9 +70,20 @@ n/^desktop_window$/.activeclient {
    globalKeyBindings
 }
 
+n/^desktop_window$/.passiveclient {}
+
 n/^desktop_window$/.frame {}
+
+n/^panel_window$/.passiveclient {}
+
+n/^panel_window$/.activeclient {}
 
 n/^panel_window$/.frame {}
 
+n/^kicker$/.passiveclient {}
+
+n/^kicker$/.activeclient {}
+
 n/^kicker$/.frame {}
+
 
