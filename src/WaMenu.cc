@@ -205,20 +205,21 @@ void WaMenu::Build(WaScreen *screen) {
         else
             font = wascreen->mstyle.f_font;
 
-        (*it)->width = XTextWidth(font, (*it)->label, strlen((*it)->label)) +
-            20;
+        (*it)->width = XTextWidth(font, (*it)->label, strlen((*it)->label)) + 20;
+        
         if ((*it)->type == MenuSubType)
             bullet_width = XTextWidth(wascreen->mstyle.b_font,
                                       wascreen->mstyle.bullet,
                                       strlen(wascreen->mstyle.bullet));
         else if ((*it)->type == MenuCBItemType) {
-            cb_width = XTextWidth(wascreen->mstyle.ct_font,
+            (*it)->cb_width2 = cb_width = XTextWidth(wascreen->mstyle.ct_font,
                                   wascreen->mstyle.checkbox_true,
                                   strlen(wascreen->mstyle.checkbox_true));
             tmp_w = XTextWidth(wascreen->mstyle.cf_font,
                                wascreen->mstyle.checkbox_false,
                                strlen(wascreen->mstyle.checkbox_false));
             if (tmp_w > cb_width) cb_width = tmp_w;
+            (*it)->cb_width1 = tmp_w;
             tmp_w = XTextWidth(font, (*it)->label2, strlen((*it)->label2)) + 20;
             if (tmp_w > (*it)->width) (*it)->width = tmp_w;
         }
@@ -684,7 +685,8 @@ void WaMenuItem::DrawFg(void) {
     }
 #else // ! XFT
     if (type == MenuCBItemType) {
-        width = XTextWidth(font, (*it)->label, strlen((*it)->label)) + 20;
+        width = XTextWidth( menu->wascreen->mstyle.f_font, label,
+                            strlen(label)) + 20;
     }
 #endif // XFT
     if (type == MenuTitleType)
