@@ -5,7 +5,7 @@ actions_DATA = action.sloppy-focus \
 
 install-data-local:
 	cd $(pkgdatadir)/actions && \
-	ln -s action.sloppy-focus action
+	ln -sf action.sloppy-focus action
 
 uninstall-local:
 	rm -f $(pkgdatadir)/actions/action
