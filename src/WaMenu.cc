@@ -472,13 +472,19 @@ void WaMenu::ReMap(int mx, int my) {
 void WaMenu::Move(int dx, int dy) {
 
 #ifdef XRENDER
-    WaTexture *texture = &wascreen->mstyle.back_frame;
-    if (texture->getOpacity()) {
-        pixmap = wascreen->ic->xrender(pbackframe, width, height, texture,
+    bool inscreen = false;
+    if (((x + width) > 0 && x < wascreen->width) && 
+        ((y + height) > 0 && y < wascreen->height)) {
+        inscreen = true;
+        
+        WaTexture *texture = &wascreen->mstyle.back_frame;
+        if (texture->getOpacity()) {
+            pixmap = wascreen->ic->xrender(pbackframe, width, height, texture,
                                        wascreen->xrootpmap_id, x,
-                                       y, pixmap);
-        XSetWindowBackgroundPixmap(display, frame, pixmap);
-        XClearWindow(display, frame);
+                                           y, pixmap);
+            XSetWindowBackgroundPixmap(display, frame, pixmap);
+            XClearWindow(display, frame);
+        }
     }
 #endif // XRENDER
 
@@ -490,7 +496,7 @@ void WaMenu::Move(int dx, int dy) {
         }
         
 #ifdef XRENDER
-        if ((*it)->texture->getOpacity()) {
+        if (inscreen && (*it)->texture->getOpacity()) {
             (*it)->Render();
             (*it)->DrawFg();
         }
