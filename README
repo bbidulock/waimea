@@ -1,19 +1,19 @@
 INFO
 
-       The design goal for waimea is to create the most efficient
-       desktop  working  environment  available.  To achieve this
-       waimea is a fast and highly customizable  virtual  desktop
-       window  manager.   It  uses  blackbox(1)  image  rendering
-       engine (blackbox  styles  support)  and  can  use  Xrender
-       extension for rendering fonts (anti-aliased font support).
-       It also features a very advanced configuration system with
-       which  it's  possible  to make waimea behave as almost any
-       other window manager.
-       
-       Features already included are:
+   The design goal for waimea is to create the most efficie-
+   nt desktop  working  environment  available.  To  achieve
+   this waimea is a fast and highly customizable virtual de-
+   sktop  window manager.  It uses blackbox image  rendering
+   engine (blackbox styles support) and can use  Xft library
+   for  font  rendering (anti-aliased font support). It also
+   features a very advanced configuration system  with which
+   it's  possible  to make waimea behave as almost any other
+   window manager.
+ 
+   Features already included are:
          Virtual desktop
          Blackbox image rendering engine (blackbox style support)
-	 Action Configuration System
+         Action Configuration System
          Advanced Menu System
          Standard X core fonts
          Xft fonts (anti-aliased fonts)
@@ -34,7 +34,7 @@ INSTALLATION
 
 	3. Run 'make install' to install binary and data files.
 	
-	That should be it,  waimea installs itself in  /usr/local 
+	That should be it,  Waimea  installs itself in /usr/local 
 	as default.
 
 CONFIGURATION
@@ -59,8 +59,8 @@ CONFIGURATION
 	your homedir.
 	cp WAIMEA_DATA_INSTALL_DIR/waimearc.example ~/.waimearc
 
-        Edit '.waimearc'. 
-        Set the styleFile option  to the full  path of the  style 
+   Edit '.waimearc'. 
+   Set the styleFile option  to the full  path of the  style 
 	you wish to use, 'HOME_DIR/.waimea/styles/Default' to use
 	default style. Set the  menuFile  option to the full path 
 	of the menu file, 'HOME_DIR/.waimea/menu' if you followed 
@@ -71,7 +71,7 @@ CONFIGURATION
 	you wish to use.  'HOME_DIR/.waimea/actions.sloppy-focus' 
 	to use default sloppy-focus action.
 
-	'HOME_DIR' must be the full path to your home directory 
+	'HOME_DIR'  must be the full path to your home  directory 
 	'~' doesn't work.
  
 	For info on how to edit the action, menu and style  files 
@@ -86,12 +86,12 @@ RUNNING
 	'exec waimea' as the last executed command of the script.
 
 	If you use startx script to start X, modify the '~.xinit-
-	rx' by adding 'exec waimea' as the last executed command of 
-	the script.
+	rx' by adding 'exec waimea' as the last executed  command 
+   of the script.
 
 BUGS
-       Bug reports, patches and suggestions are much appreciated,
-       send them to the author.
+   Bug reports, patches and suggestions are much appreciated,
+   send them to the author.
 
 AUTHOR
 	David Reveman <c99drn@cs.umu.se>
