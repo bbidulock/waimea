@@ -1,10 +1,12 @@
 !
 ! 	waimearc.example
-! This is waimea's standard configuration.
+!
+! Waimea default configuration. If no ~/.waimearc is found and no
+! --rcfile option is used, these are the settings used.
 !
 styleFile:		@pkgdatadir@/styles/Default
 menuFile:		@pkgdatadir@/menu
 actionFile:		@pkgdatadir@/actions/action
 colorsPerChannel:	4
 cacheMax:		200
-virtualSize:		1x1
+virtualSize:		3x3

@@ -255,31 +255,6 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     bdetails->push_back(new StrComp("button5", Button5));
     bdetails->push_back(new StrComp("button6", 6));
     bdetails->push_back(new StrComp("button7", 7));
-
-    kdetails = new list<StrComp *>;
-    kdetails->push_back(new StrComp("anykey", (unsigned long) 0));
-    kdetails->push_back(new StrComp("alt", 64));
-    kdetails->push_back(new StrComp("control", 37));
-    kdetails->push_back(new StrComp("tab", 23));
-    kdetails->push_back(new StrComp("shift", 50));
-    kdetails->push_back(new StrComp("shift_l", 50));
-    kdetails->push_back(new StrComp("shift_r", 62));
-    kdetails->push_back(new StrComp("esc", 9));
-    kdetails->push_back(new StrComp("up", 80));
-    kdetails->push_back(new StrComp("down", 88));
-    kdetails->push_back(new StrComp("left", 83));
-    kdetails->push_back(new StrComp("right", 85));
-    kdetails->push_back(new StrComp("return", 36));
-    kdetails->push_back(new StrComp("f1", 67));
-    kdetails->push_back(new StrComp("f2", 68));
-    kdetails->push_back(new StrComp("f3", 69));
-    kdetails->push_back(new StrComp("f4", 70));
-    kdetails->push_back(new StrComp("f5", 71));
-    kdetails->push_back(new StrComp("f6", 72));
-    kdetails->push_back(new StrComp("f7", 73));
-    kdetails->push_back(new StrComp("f8", 74));
-    kdetails->push_back(new StrComp("f9", 75));
-    kdetails->push_back(new StrComp("f10", 76));
     
     mods = new list<StrComp *>;
     mods->push_back(new StrComp("shiftmask", ShiftMask));
@@ -376,12 +351,14 @@ void ResourceHandler::LoadConfig(void) {
     if (XrmGetResource(database, "virtualSize", "ViriualSize",
                      &value_type, &value)) {
         if (sscanf(value.addr, "%dx%d", &virtual_x, &virtual_y) != 2) {
-            virtual_x = virtual_y = 1;
+            virtual_x = virtual_y = 3;
         }
     } else
-        virtual_x = virtual_y = 1;
-    if (virtual_x > 9) virtual_x = 9;
-    if (virtual_y > 9) virtual_y = 9;
+        virtual_x = virtual_y = 3;
+    if (virtual_x > 20) virtual_x = 20;
+    if (virtual_y > 20) virtual_y = 20;
+    if (virtual_x < 1) virtual_x = 1;
+    if (virtual_y < 1) virtual_y = 1;
     
     if (XrmGetResource(database, "colorsPerChannel",
                        "ColorsPerChannel", &value_type, &value)) {
@@ -822,7 +799,6 @@ void ResourceHandler::LoadActions(Waimea *waimea) {
     LISTCLEAR(macts);
     LISTCLEAR(types);
     LISTCLEAR(bdetails);
-    LISTCLEAR(kdetails);
     LISTCLEAR(mods);
 }
 
@@ -1044,6 +1020,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     char *line, *token, *par;
     int i, detail, mod;
     WaAction *act_tmp;
+    KeySym keysym;
 
     list<StrComp *>::iterator it;
     
@@ -1175,28 +1152,16 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
         }
         token = strtrim(token);
         if (act_tmp->type == KeyPress || act_tmp->type == KeyRelease) {
-            it = kdetails->begin();
-            for (; it != kdetails->end(); ++it) {
-                if ((*it)->Comp(token)) {
-                    act_tmp->detail = (*it)->value;
-                    break;
-                }
-            }
-            if (! *it) {
-                if (sscanf(token, "'%u'", &act_tmp->detail) != 1) {
-                    if (strlen(token) == 1)
-                        act_tmp->detail = *token - 29;
-                    else {
-                        WARNING << "\"" << token << "\" unknown detail" << endl;
-                        free(act_tmp);
-                        free(line);
-                        return;
-                    }
-                }
-                else {
-                    if (act_tmp->detail > 255 || act_tmp->detail < 0)
-                        act_tmp->detail = 1;
-                }
+            if (! strcasecmp(token, "anykey"))
+                act_tmp->detail = 0;
+            else {
+                if ((keysym = XStringToKeysym(token)) == NoSymbol) {
+                    WARNING << "\"" << token << "\" unknown key" << endl;
+                    free(act_tmp);
+                    free(line);
+                    return;
+                } else
+                    act_tmp->detail = XKeysymToKeycode(display, keysym);
             }
         } else if (act_tmp->type == ButtonPress ||
                    act_tmp->type == ButtonRelease) {

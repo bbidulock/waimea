@@ -290,32 +290,12 @@ ACTIONS
                 	anybutton
                 	button1-7
 		For KeyEvents:
+			Standard KeySym names obtained from <X11/keysymdef.h>
+			by removing the XK_ prefix from each name.
+			
 			anykey
-			alt
-			control
-			shift
-			shift_l
-			shift_r
-			esc
-			up
-			down
-			left
-			right
-			return
-			tab
-			f1
-			f2
-			f3
-			f4
-			f5
-			f6
-			f7
-			f8
-			f9
-			f10
-			'key-code'
-				It is possible to specify a keycode beteen
-				two "'" characters as detail for KeyEvents.
+				You can use anykey as detail if you want action
+				to match any key pressed or released.
 
         List of event modifiers:
                 shiftmask
