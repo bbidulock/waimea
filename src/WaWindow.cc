@@ -112,6 +112,8 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
  * all windows used for decorations.
  */
 WaWindow::~WaWindow(void) {
+    waimea->window_table->erase(id);
+    waimea->wawindow_list->remove(this);
 #ifdef XFT
     if (title_w)
         XftDrawDestroy(xftdraw);
@@ -153,8 +155,6 @@ WaWindow::~WaWindow(void) {
         XDestroyWindow(display, o_south);
     }
     XFree(name);
-    waimea->window_table->erase(id);
-    waimea->wawindow_list->remove(this);
 }
 
 /**

@@ -168,7 +168,13 @@ WaScreen::~WaScreen(void) {
  */
 void WaScreen::CreateFonts(void) {
 #ifdef XFT
-    double default_font_size = (8.5 / 1200.0) * (double) height;
+    double default_font_size;
+
+    if (height > 1024) default_font_size = 8.5;
+    else if (height > 768) default_font_size = 10.5;
+    else if (height > 480) default_font_size = 12.5;
+    else default_font_size = 14.5;
+    
     if (wstyle.xftsize < 2.0) wstyle.xftsize = default_font_size;
     if (! (wstyle.xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
                                         XftTypeString, wstyle.xftfontname,
