@@ -179,11 +179,11 @@ void Waimea::WaLowerWindow(Window win) {
     if (always_at_bottom_list->size()) {
         Window *stack = new Window[always_at_bottom_list->size() +
                                   ((win)? 1: 0)];
-
-        if (win) stack[0] = win;
+        i = 0;
+        if (win) stack[i++] = win;
                 
         list<Window>::reverse_iterator it = always_at_bottom_list->rbegin();
-        for (i = 1; it != always_at_bottom_list->rend(); ++it) {
+        for (; it != always_at_bottom_list->rend(); ++it) {
             stack[i++] = *it;
         }
         
