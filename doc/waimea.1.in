@@ -105,25 +105,13 @@ switch. Below is a list of configuration options that
 understands.
 
 .TP
-.B  styleFile:     Filepath
-Path to alternate
-.I STYLEFILE
-instead of
-.I @pkgdatadir@/styles/Default.
-
-.TP
-.B  menuFile:     Filepath
-Path to alternate
-.I MENUFILE
-instead of
-.I @pkgdatadir@/menu.
-
-.TP
-.B actionFile:     Filepath
-Path to alternate
-.I ACTIONFILE
-instead of
-.IR @pkgdatadir@/actions/action.
+.B  screenMask:     List of screen numbers
+Whitespace separated list of screens that 
+.I waimea 
+should manage. If you for example want
+.I waimea
+to handle only screen .0 and screen .2, then list of screen numbers
+should be: 0 2
 
 .TP
 .B scriptDir:     Dirpath
@@ -132,9 +120,43 @@ instead of
 .IR @pkgdatadir@/scripts.
 .I scriptDir 
 is used execution of dynamic menu scripts.
+
+.TP
+.B doubleClickInterval:     Integer
+Adjust the delay (in milliseconds) between mouse clicks for 
+.I waimea
+to consider it a double click. Default value is 
+.I 300.
+
+.P
+When running  
+.I waimea
+on display with multiple screens the screen0 key in the following 
+configuration options can also be screen1, 2 etc. for any appropriate screen.
+
+.TP
+.B  screen0.styleFile:     Filepath
+Path to alternate
+.I STYLEFILE
+instead of
+.I @pkgdatadir@/styles/Default.
+
+.TP
+.B  screen0.menuFile:     Filepath
+Path to alternate
+.I MENUFILE
+instead of
+.I @pkgdatadir@/menu.
+
+.TP
+.B screen0.actionFile:     Filepath
+Path to alternate
+.I ACTIONFILE
+instead of
+.IR @pkgdatadir@/actions/action.
 	
 .TP
-.B colorsPerChannel:     Integer
+.B screen0.colorsPerChannel:     Integer
 This tells 
 .I waimea
 how many colors to take from the X
@@ -149,7 +171,7 @@ Default value is
 .I 4.
 
 .TP
-.B  cacheMax:     Integer
+.B  screen0.cacheMax:     Integer
 This tells 
 .I waimea 
 how much memory (in KB) it may use to store cached pixmaps on the X server.
@@ -158,21 +180,14 @@ Default value is
 .I 200.
 
 .TP
-.B  imageDither:     Boolean
+.B  screen0.imageDither:     Boolean
 Tells 
 .I waimea
 to dither images on none TrueColor screens. Default value is 
 .I True.
 
 .TP
-.B doubleClickInterval:     Integer
-Adjust the delay (in milliseconds) between mouse clicks for 
-.I waimea
-to consider it a double click. Default value is 
-.I 300.
-
-.TP
-.B virtualSize:     IntegerxInteger
+.B screen0.virtualSize:     IntegerxInteger
 Tells 
 .I waimea 
 what virtual desktop size to use. Example:
@@ -183,7 +198,7 @@ Default value is
 .I 3x3.
 
 .TP
-.B menuStacking:     StackingType
+.B screen0.menuStacking:     StackingType
 Tells 
 .I waimea 
 what stacking type to use for menus. Can be one of: AlwaysOnTop, 
@@ -192,7 +207,7 @@ Default type is
 .I Normal.
 
 .TP
-.B transientAbove:     Bool
+.B screen0.transientAbove:     Bool
 Tells 
 .I waimea 
 to use special handling of transient windows. When turned on 
@@ -217,13 +232,13 @@ line in your
 or not.
 
 .TP
-.B dock[num].geometry:     OffsetString
+.B screen0.dock[num].geometry:     OffsetString
 Define dockappholder position, X offset string of form:
 [{+-}<xoffset>{+-}<yoffset>]. See 
 .BR X(1).
 
 .TP
-.B dock[num].order:     OrderList
+.B screen0.dock[num].order:     OrderList
 A whitespace separated list describing how to order the
 dockapps in the dockappholder. Dockapps can be ordered
 by window name and class. For window name use 
@@ -234,7 +249,7 @@ by window name and class. For window name use
 
 Example:
 
-dock0.order:    name[cpumeter] class[pager] UNKNOWN
+screen0.dock0.order:    name[cpumeter] class[pager] UNKNOWN
 
 This will put dockapp window named cpumeter at the first
 position in dockappholder and pager dockapp at second
@@ -251,11 +266,11 @@ string MUST exist in ONE AND ONLY ONE of the
 dockappholder order resources.
 
 .TP
-.B dock[num].direction:     Direction
+.B screen0.dock[num].direction:     Direction
 Dockappholder direction {Vertical, Horizontal}
 
 .TP
-.B dock[num].centered:     Boolean
+.B screen0.dock[num].centered:     Boolean
 True if you want the dockappholder to be centered. If
 direction is Vertical, yoffset from geometry resource will
 be ignored and dockappholder will be centered vertically.
@@ -264,15 +279,15 @@ will be ignored and dockappholder will be centered
 horizontally.
 
 .TP
-.B dock[num].gridSpace:     Integer
+.B screen0.dock[num].gridSpace:     Integer
 Number of pixels spacing between dockapps in dockappholder.
 
 .TP
-.B dock[num].stacking:     StackingType
+.B screen0.dock[num].stacking:     StackingType
 Stacking order for dockappholder {AlwaysOnTop, AlwaysAtBottom}.
 
 .TP
-.B dock[num].inworkspace:     Boolean
+.B screen0.dock[num].inworkspace:     Boolean
 True if you don't wont dockappholder to alter the workarea. Maximizied windows
 will be maximized over the dockappholder when this is set to true. Default
 is False.
