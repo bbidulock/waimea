@@ -42,7 +42,7 @@ window.iconifybutton.5: ToggleShade : ButtonRelease = AnyButton
 !
 window.maximizebutton.5: ToggleMaximize : ButtonRelease = AnyButton
 !
-window.leftgrip.5: ResizeLeft : ButtonPress = AnyButton & !Mod1Mask
+window.leftgrip.5: ResizeLeftOpaque : ButtonPress = AnyButton & !Mod1Mask
 !
 window.rightgrip.5: ResizeRightOpaque : ButtonPress = AnyButton & !Mod1Mask
 !

@@ -129,14 +129,15 @@ XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
                 }
                 break;
             default:
-                hash_map<int, WindowObject *>::iterator it;
-                if ((it = waimea->window_table->find(event->xany.window)) !=
-                    waimea->window_table->end())
-                    if (((*it).second)->type == WindowType)
-                        if (((WaWindow *) (*it).second)->wascreen->shape &&
-                            event->type ==
-                            ((WaWindow *) (*it).second)->wascreen->shape_event)
-                            ((WaWindow *) (*it).second)->Shape();
+                if (event->type == waimea->wascreen->shape_event) {
+                    hash_map<int, WindowObject *>::iterator it;
+                    if ((it = waimea->window_table->find(event->xany.window)) !=
+                        waimea->window_table->end()) {
+                        if (((*it).second)->type == WindowType)
+                            if (((WaWindow *) (*it).second)->wascreen->shape)
+                                ((WaWindow *) (*it).second)->Shape();
+                    }
+                }
         }
     }
 }

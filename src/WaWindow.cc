@@ -98,6 +98,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     }
     UnFocusWin();
     ReparentWin();
+    Shape();
     net->GetStateSticky(this);
     net->GetStateShaded(this);
     net->GetStateMaxV(this);
@@ -327,10 +328,15 @@ void WaWindow::ReparentWin(void) {
                      StructureNotifyMask);
 
 #ifdef SHAPE
+        int n, order;
+        XRectangle *dummy;
         if (wascreen->shape) {
-            XShapeSelectInput(display, frame->id, ShapeNotifyMask);
-            Shape();
+            XShapeSelectInput(display, id, ShapeNotifyMask);
+            dummy = XShapeGetRectangles(display, id, ShapeBounding, &n,
+                                        &order);
+            if (n > 1) shaped = True;
         }
+        XFree(dummy);
 #endif // SHAPE
         
         int tmp;
@@ -355,44 +361,32 @@ void WaWindow::ReparentWin(void) {
  * Shapes frame window after shape of client.
  */
 void WaWindow::Shape(void) {
-        int n, order;
-        XRectangle temp, *dummy;
-
-        XGrabServer(display);
-        if (validateclient(id)) {
-            dummy = XShapeGetRectangles(display, id, ShapeBounding, &n, &order);
+        int n;
+        XRectangle xrect[2];
+        
+        if (shaped) {
+            XGrabServer(display);
+            if (validateclient(id)) {
+                XShapeCombineShape(display, frame->id, ShapeBounding,
+                                   border_w, title_w + border_w, id,
+                                   ShapeBounding, ShapeSet);
+                n = 1;
+                xrect[0].x = -border_w;
+                xrect[0].y = -border_w;
+                xrect[0].width = attrib.width + border_w * 2;
+                xrect[0].height = title_w + border_w * 2;
+                if (handle_w) {
+                    xrect[1].x = -border_w;
+                    xrect[1].y = attrib.height + title_w + border_w;
+                    xrect[1].width = attrib.width + border_w * 2;
+                    xrect[1].height = handle_w + border_w * 2;
+                    n++;
+                }
+                XShapeCombineRectangles(display, frame->id, ShapeBounding, 0, 0,
+                                        xrect, n, ShapeUnion, Unsorted);
+            }
+            XUngrabServer(display);
         }
-        XUngrabServer(display);
-        if (n > 1) {            
-            XShapeCombineShape(display, frame->id, ShapeBounding,
-                               0, title_w + 2 * border_w, id,
-                               ShapeBounding, ShapeSet);
-            temp.x = -border_w;
-            temp.y = -border_w;   
-            temp.width = attrib.width + 2 * border_w;
-            temp.height = title_w + 2 * border_w;
-            
-            XShapeCombineRectangles(display, frame->id, ShapeBounding,
-                                    0, 0, &temp, 1, ShapeUnion, YXBanded);
-            temp.x = 0;
-            temp.y = 0;
-            temp.width = attrib.width;
-            temp.height = title_w;
-            
-            XShapeCombineRectangles(display, frame->id, ShapeClip,
-                                    0, title_w + 2 * border_w, &temp, 1,
-                                    ShapeUnion, YXBanded);
-            shaped = True;
-        } else if (shaped) {
-            temp.x = -border_w;
-            temp.y = -border_w;
-            temp.width = attrib.width + 2 * border_w;
-            temp.height = attrib.height + title_w + 2 * border_w;
-            
-            XShapeCombineRectangles(display, frame->id, ShapeBounding,
-                                    0, 0, &temp, 1, ShapeSet, YXBanded);
-        }
-        XFree(dummy);
 }
 #endif // SHAPE
 
@@ -414,12 +408,12 @@ void WaWindow::SendConfig(void) {
     ce.width             = attrib.width;
     ce.height            = attrib.height;
     ce.border_width      = 0;
-    ce.above             = Below;
+    ce.above             = frame->id;
     ce.override_redirect = False;
 
     XGrabServer(display);
     if (validateclient(id)) 
-        XSendEvent(display, id, False, StructureNotifyMask, (XEvent *)&ce);
+        XSendEvent(display, id, True, NoEventMask, (XEvent *)&ce);
     XUngrabServer(display);
 }
 
@@ -1851,7 +1845,7 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int bw, int type) 
     
     switch (type) {
         case FrameType:
-	    attrib_set.event_mask |= SubstructureRedirectMask;
+            attrib_set.event_mask |= SubstructureRedirectMask;
             attrib.x = wa->attrib.x - wa->border_w;
             attrib.y = wa->attrib.y - wa->title_w - wa->border_w * 2;
             attrib.width = wa->attrib.width;
