@@ -541,13 +541,15 @@ void WaWindow::UpdateAllAttributes(void) {
 }
 
 /**
- * @fn    RedrawWindow(void)
+ * @fn    RedrawWindow(bool force_if_viewable)
  * @brief Redraws Window
  *
  * Redraws the window at it's correct position with it's correct size.
  * We only redraw those things that need to be redrawn.
+ *
+ * @param force_if_viewable Force redraw if window is viewable
  */
-void WaWindow::RedrawWindow(void) {
+void WaWindow::RedrawWindow(bool force_if_viewable) {
     Bool move = false, resize = false;
 
     if (old_attrib.x != attrib.x) {
@@ -588,7 +590,21 @@ void WaWindow::RedrawWindow(void) {
             XResizeWindow(display, label->id, label->attrib.width,
                           label->attrib.height);
             
-            DrawTitlebar();
+#ifdef XFT
+            if (wascreen->config.db) {
+                Region region = XCreateRegion();
+                XRectangle xrect;
+                xrect.x = label->g_x;
+                xrect.y = 2;
+                xrect.width = label->attrib.width;
+                xrect.height = label->attrib.height;
+                XUnionRectWithRegion(&xrect, region, region);
+                XftDrawSetClip(title->xftdraw, region);
+                XDestroyRegion(region);
+            }
+#endif // XFT
+            
+            if (! force_if_viewable) DrawTitlebar();
         }
         if (flags.handle) {
             handle->attrib.width = attrib.width - 50 - border_w * 2;
@@ -600,7 +616,7 @@ void WaWindow::RedrawWindow(void) {
             XResizeWindow(display, handle->id, handle->attrib.width,
                           handle->attrib.height);
             
-            DrawHandlebar();
+            if (! force_if_viewable) DrawHandlebar();
         }
     }
     if (old_attrib.height != attrib.height) {
@@ -632,12 +648,18 @@ void WaWindow::RedrawWindow(void) {
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
         
 #ifdef XRENDER
-        render_if_opacity = true;
-        DrawTitlebar();
-        DrawHandlebar();
-        render_if_opacity = false;
+        if (! resize && ! force_if_viewable) {
+            render_if_opacity = true;
+            DrawTitlebar();
+            DrawHandlebar();
+            render_if_opacity = false;
+        }
 #endif // XRENDER
 
+    }
+    if (force_if_viewable) {
+        DrawTitlebar();
+        DrawHandlebar();
     }
     if (resize) {
         if (flags.max && (old_attrib.width != attrib.width ||
@@ -943,6 +965,17 @@ void WaWindow::DrawHandlebar(void) {
         grip_l->Render();
     }
 }
+
+/**
+ * @fn    UpdateTitle(XEvent *, WaAction *)
+ * @brief Updates titlebar text
+ *
+ */
+//void WaWindow::UpdateTitle(void) {
+//    if (! wascreen->db) label->Draw();
+//    else
+//}
+
 
 /**
  * @fn    FocusWin(void)
@@ -1253,6 +1286,8 @@ void WaWindow::Move(XEvent *e, WaAction *) {
         waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
         switch (event.type) {
             case MotionNotify:
+                while (XCheckTypedWindowEvent(display, event.xmotion.window,
+                                              MotionNotify, &event));
                 nx += event.xmotion.x_root - px;
                 ny += event.xmotion.y_root - py;
                 px  = event.xmotion.x_root;
@@ -1270,17 +1305,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                     wascreen->north->id == event.xcrossing.window ||
                     wascreen->south->id == event.xcrossing.window) {
                     waimea->eh->HandleEvent(&event);
-                } else {
-                    nx += event.xcrossing.x_root - px;
-                    ny += event.xcrossing.y_root - py;
-                    px  = event.xcrossing.x_root;
-                    py  = event.xcrossing.y_root;
-                    if (! started) {
-                        CreateOutline();
-                        started = true;
-                    }
-                    DrawOutline(nx, ny, attrib.width, attrib.height);
-                }
+                } 
                 break;
             case DestroyNotify:
             case UnmapNotify:
@@ -1384,6 +1409,8 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
         waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
         switch (event.type) {
             case MotionNotify:
+                while (XCheckTypedWindowEvent(display, event.xmotion.window,
+                                              MotionNotify, &event));
                 nx += event.xmotion.x_root - px;
                 ny += event.xmotion.y_root - py;
                 px = event.xmotion.x_root;
@@ -1399,15 +1426,7 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                     wascreen->north->id == event.xcrossing.window ||
                     wascreen->south->id == event.xcrossing.window) {
                     waimea->eh->HandleEvent(&event);
-                } else {
-                    nx += event.xcrossing.x_root - px;
-                    ny += event.xcrossing.y_root - py;
-                    px = event.xcrossing.x_root;
-                    py = event.xcrossing.y_root;
-                    attrib.x = nx;
-                    attrib.y = ny;
-                    RedrawWindow();
-                }
+                } 
                 break;
             case DestroyNotify:
             case UnmapNotify:
@@ -1515,6 +1534,8 @@ void WaWindow::Resize(XEvent *e, int how) {
         waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
         switch (event.type) {
             case MotionNotify:
+                while (XCheckTypedWindowEvent(display, event.xmotion.window,
+                                              MotionNotify, &event));
                 width  += (event.xmotion.x_root - px) * how;
                 height += event.xmotion.y_root - py;
                 px = event.xmotion.x_root;
@@ -1545,23 +1566,7 @@ void WaWindow::Resize(XEvent *e, int how) {
                     n_x = attrib.x;
                     if (how == WestType) n_x -= n_w - attrib.width;
                     DrawOutline(n_x, attrib.y, n_w, n_h);
-                } else {
-                    width  += (event.xcrossing.x_root - px) * how;
-                    height += event.xcrossing.y_root - py;
-                    px = event.xcrossing.x_root;
-                    py = event.xcrossing.y_root;
-                    if (IncSizeCheck(width, height, &n_w, &n_h)) {
-                        if (how == WestType) n_x -= n_w - o_w;
-                        if (! started) {
-                            CreateOutline();
-                            started = true;
-                        }
-                        o_x = n_x;
-                        o_w = n_w;
-                        o_h = n_h;
-                        DrawOutline(n_x, attrib.y, n_w, n_h);
-                    }
-                }
+                } 
                 break;
             case DestroyNotify:
             case UnmapNotify:
@@ -1672,6 +1677,8 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
         waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
         switch (event.type) {
             case MotionNotify:
+                while (XCheckTypedWindowEvent(display, event.xmotion.window,
+                                              MotionNotify, &event));
                 width  += (event.xmotion.x_root - px) * how;
                 height += event.xmotion.y_root - py;
                 px = event.xmotion.x_root;
@@ -1694,18 +1701,7 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                     waimea->eh->HandleEvent(&event);
                     px -= (wascreen->v_x - old_vx);
                     py -= (wascreen->v_y - old_vy);
-                } else {
-                    width  += (event.xcrossing.x_root - px) * how;
-                    height += event.xcrossing.y_root - py;
-                    px  = event.xcrossing.x_root;
-                    py  = event.xcrossing.y_root;
-                    if (IncSizeCheck(width, height, &n_w, &n_h)) {
-                        if (how == WestType) attrib.x -= n_w - attrib.width;
-                        attrib.width  = n_w;
-                        attrib.height = n_h;
-                        RedrawWindow();
-                    }
-                }
+                } 
                 break;
             case DestroyNotify:
             case UnmapNotify:
@@ -2885,9 +2881,10 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
                        &attrib_set);    
 
 #ifdef XFT
-    if (type == LabelType)
+    if (type == LabelType || type == TitleType) {
         xftdraw = XftDrawCreate(display, (Drawable) id,
                                 wascreen->visual, wascreen->colormap);
+    }
 #endif // XFT
     
     wa->waimea->window_table.insert(make_pair(id, this));
@@ -2928,8 +2925,7 @@ void WaChildWindow::Render(void) {
         xpixmap = XCreatePixmap(wascreen->pdisplay, wascreen->id,
                                 attrib.width, attrib.height,
                                 wascreen->screen_depth);
-    } else if (wa->render_if_opacity) return;
-
+    } else if (wa->render_if_opacity && IsDrawable()) return;
 #endif // XRENDER
     
     switch (type) {
@@ -3010,7 +3006,8 @@ void WaChildWindow::Render(void) {
     }
     
     if (pixmap) {
-        XSetWindowBackgroundPixmap(display, id, pixmap);
+        if (wascreen->config.db) Draw((Drawable) pixmap);
+        else XSetWindowBackgroundPixmap(display, id, pixmap);
         
 #ifdef PIXMAP
         if (
@@ -3029,8 +3026,13 @@ void WaChildWindow::Render(void) {
 #endif // PIXMAP
         
     }
-    else
-        XSetWindowBackground(display, id, texture->getColor()->getPixel());
+    else {
+        if (wascreen->config.db) Draw((Drawable) 2);
+        else XSetWindowBackground(display, id,
+                                  texture->getColor()->getPixel());
+    }
+
+    if (! wascreen->config.db) Draw();
 
 #ifdef XRENDER
     if (pixmap && texture->getOpacity()) {
@@ -3038,52 +3040,117 @@ void WaChildWindow::Render(void) {
         XFreePixmap(wascreen->pdisplay, pixmap);
     }
 #endif // XRENDER
-
-    Draw();
+    
 }
 
 /**
- * @fn    Draw(void)
+ * @fn    Draw(Drawable drawable)
  * @brief Draw text/decorations
  *
  * Draws text in window title window and button graphics for button windows.
+ * If drawable is other then NULL then we draw on this instead.
+ *
+ * @param drawable Drawable to draw on
  */
-void WaChildWindow::Draw(void) {
-    XClearWindow(display, id);
+void WaChildWindow::Draw(Drawable drawable) {
+    int x = 0, y = 0, length, text_w;
+    
+    if (! drawable) XClearWindow(display, id);
     switch (type) {
+        case TitleType:
+            if (! drawable) return;
+            if (wa->label->IsDrawable()) {
+                if (drawable == (Drawable) 2) {
+                    WaTexture *texture = (wa->has_focus)? f_texture: u_texture;
+                    XSetWindowBackground(display, id,
+                                         texture->getColor()->getPixel());
+                } else
+                    XSetWindowBackgroundPixmap(display, id, drawable);
+                XClearWindow(display, id);
+                return;
+            }
+            x = wa->label->g_x;
+            y = 2;
         case LabelType: {
-            int x = 0, length, text_w;
+            if (type == LabelType && drawable) {
+                if (drawable == ParentRelative) {
+                    if (wa->title->IsDrawable()) {
+                        XSetWindowBackgroundPixmap(display, id, drawable);
+                        XClearWindow(display, id);
+                        return;
+                    }
+                    drawable = 0;
+                }
+            }
+            Pixmap p_tmp;
+            if (drawable) {
+                p_tmp = XCreatePixmap(display, wascreen->id,
+                                      attrib.width, attrib.height,
+                                      wascreen->screen_depth);
+                if (drawable == (Drawable) 2) {
+                    XGCValues values;
+                    WaTexture *texture = (wa->has_focus)? f_texture: u_texture;
+                    values.foreground = texture->getColor()->getPixel();
+                    GC gc = XCreateGC(display, wascreen->id, GCForeground,
+                                      &values);
+                    XFillRectangle(display, p_tmp, gc, 0, 0, attrib.width,
+                                   attrib.height);
+                    XFreeGC(display, gc);
+                } else {
+                    GC gc = DefaultGC(display, wascreen->screen_number);
+                    XCopyArea(display, drawable, p_tmp, gc, 0, 0, attrib.width,
+                              attrib.height, 0, 0);
+                }
+            }
             length = strlen(wa->name);
             WaFont *wafont = (wa->has_focus)? &wascreen->wstyle.wa_font:
                 &wascreen->wstyle.wa_font_u;
             text_w = wafont->Width(display, wa->name, length);
     
-            if (text_w > (attrib.width - 10)) x = 2;
+            if (text_w > (wa->label->attrib.width - 10)) x += 2;
             else {
                 switch (wascreen->wstyle.justify) {
-                    case LeftJustify: x = 2; break;
+                    case LeftJustify: x += 2; break;
                     case CenterJustify:
-                        x = (attrib.width / 2) - (text_w / 2);
+                        x += (wa->label->attrib.width / 2) - (text_w / 2);
                         break;
                     case RightJustify:
-                        x = (attrib.width - text_w) - 2;
+                        x += (wa->label->attrib.width - text_w) - 2;
                         break;
                 }
-            }            
+            }
+
+            y += wascreen->wstyle.y_pos;
+
+#ifdef    XFT
+            if (drawable) XftDrawChange(xftdraw, p_tmp);
+#endif // XFT            
             
-            wafont->Draw(display, id,
+            wafont->Draw(display, (drawable)? p_tmp : id,
                          
 #ifdef    XFT
                      xftdraw,
 #endif // XFT
                  
-                     x, wascreen->wstyle.y_pos,
-                     wa->name, length);
+                     x, y, wa->name, length);
 
-            } break;
+            if (drawable) {
+                XSetWindowBackgroundPixmap(display, id, p_tmp);
+                XClearWindow(display, id);
+                XFreePixmap(display, p_tmp);
+            }
+        } break;
         case ButtonType: {
+            if (drawable) {
+                if (drawable == (Drawable) 2) {
+                    WaTexture *texture = (wa->has_focus)? f_texture: u_texture;
+                    XSetWindowBackground(display, id,
+                                         texture->getColor()->getPixel());
+                } else
+                    XSetWindowBackgroundPixmap(display, id, drawable);
+                XClearWindow(display, id);
+            }
             GC *gc;
-            
             if (bstyle->fg) {
                 bool flag = false;
                 switch (bstyle->cb) {
@@ -3148,7 +3215,33 @@ void WaChildWindow::Draw(void) {
                 }
             }
         } break;
+        default:
+            if (drawable) {
+                if (drawable == (Drawable) 2) {
+                    WaTexture *texture = (wa->has_focus)? f_texture: u_texture;
+                    XSetWindowBackground(display, id,
+                                         texture->getColor()->getPixel());
+                } else
+                    XSetWindowBackgroundPixmap(display, id, drawable);
+                XClearWindow(display, id);
+            }
     }
+}
+
+/**
+ * @fn    IsDrawable(void)
+ * @brief Check if drawable
+ *
+ * Checks if if window is double buffer drawable (if it will have a pixmap
+ * background).
+ */
+bool WaChildWindow::IsDrawable(void) {
+    WaTexture *texture = (wa->has_focus)? f_texture:
+        u_texture;
+    if (texture->getTexture() & WaImage_ParentRelative)
+        return false;
+    else
+        return true;
 }
 
 

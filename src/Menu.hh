@@ -65,7 +65,7 @@ public:
 
     Window frame, o_west, o_north, o_south, o_east;
     int x, y, width, height, bullet_width, cb_width, extra_width;
-    bool mapped, built, has_focus, tasksw, dynamic, dynamic_root, ignore;
+    bool mapped, built, has_focus, tasksw, dynamic, dynamic_root, ignore, db;
     char *name;
     Pixmap pbackframe, ptitle, philite, psub, psubhilite;
     unsigned long backframe_pixel, title_pixel, hilite_pixel,
@@ -80,6 +80,7 @@ public:
     
 #ifdef XRENDER
     Pixmap pixmap;
+    bool render_if_opacity;
 #endif // XRENDER
   
 private:
@@ -91,7 +92,7 @@ public:
     WaMenuItem(char *);
     virtual ~WaMenuItem(void);
 
-    void DrawFg(void);
+    void Draw(Drawable = 0, bool = false, int = 0);
     void Render(void);
     
     void Hilite(void);
@@ -178,7 +179,7 @@ public:
     
     int func_mask, func_mask1, func_mask2, height, width, dy, realheight,
                            cb, cb_y, cb_width, cb_width1, cb_width2;
-    bool hilited, move_resize, in_window, sdyn, sdyn1, sdyn2;
+    bool hilited, move_resize, in_window, sdyn, sdyn1, sdyn2, db;
     char *label, *exec, *param, *sub;
     char *label1, *exec1, *param1, *sub1;
     char *label2, *exec2, *param2, *sub2;

@@ -481,6 +481,16 @@ void ResourceHandler::LoadConfig(WaScreen *wascreen) {
     if (sc->virtual_x < 1) sc->virtual_x = 1;
     if (sc->virtual_y < 1) sc->virtual_y = 1;
 
+    sprintf(rc_name, "screen%d.doubleBufferedText", sn);
+    sprintf(rc_class, "Screen%d.DoubleBufferedText", sn);
+    if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+        if (! strncasecmp("true", value.addr, value.size))
+            sc->db = true;
+        else
+            sc->db = false;
+    } else
+        sc->db = true;
+
     sprintf(rc_name, "screen%d.colorsPerChannel", sn);
     sprintf(rc_class, "Screen%d.ColorsPerChannel", sn);
     if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
@@ -1676,6 +1686,7 @@ void ResourceHandler::ReadDatabaseColor(char *rname, char *rclass,
     
     if (XrmGetResource(database, rname, rclass, &value_type,
                        &value)) {
+        strtrim(value.addr);
         ic->parseColor(color, value.addr);
     } else {
         ic->parseColor(color);
@@ -1814,6 +1825,8 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
         
         sprintf(colorclass, "%s.Color", rclass);
         sprintf(colorname,  "%s.color", rname);
+        strtrim(colorclass);
+        strtrim(colorname);
         
         ReadDatabaseColor(colorname, colorclass, texture->getColor(),
                           default_pixel, ic);
@@ -1821,6 +1834,8 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
 #ifdef INTERLACE
         sprintf(colorclass, "%s.ColorTo", rclass);
         sprintf(colorname,  "%s.colorTo", rname);
+        strtrim(colorclass);
+        strtrim(colorname);
 
         ReadDatabaseColor(colorname, colorclass, texture->getColorTo(),
                           default_pixel, ic);
@@ -1872,9 +1887,13 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
         
         sprintf(colorclass, "%s.Color", rclass);
         sprintf(colorname,  "%s.color", rname);
+        strtrim(colorclass);
+        strtrim(colorname);
         
         sprintf(colortoclass, "%s.ColorTo", rclass);
         sprintf(colortoname,  "%s.colorTo", rname);
+        strtrim(colortoclass);
+        strtrim(colortoname);
 
         ReadDatabaseColor(colorname, colorclass, texture->getColor(),
                           default_pixel, ic);

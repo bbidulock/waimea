@@ -91,7 +91,7 @@ typedef struct {
     unsigned int virtual_y;
     int colors_per_channel, menu_stacking;
     long unsigned int cache_max;
-    bool image_dither, transient_above;
+    bool image_dither, transient_above, db;
     
     list<WaAction *> frameacts, awinacts, pwinacts, titleacts, labelacts,
         handleacts, rgacts, lgacts, rootacts, weacts, eeacts, neacts,

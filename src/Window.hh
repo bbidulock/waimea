@@ -84,7 +84,7 @@ public:
     void UpdateAllAttributes(void);
     list <WaAction *> *GetActionList(list<WaActionExtList *> *);
     void SetActionLists(void);
-    void RedrawWindow(void);
+    void RedrawWindow(bool = false);
     void SendConfig(void);
     void Gravitate(int);
     void UpdateGrabs(void);
@@ -251,7 +251,8 @@ public:
     virtual ~WaChildWindow(void);
 
     void Render(void);
-    void Draw(void);
+    void Draw(Drawable = 0);
+    bool IsDrawable(void);
     
     Display *display;
     WaWindow *wa;

@@ -260,6 +260,11 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
     } else if (e->atom == XA_WM_NAME) {
         if ((ww = (WaWindow *) waimea->FindWin(e->window, WindowType))) {
             waimea->net->GetXaName(ww);
+            if (ww->wascreen->config.db) {
+                ww->title->Render();
+                ww->label->Render();
+            } else
+                ww->label->Draw();
         }
     }
 #ifdef XRENDER
@@ -302,7 +307,8 @@ void EventHandler::EvExpose(XExposeEvent *e) {
                                            MenuSubType | MenuCBItemType))
         switch (wo->type) {
             case LabelType:
-                ((WaChildWindow *) wo)->Draw();
+                if (! ((WaChildWindow *) wo)->wa->wascreen->config.db)
+                    ((WaChildWindow *) wo)->Draw();
                 break;
             case ButtonType:
                 ((WaChildWindow *) wo)->Draw(); break;
@@ -310,7 +316,8 @@ void EventHandler::EvExpose(XExposeEvent *e) {
             case MenuItemType:
             case MenuSubType:
             case MenuCBItemType:
-                ((WaMenuItem *) wo)->DrawFg();
+                if (! ((WaMenuItem *) wo)->db)
+                    ((WaMenuItem *) wo)->Draw();
         }
 }
 
@@ -531,8 +538,14 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
     }
     else if (e->xclient.message_type == waimea->net->net_wm_name) {
         if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,
-                                               WindowType)))
+                                               WindowType))) {
             waimea->net->GetNetName(ww);
+            if (ww->wascreen->config.db) {
+                ww->title->Render();
+                ww->label->Render();
+            } else
+                ww->label->Draw();
+        }
     }
     else if (e->xclient.message_type == waimea->net->net_state) {
         if ((ww = (WaWindow *) waimea->FindWin(e->xclient.window,

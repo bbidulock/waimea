@@ -804,7 +804,6 @@ void NetHandler::GetXaName(WaWindow *ww) {
         ww->name = __m_wastrdup(data);
         XFree(data);
         ww->SetActionLists();
-        if (ww->title_w) ww->label->Draw();
     }
         
     XGrabServer(display);
@@ -845,7 +844,6 @@ bool NetHandler::GetNetName(WaWindow *ww) {
         delete [] ww->name;
         ww->name = __m_wastrdup(data);
         ww->SetActionLists();
-        if (ww->title_w) ww->label->Draw();
         XFree(data);
 
         XGrabServer(display);

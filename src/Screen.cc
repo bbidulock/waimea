@@ -519,7 +519,7 @@ void WaScreen::UpdateCheckboxes(int type) {
         miit = (*mit)->item_list.begin();
         for (; miit != (*mit)->item_list.end(); ++miit) {
             if ((*miit)->cb == type && (*miit)->menu->mapped)
-                (*miit)->DrawFg();
+                (*miit)->Draw();
         }
     }
 }
@@ -930,7 +930,7 @@ void WaScreen::MoveViewportTo(int x, int y) {
                  (*it)->attrib.x < width) && 
                 (((*it)->attrib.y + (*it)->attrib.height) > 0 &&
                  (*it)->attrib.y < height))
-                (*it)->RedrawWindow();
+                (*it)->RedrawWindow(true);
             else {
                 if (((old_x + (*it)->attrib.width) > 0 && old_x < width) && 
                     ((old_y + (*it)->attrib.height) > 0 && old_y < height))
@@ -939,9 +939,9 @@ void WaScreen::MoveViewportTo(int x, int y) {
                     (*it)->dontsend = true;
                     (*it)->RedrawWindow();
                     (*it)->dontsend = false;
+                    net->SetVirtualPos(*it);
                 }
             }
-            net->SetVirtualPos(*it);
         }
     }
     list<WaMenu *>::iterator it2 = wamenu_list.begin();
@@ -1070,29 +1070,61 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
     XGrabKeyboard(display, id, true, GrabModeAsync, GrabModeAsync,
                   CurrentTime);
     for (;;) {
+        it = wawindow_list.begin();
+        for (; it != wawindow_list.end(); ++it) {
+            (*it)->dontsend = true;
+        }
         waimea->eh->EventLoop(waimea->eh->menu_viewport_move_return_mask,
                               &event);
         switch (event.type) {
-            case MotionNotify:
-                it = wawindow_list.begin();
+            case MotionNotify: {
+                while (XCheckTypedWindowEvent(display, event.xmotion.window,
+                                              MotionNotify, &event));
+                int x = v_x - (event.xmotion.x_root - px);
+                int y = v_y - (event.xmotion.y_root - py);
+                
+                if (x > v_xmax) x = v_xmax;
+                else if (x < 0) x = 0;
+                if (y > v_ymax) y = v_ymax;
+                else if (y < 0) y = 0;
+                
+                int x_move = - (x - v_x);
+                int y_move = - (y - v_y);
+                v_x = x;
+                v_y = y;
+
+                list<WaWindow *>::iterator it = wawindow_list.begin();
                 for (; it != wawindow_list.end(); ++it) {
-                    (*it)->dontsend = true;
-                }    
-                MoveViewportTo(v_x - (event.xmotion.x_root - px),
-                               v_y - (event.xmotion.y_root - py));
+                    if (! (*it)->flags.sticky) {
+                        int old_x = (*it)->attrib.x;
+                        int old_y = (*it)->attrib.y;
+                        (*it)->attrib.x = (*it)->attrib.x + x_move;
+                        (*it)->attrib.y = (*it)->attrib.y + y_move;
+            
+                        if ((((*it)->attrib.x + (*it)->attrib.width) > 0 &&
+                             (*it)->attrib.x < width) && 
+                            (((*it)->attrib.y + (*it)->attrib.height) > 0 &&
+                             (*it)->attrib.y < height))
+                            (*it)->RedrawWindow();
+                        else {
+                            if (((old_x + (*it)->attrib.width) > 0 &&
+                                 old_x < width) && 
+                                ((old_y + (*it)->attrib.height) > 0 &&
+                                 old_y < height))
+                                (*it)->RedrawWindow();
+                        }
+                    }
+                }
+                list<WaMenu *>::iterator it2 = wamenu_list.begin();
+                for (; it2 != wamenu_list.end(); ++it2) {
+                    if ((*it2)->mapped && (! (*it2)->root_menu))
+                        (*it2)->Move(x_move, y_move);
+                }
                 px = event.xmotion.x_root;
                 py = event.xmotion.y_root;
-                break;
+            } break;
             case LeaveNotify:
             case EnterNotify:
-                it = wawindow_list.begin();
-                for (; it != wawindow_list.end(); ++it) {
-                    (*it)->dontsend = true;
-                }    
-                MoveViewportTo(v_x - (event.xcrossing.x_root - px),
-                               v_y - (event.xcrossing.y_root - py));
-                px = event.xcrossing.x_root;
-                py = event.xcrossing.y_root;
                 break;
             case MapRequest:
                 maprequest_list->push_front(&event); break;
@@ -1111,15 +1143,16 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                 }
                 delete maprequest_list;
                 it = wawindow_list.begin();
-                for (; it != wawindow_list.end(); ++it) {
+                for (; it != wawindow_list.end(); ++it) {                    
                     (*it)->dontsend = false;
+                    net->SetVirtualPos(*it);
                     if ((((*it)->attrib.x + (*it)->attrib.width) > 0 &&
                          (*it)->attrib.x < width) && 
                         (((*it)->attrib.y + (*it)->attrib.height) > 0 &&
-                         (*it)->attrib.y < height))
+                         (*it)->attrib.y < height))    
                         (*it)->SendConfig();
-                    net->SetVirtualPos(*it);
                 }
+                net->SetDesktopViewPort(this);
                 XUngrabKeyboard(display, CurrentTime);
                 XUngrabPointer(display, CurrentTime);
                 return;

@@ -1,3 +1,7 @@
+Sun Oct 13 2002 David Reveman (c99drn@cs.umu.se)
+
+   Added double buffered text rendering support
+
 Wed Oct 09 2002 David Reveman (c99drn@cs.umu.se)
 
    *** Waimea v0.3.4 release ***

@@ -18,6 +18,10 @@
 #  include <stdio.h>
 #endif // HAVE_STDIO_H
 
+#ifdef    HAVE_SYS_TYPES_H
+#  include <sys/types.h>
+#endif // HAVE_SYS_TYPES_H
+
 #ifdef    HAVE_REGEX_H
 #  include <regex.h>
 #endif // HAVE_REGEX_H
