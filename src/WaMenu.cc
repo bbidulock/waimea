@@ -406,7 +406,6 @@ void WaMenu::Move(int dx, int dy) {
  */
 void WaMenu::Unmap(bool focus) {
     XEvent e;
-    WaAction *ac;
 
     XUnmapWindow(display, frame);
 
@@ -1072,7 +1071,7 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
  * @param e Event causing function call
  */
 void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
-    XEvent event;
+    XEvent event, *map_ev;
     int px, py, i;
     list<XEvent *> *maprequest_list;
     int nx = menu->x;
@@ -1117,13 +1116,16 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                 }
                 break;
             case MapRequest:
-                maprequest_list->push_front(&event); break;
+                map_ev = new XEvent;
+                *map_ev = event;
+                maprequest_list->push_front(map_ev); break;
             case ButtonPress:
             case ButtonRelease:
                 if (e->type == event.type) break;
                 XUngrabPointer(menu->display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(menu->display, maprequest_list->front());
+                    delete maprequest_list->front();
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;

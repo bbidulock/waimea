@@ -414,7 +414,7 @@ void WaWindow::UpdateAllAttributes(void) {
  */
 void WaWindow::RedrawWindow(void) {
     Bool move = False, resize = False;
-    
+
     if (old_attrib.x != attrib.x) {
         frame->attrib.x = attrib.x - border_w;
         
@@ -1375,7 +1375,7 @@ void WaWindow::Focus(bool vis) {
  * @param e XEvent causing start of move
  */
 void WaWindow::Move(XEvent *e, WaAction *) {
-    XEvent event;
+    XEvent event, *map_ev;
     int px, py, nx, ny, i;
     list<XEvent *> *maprequest_list;
     bool started = False;
@@ -1386,14 +1386,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
     
     nx = attrib.x;
     ny = attrib.y;
-    if (e->type != ButtonPress) {    
-        if (! mapped) {
-            attrib.x = - (wascreen->v_x + attrib.width + border_w * 2);
-            attrib.y = - (wascreen->v_y + attrib.height + border_w * 4 +
-                          handle_w + title_w);
-            RedrawWindow();
-            net->SetState(this, NormalState);
-        }
+    if (e->type != ButtonPress) {
         nx = px + border_w - 3;
         ny = py + title_w + border_w - 3;
         DrawOutline(nx, ny, attrib.width, attrib.height);
@@ -1403,10 +1396,10 @@ void WaWindow::Move(XEvent *e, WaAction *) {
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id))
-        XGrabPointer(display, id, True, ButtonReleaseMask |
-                     ButtonPressMask | PointerMotionMask | EnterWindowMask |
-                     LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
-                     waimea->move_cursor, CurrentTime);
+        XGrabPointer(display, (mapped) ? id: wascreen->id, True,
+                     ButtonReleaseMask | ButtonPressMask | PointerMotionMask |
+                     EnterWindowMask | LeaveWindowMask, GrabModeAsync,
+                     GrabModeAsync, None, waimea->move_cursor, CurrentTime);
     XUngrabServer(display);
     for (;;) {
         waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
@@ -1440,6 +1433,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                       event.xdestroywindow.window) == id)) {
                     while (! maprequest_list->empty()) {
                         XPutBackEvent(display, maprequest_list->front());
+                        delete maprequest_list->front();
                         maprequest_list->pop_front();
                     }
                     delete maprequest_list;
@@ -1454,7 +1448,9 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                     waimea->eh->EvConfigureRequest(&event.xconfigurerequest);
                 break;
             case MapRequest:
-                maprequest_list->push_front(&event); break;
+                map_ev = new XEvent;
+                *map_ev = event;
+                maprequest_list->push_front(map_ev); break;
             case ButtonPress:
             case ButtonRelease:
                 if (e->type == event.type) break;
@@ -1465,6 +1461,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                 RedrawWindow();
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
+                    delete maprequest_list->front();
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
@@ -1483,7 +1480,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
  * @param e XEvent causing start of move
  */
 void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
-    XEvent event;
+    XEvent event, *map_ev;
     int px, py, nx = attrib.x, ny = attrib.y, i;
     list<XEvent *> *maprequest_list;
     Window w;
@@ -1494,19 +1491,15 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
     if (e->type != ButtonPress) {
         nx = attrib.x = px + border_w - 3;
         ny = attrib.y = py + title_w + border_w - 3;
-        if (! mapped) {
-            RedrawWindow();
-            net->SetState(this, NormalState);
-        }
     }
     dontsend = True;
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id))
-        XGrabPointer(display, id, True, ButtonReleaseMask |
-                     ButtonPressMask | PointerMotionMask | EnterWindowMask |
-                     LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
-                     waimea->move_cursor, CurrentTime);
+        XGrabPointer(display, (mapped) ? id: wascreen->id, True,
+                     ButtonReleaseMask | ButtonPressMask | PointerMotionMask |
+                     EnterWindowMask | LeaveWindowMask, GrabModeAsync,
+                     GrabModeAsync, None, waimea->move_cursor, CurrentTime);
     XUngrabServer(display);
     for (;;) {
         waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
@@ -1538,6 +1531,7 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                       event.xdestroywindow.window) == id)) {
                     while (! maprequest_list->empty()) {
                         XPutBackEvent(display, maprequest_list->front());
+                        delete maprequest_list->front();
                         maprequest_list->pop_front();
                     }
                     delete maprequest_list;
@@ -1551,13 +1545,16 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                     waimea->eh->EvConfigureRequest(&event.xconfigurerequest);
                 break;
             case MapRequest:
-                maprequest_list->push_front(&event); break;
+                map_ev = new XEvent;
+                *map_ev = event;
+                maprequest_list->push_front(map_ev); break;
             case ButtonPress:
             case ButtonRelease:
                 if (e->type == event.type) break;
                 XUngrabPointer(display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
+                    delete maprequest_list->front();
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
@@ -1581,7 +1578,7 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
  * @param e XEvent causing start of resize
  */
 void WaWindow::Resize(XEvent *e, int how) {
-    XEvent event;
+    XEvent event, *map_ev;
     int px, py, width, height, n_w, n_h, o_w, o_h, n_x, o_x, i;
     list<XEvent *> *maprequest_list;
     bool started = False;
@@ -1596,9 +1593,9 @@ void WaWindow::Resize(XEvent *e, int how) {
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id))
-        XGrabPointer(display, id, True, ButtonReleaseMask |
-                     ButtonMotionMask | EnterWindowMask | LeaveWindowMask,
-                     GrabModeAsync, GrabModeAsync, None,
+        XGrabPointer(display, (mapped) ? id: wascreen->id, True,
+                     ButtonReleaseMask | ButtonMotionMask | EnterWindowMask |
+                     LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
                      (how > 0) ? waimea->resizeright_cursor:
                      waimea->resizeleft_cursor, CurrentTime);
     XUngrabServer(display);
@@ -1645,6 +1642,7 @@ void WaWindow::Resize(XEvent *e, int how) {
                       event.xdestroywindow.window) == id)) {
                     while (! maprequest_list->empty()) {
                         XPutBackEvent(display, maprequest_list->front());
+                        delete maprequest_list->front();
                         maprequest_list->pop_front();
                     }
                     delete maprequest_list;
@@ -1659,7 +1657,9 @@ void WaWindow::Resize(XEvent *e, int how) {
                     waimea->eh->EvConfigureRequest(&event.xconfigurerequest);
                 break;
             case MapRequest:
-                maprequest_list->push_front(&event); break;
+                map_ev = new XEvent;
+                *map_ev = event;
+                maprequest_list->push_front(map_ev); break;
             case ButtonRelease:
             case ButtonPress:
                 if (e->type == event.type) break;
@@ -1671,6 +1671,7 @@ void WaWindow::Resize(XEvent *e, int how) {
                 XUngrabPointer(display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
+                    delete maprequest_list->front();
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
@@ -1692,7 +1693,7 @@ void WaWindow::Resize(XEvent *e, int how) {
  * @param e XEvent causing start of resize
  */
 void WaWindow::ResizeOpaque(XEvent *e, int how) {
-    XEvent event;
+    XEvent event, *map_ev;
     int px, py, width, height, n_w, n_h, i;
     list<XEvent *> *maprequest_list;
     Window w;
@@ -1706,9 +1707,9 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id))
-        XGrabPointer(display, id, True, ButtonReleaseMask |
-                     ButtonMotionMask | EnterWindowMask | LeaveWindowMask,
-                     GrabModeAsync, GrabModeAsync, None,
+        XGrabPointer(display, (mapped) ? id: wascreen->id, True,
+                     ButtonReleaseMask | ButtonMotionMask | EnterWindowMask |
+                     LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
                      (how > 0) ? waimea->resizeright_cursor:
                      waimea->resizeleft_cursor, CurrentTime);
     XUngrabServer(display);
@@ -1747,6 +1748,7 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                       event.xdestroywindow.window) == id)) {
                     while (! maprequest_list->empty()) {
                         XPutBackEvent(display, maprequest_list->front());
+                        delete maprequest_list->front();
                         maprequest_list->pop_front();
                     }
                     delete maprequest_list;
@@ -1760,13 +1762,16 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                     waimea->eh->EvConfigureRequest(&event.xconfigurerequest);
                 break;
             case MapRequest:
-                maprequest_list->push_front(&event); break;
+                map_ev = new XEvent;
+                *map_ev = event;
+                maprequest_list->push_front(map_ev); break;
             case ButtonPress:
             case ButtonRelease:
                 if (e->type == event.type) break;
                 XUngrabPointer(display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
+                    delete maprequest_list->front();
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
@@ -2470,6 +2475,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
                 int etype) {
     XEvent fev;
     bool replay = False, match = False;
+    int type = ed->type;
     list<WaAction *>::iterator it = acts->begin();
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
@@ -2481,7 +2487,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
                 ((*this).*((*it)->winfunc))(e, *it);
         }
     }
-    if (ed->type == DoubleClick && ! match) replay = True;
+    if (type == DoubleClick && ! match) replay = True;
     XSync(display, False);
     while (XCheckTypedEvent(display, FocusOut, &fev))
         waimea->eh->EvFocus(&fev.xfocus);
@@ -2489,16 +2495,16 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
         waimea->eh->EvFocus(&fev.xfocus);
     switch (etype) {
         case WindowType:
-            if (ed->type == MapRequest) {
+            if (type == MapRequest) {
                 net->SetState(this, NormalState);
                 net->SetVirtualPos(this);
             }
-            if (ed->type == ButtonPress || ed->type == ButtonRelease ||
-                ed->type == DoubleClick) {
+            if (type == ButtonPress || type == ButtonRelease ||
+                type == DoubleClick) {
                 if (replay) XAllowEvents(display, ReplayPointer, e->xbutton.time);
                 else XAllowEvents(display, AsyncPointer, e->xbutton.time);
             }
-            if (ed->type == KeyPress || ed->type == KeyRelease) {
+            if (type == KeyPress || type == KeyRelease) {
                 if (replay) XAllowEvents(display, ReplayKeyboard, e->xbutton.time);
                 else XAllowEvents(display, AsyncKeyboard, e->xbutton.time);
             }
@@ -2506,11 +2512,11 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
         case CButtonType:
         case IButtonType:
         case MButtonType:
-            if (ed->type == ButtonPress)
+            if (type == ButtonPress)
                 ButtonPressed(etype);
-            if (ed->type == EnterNotify)
+            if (type == EnterNotify)
                 ButtonHilite(etype);
-            else if (ed->type == LeaveNotify)
+            else if (type == LeaveNotify)
                 ButtonDehilite(etype);
     }
 }

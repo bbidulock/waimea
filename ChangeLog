@@ -1,13 +1,17 @@
-Wed Feb  5 2002 David Reveman (c99drn@cs.umu.se)
+Wed Feb  6 2002 David Reveman (c99drn@cs.umu.se)
+
+	*** Waimea v0.1.6 release ***
+
+Tue Feb  5 2002 David Reveman (c99drn@cs.umu.se)
 
 	Added support for client pass-through actions
 
-Wed Jan 26 2002 David Reveman (c99drn@cs.umu.se)
+Sat Jan 26 2002 David Reveman (c99drn@cs.umu.se)
 
 	*** Waimea v0.1.5 release ***
         Added DoubleClick event to action system
 
-Wed Jan 25 2002 David Reveman (c99drn@cs.umu.se)
+Fri Jan 25 2002 David Reveman (c99drn@cs.umu.se)
 
 	Added decoration control system
 	Finished (EWMH) specs support

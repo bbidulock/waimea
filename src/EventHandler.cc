@@ -457,7 +457,6 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
  */
 void EventHandler::EvUnmapDestroy(XEvent *e) {
     DockappHandler *dh;
-    WaAction *ac;
     
     hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find((e->type == UnmapNotify)?
