@@ -43,6 +43,7 @@ public:
 
     Waimea *waimea;
     list<Interrupt *> interrupts;
+    bool paused;
     
 private:
     struct itimerval timerval;

@@ -48,6 +48,7 @@ Timer::Timer(Waimea *wa) {
     action.sa_mask = sigset_t();
     action.sa_flags = 0;
     sigaction(SIGALRM, &action, NULL);
+    paused = true;
 
     Start();
 }
@@ -88,8 +89,9 @@ void Timer::AddInterrupt(Interrupt *i) {
     else {
         list<Interrupt *>::iterator it = interrupts.begin();
         for (; it != interrupts.end(); ++it) {
-            if (i->delay.tv_sec <= (*it)->delay.tv_sec &&
-                i->delay.tv_usec < (*it)->delay.tv_usec) {
+            if (i->delay.tv_sec < (*it)->delay.tv_sec ||
+                (i->delay.tv_sec == (*it)->delay.tv_sec &&
+                 i->delay.tv_usec < (*it)->delay.tv_usec)) {
                 interrupts.insert(it, i);
                 break;
             }
@@ -114,6 +116,7 @@ void Timer::Start(void) {
         if (timerval.it_value.tv_usec < 0) timerval.it_value.tv_usec = 0;
         if (timerval.it_value.tv_sec == 0 && timerval.it_value.tv_usec == 0)
             timerval.it_value.tv_usec = 1;
+        paused = false;
         setitimer(ITIMER_REAL, &timerval, NULL);
     }    
 }
@@ -129,7 +132,9 @@ void Timer::Pause(void) {
     struct itimerval remainval;
     struct timeval elipsedval;
 
-    if (interrupts.empty()) return;
+    if (interrupts.empty() || paused) return;
+
+    paused = true;
     
     timerval.it_value.tv_sec = 0;
     timerval.it_value.tv_usec = 0;
