@@ -301,7 +301,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     mods->push_back(new StrComp("button4mask", Button4Mask));
     mods->push_back(new StrComp("button5mask", Button5Mask));
     mods->push_back(new StrComp("moveresizemask", MoveResizeMask));
-    
+
     frameacts  = new list<WaAction *>;
     awinacts   = new list<WaAction *>;
     pwinacts   = new list<WaAction *>;
@@ -917,7 +917,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
  * @fn    LoadMenus(void)
  * @brief Reads menu file
  *
- * Creates menus by parsing a menu file.
+ * Creates menus by parsing the menu file.
  */
 void ResourceHandler::LoadMenus(void) {
     FILE *file;
@@ -977,103 +977,186 @@ void ResourceHandler::LoadMenus(void) {
 }
 
 /**
- * @fn    LoadActions(Waimea *waimea)
+ * @fn    LoadActions(void)
  * @brief Reads action file
  *
- * Creates action lists from action resource file.
- *
- * @param waimea Pointer to waimea object
+ * Creates action lists by parsing the action file.
  */
-void ResourceHandler::LoadActions(Waimea *waimea) {
-    database = (XrmDatabase) 0;
-
-    if (! (database = XrmGetFileDatabase(action_file))) {
-        ERROR << "action_file \"" << action_file << "\" not found" << endl;
+void ResourceHandler::LoadActions(void) {
+    FILE *file;
+    int i, i2;
+    bool cmd;
+    char *buffer = new char[8192];
+    char *buffer2 = new char[8192];
+    char tmp_ch;
+    char *str;
+    list<Define *> *defs = new list<Define *>;
+    
+    if (! (file = fopen(action_file, "r"))) {
+        WARNING << "can't open action file \"" << action_file << 
+            "\" for reading" << endl;
         exit(1);
     }
-    
-    ReadDatabaseActions("window.frame", "Window.Frame",
-                        wacts, frameacts);
-    ReadDatabaseActions("window.title", "Window.Title",
-                        wacts, titleacts);
-    ReadDatabaseActions("window.label", "Window.Label",
-                        wacts, labelacts);
-    ReadDatabaseActions("window.handle", "Window.Handle",
-                        wacts, handleacts);
-    ReadDatabaseActions("window.client.active", "Window.Client.Active",
-                        wacts, awinacts);
-    ReadDatabaseActions("window.client.passive", "Window.Client.Passive",
-                        wacts, pwinacts);
-    ReadDatabaseActions("window.closebutton", "Window.Closebutton",
-                        wacts, cbacts);
-    ReadDatabaseActions("window.iconifybutton", "Window.Iconifybutton",
-                        wacts, ibacts);
-    ReadDatabaseActions("window.maximizebutton", "Window.Maximizebutton",
-                        wacts, mbacts);
-    ReadDatabaseActions("window.leftgrip", "Window.Leftgrip",
-                        wacts, lgacts);
-    ReadDatabaseActions("window.rightgrip", "Window.Rightgrip",
-                        wacts, rgacts);
-
-    ReadDatabaseActions("root", "Root",
-                        racts, rootacts);
-    ReadDatabaseActions("westedge", "Westedge",
-                        racts, weacts);
-    ReadDatabaseActions("eastedge", "Eastedge",
-                        racts, eeacts);
-    ReadDatabaseActions("northedge", "Northedge",
-                        racts, neacts);
-    ReadDatabaseActions("southedge", "Southedge",
-                        racts, seacts);
-    
-    ReadDatabaseActions("menu.title", "Menu.Title",
-                        macts, mtacts);
-    ReadDatabaseActions("menu.item", "Menu.Item",
-                        macts, miacts);
-    ReadDatabaseActions("menu.sub", "Menu.Sub",
-                        macts, msacts);
-    ReadDatabaseActions("menu.checkbox", "Menu.Checkbox",
-                        macts, mcbacts);
-    
-    XrmDestroyDatabase(database);
-
-    LISTCLEAR(wacts);
-    LISTCLEAR(racts);
-    LISTCLEAR(macts);
-    LISTCLEAR(types);
-    LISTCLEAR(bdetails);
-    LISTCLEAR(mods);
+    for (;;) {
+        for (i = 0; (buffer[i] = fgetc(file)) != EOF &&
+                 buffer[i] != '{'; i++) {
+            if (buffer[i] == '#' || buffer[i] == '!') {
+                i--;
+                while ((tmp_ch = fgetc(file)) != EOF && tmp_ch != '\n');
+            }
+        }
+        if (buffer[i] == EOF) {
+            fclose(file);
+            LISTCLEAR(defs);
+            LISTCLEAR(wacts);
+            LISTCLEAR(racts);
+            LISTCLEAR(macts);
+            LISTCLEAR(types);
+            LISTCLEAR(bdetails);
+            LISTCLEAR(mods);
+            delete buffer;
+            delete buffer2;
+            return;
+        }
+        str = strtrim(buffer);
+        switch (buffer[i]) {
+            case '\n':
+                i = 0;
+                break;
+            case '{':
+                buffer[i] = '\0';
+                cmd = false;
+                for (i2 = 0; (buffer2[i2] = fgetc(file)) != EOF &&
+                         (buffer2[i2] != '}' || cmd); i2++) {
+                    if (buffer2[i2] == '{') cmd = true;
+                    if (buffer2[i2] == '}') cmd = false;
+                }
+                if (buffer2[i2] == EOF) ERROR << "missing '}'" << endl;
+                buffer2[i2] = '\0';               
+                if (! strncasecmp(str, "DEF", 3)) {
+                    str = strtrim(str + 3);                   
+                    defs->push_front(new Define(wastrdup(str),
+                                                wastrdup(strtrim(buffer2))));
+                }
+                else {                  
+                    str = strtrim(str);
+                    if (! strcasecmp(str, "window.frame")) {
+                        ReadActions(buffer2, defs, wacts, frameacts);
+                    }
+                    else if (! strcasecmp(str, "window.title")) {
+                        ReadActions(buffer2, defs, wacts, titleacts);
+                    }
+                    else if (! strcasecmp(str, "window.label")) {
+                        ReadActions(buffer2, defs, wacts, labelacts);
+                    }
+                    else if (! strcasecmp(str, "window.handle")) {
+                        ReadActions(buffer2, defs, wacts, handleacts);
+                    }
+                    else if (! strcasecmp(str, "window.activeclient")) {
+                        ReadActions(buffer2, defs, wacts, awinacts);
+                    }
+                    else if (! strcasecmp(str, "window.passiveclient")) {
+                        ReadActions(buffer2, defs, wacts, pwinacts);
+                    }
+                    else if (! strcasecmp(str, "window.closebutton")) {
+                        ReadActions(buffer2, defs, wacts, cbacts);
+                    }
+                    else if (! strcasecmp(str, "window.iconifybutton")) {
+                        ReadActions(buffer2, defs, wacts, ibacts);
+                    }
+                    else if (! strcasecmp(str, "window.maximizebutton")) {
+                        ReadActions(buffer2, defs, wacts, mbacts);
+                    }
+                    else if (! strcasecmp(str, "window.leftgrip")) {
+                        ReadActions(buffer2, defs, wacts, lgacts);
+                    }
+                    else if (! strcasecmp(str, "root")) {
+                        ReadActions(buffer2, defs, racts, rootacts);
+                    }
+                    else if (! strcasecmp(str, "westedge")) {
+                        ReadActions(buffer2, defs, racts, weacts);
+                    }
+                    else if (! strcasecmp(str, "eastedge")) {
+                        ReadActions(buffer2, defs, racts, eeacts);
+                    }
+                    else if (! strcasecmp(str, "northedge")) {
+                        ReadActions(buffer2, defs, racts, neacts);
+                    }
+                    else if (! strcasecmp(str, "southedge")) {
+                        ReadActions(buffer2, defs, racts, seacts);
+                    }
+                    else if (! strcasecmp(str, "menu.title")) {
+                        ReadActions(buffer2, defs, macts, mtacts);
+                    }
+                    else if (! strcasecmp(str, "menu.item")) {
+                        ReadActions(buffer2, defs, macts, miacts);
+                    }
+                    else if (! strcasecmp(str, "menu.sub")) {
+                        ReadActions(buffer2, defs, macts, msacts);
+                    }
+                    else if (! strcasecmp(str, "menu.checkbox")) {
+                        ReadActions(buffer2, defs, macts, mcbacts);
+                    }
+                }
+                break;
+        }
+    }
 }
 
 /**
- * @fn    ReadDatabaseActions(char *rname, char *rclass,
- *                            list<WaAction *> *comp,
- *                            list<WaAction *> *insert)
- * @brief Reads actions for an item
+ * @fn    ReadActions(char *s,
+ *                    list<Define *> *defs,
+ *                    list<StrComp *> *comp,
+ *                    list<WaAction *> *insert)
+ * @brief Parses a block of actions
  *
- * Reads action number 1 and then action number 2 and so on until an action
- * number doesn't exist. All action resource lines found are parsed with
- * ParseAction function.
+ * Parses a block of action lines. All defines are replaced with actual lines
+ * and then parsed.
  *
- * @param rname Resource name to use
- * @param rclass Resource class name to use
  * @param comp List with available actions
  * @param insert List to insert action in
  */
-void ResourceHandler::ReadDatabaseActions(char *rname, char *rclass,
-                                          list<StrComp *> *comp,
-                                          list<WaAction *> *insert) {
-    XrmValue value;
-    char *value_type, name_lookup[1024], class_lookup[1024];
-    int i, more;
-    
-    for (i = 1, more = 1; more; i++) {
-        sprintf(name_lookup, "%s.%d", rname, i);
-        sprintf(class_lookup, "%s.%d", rclass, i);
-        if ((more = XrmGetResource(database, name_lookup, class_lookup,
-                           &value_type, &value))) {
-            ParseAction(value.addr, comp, insert);
+void ResourceHandler::ReadActions(char *s,
+                                  list<Define *> *defs,
+                                  list<StrComp *> *comp,
+                                  list<WaAction *> *insert) {
+    bool match, ret = false;
+    char tmp[8192];
+    char *ts;
+    int i;
+    list<Define *>::iterator it;
+    for (;;) {       
+        for (i = 0; s[i] != ',' && s[i] != '\0'; i++);       
+        if (s[i] == '\0') {
+            s[i + 1] = '\0';
+            ret = true;
         }
+        else s[i] = '\0';
+        ts = strtrim(s);
+        if (strlen(ts) == 0) {
+            s = s + i + 1;           
+            if (ret) return;
+            continue;
+        }
+        match = false;
+        for (it = defs->begin(); it != defs->end(); ++it) {
+            if (! strcasecmp(ts, (*it)->name)) {
+                if (! ret) {
+                    s[i] = ',';
+                    sprintf(tmp, "%s", s + i);                  
+                }
+                else tmp[0] = '\0'; 
+                sprintf(s, "%s%s", (*it)->value, tmp);              
+                ret = false;
+                match = true;
+                break;
+            }
+        }
+        if (! match) {
+            ParseAction(ts, comp, insert);           
+            s = s + i + 1;
+        }
+        if (ret) return;
     }
 }
 
@@ -1850,15 +1933,18 @@ bool StrComp::Comp(char *s) {
  * @fn    strtrim(char *s)
  * @brief Trims a string
  *
- * Removes leading and trailing spaces.
+ * Removes leading and trailing spaces, tabs and newlines.
  *
  * @param s String we want to trim
  *
  * @return Trimmed string
  */
 char *strtrim(char *s) {
-    for (; *s == ' ' || *s == '\t'; s++);
-    while (s[strlen(s) - 1] == ' ' || s[strlen(s) - 1] == '\t')
+    for (; *s != '\0' && *s == ' ' || *s == '\t' || *s == '\n'; s++);
+    if (*s == '\0') return s;
+    while (s[strlen(s) - 1] == ' ' ||
+           s[strlen(s) - 1] == '\t' ||
+           s[strlen(s) - 1] == '\n')
         s[strlen(s) - 1] = '\0';
     return s;
 }

@@ -100,7 +100,7 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     rh = new ResourceHandler(this, options);
     rh->LoadConfig();
     rh->LoadMenus();
-    rh->LoadActions(this);
+    rh->LoadActions();
 
     net = new NetHandler(this);
     wascreen = new WaScreen(display, DefaultScreen(display), this);

@@ -21,7 +21,9 @@
 #include <X11/Xresource.h>
 
 class ResourceHandler;
+class Define;
 class StrComp;
+
 typedef struct _WaAction WaAction;
 typedef struct _DockStyle DockStyle;
 
@@ -43,6 +45,7 @@ typedef struct _DockStyle DockStyle;
     delete list;
 
 struct _WaAction {
+    list<int> *defs;
     WwActionFn winfunc;
     RootActionFn rootfunc;
     MenuActionFn menufunc;
@@ -85,7 +88,9 @@ public:
     void LoadConfig(void);
     void LoadStyle(WaScreen *);
     void LoadMenus(void);
-    void LoadActions(Waimea *);
+    void LoadActions(void);
+    void ReadActions(char *, list<Define *> *, list<StrComp *> *,
+                     list<WaAction *> *);
 
     char *rc_file;
     char *style_file;
@@ -110,8 +115,6 @@ private:
     void ReadDatabaseTexture(char *, char *, WaTexture *, unsigned long,
                              WaImageControl *, WaScreen *);
     void ReadDatabaseFont(char *, char *, char **, char *);
-    void ReadDatabaseActions(char *, char *, list<StrComp *> *,
-                             list<WaAction *> *);
     void ParseAction(const char *, list<StrComp *> *, list<WaAction *> *);
     void ParseMenu(WaMenu *, FILE *);
 
@@ -131,6 +134,15 @@ private:
 #define WindowFuncMask (1L << 0)
 #define RootFuncMask   (1L << 1)
 #define MenuFuncMask   (1L << 2)
+
+class Define {
+public:
+    inline Define(char *n, char *v) { name = n; value = v; }
+    inline ~Define(void) { delete name; delete value; }
+    
+    char *name;
+    char *value;
+};
 
 class StrComp {
 public:
