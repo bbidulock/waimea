@@ -75,9 +75,9 @@ public:
     long unsigned int cache_max;
     Bool image_dither, rc_forced, style_forced, action_forced, menu_forced;
     
-    list<WaAction *> *frameacts, *winacts, *titleacts, *labelacts, *handleacts,
-        *cbacts, *ibacts, *mbacts, *rgacts, *lgacts, *rootacts, *weacts,
-        *eeacts, *neacts, *seacts, *mtacts, *miacts, *msacts;
+    list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
+        *handleacts, *cbacts, *ibacts, *mbacts, *rgacts, *lgacts, *rootacts,
+        *weacts, *eeacts, *neacts, *seacts, *mtacts, *miacts, *msacts;
 
     list<DockStyle *> *dockstyles;
     

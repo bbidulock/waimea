@@ -84,6 +84,7 @@ public:
     void Gravitate(int);
     void ButtonPressed(int);
     void RedrawWindow(void);
+    void UpdateGrabs(void);
     bool IncSizeCheck(int, int, int *, int *);
     void DrawIconifyButtonFg(void);
     void DrawCloseButtonFg(void);

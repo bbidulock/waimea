@@ -1,6 +1,6 @@
 ! Waimea Action configuration file
 !
-! Focus model:   Click-to-focus
+! Focus model:   Click-to-focus (Click anywhere in passive window will focus it)
 ! Move method:	 Opaque
 ! Move window:   Left mouse button click on titlebar
 !                Left mouse button click on handlebar 
@@ -65,15 +65,18 @@ window.handle.6: Raise      : ButtonPress = Button1 & !Mod1Mask
 window.handle.7: Lower      : ButtonPress = Button2 & !Mod1Mask
 window.handle.8: MoveOpaque : ButtonPress = Button1 & !Mod1Mask
 !
-window.client.5:  ToggleShade                : KeyPress = F1 & Mod1Mask
-window.client.6:  ToggleMaximize             : KeyPress = F2 & Mod1Mask
-window.client.7:  Raise                      : KeyPress = F2 & Mod1Mask 
-window.client.8:  Close                      : KeyPress = F4 & Mod1Mask
-window.client.9:  Kill                       : KeyPress = F10 & Mod1Mask
-window.client.10: TaskSwitcher               : KeyPress = Tab & Mod1Mask
-window.client.11: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
-window.client.12: Raise                      : MapRequest
-window.client.13: Move                       : MapRequest & ControlMask
+window.client.active.5:  ToggleShade                : KeyPress = F1 & Mod1Mask
+window.client.active.6:  ToggleMaximize             : KeyPress = F2 & Mod1Mask
+window.client.active.7:  Raise                      : KeyPress = F2 & Mod1Mask 
+window.client.active.8:  Close                      : KeyPress = F4 & Mod1Mask
+window.client.active.9:  Kill                       : KeyPress = F10 & Mod1Mask
+window.client.active.10: TaskSwitcher               : KeyPress = Tab & Mod1Mask
+window.client.active.11: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+!
+window.client.passive.5: Focus : ButtonPress = AnyButton
+window.client.passive.6: Raise : MapRequest
+window.client.passive.7: Move  : MapRequest & ControlMask
+window.client.passive.8: Focus : MapRequest & ControlMask
 !
 window.closebutton.5: Focus : ButtonPress = AnyButton
 window.closebutton.6: Close : ButtonRelease = AnyButton
@@ -98,7 +101,7 @@ root.1: MenuRemap(rootmenu)        : ButtonPress = Button3
 root.2: MenuUnmap(rootmenu)        : ButtonPress = Button1
 root.3: ViewportMove               : ButtonPress = Button2
 root.4: TaskSwitcher               : KeyPress = Tab & Mod1Mask
-root.5: MenuRemapFocused(rootmenu) : KeyPress = Esc & ControlMask
+root.5: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
 !
 !
 ! == Screen Edges ==

@@ -254,10 +254,14 @@ void EventHandler::EvFocus(XFocusChangeEvent *e) {
                 ww = (WaWindow *) ((*it).second);
             if ((it = waimea->window_table->find(focused)) !=
                 waimea->window_table->end())
-                if (((*it).second)->type == WindowType)
+                if (((*it).second)->type == WindowType) {
                     ((WaWindow *) (*it).second)->UnFocusWin();
-            if (ww)
+                    ((WaWindow *) (*it).second)->UpdateGrabs();
+                }
+            if (ww) {
                 ww->FocusWin();
+                ww->UpdateGrabs();
+            }
             focused = e->window;
         }
 }
@@ -479,7 +483,10 @@ void EventHandler::EvAct(XEvent *e, Window win) {
                 (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->frameacts,
                                                     wo->type); break;
             case WindowType:
-                ((WaWindow *) wo)->EvAct(e, &ed, rh->winacts, wo->type);
+                if (((WaWindow *) wo)->has_focus)
+                    ((WaWindow *) wo)->EvAct(e, &ed, rh->awinacts, wo->type);
+                else
+                    ((WaWindow *) wo)->EvAct(e, &ed, rh->pwinacts, wo->type);
                 break;
             case TitleType:
                 (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->titleacts,

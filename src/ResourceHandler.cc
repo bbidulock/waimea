@@ -261,7 +261,8 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     mods->push_back(new StrComp("button5mask", Button5Mask));
     
     frameacts  = new list<WaAction *>;
-    winacts    = new list<WaAction *>;
+    awinacts   = new list<WaAction *>;
+    pwinacts   = new list<WaAction *>;
     titleacts  = new list<WaAction *>;
     labelacts  = new list<WaAction *>;
     handleacts = new list<WaAction *>;
@@ -290,7 +291,8 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
  */
 ResourceHandler::~ResourceHandler(void) {
     LISTCLEAR(frameacts);
-    LISTCLEAR(winacts);
+    LISTCLEAR(awinacts);
+    LISTCLEAR(pwinacts);
     LISTCLEAR(titleacts);
     LISTCLEAR(labelacts);
     LISTCLEAR(handleacts);
@@ -427,7 +429,7 @@ void ResourceHandler::LoadConfig(void) {
             else
                 dockstyle->centered = False;
         } else
-            dockstyle->centered = True;
+            dockstyle->centered = False;
 
         sprintf(rc_name, "dock%d.direction", dock_num);
         sprintf(rc_class, "Dock%d.Direction", dock_num);
@@ -845,8 +847,10 @@ void ResourceHandler::LoadActions(Waimea *waimea) {
                         wacts, labelacts);
     ReadDatabaseActions("window.handle", "Window.Handle",
                         wacts, handleacts);
-    ReadDatabaseActions("window.client", "Window.Client",
-                        wacts, winacts);
+    ReadDatabaseActions("window.client.active", "Window.Client.Active",
+                        wacts, awinacts);
+    ReadDatabaseActions("window.client.passive", "Window.Client.Passive",
+                        wacts, pwinacts);
     ReadDatabaseActions("window.closebutton", "Window.Closebutton",
                         wacts, cbacts);
     ReadDatabaseActions("window.iconifybutton", "Window.Iconifybutton",

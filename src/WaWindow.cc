@@ -96,6 +96,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     }
     UnFocusWin();
     ReparentWin();
+    UpdateGrabs();
     Shape();
     
     net->GetWmState(this);
@@ -348,9 +349,29 @@ void WaWindow::ReparentWin(void) {
         }
         XFree(dummy);
 #endif // SHAPE
+        
+    }
+    XUngrabServer(display);
+}
 
-        list<WaAction *>::iterator it = waimea->rh->winacts->begin();
-        for (; it != waimea->rh->winacts->end(); ++it) {
+/**
+ * @fn    UpdateGrabs(void)
+ * @brief Update window grabs
+ *
+ * Updates passive window grabs for the window.
+ */
+void WaWindow::UpdateGrabs(void) {
+    list<WaAction *> *tmp_list;
+    list<WaAction *>::iterator it;
+    
+    XGrabServer(display);
+    if (validateclient(id)) {
+        XUngrabButton(display, AnyButton, AnyModifier, id);
+        XUngrabKey(display, AnyKey, AnyModifier, id);
+        if (has_focus) tmp_list = waimea->rh->awinacts;
+        else tmp_list = waimea->rh->pwinacts;
+        it = tmp_list->begin();
+        for (; it != tmp_list->end(); ++it) {
             if ((*it)->type == ButtonPress || (*it)->type == ButtonRelease) {
                 XGrabButton(display, (*it)->detail ? (*it)->detail: AnyButton,
                             (*it)->mod, id, True, ButtonPressMask |
@@ -363,8 +384,8 @@ void WaWindow::ReparentWin(void) {
         }
     }
     XUngrabServer(display);
+        
 }
-
 #ifdef SHAPE
 /**
  * @fn    Shape(void)

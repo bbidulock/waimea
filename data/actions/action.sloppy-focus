@@ -62,15 +62,17 @@ window.handle.5: Raise      : ButtonPress = Button1 & !Mod1Mask
 window.handle.6: Lower      : ButtonPress = Button2 & !Mod1Mask
 window.handle.7: MoveOpaque : ButtonPress = Button1 & !Mod1Mask
 !
-window.client.5:  ToggleShade                : KeyPress = F1 & Mod1Mask
-window.client.6:  ToggleMaximize             : KeyPress = F2 & Mod1Mask
-window.client.7:  Raise                      : KeyPress = F2 & Mod1Mask
-window.client.8:  Close                      : KeyPress = F4 & Mod1Mask
-window.client.9:  Kill                       : KeyPress = F10 & Mod1Mask
-window.client.10: TaskSwitcher               : KeyPress = Tab & Mod1Mask
-window.client.11: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
-window.client.12: Raise                      : MapRequest
-window.client.13: Move                       : MapRequest & ControlMask
+window.client.active.5:  ToggleShade                : KeyPress = F1 & Mod1Mask
+window.client.active.6:  ToggleMaximize             : KeyPress = F2 & Mod1Mask
+window.client.active.7:  Raise                      : KeyPress = F2 & Mod1Mask
+window.client.active.8:  Close                      : KeyPress = F4 & Mod1Mask
+window.client.active.9:  Kill                       : KeyPress = F10 & Mod1Mask
+window.client.active.10: TaskSwitcher               : KeyPress = Tab & Mod1Mask
+window.client.active.11: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+!
+window.client.passive.5: Raise : MapRequest
+window.client.passive.6: Move  : MapRequest & ControlMask
+window.client.passive.7: Focus : MapRequest & ControlMask
 !
 window.closebutton.5: Close : ButtonRelease = AnyButton
 !
