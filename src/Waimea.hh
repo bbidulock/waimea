@@ -133,7 +133,7 @@ public:
 };
 
 bool validateclient(Window);
-bool validateclient_mapped(Window);
+const bool validateclient_mapped(Window);
 void wawarning(char *, ...);
 void waerror(char *, ...);
 void waexec(const char *, char *);

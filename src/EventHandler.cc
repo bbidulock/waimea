@@ -100,6 +100,8 @@ void EventHandler::HandleEvent(XEvent *event) {
     EventDetail *ed = new EventDetail;
 
     switch (event->type) {
+        case ConfigureRequest:
+            EvConfigureRequest(&event->xconfigurerequest); break;
         case Expose:
             EvExpose(&event->xexpose); break;
         case PropertyNotify:
@@ -167,8 +169,6 @@ void EventHandler::HandleEvent(XEvent *event) {
             break;
         case ColormapNotify:
             EvColormap(&event->xcolormap); break;
-        case ConfigureRequest:
-            EvConfigureRequest(&event->xconfigurerequest); break;
         case MapRequest:
             EvMapRequest(&event->xmaprequest);
             ed->type = event->type;
@@ -356,7 +356,8 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
     wc.height = e->height;
     wc.sibling = e->above;
     wc.stack_mode = e->detail;
-
+    wc.border_width = e->border_width;
+    
     hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(e->window)) !=
         waimea->window_table->end()) {
@@ -372,6 +373,7 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
             ww->RedrawWindow();
             wc.sibling = e->above;
             wc.stack_mode = e->detail;
+            wc.border_width = 0;
             mask = (e->value_mask & CWSibling)? CWSibling: 0;
             mask |= (e->value_mask & CWStackMode)? CWStackMode: 0;
             XConfigureWindow(ww->display, ww->frame->id, mask, &wc);

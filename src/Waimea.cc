@@ -40,7 +40,9 @@ WindowObject::WindowObject(Window win_id, int win_type) {
 
 Waimea *waimea;
 char **argv;
-char *errfunc;
+bool hush;
+int errors;
+
 
 /**
  * @fn    Waimea(char **av)
@@ -66,6 +68,8 @@ Waimea::Waimea(char **av, struct waoptions *options) {
         exit(1);
     }
     waimea = this;
+    hush = false;
+    errors = 0;
 
     action.sa_handler = signalhandler;
     action.sa_mask = sigset_t();
@@ -267,47 +271,52 @@ WaMenu *Waimea::GetMenuNamed(char *menu) {
  * @fn    validateclient(Window id)
  * @brief Validates if a window exists
  *
- * Checks if the event queue holds a DestroyNotify event for the window we want
- * to validate. If no event is found in the event queue when the window is
- * valid.
+ * Tries to get current window attribute for the window. The window is valid
+ * if no XError is generated.
  *
  * @param id Resource ID used for window validation
  *
  * @return True if window is valid, otherwise false
  */
 bool validateclient(Window id) {
-    XFlush(waimea->display);
-    
-    XEvent e;
-    if (XCheckTypedWindowEvent(waimea->display, id, DestroyNotify, &e)) {
-        XPutBackEvent(waimea->display, &e);
-        return false;
-    }
-    return true;
+    int ret;
+    XWindowAttributes attr;
+
+    errors = 0;
+    hush = 1;
+    XGetWindowAttributes(waimea->display, id, &attr);
+    XSync(waimea->display, False);
+    hush = 0;
+    ret = ( errors == 0 );
+    errors = 0;
+    return ret;
 }
 
 /**
  * @fn    validateclient_mapped(Window id)
  * @brief Validates if a window exist and is mapped
  *
- * Checks if the event queue holds any DestroyNotify or UnmapNotify events for
- * the window we want to validate. If none of these events are found in the
- * event queue when the window is valid.
+ * First we check that the window exists, if it exists we check the event
+ * queue so that there's no UnmapNotify event from the window in it. If there's
+ * no UnmapNotify event in the event queue then the window exists and is
+ * mapped.
  *
  * @param id Resource ID used for window validation
  *
  * @return True if window is valid, otherwise false
  */
-bool validateclient_mapped(Window id) {
+const bool validateclient_mapped(Window id) {
     XFlush(waimea->display);
     
     XEvent e;
-    if (XCheckTypedWindowEvent(waimea->display, id, UnmapNotify, &e) ||
-        XCheckTypedWindowEvent(waimea->display, id, DestroyNotify, &e)) {
-        XPutBackEvent(waimea->display, &e);
-        return false;
+    if (validateclient(id)) {
+        if (XCheckTypedWindowEvent(waimea->display, id, UnmapNotify, &e)) {
+            XPutBackEvent(waimea->display, &e);
+            return false;
+        }
+        return true;
     }
-    return true;
+    return false;
 }
 
 
@@ -344,29 +353,32 @@ int xerrorhandler(Display *d, XErrorEvent *e) {
     char buff[128];
     hash_map<Window, WindowObject *>::iterator it;
 
-    XGetErrorDatabaseText(d, "XlibMessage", "XError", "", buff, 128);
-    cerr << buff;
-    XGetErrorText(d, e->error_code, buff, 128);
-    cerr << ":  " << buff << endl;
-    XGetErrorDatabaseText(d, "XlibMessage", "MajorCode", "%d", buff, 128);
-    cerr << "  ";
-    fprintf(stderr, buff, e->request_code);
-    sprintf(buff, "%d", e->request_code);
-    XGetErrorDatabaseText(d, "XRequest", buff, "%d", buff, 128);
-    cerr << " (" << buff << ")" << endl;
-    XGetErrorDatabaseText(d, "XlibMessage", "MinorCode", "%d", buff, 128);
-    cerr << "  ";
-    fprintf(stderr, buff, e->minor_code);
-    cerr << endl;
-    XGetErrorDatabaseText(d, "XlibMessage", "ResourceID", "%d", buff, 128);
-    cerr << "  ";
-    fprintf(stderr, buff, e->resourceid);
-    if (((it = waimea->window_table->find(e->resourceid)) !=
-         waimea->window_table->end()) &&
-        (((*it).second)->type == WindowType))
-        cerr << " (" << ((WaWindow *) (*it).second)->name << ")";
-    cerr << endl;
-    
+    errors++;
+
+    if (! hush) {
+        XGetErrorDatabaseText(d, "XlibMessage", "XError", "", buff, 128);
+        cerr << buff;
+        XGetErrorText(d, e->error_code, buff, 128);
+        cerr << ":  " << buff << endl;
+        XGetErrorDatabaseText(d, "XlibMessage", "MajorCode", "%d", buff, 128);
+        cerr << "  ";
+        fprintf(stderr, buff, e->request_code);
+        sprintf(buff, "%d", e->request_code);
+        XGetErrorDatabaseText(d, "XRequest", buff, "%d", buff, 128);
+        cerr << " (" << buff << ")" << endl;
+        XGetErrorDatabaseText(d, "XlibMessage", "MinorCode", "%d", buff, 128);
+        cerr << "  ";
+        fprintf(stderr, buff, e->minor_code);
+        cerr << endl;
+        XGetErrorDatabaseText(d, "XlibMessage", "ResourceID", "%d", buff, 128);
+        cerr << "  ";
+        fprintf(stderr, buff, e->resourceid);
+        if (((it = waimea->window_table->find(e->resourceid)) !=
+             waimea->window_table->end()) &&
+            (((*it).second)->type == WindowType))
+            cerr << " (" << ((WaWindow *) (*it).second)->name << ")";
+        cerr << endl;
+    }
     return 0;
 }
 

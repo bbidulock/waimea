@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <hash_set.h>
-#include <string>
 
 /**
  * @fn    WaWindow(Window win_id, WaScreen *scrn) :
@@ -35,7 +34,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     WindowObject(win_id, WindowType) {
     XWindowAttributes init_attrib;
     char *tmp_name;
-    
+
     id = win_id;
     wascreen = scrn;
     display = wascreen->display;
@@ -129,7 +128,7 @@ WaWindow::~WaWindow(void) {
 #endif // XFT
     
     XGrabServer(display);
-    if ((! deleted) && validateclient(id)) {
+    if ((! deleted) && validateclient_mapped(id)) {
         XRemoveFromSaveSet(display, id);
         Gravitate(RemoveGravity);
         if (flags.shaded) attrib.height = restore_shade;
@@ -585,7 +584,7 @@ void WaWindow::UpdateGrabs(void) {
     list<WaAction *>::iterator it;
     
     XGrabServer(display);
-    if (validateclient(id)) {
+    if (validateclient_mapped(id)) {
         XUngrabButton(display, AnyButton, AnyModifier, id);
         XUngrabKey(display, AnyKey, AnyModifier, id);
         if (has_focus) tmp_list = waimea->rh->awinacts;
