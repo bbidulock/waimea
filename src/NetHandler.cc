@@ -144,7 +144,6 @@ void NetHandler::GetWMHints(WaWindow *ww) {
  */
 void NetHandler::GetMWMHints(WaWindow *ww) {
     Window trans;
-    bool all = false;
     ww->flags.title = ww->flags.border = ww->flags.handle = true;
     
     XGrabServer(display);
