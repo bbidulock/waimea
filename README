@@ -47,9 +47,9 @@ CONFIGURATION
 
 	Create a '.waimea' directory structure in your home dire-
 	ctory.
-	mkdir ~/.waimearc
-	mkdir ~/.waimearc/actions
-	mkdir ~/.waimearc/styles
+	mkdir ~/.waimea
+	mkdir ~/.waimea/actions
+	mkdir ~/.waimea/styles
 
 	Copy default data files into directory structure.
 	cp WAIMEA_DATA_INSTALL_DIR/menu ~/.waimea/menu
@@ -60,8 +60,8 @@ CONFIGURATION
 	your homedir.
 	cp WAIMEA_DATA_INSTALL_DIR/waimearc.example ~/.waimearc
 
-   Edit '.waimearc'. 
-   Set the styleFile option  to the full  path of the  style 
+	Edit '.waimearc'. 
+	Set the styleFile option  to the full  path of the  style 
 	you wish to use, 'HOME_DIR/.waimea/styles/Default' to use
 	default style. Set the  menuFile  option to the full path 
 	of the menu file, 'HOME_DIR/.waimea/menu' if you followed 
@@ -88,11 +88,11 @@ RUNNING
 
 	If you use startx script to start X, modify the '~.xinit-
 	rx' by adding 'exec waimea' as the last executed  command 
-   of the script.
+	of the script.
 
 BUGS
-   Bug reports, patches and suggestions are much appreciated,
-   send them to the author.
+	Bug reports, patches and suggestions are much appreciated,
+	send them to the author.
 
 AUTHOR
 	David Reveman <c99drn@cs.umu.se>
