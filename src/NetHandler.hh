@@ -14,11 +14,10 @@
 #ifndef __NetHandler_hh
 #define __NetHandler_hh
 
-class NetHandler;
+#include <X11/Xlib.h>
+#include <X11/Xproto.h>
 
-#include "Waimea.hh"
-#include "WaScreen.hh"
-#include "WaWindow.hh"
+class NetHandler;
 
 #define MwmHintsDecorations (1L << 1)
 
@@ -37,6 +36,8 @@ typedef struct {
     CARD32 functions;
     CARD32 decorations;
 } MwmHints;
+
+#include "Waimea.hh"
 
 class NetHandler {
 public:

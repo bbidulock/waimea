@@ -15,11 +15,27 @@
  *
  */
 
-#include <stdio.h>
-#include <string.h>
+#ifdef    HAVE_CONFIG_H
+#  include "../config.h"
+#endif // HAVE_CONFIG_H
 
 #include "WaMenu.hh"
-#include "EventHandler.hh"
+
+#ifdef    HAVE_STDIO_H
+#  include <stdio.h>
+#endif // HAVE_STDIO_H
+
+#ifdef    STDC_HEADERS
+#  include <string.h>
+#endif // STDC_HEADERS
+
+#ifdef    HAVE_IOSTREAM
+#  include <iostream>
+#endif // HAVE_IOSTREAM
+
+using std::cerr;
+using std::cout;
+using std::endl;
 
 /**
  * @fn    WaMenu(char *n)
@@ -553,17 +569,17 @@ void WaMenu::Unmap(bool focus) {
             waimea->wawindow_list->front()->Focus(false);
     }
     if (dynamic) {
-       waimea->wamenu_list->remove(this);
-       if (root_item) root_item->submenu = NULL;
-       it = item_list->begin();
-       for (; it != item_list->end(); ++it) {
-           if ((*it)->submenu) (*it)->submenu->root_item = NULL;
-       }
-       delete this;
+        waimea->wamenu_list->remove(this);
+        if (root_item) root_item->submenu = NULL;
+        it = item_list->begin();
+        for (; it != item_list->end(); ++it) {
+            if ((*it)->submenu) (*it)->submenu->root_item = NULL;
+        }
+        delete this;
     }
     else {
-       root_item = NULL;
-       mapped = false;
+        root_item = NULL;
+        mapped = false;
     }
 }
 
@@ -1105,8 +1121,8 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
     if (! (func_mask & MenuSubMask)) return;
     if (submenu && (submenu == menu)) return; 
     if (sdyn) {
-       if (submenu) {
-           submenu->Unmap(submenu->has_focus);
+        if (submenu) {
+            submenu->Unmap(submenu->has_focus);
         }
         if (! (submenu = menu->waimea->GetMenuNamed(sub))) return;
     }
@@ -1172,7 +1188,7 @@ void WaMenuItem::Exec(XEvent *, WaAction *) {
  * @param ac WaAction object
  */
 void WaMenuItem::Func(XEvent *e, WaAction *ac) {
-    hash_map<Window, WindowObject *>::iterator it;
+    map<Window, WindowObject *>::iterator it;
     Window func_win;
     char *tmp_param;
 
@@ -1576,7 +1592,7 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
  * handled correct.
  */
 void WaMenuItem::UpdateCBox(void) {
-    hash_map<Window, WindowObject *>::iterator it;
+    map<Window, WindowObject *>::iterator it;
     Window func_win;
     bool true_false = false;
     WaWindow *ww;
@@ -1742,10 +1758,10 @@ void WaMenuItem::ViewportMove(XEvent *e, WaAction *wa) {
     menu->wascreen->ViewportMove(e, wa);
 }
 void WaMenuItem::ViewportRelativeMove(XEvent *e, WaAction *wa) {
-       menu->wascreen->ViewportRelativeMove(e, wa);
+    menu->wascreen->ViewportRelativeMove(e, wa);
 }
 void WaMenuItem::ViewportFixedMove(XEvent *e, WaAction *wa) {
-       menu->wascreen->ViewportFixedMove(e, wa);
+    menu->wascreen->ViewportFixedMove(e, wa);
 }
 void WaMenuItem::MoveViewportLeft(XEvent *, WaAction *) {
     menu->wascreen->MoveViewport(WestDirection);
@@ -1763,7 +1779,7 @@ void WaMenuItem::PointerRelativeWarp(XEvent *e, WaAction *ac) {
     menu->wascreen->PointerRelativeWarp(e, ac);
 }
 void WaMenuItem::PointerFixedWarp(XEvent *e, WaAction *ac) {
-       menu->wascreen->PointerFixedWarp(e, ac);
+    menu->wascreen->PointerFixedWarp(e, ac);
 }
 void WaMenuItem::MenuMap(XEvent *e, WaAction *ac) {
     menu->wascreen->MenuMap(e, ac, false);

@@ -10,10 +10,23 @@
  * Copyright (C) David Reveman.  All rights reserved.
  */
 
-#include <stdio.h>
-#include <hash_set.h>
+#ifdef    HAVE_CONFIG_H
+#  include "../config.h"
+#endif // HAVE_CONFIG_H
 
 #include "Waimea.hh"
+
+#ifdef    HAVE_STDIO_H
+#  include <stdio.h>
+#endif // HAVE_STDIO_H
+
+#ifdef    HAVE_IOSTREAM
+#  include <iostream>
+#endif // HAVE_IOSTREAM
+
+using std::cerr;
+using std::cout;
+using std::endl;
 
 void usage(void);
 void help(void);
@@ -44,7 +57,7 @@ int main(int argc, char **argv) {
         if (! strcmp(argv[i], "--display")) {
             if (i + 1 < argc) options.display = argv[i++ + 1];
             else { cerr << program_name << ": option `" <<
-                     argv[i] << "' requires an argument" << endl; return 1; }
+                       argv[i] << "' requires an argument" << endl; return 1; }
         } else if (! strncmp(argv[i], "--display=", 10) &&
                    strlen(argv[i]) >= 11) { options.display = argv[i] + 10;
         } else if (! strcmp(argv[i], "--rcfile")) {
@@ -116,8 +129,8 @@ void usage(void) {
  */
 void help(void) {
     cout << "Usage: " << program_name << " [OPTION...]" << endl;
-    cout << "Waimea - an X11 window manager designed for maximum efficiency" << 
-	    endl << endl;
+    cout << "Waimea - an X11 window manager designed for maximum efficiency" <<
+        endl << endl;
     cout << "   --display=DISPLAYNAME    X server to contact" << endl;
     cout << "   --rcfile=CONFIGFILE      Config-file to use" << endl;
     cout << "   --stylefile=STYLEFILE    Style-file to use" << endl;
@@ -125,7 +138,7 @@ void help(void) {
     cout << "   --menufile=MENUFILE      Menu-file to use" << endl;
     cout << "   --usage                  Display brief usage message" << endl;
     cout << "   --help                   Show this help message" << endl;
-    cout << "   --version                Output version information and exit" <<
-        endl << endl;
+    cout << "   --version                Output version information and exit"
+         << endl << endl;
     cout << "Report bugs to <c99drn@cs.umu.se>." << endl;
 }

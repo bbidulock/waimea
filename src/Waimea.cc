@@ -11,14 +11,37 @@
  *
  */
 
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
+#ifdef    HAVE_CONFIG_H
+#  include "../config.h"
+#endif // HAVE_CONFIG_H
 
 #include "Waimea.hh"
+
+#ifdef    HAVE_IOSTREAM
+#  include <iostream>
+#endif // HAVE_IOSTREAM
+
+using std::cerr;
+using std::cout;
+using std::endl;
+
+#ifdef    HAVE_STDIO_H
+#  include <stdio.h>
+#endif // HAVE_STDIO_H
+
+#ifdef    STDC_HEADERS
+#  include <stdlib.h>
+#endif // STDC_HEADERS
+
+#ifdef    HAVE_UNISTD_H
+#  include <sys/types.h>
+#  include <sys/wait.h>
+#  include <unistd.h>
+#endif // HAVE_UNISTD_H
+
+#ifdef    HAVE_SIGNAL_H
+#  include <signal.h>
+#endif // HAVE_SIGNAL_H
 
 
 Waimea *waimea;
@@ -66,7 +89,7 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     sigaction(SIGCHLD, &action, NULL);
     sigaction(SIGHUP, &action, NULL);
     
-    window_table = new hash_map<Window, WindowObject *>;
+    window_table = new map<Window, WindowObject *>;
     always_on_top_list = new list<Window>;
     always_at_bottom_list = new list<Window>;
     wawindow_list = new list<WaWindow *>;
@@ -147,7 +170,7 @@ void Waimea::WaRaiseWindow(Window win) {
     
     if (always_on_top_list->size()) {
         Window *stack = new Window[always_on_top_list->size() +
-                                  ((win)? 1: 0)];
+                                   ((win)? 1: 0)];
 
         list<Window>::iterator it = always_on_top_list->begin();
         for (i = 0; it != always_on_top_list->end(); ++it) {
@@ -186,7 +209,7 @@ void Waimea::WaLowerWindow(Window win) {
     
     if (always_at_bottom_list->size()) {
         Window *stack = new Window[always_at_bottom_list->size() +
-                                  ((win)? 1: 0)];
+                                   ((win)? 1: 0)];
         i = 0;
         if (win) stack[i++] = win;
                 
@@ -256,7 +279,7 @@ WaMenu *Waimea::GetMenuNamed(char *menu) {
     list<WaMenu *>::iterator menu_it = wamenu_list->begin();
     for (; menu_it != wamenu_list->end(); ++menu_it)
         if (! strcmp((*menu_it)->name, menu))
-             return *menu_it;
+            return *menu_it;
             
     for (i = 0; menu[i] != '\0' && menu[i] != '!'; i++);
     if (menu[i] == '!' && menu[i + 1] != '\0') {
@@ -288,7 +311,7 @@ WaMenu *Waimea::CreateDynamicMenu(char *name) {
     if (name[i] == '!' && name[i + 1] != '\0')
         commandline_to_argv(wastrdup(&name[i + 1]), tmp_argv);
     else 
-       return NULL;
+        return NULL;
 
     if (pipe(m_pipe) < 0) {
         WARNING;
@@ -322,8 +345,8 @@ WaMenu *Waimea::CreateDynamicMenu(char *name) {
         dmenu = rh->ParseMenu(dmenu, fdopen(m_pipe[0], "r"));
         close(m_pipe[0]);
         if (waitpid(pid, &status, 0) == -1) {
-           WARNING; 
-           perror("waitpid");
+            WARNING; 
+            perror("waitpid");
         }
         action.sa_handler = signalhandler;
         action.sa_flags = SA_NOCLDSTOP | SA_NODEFER;
@@ -421,7 +444,7 @@ void waexec(const char *command, char *displaystring) {
  */
 int xerrorhandler(Display *d, XErrorEvent *e) {
     char buff[128];
-    hash_map<Window, WindowObject *>::iterator it;
+    map<Window, WindowObject *>::iterator it;
 
     errors++;
 
@@ -590,22 +613,4 @@ char **commandline_to_argv(char *s, char **tmp_argv) {
     }
     tmp_argv[i] = NULL;
     return tmp_argv;
-}
-
-/**
- * @fn    basename(char *name)
- * @brief Returns basename for filepath
- *
- * Returns pointer to basename of filepath.
- *
- * @param name Filepath
- *
- * @return Basename for filepath
- */
-char *basename(char *name) {
-   int i = strlen(name);
-
-   for (; i >= 0 && name[i] != '/'; i--);
-   if (name[i] == '/') i++;
-   return &name[i];
 }

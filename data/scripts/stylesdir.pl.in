@@ -1,3 +1,43 @@
-#!/bin/perl
-print "[title] (Styles)\n";
-print "[item] (Default) \"restart(waimea --stylefile=@pkgdatadir@/styles/Default)\"\n";
+#!/usr/bin/perl -w
+use Fcntl ':mode';
+
+my $title = "Styles";
+my $stylesdir = "@pkgdatadir@/styles";
+
+print "[title] ($title)\n";
+
+if (! $ARGV[0]) {
+    print_directory($stylesdir);
+}
+else {
+    print_directory($ARGV[0]);
+}
+
+sub print_directory {
+    my $mode;
+    my $temp;
+    my @dir_list;
+
+    opendir(DIR, $_[0]) || die "can't opendir $_[0]: $!";
+    @dir_list = grep { /^[^\.].*/ || /^\.\..*/} readdir(DIR);
+    closedir DIR;
+    
+    while ($temp = shift @dir_list) {
+	$mode = (stat("$_[0]\/$temp"))[2];
+	if (!($temp eq '..' || $temp eq '.')) {
+	    if ($mode & S_IFDIR) {
+		print_directory("$_[0]\/$temp");
+	    }
+	    else {
+		if ($mode & S_IFREG) {
+		    $_ = $temp;
+		    if (/(.+)\.style$/) {
+			print "[item] ($1) \"restart(waimea --stylefile=";
+			print "$_[0]\/$temp)\"\n";
+		    }
+		}
+	    }
+	}
+    }
+    return 0;
+}

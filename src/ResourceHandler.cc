@@ -13,16 +13,49 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#ifdef    HAVE_CONFIG_H
+#  include "../config.h"
+#endif // HAVE_CONFIG_H
+
 #include <X11/Xlib.h>
 
-#ifdef PIXMAP
-#include <Imlib2.h>
+#include "ResourceHandler.hh"
+
+#ifdef    HAVE_STDIO_H
+#  include <stdio.h>
+#endif // HAVE_STDIO_H
+
+#ifdef    STDC_HEADERS
+#  include <stdlib.h>
+#  include <string.h>
+#endif // STDC_HEADERS
+
+#ifdef    HAVE_CTYPE_H
+#  include <ctype.h>
+#endif // HAVE_CTYPE_H
+
+#ifdef    HAVE_LIBGEN_H
+#  include <libgen.h>
+#else
+inline char *basename(char *name) {
+    int i = strlen(name);
+    for (; i >= 0 && name[i] != '/'; i--);
+    if (name[i] == '/') i++;
+    return &name[i];
+}
+#endif // HAVE_LIBGEN_H
+
+#ifdef    PIXMAP
+#  include <Imlib2.h>
 #endif // PIXMAP
 
-#include "ResourceHandler.hh"
+#ifdef    HAVE_IOSTREAM
+#  include <iostream>
+#endif // HAVE_IOSTREAM
+
+using std::cerr;
+using std::cout;
+using std::endl;
 
 /**
  * @fn    ResourceHandler(void)
@@ -377,9 +410,9 @@ void ResourceHandler::LoadConfig(void) {
         if (rc_forced) WARNING << "can't open rcfile \"" << rc_file <<
                            "\" for reading" << endl;
         else
-           if (! (database = XrmGetFileDatabase(DEFAULTRCFILE)))
-              WARNING << "can't open system default rcfile \"" << rc_file <<
-                  "\" for reading" << endl;
+            if (! (database = XrmGetFileDatabase(DEFAULTRCFILE)))
+                WARNING << "can't open system default rcfile \"" << rc_file <<
+                    "\" for reading" << endl;
     }
 
     if (! style_forced)
@@ -496,7 +529,8 @@ void ResourceHandler::LoadConfig(void) {
         sprintf(rc_class, "Dock%d.Geometry", dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
             dockstyle->geometry = XParseGeometry(value.addr, &dockstyle->x,
-                                                 &dockstyle->y, &dummy, &dummy);
+                                                 &dockstyle->y, &dummy,
+                                                 &dummy);
             d_exists = true;
         }
         
@@ -1202,8 +1236,8 @@ void ResourceHandler::LoadActions(void) {
                 if (! strncasecmp(str, "DEF", 3)) {
                     str = strtrim(str + 3);                   
                     defs->push_front(new Define(wastrdup(str),
-                                                wastrdup(strtrim(
-                                                    (char *) buffer2))));
+                                                wastrdup(strtrim((char *)
+                                                                 buffer2))));
                 }
                 else {                  
                     str = strtrim(str);
@@ -1510,7 +1544,8 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
                            &value)) {
             if (strstr(value.addr, "/")) {
                 if (! (image = imlib_load_image(value.addr)))
-                    WARNING << "failed loading image \"" << value.addr << "\"\n";
+                    WARNING << "failed loading image \"" << value.addr <<
+                        "\"\n";
             }
             else {
                 sprintf(pixmap_path, "%s/%s", style_file, value.addr);
@@ -1787,7 +1822,6 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             }
         }
         if (strlen(par)) {
-            char *tmp;
             par[i] = '\0';
             act_tmp->param = param_eval(token, par, wascreen);
         }
@@ -1802,7 +1836,8 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             endl;
         delete act_tmp;
         delete [] line;
-        return;                                                                   }
+        return;
+    }
     delete [] tmp_par;
     
     it = comp->begin();
@@ -1914,16 +1949,16 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             }
         }
     }
-    if (token = strtok(NULL, "]")) {
+    if ((token = strtok(NULL, "]"))) {
         int msdelay = 0;
         act_tmp->delay_breaks = new list<int>;
-        if (token = strtok(token, ":")) {
+        if ((token = strtok(token, ":"))) {
             token = strtrim(token);
             msdelay = atoi(token);
             act_tmp->delay.tv_usec = (msdelay % 1000) * 1000;
             act_tmp->delay.tv_sec = msdelay / 1000;
             act_tmp->delay_breaks = new list<int>;
-            while (token = strtok(NULL, "|")) {
+            while ((token = strtok(NULL, "|"))) {
                 token = strtrim(token);
                 it = types->begin();
                 for (; it != types->end(); ++it) {
@@ -2355,7 +2390,8 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                 }
                 if (! (m->wfunc2 || m->rfunc2 || m->mfunc2)) {
                     WARNING << "(" << basename(menu_file) << ":" << linenr <<
-                        "): function \"" << s << "\" not available" << endl;                         delete [] s;
+                        "): function \"" << s << "\" not available" << endl;
+                    delete [] s;
                     continue;
                 }
             }
@@ -2482,7 +2518,7 @@ char *strwithin(char *s, char c1, char c2, bool eval_env) {
                 if ((env = getenv(env_name)) == NULL) env = "";
                 str[i] = tmp_char;
                 tmp = new char[strlen(str) + strlen(env) +
-                              strlen(&str[i]) + 1];
+                               strlen(&str[i]) + 1];
                 sprintf(tmp, "%s%s%s", str, env, &str[i]);
                 i = strlen(str) + strlen(env);
                 delete [] str;

@@ -15,11 +15,12 @@
 #ifndef __ResourceHandler_hh
 #define __ResourceHandler_hh
 
-#include <stdio.h>
-#include <ctype.h>
-#include <sys/time.h>
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
+
+#ifdef    HAVE_STDIO_H
+#  include <stdio.h>
+#endif // HAVE_STDIO_H
 
 class ResourceHandler;
 class Define;
@@ -30,11 +31,9 @@ typedef struct _WaAction WaAction;
 typedef struct _DockStyle DockStyle;
 typedef struct _ButtonStyle ButtonStyle;
 
-#include "Waimea.hh"
 #include "WaWindow.hh"
+#include "Waimea.hh"
 #include "WaScreen.hh"
-#include "WaImage.hh"
-#include "WaMenu.hh"
 
 #define ACTLISTCLEAR(list) \
     while (! list->empty()) { \
@@ -146,7 +145,7 @@ public:
     int colors_per_channel, menu_stacking;
     long unsigned int cache_max, double_click;
     bool image_dither, rc_forced, style_forced, action_forced, menu_forced,
-                         trans;
+        trans;
     int linenr;
     
     list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,

@@ -11,6 +11,10 @@
  *
  */
 
+#ifdef    HAVE_CONFIG_H
+#  include "../config.h"
+#endif // HAVE_CONFIG_H
+
 #include "DockappHandler.hh"
 
 /**
@@ -160,7 +164,7 @@ void DockappHandler::Update(void) {
         switch (style->direction) {
             case VerticalDock:
                 if (((*it)->width + style->gridspace * 2) > width)
-                        width = (*it)->width + style->gridspace * 2;
+                    width = (*it)->width + style->gridspace * 2;
                 break;
             case HorizontalDock:
                 if (((*it)->height + style->gridspace * 2) > height)
@@ -309,16 +313,16 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
 
     XWMHints *wmhints = XGetWMHints(display, win);
     if (wmhints) {
-      if ((wmhints->flags & IconWindowHint) &&
-          (wmhints->icon_window != None)) {
-          XUnmapWindow(display, client_id);
-          icon_id = wmhints->icon_window;
-          id = icon_id;
-      } else {
-          icon_id = None;
-          id = client_id;
-      }
-      XFree(wmhints);
+        if ((wmhints->flags & IconWindowHint) &&
+            (wmhints->icon_window != None)) {
+            XUnmapWindow(display, client_id);
+            icon_id = wmhints->icon_window;
+            id = icon_id;
+        } else {
+            icon_id = None;
+            id = client_id;
+        }
+        XFree(wmhints);
     } else {
         icon_id = None;
         id = client_id;

@@ -20,17 +20,23 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#ifdef XRENDER
-#include <X11/extensions/Xrender.h>
+#ifdef    XRENDER
+#  include <X11/extensions/Xrender.h>
 #endif // XRENDER
 
-#ifdef XFT
-#include <X11/Xft/Xft.h>
+#ifdef    XFT
+#  include <X11/Xft/Xft.h>
 #endif // XFT
 
-#ifdef PIXMAP
-#include <Imlib2.h>
+#ifdef    PIXMAP
+#  include <Imlib2.h>
 #endif // PIXMAP
+
+#ifdef    HAVE_LIST
+#  include <list>
+#endif // HAVE_LIST
+
+using std::list;
 
 class WaImage;
 class WaImageControl;
@@ -224,7 +230,6 @@ public:
     
 };
 
-#include <list.h>
 #include "WaScreen.hh"
 
 class WaImageControl {

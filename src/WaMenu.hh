@@ -24,11 +24,8 @@ class TaskSwitcher;
 typedef struct _WaAction WaAction;
 typedef void (WaMenuItem::*MenuActionFn)(XEvent *, WaAction *);
 
-#include "Waimea.hh"
-#include "WaWindow.hh"
-#include "WaScreen.hh"
-#include "WaImage.hh"
 #include "ResourceHandler.hh"
+#include "WaScreen.hh"
 
 #define MenuExecMask  (1L << 0)
 #define MenuSubMask   (1L << 1)
@@ -174,7 +171,7 @@ public:
     void UpdateCBox(void);
     
     int func_mask, func_mask1, func_mask2, height, width, dy, realheight,
-                   cb, cb_y, cb_width, cb_width1, cb_width2;
+                           cb, cb_y, cb_width, cb_width1, cb_width2;
     bool hilited, move_resize, in_window, sdyn, sdyn1, sdyn2;
     char *label, *exec, *param, *sub;
     char *label1, *exec1, *param1, *sub1;

@@ -11,17 +11,24 @@
  *
  */
 
+#ifdef    HAVE_CONFIG_H
+#  include "../config.h"
+#endif // HAVE_CONFIG_H
+
+#include <X11/Xatom.h>
+
 #include "EventHandler.hh"
 
-#include <stdio.h>
-#include <X11/Xatom.h>
+#ifdef    HAVE_STDIO_H
+#  include <stdio.h>
+#endif // HAVE_STDIO_H
 
 /**
  * @fn    EventHandler(Waimea *wa)
  * @brief Constructor for EventHandler class
  *
  * Sets waimea and rh pointers. Creates menu move return mask, window
- * move/resize return mask and empty return mask hash_sets.
+ * move/resize return mask and empty return mask sets.
  *
  * @param wa Pointer to waimea object
  */
@@ -31,9 +38,9 @@ EventHandler::EventHandler(Waimea *wa) {
     focused = last_click_win = (Window) 0;
     move_resize = EndMoveResizeType;
 
-    empty_return_mask = new hash_set<int>;
+    empty_return_mask = new set<int>;
     
-    moveresize_return_mask = new hash_set<int>;
+    moveresize_return_mask = new set<int>;
     moveresize_return_mask->insert(MotionNotify);
     moveresize_return_mask->insert(ButtonPress);
     moveresize_return_mask->insert(ButtonRelease);
@@ -46,7 +53,7 @@ EventHandler::EventHandler(Waimea *wa) {
     moveresize_return_mask->insert(LeaveNotify);
     moveresize_return_mask->insert(ConfigureRequest);
 
-    menu_viewport_move_return_mask = new hash_set<int>;
+    menu_viewport_move_return_mask = new set<int>;
     menu_viewport_move_return_mask->insert(MotionNotify);
     menu_viewport_move_return_mask->insert(ButtonPress);
     menu_viewport_move_return_mask->insert(ButtonRelease);
@@ -70,18 +77,18 @@ EventHandler::~EventHandler(void) {
 }
 
 /**
- * @fn    EventLoop(hash_set<int> *return_mask, XEvent *event)
+ * @fn    EventLoop(set<int> *return_mask, XEvent *event)
  * @brief Eventloop
  *
  * Infinite loop waiting for an event to occur. This function can be called
- * from move and resize functions the return_mask hash_set is then used for
+ * from move and resize functions the return_mask set is then used for
  * deciding if an event should be processed as normal or returned to the
  * function caller.
  *
- * @param return_mask hash_set to use as return_mask
+ * @param return_mask set to use as return_mask
  * @param event Pointer to allocated event structure
  */
-void EventHandler::EventLoop(hash_set<int> *return_mask, XEvent *event) {    
+void EventHandler::EventLoop(set<int> *return_mask, XEvent *event) {    
     for (;;) {
         XNextEvent(waimea->display, event);
         
@@ -149,13 +156,14 @@ void EventHandler::HandleEvent(XEvent *event) {
                 gettimeofday(&click_time, NULL);
                 if (click_time.tv_sec <= last_click.tv_sec + 1) {
                     if (click_time.tv_sec == last_click.tv_sec &&
-                        (long) (click_time.tv_usec - last_click.tv_usec) <
+                        (unsigned long) 
+                        (click_time.tv_usec - last_click.tv_usec) <
                         waimea->rh->double_click * 1000) {
                         ed->type = DoubleClick;
                         last_click_win = (Window) 0;
                     }
                     else if ((1000000 - last_click.tv_usec) +
-                             (long) click_time.tv_usec <
+                             (unsigned long) click_time.tv_usec <
                              waimea->rh->double_click * 1000) {
                         ed->type = DoubleClick;
                         last_click_win = (Window) 0;
@@ -202,7 +210,7 @@ void EventHandler::HandleEvent(XEvent *event) {
 #ifdef SHAPE
         default:                
             if (event->type == waimea->wascreen->shape_event) {
-                hash_map<Window, WindowObject *>::iterator it;
+                map<Window, WindowObject *>::iterator it;
                 if ((it = waimea->window_table->find(event->xany.window)) !=
                     waimea->window_table->end()) {
                     if (((*it).second)->type == WindowType)
@@ -231,7 +239,7 @@ void EventHandler::HandleEvent(XEvent *event) {
  */
 void EventHandler::EvProperty(XPropertyEvent *e) {
     WaWindow *ww;
-    hash_map<Window, WindowObject *>::iterator it;
+    map<Window, WindowObject *>::iterator it;
     char *tmp_name;
 
     if (e->state == PropertyDelete) {
@@ -307,7 +315,7 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
  * @param e	The ExposeEvent
  */
 void EventHandler::EvExpose(XExposeEvent *e) {
-    hash_map<Window, WindowObject *>::iterator it;
+    map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(e->window)) !=
         waimea->window_table->end()) {
         switch (((*it).second)->type) {
@@ -338,7 +346,7 @@ void EventHandler::EvExpose(XExposeEvent *e) {
 void EventHandler::EvFocus(XFocusChangeEvent *e) {
     WaWindow *ww = NULL;
 
-    hash_map<Window, WindowObject *>::iterator it;
+    map<Window, WindowObject *>::iterator it;
     if (e->type == FocusIn && e->window != focused) {
         if ((it = waimea->window_table->find(e->window)) !=
             waimea->window_table->end()) {
@@ -389,7 +397,7 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
     wc.stack_mode = e->detail;
     wc.border_width = e->border_width;
     
-    hash_map<Window, WindowObject *>::iterator it;
+    map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(e->window)) !=
         waimea->window_table->end()) {
         if (((*it).second)->type == WindowType) {
@@ -461,7 +469,7 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
     XWindowAttributes attr;
     XWMHints *wm_hints;
     
-    hash_map<Window, WindowObject *>::iterator it;
+    map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(e->window)) !=
         waimea->window_table->end()) {
         if (((*it).second)->type == WindowType) {
@@ -498,10 +506,10 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
 void EventHandler::EvUnmapDestroy(XEvent *e) {
     DockappHandler *dh;
     
-    hash_map<Window, WindowObject *>::iterator it;
+    map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find((e->type == UnmapNotify)?
-                                          e->xunmap.window:
-                                          e->xdestroywindow.window))
+                                         e->xunmap.window:
+                                         e->xdestroywindow.window))
         != waimea->window_table->end()) {
         if (((*it).second)->type == WindowType) {
             if (e->type == DestroyNotify)
@@ -580,7 +588,7 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
     WindowObject *wo;
     WaWindow *wa;
 
-    hash_map<Window, WindowObject *>::iterator it;
+    map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find(win)) !=
         waimea->window_table->end()) {
         wo = (*it).second;

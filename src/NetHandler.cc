@@ -11,6 +11,10 @@
  *
  */
 
+#ifdef    HAVE_CONFIG_H
+#  include "../config.h"
+#endif // HAVE_CONFIG_H
+
 #include <X11/Xatom.h>
 
 #include "NetHandler.hh"
@@ -158,7 +162,7 @@ void NetHandler::GetMWMHints(WaWindow *ww) {
                 ww->flags.title  =
                     (mwm_hints->decorations & MwmDecorTitle)  ? true: false;
                 ww->flags.border =
-                (mwm_hints->decorations & MwmDecorBorder) ? true: false;
+                    (mwm_hints->decorations & MwmDecorBorder) ? true: false;
                 ww->flags.handle =
                     (mwm_hints->decorations & MwmDecorHandle) ? true: false;
             }
@@ -173,7 +177,7 @@ void NetHandler::GetMWMHints(WaWindow *ww) {
                         (*it)->transients.push_back(ww->id);
                     ww->want_focus = true;
                 } else {
-                    hash_map<Window, WindowObject *>::iterator it;
+                    map<Window, WindowObject *>::iterator it;
                     if ((it = waimea->window_table->find(trans)) !=
                         waimea->window_table->end()) {
                         if (((*it).second)->type == WindowType) {
@@ -471,7 +475,7 @@ void NetHandler::SetSupported(WaScreen *ws) {
  *
  * @param ws WaScreen object
  & @param child Window to use as child window
- */
+*/
 void NetHandler::SetSupportedWMCheck(WaScreen *ws, Window child) {
     XChangeProperty(display, ws->id, net_supported_wm_check, XA_WINDOW, 32,
                     PropModeReplace, (unsigned char *) &child, 1);
@@ -519,13 +523,13 @@ void NetHandler::SetClientListStacking(WaScreen *ws) {
     
     it = waimea->wawindow_list_stacking_aab->begin();
     for (; it != waimea->wawindow_list_stacking_aab->end(); ++it)
-      data[i++] = (*it)->id;
+        data[i++] = (*it)->id;
     rit = waimea->wawindow_list_stacking->rbegin();
     for (; rit != ws->waimea->wawindow_list_stacking->rend(); ++rit)
-      data[i++] = (*rit)->id;
+        data[i++] = (*rit)->id;
     rit = waimea->wawindow_list_stacking_aot->rbegin();
     for (; rit != waimea->wawindow_list_stacking_aot->rend(); ++rit)
-      data[i++] = (*rit)->id;
+        data[i++] = (*rit)->id;
 
     if (i > 0)
         XChangeProperty(display, ws->id, net_client_list_stacking, XA_WINDOW,
@@ -542,7 +546,7 @@ void NetHandler::SetClientListStacking(WaScreen *ws) {
  */
 void NetHandler::GetClientListStacking(WaScreen *ws) {
     CARD32 *data;    
-    hash_map<Window, WindowObject *>::iterator it;
+    map<Window, WindowObject *>::iterator it;
     WaWindow *ww;
     unsigned int i;
     
@@ -613,7 +617,7 @@ void NetHandler::GetActiveWindow(WaScreen *ws) {
     WaAction *ac;
     WaWindow *ww;
     CARD32 *data;
-    hash_map<Window, WindowObject *>::iterator it;
+    map<Window, WindowObject *>::iterator it;
     int i;
     
     if (XGetWindowProperty(display, ws->id, net_active_window, 0L,
@@ -830,7 +834,7 @@ void NetHandler::wXDNDMakeAwareness(Window window) {
     long int xdnd_version = 3;
 
     XChangeProperty(waimea->display, window, xa_xdndaware, XA_ATOM,
-            32, PropModeReplace, (unsigned char *) &xdnd_version, 1);
+                    32, PropModeReplace, (unsigned char *) &xdnd_version, 1);
 }
 
 /**

@@ -11,11 +11,19 @@
  *
  */
 
-#include <signal.h>
-#include <unistd.h>
-#include <string.h>
+#ifdef    HAVE_CONFIG_H
+#  include "../config.h"
+#endif // HAVE_CONFIG_H
 
 #include "Timer.hh"
+
+#ifdef    HAVE_SIGNAL_H
+#  include <signal.h>
+#endif // HAVE_SIGNAL_H
+
+#ifdef    HAVE_UNISTD_H
+#  include <unistd.h>
+#endif // HAVE_UNISTD_H
 
 Timer *timer;
 
@@ -222,42 +230,42 @@ void timeout(int signal) {
         }
     }
 
-    hash_map<Window, WindowObject *>::iterator wit;
+    map<Window, WindowObject *>::iterator wit;
     if ((wit = timer->waimea->window_table->find(i->id)) !=
         timer->waimea->window_table->end()) {
         WindowObject *wo = (*wit).second;
 
         switch (wo->type) {
-           case WindowType: {
-               WaWindow *wa = (WaWindow *) wo;    
-               if (i->action->exec)
+            case WindowType: {
+                WaWindow *wa = (WaWindow *) wo;    
+                if (i->action->exec)
                     waexec(i->action->exec, wa->wascreen->displaystring);
-               else {
+                else {
                     ((*wa).*(i->action->winfunc))(&i->event, i->action);
                     XSync(wa->display, false);
-               }
-           } break;
-           case MenuTitleType:
-           case MenuItemType:
-           case MenuCBItemType:
-           case MenuSubType: {
-              WaMenuItem *wm = (WaMenuItem *) wo;
-              if (i->action->exec)
-                  waexec(i->action->exec, wm->menu->wascreen->displaystring);
-              else { 
-                  ((*wm).*(i->action->menufunc))(&i->event, i->action);
-                  XSync(wm->menu->display, false);
-               }
-           } break;
-           case RootType: {
-              WaScreen *ws = (WaScreen *) wo;
-              if (i->action->exec) 
-                 waexec(i->action->exec, ws->displaystring);
-              else {
-                 ((*ws).*(i->action->rootfunc))(&i->event, i->action);
-                 XSync(ws->display, false);
-              }
-           } break;
+                }
+            } break;
+            case MenuTitleType:
+            case MenuItemType:
+            case MenuCBItemType:
+            case MenuSubType: {
+                WaMenuItem *wm = (WaMenuItem *) wo;
+                if (i->action->exec)
+                    waexec(i->action->exec, wm->menu->wascreen->displaystring);
+                else { 
+                    ((*wm).*(i->action->menufunc))(&i->event, i->action);
+                    XSync(wm->menu->display, false);
+                }
+            } break;
+            case RootType: {
+                WaScreen *ws = (WaScreen *) wo;
+                if (i->action->exec) 
+                    waexec(i->action->exec, ws->displaystring);
+                else {
+                    ((*ws).*(i->action->rootfunc))(&i->event, i->action);
+                    XSync(ws->display, false);
+                }
+            } break;
         }
     }
     delete i;

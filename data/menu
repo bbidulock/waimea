@@ -29,6 +29,8 @@
     [item] (Ncftp)    {xterm -e ncftp} 
     [item] (Telnet)   {xterm -e telnet}
   [end]
+
+  [sub] (Styles) <!stylesdir.pl>
   
   [restart] (Restart)
   [exit]    (Exit)

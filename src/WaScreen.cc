@@ -13,11 +13,29 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#ifdef    HAVE_CONFIG_H
+#  include "../config.h"
+#endif // HAVE_CONFIG_H
+
 #include <X11/cursorfont.h>
 
 #include "WaScreen.hh"
+
+#ifdef    HAVE_STDIO_H
+#  include <stdio.h>
+#endif // HAVE_STDIO_H
+
+#ifdef    STDC_HEADERS
+#  include <stdlib.h>
+#endif // STDC_HEADERS
+
+#ifdef    HAVE_IOSTREAM
+#  include <iostream>
+#endif // HAVE_IOSTREAM
+
+using std::cerr;
+using std::cout;
+using std::endl;
 
 /**
  * @fn    WaScreen(Display *d, int scrn_number, Waimea *wa)
@@ -150,7 +168,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
             else if ((waimea->window_table->find(children[i]))
                      == waimea->window_table->end()) {
                 newwin = new WaWindow(children[i], this);
-                hash_map<Window, WindowObject *>::iterator it;
+                map<Window, WindowObject *>::iterator it;
                 if ((it = waimea->window_table->find(children[i]))
                     != waimea->window_table->end()) {
                     if (((*it).second)->type == WindowType) {
@@ -798,16 +816,15 @@ void WaScreen::MoveViewport(int direction) {
  * @param ac WaAction object
  */ 
 void WaScreen::ViewportFixedMove(XEvent *, WaAction *ac) {
-   int x, y, mask; 
-   unsigned int w = 0, h = 0;
-   char *tmp;
+    int x, y, mask; 
+    unsigned int w = 0, h = 0;
                             
-   if (! ac->param) return;
+    if (! ac->param) return;
    
-   mask = XParseGeometry(ac->param, &x, &y, &w, &h);
-   if (mask & XNegative) x = v_xmax + x;
-   if (mask & YNegative) y = v_ymax + y;
-   MoveViewportTo(x, y); 
+    mask = XParseGeometry(ac->param, &x, &y, &w, &h);
+    if (mask & XNegative) x = v_xmax + x;
+    if (mask & YNegative) y = v_ymax + y;
+    MoveViewportTo(x, y); 
 }
 
 /**
@@ -820,13 +837,13 @@ void WaScreen::ViewportFixedMove(XEvent *, WaAction *ac) {
  * @param ac WaAction object
  */
 void WaScreen::ViewportRelativeMove(XEvent *, WaAction *ac) {
-   int x, y, mask;
-   unsigned int w = 0, h = 0;
+    int x, y, mask;
+    unsigned int w = 0, h = 0;
                   
-   if (! ac->param) return;
+    if (! ac->param) return;
    
-   mask = XParseGeometry(ac->param, &x, &y, &w, &h);
-   MoveViewportTo(v_x + x, v_y + y);
+    mask = XParseGeometry(ac->param, &x, &y, &w, &h);
+    MoveViewportTo(v_x + x, v_y + y);
 }
 
 /**
@@ -1122,11 +1139,11 @@ void WaScreen::PointerFixedWarp(XEvent *, WaAction *ac) {
  * @param ac WaAction object
  */
 void WaScreen::PointerRelativeWarp(XEvent *, WaAction *ac) {
-   int x, y, mask, i, o_x, o_y;
-   unsigned int w, h;
+    int x, y, mask;
+    unsigned int w, h;
                     
-   mask = XParseGeometry(ac->param, &x, &y, &w, &h);
-   XWarpPointer(display, None, None, 0, 0, 0, 0, x, y);
+    mask = XParseGeometry(ac->param, &x, &y, &w, &h);
+    XWarpPointer(display, None, None, 0, 0, 0, 0, x, y);
 } 
 
 /**

@@ -13,11 +13,19 @@
  *
  */
 
+#ifdef    HAVE_CONFIG_H
+#  include "../config.h"
+#endif // HAVE_CONFIG_H
+
 #include "WaWindow.hh"
 
-#include <stdio.h>
-#include <string.h>
-#include <hash_set.h>
+#ifdef    HAVE_STDIO_H
+#  include <stdio.h>
+#endif // HAVE_STDIO_H
+
+#ifdef    STDC_HEADERS
+#  include <string.h>
+#endif // STDC_HEADERS
 
 /**
  * @fn    WaWindow(Window win_id, WaScreen *scrn) :
@@ -159,7 +167,7 @@ WaWindow::~WaWindow(void) {
                 (*it)->transients.remove(id);
         }
         else {
-            hash_map<Window, WindowObject *>::iterator hit;
+            map<Window, WindowObject *>::iterator hit;
             if ((hit = waimea->window_table->find(transient_for)) !=
                 waimea->window_table->end()) {
                 if (((*hit).second)->type == WindowType)
@@ -707,36 +715,36 @@ void WaWindow::UpdateGrabs(void) {
  * Shapes frame window after shape of client.
  */
 void WaWindow::Shape(void) {
-        int n;
-        XRectangle xrect[2];
+    int n;
+    XRectangle xrect[2];
         
-        if (shaped) {
-            XGrabServer(display);
-            if (validateclient(id)) {
-                XShapeCombineShape(display, frame->id, ShapeBounding,
-                                   border_w, title_w + border_w, id,
-                                   ShapeBounding, ShapeSet);
-                n = 0;
-                if (title_w) {
-                    xrect[n].x = -border_w;
-                    xrect[n].y = -border_w;
-                    xrect[n].width = attrib.width + border_w * 2;
-                    xrect[n].height = title_w + border_w * 2;
-                    n++;
-                }
-                if (handle_w) {
-                    xrect[n].x = -border_w;
-                    xrect[n].y = attrib.height + title_w;
-                    if (title_w) xrect[n].y += border_w;
-                    xrect[n].width = attrib.width + border_w * 2;
-                    xrect[n].height = handle_w + border_w * 2;
-                    n++;
-                }
-                XShapeCombineRectangles(display, frame->id, ShapeBounding, 0,
-                                        0, xrect, n, ShapeUnion, Unsorted);
+    if (shaped) {
+        XGrabServer(display);
+        if (validateclient(id)) {
+            XShapeCombineShape(display, frame->id, ShapeBounding,
+                               border_w, title_w + border_w, id,
+                               ShapeBounding, ShapeSet);
+            n = 0;
+            if (title_w) {
+                xrect[n].x = -border_w;
+                xrect[n].y = -border_w;
+                xrect[n].width = attrib.width + border_w * 2;
+                xrect[n].height = title_w + border_w * 2;
+                n++;
             }
-            XUngrabServer(display);
+            if (handle_w) {
+                xrect[n].x = -border_w;
+                xrect[n].y = attrib.height + title_w;
+                if (title_w) xrect[n].y += border_w;
+                xrect[n].width = attrib.width + border_w * 2;
+                xrect[n].height = handle_w + border_w * 2;
+                n++;
+            }
+            XShapeCombineRectangles(display, frame->id, ShapeBounding, 0,
+                                    0, xrect, n, ShapeUnion, Unsorted);
         }
+        XUngrabServer(display);
+    }
 }
 #endif // SHAPE
 
@@ -1080,7 +1088,7 @@ void WaWindow::Raise(XEvent *, WaAction *) {
     if (! transients.empty()) {
         list<Window>::iterator it = transients.begin();
         for (;it != transients.end(); ++it) {
-            hash_map<Window, WindowObject *>::iterator hit;
+            map<Window, WindowObject *>::iterator hit;
             if ((hit = waimea->window_table->find(*it)) !=
                 waimea->window_table->end()) {
                 if (((*hit).second)->type == WindowType) {
@@ -1139,7 +1147,7 @@ void WaWindow::Focus(bool vis) {
             XInstallColormap(display, attrib.colormap);
             XSetInputFocus(display, id, RevertToPointerRoot, CurrentTime);
             if (transient_for) {
-                hash_map<Window, WindowObject *>::iterator hit;
+                map<Window, WindowObject *>::iterator hit;
                 if ((hit = waimea->window_table->find(transient_for)) !=
                     waimea->window_table->end()) {
                     if (((*hit).second)->type == WindowType) {
@@ -1509,7 +1517,7 @@ void WaWindow::Resize(XEvent *e, int how) {
                         o_h = n_h;
                         DrawOutline(n_x, attrib.y, n_w, n_h);
                     }
-              }
+                }
                 break;
             case DestroyNotify:
             case UnmapNotify:
@@ -2431,7 +2439,7 @@ void WaWindow::AlwaysatbottomOn(XEvent *, WaAction *) {
     waimea->always_at_bottom_list->push_back(frame->id);
     waimea->WaLowerWindow(0);
     net->SetWmState(this);
-        if (title_w) {
+    if (title_w) {
         list<WaChildWindow *>::iterator bit = buttons.begin();
         for (; bit != buttons.end(); ++bit)
             if ((*bit)->bstyle->cb == AOTCBoxType ||
@@ -2682,24 +2690,24 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
     if (waimea->eh->move_resize != EndMoveResizeType)
         ed->mod |= MoveResizeMask;
     else if (etype == WindowType) {
-            if (ed->type == ButtonPress) {
-                for (; it != acts->end(); ++it) {
-                    if ((*it)->type == ButtonRelease &&
-                        (*it)->detail == ed->detail &&
-                        (! ((*it)->mod & MoveResizeMask)))
-                        wait_release = match = true;
+        if (ed->type == ButtonPress) {
+            for (; it != acts->end(); ++it) {
+                if ((*it)->type == ButtonRelease &&
+                    (*it)->detail == ed->detail &&
+                    (! ((*it)->mod & MoveResizeMask)))
+                    wait_release = match = true;
+            }
+        }
+        else if (ed->type == KeyPress) {
+            for (; it != acts->end(); ++it) {
+                if ((*it)->type == KeyRelease &&
+                    (*it)->detail == ed->detail &&
+                    (! ((*it)->mod & MoveResizeMask))) {
+                    wait_release = match = true;
+                    XAutoRepeatOff(display);
                 }
             }
-            else if (ed->type == KeyPress) {
-                for (; it != acts->end(); ++it) {
-                    if ((*it)->type == KeyRelease &&
-                        (*it)->detail == ed->detail &&
-                        (! ((*it)->mod & MoveResizeMask))) {
-                        wait_release = match = true;
-                        XAutoRepeatOff(display);
-                    }
-                }
-            }
+        }
     }
     it = acts->begin();
     for (; it != acts->end(); ++it) {
@@ -2872,7 +2880,7 @@ void WaChildWindow::Render(void) {
     int pos_y = wa->attrib.y - wa->title_w + attrib.y;
     if (texture->getOpacity()) {
         xpixmap = XCreatePixmap(display, wascreen->id, attrib.width,
-                               attrib.height, wascreen->screen_depth);
+                                attrib.height, wascreen->screen_depth);
     }
 #endif // XRENDER
     
@@ -2921,10 +2929,10 @@ void WaChildWindow::Render(void) {
 #ifdef XRENDER
             if (texture->getOpacity())
                 pixmap = ic->xrender((wa->has_focus)? wascreen->fgrip:
-                                      wascreen->ugrip,
-                                      attrib.width, attrib.height,
-                                      texture, wascreen->xrootpmap_id, pos_x,
-                                      pos_y, xpixmap);
+                                     wascreen->ugrip,
+                                     attrib.width, attrib.height,
+                                     texture, wascreen->xrootpmap_id, pos_x,
+                                     pos_y, xpixmap);
             else
 #endif // XRENDER
                 pixmap = (wa->has_focus)? wascreen->fgrip: wascreen->ugrip;
@@ -2937,20 +2945,20 @@ void WaChildWindow::Render(void) {
 #ifdef XRENDER
             if (texture->getOpacity())
                 pixmap = ic->xrender(None, attrib.width, attrib.height,
-                                      texture, wascreen->xrootpmap_id, pos_x,
-                                      pos_y, xpixmap);
+                                     texture, wascreen->xrootpmap_id, pos_x,
+                                     pos_y, xpixmap);
 #endif // XRENDER
             
         } else
             pixmap = ic->renderImage(attrib.width,
-                                      attrib.height, texture
+                                     attrib.height, texture
                                       
 #ifdef XRENDER
-                                      , wascreen->xrootpmap_id, pos_x, pos_y,
-                                      xpixmap
+                                     , wascreen->xrootpmap_id, pos_x, pos_y,
+                                     xpixmap
 #endif // XRENDER                                 
                                       
-                                      );
+                                     );
     }
 
     if (pixmap)
@@ -3095,10 +3103,10 @@ void WaWindow::ViewportMove(XEvent *e, WaAction *wa) {
     wascreen->ViewportMove(e, wa);
 }
 void WaWindow::ViewportRelativeMove(XEvent *e, WaAction *wa) {
-       wascreen->ViewportRelativeMove(e, wa);
+    wascreen->ViewportRelativeMove(e, wa);
 }
 void WaWindow::ViewportFixedMove(XEvent *e, WaAction *wa) {
-       wascreen->ViewportFixedMove(e, wa);
+    wascreen->ViewportFixedMove(e, wa);
 }
 void WaWindow::MoveViewportLeft(XEvent *, WaAction *) {
     wascreen->MoveViewport(WestDirection);
@@ -3116,7 +3124,7 @@ void WaWindow::PointerRelativeWarp(XEvent *e, WaAction *ac) {
     wascreen->PointerRelativeWarp(e, ac);
 }
 void WaWindow::PointerFixedWarp(XEvent *e, WaAction *ac) {
-       wascreen->PointerFixedWarp(e, ac);
+    wascreen->PointerFixedWarp(e, ac);
 }
 void WaWindow::Restart(XEvent *e, WaAction *ac) {
     wascreen->Restart(e, ac);

@@ -18,7 +18,15 @@
  *
  */
 
-#include <sys/types.h>
+#ifdef    HAVE_CONFIG_H
+#  include "../config.h"
+#endif // HAVE_CONFIG_H
+
+#include "WaImage.hh"
+
+#ifdef    HAVE_SYS_TYPES_H
+#  include <sys/types.h>
+#endif // HAVE_SYS_TYPES_H
 
 #ifndef u_int32_t
 #  ifdef uint_32_t
@@ -32,12 +40,26 @@ typedef unsigned int u_int32_t;
 #  endif
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
+#ifdef    STDC_HEADERS
+#  include <stdlib.h>
+#  include <string.h>
+#endif // STDC_HEADERS
 
-#include "WaImage.hh"
+#ifdef    HAVE_STDIO_H
+#  include <stdio.h>
+#endif // HAVE_STDIO_H
+
+#ifdef    HAVE_CTYPE_H
+#  include <ctype.h>
+#endif // HAVE_CTYPE_H
+
+#ifdef    HAVE_IOSTREAM
+#  include <iostream>
+#endif // HAVE_IOSTREAM
+
+using std::cerr;
+using std::cout;
+using std::endl;
 
 static unsigned long bsqrt(unsigned long x) {
     if (x <= 0) return 0;
@@ -146,8 +168,8 @@ Pixmap WaImage::render_pixmap(WaTexture *texture) {
     if (texture->getTexture() & WaImage_Tile)
         imlib_render_pixmaps_for_whole_image(&pixmap, &mask);
     else 
-       imlib_render_pixmaps_for_whole_image_at_size(&pixmap, &mask, width,
-                                                    height); 
+        imlib_render_pixmaps_for_whole_image_at_size(&pixmap, &mask, width,
+                                                     height); 
     return pixmap;   
 }
 #endif // PIXMAP
@@ -333,9 +355,10 @@ XImage *WaImage::renderXImage(void) {
         
         switch (control->getVisual()->c_class) {
             case TrueColor:
-                // algorithm: ordered dithering... many many thanks to rasterman
-                // (raster@rasterman.com) for telling me about this... portions
-                // of this code is based off of his code in Imlib
+                // algorithm: ordered dithering... many many thanks to
+                // rasterman (raster@rasterman.com) for telling me about
+                // this... portions of this code is based off of his code
+                // in Imlib
                 for (y = 0, offset = 0; y < height; y++) {
                     dithy = y & 0x3;
                     
@@ -821,7 +844,7 @@ void WaImage::bevel1(void) {
 void WaImage::bevel2(void) {
     if (width > 4 && height > 4) {
         unsigned char r, g, b, rr ,gg ,bb, *pr = red + width + 1,
-      *pg = green + width + 1, *pb = blue + width + 1;
+            *pg = green + width + 1, *pb = blue + width + 1;
         unsigned int w = width - 2, h = height - 1, wh = width * (height - 3);
         
         while (--w) {
@@ -1156,642 +1179,668 @@ void WaImage::vgradient(void) {
                 channel = (unsigned char) yg;
                 channel2 = (channel >> 1) + (channel >> 2);
                 if (channel2 > channel) channel2 = 0;
-        memset(pg, channel2, width);
+                memset(pg, channel2, width);
         
-        channel = (unsigned char) yb;
-        channel2 = (channel >> 1) + (channel >> 2);
-        if (channel2 > channel) channel2 = 0;
-        memset(pb, channel2, width);
-      } else {
-        channel = (unsigned char) yr;
-        channel2 = channel + (channel >> 3);
-        if (channel2 < channel) channel2 = ~0;
-        memset(pr, channel2, width);
+                channel = (unsigned char) yb;
+                channel2 = (channel >> 1) + (channel >> 2);
+                if (channel2 > channel) channel2 = 0;
+                memset(pb, channel2, width);
+            } else {
+                channel = (unsigned char) yr;
+                channel2 = channel + (channel >> 3);
+                if (channel2 < channel) channel2 = ~0;
+                memset(pr, channel2, width);
 
-        channel = (unsigned char) yg;
-        channel2 = channel + (channel >> 3);
-        if (channel2 < channel) channel2 = ~0;
-        memset(pg, channel2, width);
+                channel = (unsigned char) yg;
+                channel2 = channel + (channel >> 3);
+                if (channel2 < channel) channel2 = ~0;
+                memset(pg, channel2, width);
 
-        channel = (unsigned char) yb;
-        channel2 = channel + (channel >> 3);
-        if (channel2 < channel) channel2 = ~0;
-        memset(pb, channel2, width);
-      }
+                channel = (unsigned char) yb;
+                channel2 = channel + (channel >> 3);
+                if (channel2 < channel) channel2 = ~0;
+                memset(pb, channel2, width);
+            }
 
-      yr += dry;
-      yg += dgy;
-      yb += dby;
-    }
-  } else {
+            yr += dry;
+            yg += dgy;
+            yb += dby;
+        }
+    } else {
 #endif // INTERLACE
 
-    // normal vgradient
-    for (y = 0; y < height; y++, pr += width, pg += width, pb += width) {
-      memset(pr, (unsigned char) yr, width);
-      memset(pg, (unsigned char) yg, width);
-      memset(pb, (unsigned char) yb, width);
+        // normal vgradient
+        for (y = 0; y < height; y++, pr += width, pg += width, pb += width) {
+            memset(pr, (unsigned char) yr, width);
+            memset(pg, (unsigned char) yg, width);
+            memset(pb, (unsigned char) yb, width);
 
-      yr += dry;
-      yg += dgy;
-      yb += dby;
-    }
+            yr += dry;
+            yg += dgy;
+            yb += dby;
+        }
 
 #ifdef    INTERLACE
-  }
+    }
 #endif // INTERLACE
 
 }
 
 
 void WaImage::pgradient(void) {
-  // pyramid gradient -  based on original dgradient, written by
-  // Mosfet (mosfet@kde.org)
-  // adapted from kde sources for Blackbox by Brad Hughes
+    // pyramid gradient -  based on original dgradient, written by
+    // Mosfet (mosfet@kde.org)
+    // adapted from kde sources for Blackbox by Brad Hughes
 
-  float yr, yg, yb, drx, dgx, dbx, dry, dgy, dby,
-    xr, xg, xb;
-  int rsign, gsign, bsign;
-  unsigned char *pr = red, *pg = green, *pb = blue;
-  unsigned int tr = to->getRed(), tg = to->getGreen(), tb = to->getBlue(),
-    *xt = xtable, *yt = ytable;
+    float yr, yg, yb, drx, dgx, dbx, dry, dgy, dby,
+        xr, xg, xb;
+    int rsign, gsign, bsign;
+    unsigned char *pr = red, *pg = green, *pb = blue;
+    unsigned int tr = to->getRed(), tg = to->getGreen(), tb = to->getBlue(),
+        *xt = xtable, *yt = ytable;
 
-  register unsigned int x, y;
+    register unsigned int x, y;
 
-  dry = drx = (float) (to->getRed() - from->getRed());
-  dgy = dgx = (float) (to->getGreen() - from->getGreen());
-  dby = dbx = (float) (to->getBlue() - from->getBlue());
+    dry = drx = (float) (to->getRed() - from->getRed());
+    dgy = dgx = (float) (to->getGreen() - from->getGreen());
+    dby = dbx = (float) (to->getBlue() - from->getBlue());
 
-  rsign = (drx < 0) ? -1 : 1;
-  gsign = (dgx < 0) ? -1 : 1;
-  bsign = (dbx < 0) ? -1 : 1;
+    rsign = (drx < 0) ? -1 : 1;
+    gsign = (dgx < 0) ? -1 : 1;
+    bsign = (dbx < 0) ? -1 : 1;
 
-  xr = yr = (drx / 2);
-  xg = yg = (dgx / 2);
-  xb = yb = (dbx / 2);
+    xr = yr = (drx / 2);
+    xg = yg = (dgx / 2);
+    xb = yb = (dbx / 2);
 
-  // Create X table
-  drx /= width;
-  dgx /= width;
-  dbx /= width;
+    // Create X table
+    drx /= width;
+    dgx /= width;
+    dbx /= width;
 
-  for (x = 0; x < width; x++) {
-    *(xt++) = (unsigned char) ((xr < 0) ? -xr : xr);
-    *(xt++) = (unsigned char) ((xg < 0) ? -xg : xg);
-    *(xt++) = (unsigned char) ((xb < 0) ? -xb : xb);
+    for (x = 0; x < width; x++) {
+        *(xt++) = (unsigned char) ((xr < 0) ? -xr : xr);
+        *(xt++) = (unsigned char) ((xg < 0) ? -xg : xg);
+        *(xt++) = (unsigned char) ((xb < 0) ? -xb : xb);
 
-    xr -= drx;
-    xg -= dgx;
-    xb -= dbx;
-  }
+        xr -= drx;
+        xg -= dgx;
+        xb -= dbx;
+    }
 
-  // Create Y table
-  dry /= height;
-  dgy /= height;
-  dby /= height;
+    // Create Y table
+    dry /= height;
+    dgy /= height;
+    dby /= height;
 
-  for (y = 0; y < height; y++) {
-    *(yt++) = ((unsigned char) ((yr < 0) ? -yr : yr));
-    *(yt++) = ((unsigned char) ((yg < 0) ? -yg : yg));
-    *(yt++) = ((unsigned char) ((yb < 0) ? -yb : yb));
+    for (y = 0; y < height; y++) {
+        *(yt++) = ((unsigned char) ((yr < 0) ? -yr : yr));
+        *(yt++) = ((unsigned char) ((yg < 0) ? -yg : yg));
+        *(yt++) = ((unsigned char) ((yb < 0) ? -yb : yb));
 
-    yr -= dry;
-    yg -= dgy;
-    yb -= dby;
-  }
+        yr -= dry;
+        yg -= dgy;
+        yb -= dby;
+    }
 
-  // Combine tables to create gradient
+    // Combine tables to create gradient
 
 #ifdef    INTERLACE
-  if (! interlaced) {
+    if (! interlaced) {
 #endif // INTERLACE
 
-    // normal pgradient
-    for (yt = ytable, y = 0; y < height; y++, yt += 3) {
-      for (xt = xtable, x = 0; x < width; x++) {
-        *(pr++) = (unsigned char) (tr - (rsign * (*(xt++) + *(yt))));
-        *(pg++) = (unsigned char) (tg - (gsign * (*(xt++) + *(yt + 1))));
-        *(pb++) = (unsigned char) (tb - (bsign * (*(xt++) + *(yt + 2))));
-      }
-    }
+        // normal pgradient
+        for (yt = ytable, y = 0; y < height; y++, yt += 3) {
+            for (xt = xtable, x = 0; x < width; x++) {
+                *(pr++) = (unsigned char) (tr - (rsign * (*(xt++) + *(yt))));
+                *(pg++) = (unsigned char)
+                    (tg - (gsign * (*(xt++) + *(yt + 1))));
+                *(pb++) = (unsigned char)
+                    (tb - (bsign * (*(xt++) + *(yt + 2))));
+            }
+        }
 
 #ifdef    INTERLACE
-  } else {
-    // faked interlacing effect
-    unsigned char channel, channel2;
+    } else {
+        // faked interlacing effect
+        unsigned char channel, channel2;
 
-    for (yt = ytable, y = 0; y < height; y++, yt += 3) {
-      for (xt = xtable, x = 0; x < width; x++) {
-        if (y & 1) {
-          channel = (unsigned char) (tr - (rsign * (*(xt++) + *(yt))));
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pr++) = channel2;
+        for (yt = ytable, y = 0; y < height; y++, yt += 3) {
+            for (xt = xtable, x = 0; x < width; x++) {
+                if (y & 1) {
+                    channel = (unsigned char)
+                        (tr - (rsign * (*(xt++) + *(yt))));
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pr++) = channel2;
 
-          channel = (unsigned char) (tg - (gsign * (*(xt++) + *(yt + 1))));
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pg++) = channel2;
+                    channel = (unsigned char)
+                        (tg - (gsign * (*(xt++) + *(yt + 1))));
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pg++) = channel2;
 
-          channel = (unsigned char) (tb - (bsign * (*(xt++) + *(yt + 2))));
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pb++) = channel2;
-        } else {
-          channel = (unsigned char) (tr - (rsign * (*(xt++) + *(yt))));
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pr++) = channel2;
+                    channel = (unsigned char)
+                        (tb - (bsign * (*(xt++) + *(yt + 2))));
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pb++) = channel2;
+                } else {
+                    channel = (unsigned char)
+                        (tr - (rsign * (*(xt++) + *(yt))));
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pr++) = channel2;
 
-          channel = (unsigned char) (tg - (gsign * (*(xt++) + *(yt + 1))));
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pg++) = channel2;
+                    channel = (unsigned char)
+                        (tg - (gsign * (*(xt++) + *(yt + 1))));
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pg++) = channel2;
 
-          channel = (unsigned char) (tb - (bsign * (*(xt++) + *(yt + 2))));
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pb++) = channel2;
+                    channel = (unsigned char)
+                        (tb - (bsign * (*(xt++) + *(yt + 2))));
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pb++) = channel2;
+                }
+            }
         }
-      }
     }
-  }
 #endif // INTERLACE
 
 }
 
 
 void WaImage::rgradient(void) {
-  // rectangle gradient -  based on original dgradient, written by
-  // Mosfet (mosfet@kde.org)
-  // adapted from kde sources for Blackbox by Brad Hughes
+    // rectangle gradient -  based on original dgradient, written by
+    // Mosfet (mosfet@kde.org)
+    // adapted from kde sources for Blackbox by Brad Hughes
 
-  float drx, dgx, dbx, dry, dgy, dby, xr, xg, xb, yr, yg, yb;
-  int rsign, gsign, bsign;
-  unsigned char *pr = red, *pg = green, *pb = blue;
-  unsigned int tr = to->getRed(), tg = to->getGreen(), tb = to->getBlue(),
-    *xt = xtable, *yt = ytable;
+    float drx, dgx, dbx, dry, dgy, dby, xr, xg, xb, yr, yg, yb;
+    int rsign, gsign, bsign;
+    unsigned char *pr = red, *pg = green, *pb = blue;
+    unsigned int tr = to->getRed(), tg = to->getGreen(), tb = to->getBlue(),
+        *xt = xtable, *yt = ytable;
 
-  register unsigned int x, y;
+    register unsigned int x, y;
 
-  dry = drx = (float) (to->getRed() - from->getRed());
-  dgy = dgx = (float) (to->getGreen() - from->getGreen());
-  dby = dbx = (float) (to->getBlue() - from->getBlue());
+    dry = drx = (float) (to->getRed() - from->getRed());
+    dgy = dgx = (float) (to->getGreen() - from->getGreen());
+    dby = dbx = (float) (to->getBlue() - from->getBlue());
 
-  rsign = (drx < 0) ? -2 : 2;
-  gsign = (dgx < 0) ? -2 : 2;
-  bsign = (dbx < 0) ? -2 : 2;
+    rsign = (drx < 0) ? -2 : 2;
+    gsign = (dgx < 0) ? -2 : 2;
+    bsign = (dbx < 0) ? -2 : 2;
 
-  xr = yr = (drx / 2);
-  xg = yg = (dgx / 2);
-  xb = yb = (dbx / 2);
+    xr = yr = (drx / 2);
+    xg = yg = (dgx / 2);
+    xb = yb = (dbx / 2);
 
-  // Create X table
-  drx /= width;
-  dgx /= width;
-  dbx /= width;
+    // Create X table
+    drx /= width;
+    dgx /= width;
+    dbx /= width;
 
-  for (x = 0; x < width; x++) {
-    *(xt++) = (unsigned char) ((xr < 0) ? -xr : xr);
-    *(xt++) = (unsigned char) ((xg < 0) ? -xg : xg);
-    *(xt++) = (unsigned char) ((xb < 0) ? -xb : xb);
+    for (x = 0; x < width; x++) {
+        *(xt++) = (unsigned char) ((xr < 0) ? -xr : xr);
+        *(xt++) = (unsigned char) ((xg < 0) ? -xg : xg);
+        *(xt++) = (unsigned char) ((xb < 0) ? -xb : xb);
 
-    xr -= drx;
-    xg -= dgx;
-    xb -= dbx;
-  }
+        xr -= drx;
+        xg -= dgx;
+        xb -= dbx;
+    }
 
-  // Create Y table
-  dry /= height;
-  dgy /= height;
-  dby /= height;
+    // Create Y table
+    dry /= height;
+    dgy /= height;
+    dby /= height;
 
-  for (y = 0; y < height; y++) {
-    *(yt++) = ((unsigned char) ((yr < 0) ? -yr : yr));
-    *(yt++) = ((unsigned char) ((yg < 0) ? -yg : yg));
-    *(yt++) = ((unsigned char) ((yb < 0) ? -yb : yb));
+    for (y = 0; y < height; y++) {
+        *(yt++) = ((unsigned char) ((yr < 0) ? -yr : yr));
+        *(yt++) = ((unsigned char) ((yg < 0) ? -yg : yg));
+        *(yt++) = ((unsigned char) ((yb < 0) ? -yb : yb));
 
-    yr -= dry;
-    yg -= dgy;
-    yb -= dby;
-  }
+        yr -= dry;
+        yg -= dgy;
+        yb -= dby;
+    }
 
-  // Combine tables to create gradient
+    // Combine tables to create gradient
 
 #ifdef    INTERLACE
-  if (! interlaced) {
+    if (! interlaced) {
 #endif // INTERLACE
 
-    // normal rgradient
-    for (yt = ytable, y = 0; y < height; y++, yt += 3) {
-      for (xt = xtable, x = 0; x < width; x++) {
-        *(pr++) = (unsigned char) (tr - (rsign * wamax(*(xt++), *(yt))));
-        *(pg++) = (unsigned char) (tg - (gsign * wamax(*(xt++), *(yt + 1))));
-        *(pb++) = (unsigned char) (tb - (bsign * wamax(*(xt++), *(yt + 2))));
-      }
-    }
+        // normal rgradient
+        for (yt = ytable, y = 0; y < height; y++, yt += 3) {
+            for (xt = xtable, x = 0; x < width; x++) {
+                *(pr++) = (unsigned char)
+                    (tr - (rsign * wamax(*(xt++), *(yt))));
+                *(pg++) = (unsigned char)
+                    (tg - (gsign * wamax(*(xt++), *(yt + 1))));
+                *(pb++) = (unsigned char)
+                    (tb - (bsign * wamax(*(xt++), *(yt + 2))));
+            }
+        }
 
 #ifdef    INTERLACE
-  } else {
-    // faked interlacing effect
-    unsigned char channel, channel2;
+    } else {
+        // faked interlacing effect
+        unsigned char channel, channel2;
 
-    for (yt = ytable, y = 0; y < height; y++, yt += 3) {
-      for (xt = xtable, x = 0; x < width; x++) {
-        if (y & 1) {
-          channel = (unsigned char) (tr - (rsign * wamax(*(xt++), *(yt))));
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pr++) = channel2;
+        for (yt = ytable, y = 0; y < height; y++, yt += 3) {
+            for (xt = xtable, x = 0; x < width; x++) {
+                if (y & 1) {
+                    channel = (unsigned char)
+                        (tr - (rsign * wamax(*(xt++), *(yt))));
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pr++) = channel2;
 
-          channel = (unsigned char) (tg - (gsign * wamax(*(xt++), *(yt + 1))));
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pg++) = channel2;
+                    channel = (unsigned char)
+                        (tg - (gsign * wamax(*(xt++), *(yt + 1))));
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pg++) = channel2;
 
-          channel = (unsigned char) (tb - (bsign * wamax(*(xt++), *(yt + 2))));
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pb++) = channel2;
-        } else {
-          channel = (unsigned char) (tr - (rsign * wamax(*(xt++), *(yt))));
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pr++) = channel2;
+                    channel = (unsigned char)
+                        (tb - (bsign * wamax(*(xt++), *(yt + 2))));
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pb++) = channel2;
+                } else {
+                    channel = (unsigned char)
+                        (tr - (rsign * wamax(*(xt++), *(yt))));
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pr++) = channel2;
 
-          channel = (unsigned char) (tg - (gsign * wamax(*(xt++), *(yt + 1))));
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pg++) = channel2;
+                    channel = (unsigned char)
+                        (tg - (gsign * wamax(*(xt++), *(yt + 1))));
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pg++) = channel2;
 
-          channel = (unsigned char) (tb - (bsign * wamax(*(xt++), *(yt + 2))));
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pb++) = channel2;
+                    channel = (unsigned char)
+                        (tb - (bsign * wamax(*(xt++), *(yt + 2))));
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pb++) = channel2;
+                }
+            }
         }
-      }
     }
-  }
 #endif // INTERLACE
 
 }
 
 
 void WaImage::egradient(void) {
-  // elliptic gradient -  based on original dgradient, written by
-  // Mosfet (mosfet@kde.org)
-  // adapted from kde sources for Blackbox by Brad Hughes
+    // elliptic gradient -  based on original dgradient, written by
+    // Mosfet (mosfet@kde.org)
+    // adapted from kde sources for Blackbox by Brad Hughes
 
-  float drx, dgx, dbx, dry, dgy, dby, yr, yg, yb, xr, xg, xb;
-  int rsign, gsign, bsign;
-  unsigned char *pr = red, *pg = green, *pb = blue;
-  unsigned int *xt = xtable, *yt = ytable,
-    tr = (unsigned long) to->getRed(),
-    tg = (unsigned long) to->getGreen(),
-    tb = (unsigned long) to->getBlue();
+    float drx, dgx, dbx, dry, dgy, dby, yr, yg, yb, xr, xg, xb;
+    int rsign, gsign, bsign;
+    unsigned char *pr = red, *pg = green, *pb = blue;
+    unsigned int *xt = xtable, *yt = ytable,
+        tr = (unsigned long) to->getRed(),
+        tg = (unsigned long) to->getGreen(),
+        tb = (unsigned long) to->getBlue();
 
-  register unsigned int x, y;
+    register unsigned int x, y;
 
-  dry = drx = (float) (to->getRed() - from->getRed());
-  dgy = dgx = (float) (to->getGreen() - from->getGreen());
-  dby = dbx = (float) (to->getBlue() - from->getBlue());
+    dry = drx = (float) (to->getRed() - from->getRed());
+    dgy = dgx = (float) (to->getGreen() - from->getGreen());
+    dby = dbx = (float) (to->getBlue() - from->getBlue());
 
-  rsign = (drx < 0) ? -1 : 1;
-  gsign = (dgx < 0) ? -1 : 1;
-  bsign = (dbx < 0) ? -1 : 1;
+    rsign = (drx < 0) ? -1 : 1;
+    gsign = (dgx < 0) ? -1 : 1;
+    bsign = (dbx < 0) ? -1 : 1;
 
-  xr = yr = (drx / 2);
-  xg = yg = (dgx / 2);
-  xb = yb = (dbx / 2);
+    xr = yr = (drx / 2);
+    xg = yg = (dgx / 2);
+    xb = yb = (dbx / 2);
 
-  // Create X table
-  drx /= width;
-  dgx /= width;
-  dbx /= width;
+    // Create X table
+    drx /= width;
+    dgx /= width;
+    dbx /= width;
 
-  for (x = 0; x < width; x++) {
-    *(xt++) = (unsigned long) (xr * xr);
-    *(xt++) = (unsigned long) (xg * xg);
-    *(xt++) = (unsigned long) (xb * xb);
+    for (x = 0; x < width; x++) {
+        *(xt++) = (unsigned long) (xr * xr);
+        *(xt++) = (unsigned long) (xg * xg);
+        *(xt++) = (unsigned long) (xb * xb);
 
-    xr -= drx;
-    xg -= dgx;
-    xb -= dbx;
-  }
+        xr -= drx;
+        xg -= dgx;
+        xb -= dbx;
+    }
 
-  // Create Y table
-  dry /= height;
-  dgy /= height;
-  dby /= height;
+    // Create Y table
+    dry /= height;
+    dgy /= height;
+    dby /= height;
 
-  for (y = 0; y < height; y++) {
-    *(yt++) = (unsigned long) (yr * yr);
-    *(yt++) = (unsigned long) (yg * yg);
-    *(yt++) = (unsigned long) (yb * yb);
+    for (y = 0; y < height; y++) {
+        *(yt++) = (unsigned long) (yr * yr);
+        *(yt++) = (unsigned long) (yg * yg);
+        *(yt++) = (unsigned long) (yb * yb);
 
-    yr -= dry;
-    yg -= dgy;
-    yb -= dby;
-  }
+        yr -= dry;
+        yg -= dgy;
+        yb -= dby;
+    }
 
-  // Combine tables to create gradient
+    // Combine tables to create gradient
 
 #ifdef    INTERLACE
-  if (! interlaced) {
+    if (! interlaced) {
 #endif // INTERLACE
 
-    // normal egradient
-    for (yt = ytable, y = 0; y < height; y++, yt += 3) {
-      for (xt = xtable, x = 0; x < width; x++) {
-        *(pr++) = (unsigned char)
-          (tr - (rsign * control->getSqrt(*(xt++) + *(yt))));
-        *(pg++) = (unsigned char)
-          (tg - (gsign * control->getSqrt(*(xt++) + *(yt + 1))));
-        *(pb++) = (unsigned char)
-          (tb - (bsign * control->getSqrt(*(xt++) + *(yt + 2))));
-      }
-    }
+        // normal egradient
+        for (yt = ytable, y = 0; y < height; y++, yt += 3) {
+            for (xt = xtable, x = 0; x < width; x++) {
+                *(pr++) = (unsigned char)
+                    (tr - (rsign * control->getSqrt(*(xt++) + *(yt))));
+                *(pg++) = (unsigned char)
+                    (tg - (gsign * control->getSqrt(*(xt++) + *(yt + 1))));
+                *(pb++) = (unsigned char)
+                    (tb - (bsign * control->getSqrt(*(xt++) + *(yt + 2))));
+            }
+        }
 
 #ifdef    INTERLACE
-  } else {
-    // faked interlacing effect
-    unsigned char channel, channel2;
+    } else {
+        // faked interlacing effect
+        unsigned char channel, channel2;
 
-    for (yt = ytable, y = 0; y < height; y++, yt += 3) {
-      for (xt = xtable, x = 0; x < width; x++) {
-        if (y & 1) {
-          channel = (unsigned char)
-            (tr - (rsign * control->getSqrt(*(xt++) + *(yt))));
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pr++) = channel2;
+        for (yt = ytable, y = 0; y < height; y++, yt += 3) {
+            for (xt = xtable, x = 0; x < width; x++) {
+                if (y & 1) {
+                    channel = (unsigned char)
+                        (tr - (rsign * control->getSqrt(*(xt++) + *(yt))));
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pr++) = channel2;
 
-          channel = (unsigned char)
-            (tg - (gsign * control->getSqrt(*(xt++) + *(yt + 1))));
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pg++) = channel2;
+                    channel = (unsigned char)
+                        (tg - (gsign * control->getSqrt(*(xt++) + *(yt + 1))));
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pg++) = channel2;
 
-          channel = (unsigned char)
-            (tb - (bsign * control->getSqrt(*(xt++) + *(yt + 2))));
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pb++) = channel2;
-        } else {
-          channel = (unsigned char)
-            (tr - (rsign * control->getSqrt(*(xt++) + *(yt))));
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pr++) = channel2;
+                    channel = (unsigned char)
+                        (tb - (bsign * control->getSqrt(*(xt++) + *(yt + 2))));
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pb++) = channel2;
+                } else {
+                    channel = (unsigned char)
+                        (tr - (rsign * control->getSqrt(*(xt++) + *(yt))));
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pr++) = channel2;
 
-          channel = (unsigned char)
-          (tg - (gsign * control->getSqrt(*(xt++) + *(yt + 1))));
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pg++) = channel2;
+                    channel = (unsigned char)
+                        (tg - (gsign * control->getSqrt(*(xt++) + *(yt + 1))));
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pg++) = channel2;
 
-          channel = (unsigned char)
-            (tb - (bsign * control->getSqrt(*(xt++) + *(yt + 2))));
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pb++) = channel2;
+                    channel = (unsigned char)
+                        (tb - (bsign * control->getSqrt(*(xt++) + *(yt + 2))));
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pb++) = channel2;
+                }
+            }
         }
-      }
     }
-  }
 #endif // INTERLACE
 
 }
 
 
 void WaImage::pcgradient(void) {
-  // pipe cross gradient -  based on original dgradient, written by
-  // Mosfet (mosfet@kde.org)
-  // adapted from kde sources for Blackbox by Brad Hughes
+    // pipe cross gradient -  based on original dgradient, written by
+    // Mosfet (mosfet@kde.org)
+    // adapted from kde sources for Blackbox by Brad Hughes
 
-  float drx, dgx, dbx, dry, dgy, dby, xr, xg, xb, yr, yg, yb;
-  int rsign, gsign, bsign;
-  unsigned char *pr = red, *pg = green, *pb = blue;
-  unsigned int *xt = xtable, *yt = ytable,
-    tr = to->getRed(),
-    tg = to->getGreen(),
-    tb = to->getBlue();
+    float drx, dgx, dbx, dry, dgy, dby, xr, xg, xb, yr, yg, yb;
+    int rsign, gsign, bsign;
+    unsigned char *pr = red, *pg = green, *pb = blue;
+    unsigned int *xt = xtable, *yt = ytable,
+        tr = to->getRed(),
+        tg = to->getGreen(),
+        tb = to->getBlue();
 
-  register unsigned int x, y;
+    register unsigned int x, y;
 
-  dry = drx = (float) (to->getRed() - from->getRed());
-  dgy = dgx = (float) (to->getGreen() - from->getGreen());
-  dby = dbx = (float) (to->getBlue() - from->getBlue());
+    dry = drx = (float) (to->getRed() - from->getRed());
+    dgy = dgx = (float) (to->getGreen() - from->getGreen());
+    dby = dbx = (float) (to->getBlue() - from->getBlue());
 
-  rsign = (drx < 0) ? -2 : 2;
-  gsign = (dgx < 0) ? -2 : 2;
-  bsign = (dbx < 0) ? -2 : 2;
+    rsign = (drx < 0) ? -2 : 2;
+    gsign = (dgx < 0) ? -2 : 2;
+    bsign = (dbx < 0) ? -2 : 2;
 
-  xr = yr = (drx / 2);
-  xg = yg = (dgx / 2);
-  xb = yb = (dbx / 2);
+    xr = yr = (drx / 2);
+    xg = yg = (dgx / 2);
+    xb = yb = (dbx / 2);
 
-  // Create X table
-  drx /= width;
-  dgx /= width;
-  dbx /= width;
+    // Create X table
+    drx /= width;
+    dgx /= width;
+    dbx /= width;
 
-  for (x = 0; x < width; x++) {
-    *(xt++) = (unsigned char) ((xr < 0) ? -xr : xr);
-    *(xt++) = (unsigned char) ((xg < 0) ? -xg : xg);
-    *(xt++) = (unsigned char) ((xb < 0) ? -xb : xb);
+    for (x = 0; x < width; x++) {
+        *(xt++) = (unsigned char) ((xr < 0) ? -xr : xr);
+        *(xt++) = (unsigned char) ((xg < 0) ? -xg : xg);
+        *(xt++) = (unsigned char) ((xb < 0) ? -xb : xb);
 
-    xr -= drx;
-    xg -= dgx;
-    xb -= dbx;
-  }
+        xr -= drx;
+        xg -= dgx;
+        xb -= dbx;
+    }
 
-  // Create Y table
-  dry /= height;
-  dgy /= height;
-  dby /= height;
+    // Create Y table
+    dry /= height;
+    dgy /= height;
+    dby /= height;
 
-  for (y = 0; y < height; y++) {
-    *(yt++) = ((unsigned char) ((yr < 0) ? -yr : yr));
-    *(yt++) = ((unsigned char) ((yg < 0) ? -yg : yg));
-    *(yt++) = ((unsigned char) ((yb < 0) ? -yb : yb));
+    for (y = 0; y < height; y++) {
+        *(yt++) = ((unsigned char) ((yr < 0) ? -yr : yr));
+        *(yt++) = ((unsigned char) ((yg < 0) ? -yg : yg));
+        *(yt++) = ((unsigned char) ((yb < 0) ? -yb : yb));
 
-    yr -= dry;
-    yg -= dgy;
-    yb -= dby;
-  }
+        yr -= dry;
+        yg -= dgy;
+        yb -= dby;
+    }
 
-  // Combine tables to create gradient
+    // Combine tables to create gradient
 
 #ifdef    INTERLACE
-  if (! interlaced) {
+    if (! interlaced) {
 #endif // INTERLACE
 
-    // normal pcgradient
-    for (yt = ytable, y = 0; y < height; y++, yt += 3) {
-      for (xt = xtable, x = 0; x < width; x++) {
-        *(pr++) = (unsigned char) (tr - (rsign * wamin(*(xt++), *(yt))));
-        *(pg++) = (unsigned char) (tg - (gsign * wamin(*(xt++), *(yt + 1))));
-        *(pb++) = (unsigned char) (tb - (bsign * wamin(*(xt++), *(yt + 2))));
-      }
-    }
+        // normal pcgradient
+        for (yt = ytable, y = 0; y < height; y++, yt += 3) {
+            for (xt = xtable, x = 0; x < width; x++) {
+                *(pr++) = (unsigned char)
+                    (tr - (rsign * wamin(*(xt++), *(yt))));
+                *(pg++) = (unsigned char)
+                    (tg - (gsign * wamin(*(xt++), *(yt + 1))));
+                *(pb++) = (unsigned char)
+                    (tb - (bsign * wamin(*(xt++), *(yt + 2))));
+            }
+        }
 
 #ifdef    INTERLACE
-  } else {
-    // faked interlacing effect
-    unsigned char channel, channel2;
+    } else {
+        // faked interlacing effect
+        unsigned char channel, channel2;
 
-    for (yt = ytable, y = 0; y < height; y++, yt += 3) {
-      for (xt = xtable, x = 0; x < width; x++) {
-        if (y & 1) {
-          channel = (unsigned char) (tr - (rsign * wamin(*(xt++), *(yt))));
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pr++) = channel2;
+        for (yt = ytable, y = 0; y < height; y++, yt += 3) {
+            for (xt = xtable, x = 0; x < width; x++) {
+                if (y & 1) {
+                    channel = (unsigned char)
+                        (tr - (rsign * wamin(*(xt++), *(yt))));
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pr++) = channel2;
 
-          channel = (unsigned char) (tg - (bsign * wamin(*(xt++), *(yt + 1))));
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pg++) = channel2;
+                    channel = (unsigned char)
+                        (tg - (bsign * wamin(*(xt++), *(yt + 1))));
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pg++) = channel2;
 
-          channel = (unsigned char) (tb - (gsign * wamin(*(xt++), *(yt + 2))));
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pb++) = channel2;
-        } else {
-          channel = (unsigned char) (tr - (rsign * wamin(*(xt++), *(yt))));
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pr++) = channel2;
+                    channel = (unsigned char)
+                        (tb - (gsign * wamin(*(xt++), *(yt + 2))));
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pb++) = channel2;
+                } else {
+                    channel = (unsigned char)
+                        (tr - (rsign * wamin(*(xt++), *(yt))));
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pr++) = channel2;
 
-          channel = (unsigned char) (tg - (gsign * wamin(*(xt++), *(yt + 1))));
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pg++) = channel2;
+                    channel = (unsigned char)
+                        (tg - (gsign * wamin(*(xt++), *(yt + 1))));
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pg++) = channel2;
 
-          channel = (unsigned char) (tb - (bsign * wamin(*(xt++), *(yt + 2))));
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pb++) = channel2;
+                    channel = (unsigned char)
+                        (tb - (bsign * wamin(*(xt++), *(yt + 2))));
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pb++) = channel2;
+                }
+            }
         }
-      }
     }
-  }
 #endif // INTERLACE
 
 }
 
 
 void WaImage::cdgradient(void) {
-  // cross diagonal gradient -  based on original dgradient, written by
-  // Mosfet (mosfet@kde.org)
-  // adapted from kde sources for Blackbox by Brad Hughes
+    // cross diagonal gradient -  based on original dgradient, written by
+    // Mosfet (mosfet@kde.org)
+    // adapted from kde sources for Blackbox by Brad Hughes
 
-  float drx, dgx, dbx, dry, dgy, dby, yr = 0.0, yg = 0.0, yb = 0.0,
-    xr = (float) from->getRed(),
-    xg = (float) from->getGreen(),
-    xb = (float) from->getBlue();
-  unsigned char *pr = red, *pg = green, *pb = blue;
-  unsigned int w = width * 2, h = height * 2, *xt, *yt;
+    float drx, dgx, dbx, dry, dgy, dby, yr = 0.0, yg = 0.0, yb = 0.0,
+        xr = (float) from->getRed(),
+        xg = (float) from->getGreen(),
+        xb = (float) from->getBlue();
+    unsigned char *pr = red, *pg = green, *pb = blue;
+    unsigned int w = width * 2, h = height * 2, *xt, *yt;
 
-  register unsigned int x, y;
+    register unsigned int x, y;
 
-  dry = drx = (float) (to->getRed() - from->getRed());
-  dgy = dgx = (float) (to->getGreen() - from->getGreen());
-  dby = dbx = (float) (to->getBlue() - from->getBlue());
+    dry = drx = (float) (to->getRed() - from->getRed());
+    dgy = dgx = (float) (to->getGreen() - from->getGreen());
+    dby = dbx = (float) (to->getBlue() - from->getBlue());
 
-  // Create X table
-  drx /= w;
-  dgx /= w;
-  dbx /= w;
+    // Create X table
+    drx /= w;
+    dgx /= w;
+    dbx /= w;
 
-  for (xt = (xtable + (width * 3) - 1), x = 0; x < width; x++) {
-    *(xt--) = (unsigned char) xb;
-    *(xt--) = (unsigned char) xg;
-    *(xt--) = (unsigned char) xr;
+    for (xt = (xtable + (width * 3) - 1), x = 0; x < width; x++) {
+        *(xt--) = (unsigned char) xb;
+        *(xt--) = (unsigned char) xg;
+        *(xt--) = (unsigned char) xr;
 
-    xr += drx;
-    xg += dgx;
-    xb += dbx;
-  }
+        xr += drx;
+        xg += dgx;
+        xb += dbx;
+    }
 
-  // Create Y table
-  dry /= h;
-  dgy /= h;
-  dby /= h;
+    // Create Y table
+    dry /= h;
+    dgy /= h;
+    dby /= h;
 
-  for (yt = ytable, y = 0; y < height; y++) {
-    *(yt++) = (unsigned char) yr;
-    *(yt++) = (unsigned char) yg;
-    *(yt++) = (unsigned char) yb;
+    for (yt = ytable, y = 0; y < height; y++) {
+        *(yt++) = (unsigned char) yr;
+        *(yt++) = (unsigned char) yg;
+        *(yt++) = (unsigned char) yb;
 
-    yr += dry;
-    yg += dgy;
-    yb += dby;
-  }
+        yr += dry;
+        yg += dgy;
+        yb += dby;
+    }
 
-  // Combine tables to create gradient
+    // Combine tables to create gradient
 
 #ifdef    INTERLACE
-  if (! interlaced) {
+    if (! interlaced) {
 #endif // INTERLACE
 
-    // normal cdgradient
-    for (yt = ytable, y = 0; y < height; y++, yt += 3) {
-      for (xt = xtable, x = 0; x < width; x++) {
-        *(pr++) = *(xt++) + *(yt);
-        *(pg++) = *(xt++) + *(yt + 1);
-        *(pb++) = *(xt++) + *(yt + 2);
-      }
-    }
+        // normal cdgradient
+        for (yt = ytable, y = 0; y < height; y++, yt += 3) {
+            for (xt = xtable, x = 0; x < width; x++) {
+                *(pr++) = *(xt++) + *(yt);
+                *(pg++) = *(xt++) + *(yt + 1);
+                *(pb++) = *(xt++) + *(yt + 2);
+            }
+        }
 
 #ifdef    INTERLACE
-  } else {
-    // faked interlacing effect
-    unsigned char channel, channel2;
+    } else {
+        // faked interlacing effect
+        unsigned char channel, channel2;
 
-    for (yt = ytable, y = 0; y < height; y++, yt += 3) {
-      for (xt = xtable, x = 0; x < width; x++) {
-        if (y & 1) {
-          channel = *(xt++) + *(yt);
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pr++) = channel2;
+        for (yt = ytable, y = 0; y < height; y++, yt += 3) {
+            for (xt = xtable, x = 0; x < width; x++) {
+                if (y & 1) {
+                    channel = *(xt++) + *(yt);
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pr++) = channel2;
 
-          channel = *(xt++) + *(yt + 1);
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pg++) = channel2;
+                    channel = *(xt++) + *(yt + 1);
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pg++) = channel2;
 
-          channel = *(xt++) + *(yt + 2);
-          channel2 = (channel >> 1) + (channel >> 2);
-          if (channel2 > channel) channel2 = 0;
-          *(pb++) = channel2;
-        } else {
-          channel = *(xt++) + *(yt);
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pr++) = channel2;
+                    channel = *(xt++) + *(yt + 2);
+                    channel2 = (channel >> 1) + (channel >> 2);
+                    if (channel2 > channel) channel2 = 0;
+                    *(pb++) = channel2;
+                } else {
+                    channel = *(xt++) + *(yt);
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pr++) = channel2;
 
-          channel = *(xt++) + *(yt + 1);
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pg++) = channel2;
+                    channel = *(xt++) + *(yt + 1);
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pg++) = channel2;
 
-          channel = *(xt++) + *(yt + 2);
-          channel2 = channel + (channel >> 3);
-          if (channel2 < channel) channel2 = ~0;
-          *(pb++) = channel2;
+                    channel = *(xt++) + *(yt + 2);
+                    channel2 = channel + (channel >> 3);
+                    if (channel2 < channel) channel2 = ~0;
+                    *(pb++) = channel2;
+                }
+            }
         }
-      }
     }
-  }
 #endif // INTERLACE
 }
 
 
 WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
-                             int _cpc, unsigned long cmax) {
+                               int _cpc, unsigned long cmax) {
     display       = dpy;
     screen_number = scrn->screen_number;
     screen_depth  = scrn->screen_depth;
@@ -1816,13 +1865,13 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
     XPixmapFormatValues *pmv = XListPixmapFormats(display,
                                                   &count);    
     if (pmv) {
-            bits_per_pixel = 0;
-            for (int i = 0; i < count; i++)
-                if (pmv[i].depth == screen_depth) {
-                    bits_per_pixel = pmv[i].bits_per_pixel;
-                    break;
-                } 
-            XFree(pmv);
+        bits_per_pixel = 0;
+        for (int i = 0; i < count; i++)
+            if (pmv[i].depth == screen_depth) {
+                bits_per_pixel = pmv[i].bits_per_pixel;
+                break;
+            } 
+        XFree(pmv);
     }
     
     if (bits_per_pixel == 0) bits_per_pixel = screen_depth;
@@ -1836,7 +1885,7 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
             
             // compute color tables
             unsigned long red_mask = getVisual()->red_mask,
-                    green_mask = getVisual()->green_mask,
+                green_mask = getVisual()->green_mask,
                 blue_mask = getVisual()->blue_mask;
             
             while (! (red_mask & 1)) { red_offset++; red_mask >>= 1; }
@@ -1911,8 +1960,8 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
                         " " << colors[i].green << " " << colors[i].blue <<
                         endl;
                     colors[i].flags = 0;
-                    } else
-                        colors[i].flags = DoRed|DoGreen|DoBlue;
+                } else
+                    colors[i].flags = DoRed|DoGreen|DoBlue;
             
             XUngrabServer(display);
             
@@ -1939,7 +1988,7 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
                             if (pixel < chk) {
                                 chk = pixel;
                                 close = ii;
-                                }
+                            }
                             
                             colors[i].red = icolors[close].red;
                             colors[i].green = icolors[close].green;
@@ -1950,7 +1999,7 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
                                 colors[i].flags = DoRed|DoGreen|DoBlue;
                                 break;
                             }
-                            }
+                        }
                     }
                 }
             }
@@ -2052,7 +2101,8 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
             break;
         }    
         default:
-            ERROR << "unsupported visual " << getVisual()->c_class << endl; quit(1);
+            ERROR << "unsupported visual " << getVisual()->c_class << endl;
+            quit(1);
     }
     cache = new list<Cache *>;
 }
@@ -2121,7 +2171,7 @@ Pixmap WaImageControl::renderImage(unsigned int width, unsigned int height,
                                    WaTexture *texture, Pixmap parent,
                                    unsigned int src_x, unsigned int src_y,
                                    Pixmap dest) {
-  if (texture->getTexture() & WaImage_ParentRelative) return ParentRelative;
+    if (texture->getTexture() & WaImage_ParentRelative) return ParentRelative;
     
     Pixmap pixmap = searchCache(width, height, texture->getTexture(),
                                 texture->getColor(), texture->getColorTo());
@@ -2232,9 +2282,9 @@ unsigned long WaImageControl::getColor(const char *colorname) {
 }
 
 void WaImageControl::getColorTables(unsigned char **rmt, unsigned char **gmt,
-                                   unsigned char **bmt,
-                                   int *roff, int *goff, int *boff,
-                                   int *rbit, int *gbit, int *bbit) {
+                                    unsigned char **bmt,
+                                    int *roff, int *goff, int *boff,
+                                    int *rbit, int *gbit, int *bbit) {
     if (rmt) *rmt = red_color_table;
     if (gmt) *gmt = green_color_table;
     if (bmt) *bmt = blue_color_table;
@@ -2254,9 +2304,9 @@ void WaImageControl::getXColorTable(XColor **c, int *n) {
 }
 
 void WaImageControl::getGradientBuffers(unsigned int w,
-                                       unsigned int h,
-                                       unsigned int **xbuf,
-                                       unsigned int **ybuf) {
+                                        unsigned int h,
+                                        unsigned int **xbuf,
+                                        unsigned int **ybuf) {
     if (w > grad_buffer_width) {
         if (grad_xbuffer) {
             delete [] grad_xbuffer;
@@ -2444,7 +2494,7 @@ Pixmap WaImageControl::xrender(Pixmap p, unsigned int width,
     XRenderPictFormat *format;
     
     if ((! texture->getOpacity()) || parent == None || dest == None)
-      return p;
+        return p;
 
     GC gc = DefaultGC(display, screen_number);
     XCopyArea(display, parent, dest, gc, src_x, src_y, width,

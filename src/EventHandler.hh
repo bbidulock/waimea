@@ -14,21 +14,32 @@
 #ifndef __EventHandler_hh
 #define __EventHandler_hh
 
-#include <sys/types.h>
-#include <sys/time.h>
 #include <X11/Xlib.h>
-#include <hash_set.h>
+
+#ifdef    TIME_WITH_SYS_TIME
+#  include <sys/time.h>
+#  include <time.h>
+#else // !TIME_WITH_SYS_TIME
+#  ifdef    HAVE_SYS_TIME_H
+#    include <sys/time.h>
+#  else // !HAVE_SYS_TIME_H
+#    include <time.h>
+#  endif // HAVE_SYS_TIME_H
+#endif // TIME_WITH_SYS_TIME
+
+#ifdef    HAVE_SET
+#  include <set>
+#endif // HAVE_SET
+
+using std::set;
 
 class EventHandler;
-typedef struct _EventDetail EventDetail;
+
+typedef struct {
+    unsigned int type, mod, detail;
+} EventDetail;
 
 #include "Waimea.hh"
-#include "WaWindow.hh"
-#include "ResourceHandler.hh"
-
-struct _EventDetail {
-    unsigned int type, mod, detail;
-};
 
 #define MoveResizeMask (1L << 25)
 
@@ -39,7 +50,7 @@ public:
     EventHandler(Waimea *);
     virtual ~EventHandler(void);
 
-    void EventLoop(hash_set<int> *, XEvent *);
+    void EventLoop(set<int> *, XEvent *);
     void HandleEvent(XEvent *);
     void EvExpose(XExposeEvent *);
     void EvFocus(XFocusChangeEvent *);
@@ -48,9 +59,9 @@ public:
     void EvAct(XEvent *, Window, EventDetail *);
     
     XEvent *event;
-    hash_set<int> *empty_return_mask;
-    hash_set<int> *moveresize_return_mask;
-    hash_set<int> *menu_viewport_move_return_mask;
+    set<int> *empty_return_mask;
+    set<int> *moveresize_return_mask;
+    set<int> *menu_viewport_move_return_mask;
 
     int move_resize;
     Window focused;

@@ -16,19 +16,19 @@
 
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
-#include <hash_map.h>
-#include <list.h>
 
-struct waoptions {
-    char *display;
-    char *rcfile;
-    char *stylefile;
-    char *actionfile;
-    char *menufile;
-};
+#ifdef    HAVE_LIST
+#  include <list>
+#endif // HAVE_LIST
 
-#define EastType  1
-#define WestType -1
+using std::list;
+
+#ifdef    HAVE_MAP
+#  include <map>
+#endif // HAVE_MAP
+
+using std::map;
+using std::make_pair;
 
 class Waimea;
 
@@ -38,17 +38,26 @@ public:
         id = win_id;
         type = win_type;
     }
-    
+
     Window id;
     int type;
 };
 
-#include "EventHandler.hh"
-#include "NetHandler.hh"
-#include "ResourceHandler.hh"
-#include "WaWindow.hh"
-#include "WaScreen.hh"
+typedef struct _WaAction WaAction;
+
+#define EastType  1
+#define WestType -1
+
+#include "WaMenu.hh"
 #include "Timer.hh"
+
+struct waoptions {
+    char *display;
+    char *rcfile;
+    char *stylefile;
+    char *actionfile;
+    char *menufile;
+};
 
 #define WARNING cerr << "Warning: " << __FUNCTION__ << ": "
 #define ERROR cerr << "Error: " << __FUNCTION__ << ": "
@@ -146,7 +155,7 @@ public:
     Timer *timer;
     Cursor session_cursor, move_cursor, resizeleft_cursor, resizeright_cursor;
     
-    hash_map<long unsigned int, WindowObject *> *window_table;
+    map<long unsigned int, WindowObject *> *window_table;
     list<Window> *always_on_top_list;
     list<Window> *always_at_bottom_list;
     list<WaWindow *> *wawindow_list;
@@ -169,6 +178,5 @@ char *wastrdup(char *);
 void restart(char *);
 void quit(int);
 char **commandline_to_argv(char *, char **);
-char *basename(char *);
 
 #endif // __Waimea_hh

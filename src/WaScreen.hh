@@ -17,21 +17,24 @@
 
 #include <X11/Xlib.h>
 
-#ifdef SHAPE
-#include <X11/Xutil.h>
-#include <X11/extensions/shape.h>
-#endif //SHAPE
+#ifdef    SHAPE
+#  include <X11/Xutil.h>
+#  include <X11/extensions/shape.h>
+#endif // SHAPE
 
-#ifdef XRENDER
-#include <X11/extensions/Xrender.h>
+#ifdef    XRENDER
+#  include <X11/extensions/Xrender.h>
 #endif // XRENDER
 
-#ifdef XFT
-#include <X11/Xft/Xft.h>
+#ifdef    XFT
+#  include <X11/Xft/Xft.h>
 #endif // XFT
 
 class WaScreen;
 class ScreenEdge;
+
+typedef struct _WaAction WaAction;
+typedef void (WaScreen::*RootActionFn)(XEvent *, WaAction *);
 
 typedef struct {
     Window window;
@@ -42,26 +45,21 @@ typedef struct {
 } WMstrut;
 
 typedef struct {
+    bool xft;
+    char *font;
+} WaFont;
+
+#include "WaImage.hh"
+#include "EventHandler.hh"
+#include "NetHandler.hh"
+#include "DockappHandler.hh"
+
+typedef struct {
     int x;
     int y;
     int width;
     int height;
 } Workarea;
-
-typedef struct {
-    bool xft;
-    char *font;
-} WaFont;
-
-typedef struct _WaAction WaAction;
-typedef void (WaScreen::*RootActionFn)(XEvent *, WaAction *);
-
-#include "WaImage.hh"
-#include "Waimea.hh"
-#include "WaMenu.hh"
-#include "ResourceHandler.hh"
-#include "NetHandler.hh"
-#include "DockappHandler.hh"
 
 #define WestDirection  1
 #define EastDirection  2

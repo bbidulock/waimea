@@ -1,5 +1,10 @@
-AC_INIT
-AM_INIT_AUTOMAKE(Waimea, 0.3.4)
+dnl configure.in for Waimea
+
+AC_INIT(waimea, 0.3.4)
+AM_INIT_AUTOMAKE(waimea, 0.3.4)
+
+AM_CONFIG_HEADER(config.h)
+
 AC_PROG_CXX
 AC_PROG_INSTALL
 
@@ -24,29 +29,8 @@ AC_CHECK_LIB(X11, XOpenDisplay,
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 
-AC_MSG_CHECKING(for hash_map.h)
-AC_TRY_COMPILE(
-#include <hash_map.h>
-   ,,
-   AC_MSG_RESULT(yes), [
-   AC_MSG_RESULT(no)
-   AC_MSG_ERROR([Your libstdc++ installation does not have the extra hash classes])])
-
-AC_MSG_CHECKING(for hash_set.h)
-AC_TRY_COMPILE(
-#include <hash_set.h>
-   ,,
-   AC_MSG_RESULT(yes), [
-   AC_MSG_RESULT(no)
-   AC_MSG_ERROR([Your libstdc++ installation does not have the extra hash classes])])
-
-AC_MSG_CHECKING(for list.h)
-AC_TRY_COMPILE(
-#include <list.h>
-   ,,
-   AC_MSG_RESULT(yes), [
-   AC_MSG_RESULT(no)
-   AC_MSG_ERROR([Your libstdc++ installation does not have the extra list classes])])
+AC_HEADER_STDC
+AC_CHECK_HEADERS(ctype.h libgen.h signal.h stdio.h time.h unistd.h sys/select.h sys/signal.h sys/stat.h sys/time.h sys/types.h sys/wait.h iostream list set map)
 
 dnl Check for XShape extension support and proper library files
 SHAPE=""

@@ -19,9 +19,9 @@
 #include <X11/Xutil.h>
 #include <X11/Xmd.h>
 
-#ifdef SHAPE
-#include <X11/extensions/shape.h>
-#endif //SHAPE
+#ifdef    SHAPE
+#  include <X11/extensions/shape.h>
+#endif // SHAPE
 
 class WaWindow;
 class WaChildWindow;
@@ -29,11 +29,9 @@ class WaChildWindow;
 typedef struct _WaAction WaAction;
 typedef void (WaWindow::*WwActionFn)(XEvent *, WaAction *);
 
-#include "WaScreen.hh"
-#include "WaMenu.hh"
 #include "Waimea.hh"
+#include "WaScreen.hh"
 #include "NetHandler.hh"
-#include "ResourceHandler.hh"
 
 #define ApplyGravity   1
 #define RemoveGravity -1
