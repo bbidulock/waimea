@@ -184,15 +184,18 @@ void Timer::ValidateInterrupts(XEvent *e) {
  * @fn    Interrupt(void)
  * @brief Constructor for Interrupt class
  *
+ * Creates an Interrupt that can be added to the timer.
+ *
+ * @param ac WaAction object, contains delay time
+ * @param e Event causing Interrupt creation
+ * @param win Window linked to Interrupt
  */
-Interrupt::Interrupt(WaAction *ac, XEvent *e) {
+Interrupt::Interrupt(WaAction *ac, XEvent *e, Window win) {
     memcpy(&event, e, sizeof(XEvent));
-    action = ac;    
+    action = ac;
     delay.tv_sec = ac->delay.tv_sec;
     delay.tv_usec = ac->delay.tv_usec;
-    win = (Window) 0;
-    wm = NULL;
-    ws = NULL;
+    id = win;
 }
 
 /**
@@ -219,31 +222,42 @@ void timeout(int signal) {
         }
     }
 
-    if (i->win) {
-        list<WaWindow *>::iterator wit = timer->waimea->wawindow_list->begin();
-        for (; wit != timer->waimea->wawindow_list->end(); ++wit) {
-            if ((*wit)->id == i->win) {
-                if (i->action->exec)
-                    waexec(i->action->exec, (*wit)->wascreen->displaystring);
-                else {
-                    ((*(*wit)).*(i->action->winfunc))(&i->event, i->action);
-                    XSync((*wit)->display, false);
-                }
-            }
-        }
-    } else if (i->ws) {
-        if (i->action->exec)
-            waexec(i->action->exec, i->ws->displaystring);
-        else {
-            ((*(i->ws)).*(i->action->rootfunc))(&i->event, i->action);
-            XSync(i->ws->display, false);
-        }
-    } else if (i->wm) {
-        if (i->action->exec)
-            waexec(i->action->exec, i->wm->menu->wascreen->displaystring);
-        else {
-            ((*(i->wm)).*(i->action->menufunc))(&i->event, i->action);
-            XSync(i->wm->menu->display, false);
+    hash_map<Window, WindowObject *>::iterator wit;
+    if ((wit = timer->waimea->window_table->find(i->id)) !=
+        timer->waimea->window_table->end()) {
+        WindowObject *wo = (*wit).second;
+
+        switch (wo->type) {
+           case WindowType: {
+               WaWindow *wa = (WaWindow *) wo;    
+               if (i->action->exec)
+                    waexec(i->action->exec, wa->wascreen->displaystring);
+               else {
+                    ((*wa).*(i->action->winfunc))(&i->event, i->action);
+                    XSync(wa->display, false);
+               }
+           } break;
+           case MenuTitleType:
+           case MenuItemType:
+           case MenuCBItemType:
+           case MenuSubType: {
+              WaMenuItem *wm = (WaMenuItem *) wo;
+              if (i->action->exec)
+                  waexec(i->action->exec, wm->menu->wascreen->displaystring);
+              else { 
+                  ((*wm).*(i->action->menufunc))(&i->event, i->action);
+                  XSync(wm->menu->display, false);
+               }
+           } break;
+           case RootType: {
+              WaScreen *ws = (WaScreen *) wo;
+              if (i->action->exec) 
+                 waexec(i->action->exec, ws->displaystring);
+              else {
+                 ((*ws).*(i->action->rootfunc))(&i->event, i->action);
+                 XSync(ws->display, false);
+              }
+           } break;
         }
     }
     delete i;

@@ -41,9 +41,9 @@ private:
 
 class Interrupt {
 public:
-    Interrupt(WaAction *, XEvent *);
+    Interrupt(WaAction *, XEvent *, Window);
     
-    Window win;
+    Window id;
     WaMenuItem *wm;
     WaScreen *ws;
     struct timeval delay;

@@ -134,6 +134,7 @@ public:
     void LoadActions(void);
     void ReadActions(char *, list<Define *> *, list<StrComp *> *,
                      list<WaAction *> *);
+    WaMenu *ParseMenu(WaMenu *, FILE *);
 
     char *rc_file;
     char *style_file;
@@ -145,6 +146,7 @@ public:
     long unsigned int cache_max, double_click;
     bool image_dither, rc_forced, style_forced, action_forced, menu_forced,
                          trans;
+    int linenr;
     
     list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
         *handleacts, *rgacts, *lgacts, *rootacts, *weacts, *eeacts, *neacts,
@@ -165,14 +167,12 @@ private:
                              WaImageControl *);
     void ReadDatabaseFont(char *, char *, WaFont *, WaFont *);
     void ParseAction(const char *, list<StrComp *> *, list<WaAction *> *);
-    void ParseMenu(WaMenu *, FILE *);
 
     Waimea *waimea;
     WaScreen *wascreen;
     Display *display;
     XrmDatabase database;
     char *homedir;
-    int linenr;
     list<StrComp *> *wacts;
     list<StrComp *> *racts;
     list<StrComp *> *macts;
@@ -232,5 +232,6 @@ public:
 
 char *strtrim(char *);
 char *strwithin(char *, char, char, bool = false);
+char *param_eval(char *, char *, WaScreen *);
 
 #endif // __ResourceHandler_hh

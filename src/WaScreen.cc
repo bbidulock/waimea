@@ -800,9 +800,10 @@ void WaScreen::MoveViewport(int direction) {
 void WaScreen::ViewportFixedMove(XEvent *, WaAction *ac) {
    int x, y, mask; 
    unsigned int w = 0, h = 0;
+   char *tmp;
                             
    if (! ac->param) return;
-                
+   
    mask = XParseGeometry(ac->param, &x, &y, &w, &h);
    if (mask & XNegative) x = v_xmax + x;
    if (mask & YNegative) y = v_ymax + y;
@@ -979,6 +980,10 @@ void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
     if (! menu) return;
+    if (menu->dynamic && menu->mapped) {
+        menu->Unmap(menu->has_focus);
+        if (! (menu = waimea->CreateDynamicMenu(ac->param))) return;
+    }
     if (waimea->eh->move_resize != EndMoveResizeType) return;
     
     if (XQueryPointer(display, id, &w, &w, &rx, &ry, &i, &i, &ui)) {
@@ -1142,8 +1147,7 @@ void WaScreen::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
             if ((*it)->delay.tv_sec || (*it)->delay.tv_usec) {
-                Interrupt *i = new Interrupt(*it, e);
-                i->ws = this;
+                Interrupt *i = new Interrupt(*it, e, id);
                 waimea->timer->AddInterrupt(i);
             }
             else {

@@ -135,6 +135,7 @@ public:
     void WaLowerWindow(Window);
     void UpdateCheckboxes(int);
     WaMenu *GetMenuNamed(char *);
+    WaMenu *CreateDynamicMenu(char *);
     
     Display *display;
     WaScreen *wascreen;
@@ -168,5 +169,6 @@ char *wastrdup(char *);
 void restart(char *);
 void quit(int);
 char **commandline_to_argv(char *, char **);
+char *basename(char *);
 
 #endif // __Waimea_hh

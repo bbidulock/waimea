@@ -248,16 +248,91 @@ void Waimea::UpdateCheckboxes(int type) {
  *         NULL is returned
  */
 WaMenu *Waimea::GetMenuNamed(char *menu) {
+    WaMenu *dmenu;
+    int i;
+
     if (! menu) return NULL;
-    
+   
     list<WaMenu *>::iterator menu_it = wamenu_list->begin();
     for (; menu_it != wamenu_list->end(); ++menu_it)
         if (! strcmp((*menu_it)->name, menu))
-            return *menu_it;
+             return *menu_it;
+            
+    for (i = 0; menu[i] != '\0' && menu[i] != '!'; i++);
+    if (menu[i] == '!' && menu[i + 1] != '\0') {
+        dmenu = CreateDynamicMenu(menu);
+        return dmenu;
+    }
     
     WARNING << "\"" << menu << "\" unknown menu" << endl;
     return NULL;
 } 
+
+/**
+ * @fn    CreateDynamicMenu(char *name)
+ * @brief Creates a dynamic menu
+ *
+ * Executes command line and parses standard out as a menu file.
+ *
+ * @param name Name of dynamic menu to create
+ *
+ * @return Created menu, NULL if error occured inmenu parsing
+ */
+WaMenu *Waimea::CreateDynamicMenu(char *name) {
+    char *tmp_argv[128];
+    int m_pipe[2];
+    WaMenu *dmenu;
+    int pid, status, i;
+
+    for (i = 0; name[i] != '\0' && name[i] != '!'; i++);
+    if (name[i] == '!' && name[i + 1] != '\0')
+        commandline_to_argv(wastrdup(&name[i + 1]), tmp_argv);
+    else 
+       return NULL;
+
+    if (pipe(m_pipe) < 0) {
+        WARNING;
+        perror("pipe");
+    }
+    else {
+        struct sigaction action;
+        
+        action.sa_handler = SIG_DFL;
+        action.sa_mask = sigset_t();
+        action.sa_flags = 0;
+        sigaction(SIGCHLD, &action, NULL); 
+        pid = fork();
+        if (pid == 0) {
+            dup2(m_pipe[1], STDOUT_FILENO);
+            close(m_pipe[0]);
+            close(m_pipe[1]);
+            if (execvp(*tmp_argv, tmp_argv) < 0)
+                WARNING << *tmp_argv << ": command not found" << endl;
+            close(STDOUT_FILENO);
+            exit(127);
+        }
+        close(m_pipe[1]);
+        rh->linenr = 0;
+        delete [] rh->menu_file;
+        rh->menu_file = wastrdup("PIPE");
+        dmenu = new WaMenu(wastrdup(name));
+        dmenu->dynamic = true;
+        dmenu = rh->ParseMenu(dmenu, fdopen(m_pipe[0], "r"));
+        close(m_pipe[0]);
+        if (waitpid(pid, &status, 0) == -1) {
+           WARNING; 
+           perror("waitpid");
+        }
+        action.sa_handler = signalhandler;
+        action.sa_flags = SA_NOCLDSTOP | SA_NODEFER;
+        sigaction(SIGCHLD, &action, NULL);
+        if (dmenu != NULL) {
+            dmenu->Build(wascreen);
+            return dmenu;
+        }
+    }
+    return NULL;
+}
 
 /**
  * @fn    validateclient(Window id)
@@ -452,7 +527,7 @@ void restart(char *command) {
     char *tmp_argv[128];
     
     if (command) {
-        argv = commandline_to_argv(wastrdup(command), tmp_argv);
+        commandline_to_argv(wastrdup(command), tmp_argv);
         delete waimea;
         execvp(*tmp_argv, tmp_argv);
         perror(*tmp_argv);
@@ -515,4 +590,20 @@ char **commandline_to_argv(char *s, char **tmp_argv) {
     return tmp_argv;
 }
 
+/**
+ * @fn    basename(char *name)
+ * @brief Returns basename for filepath
+ *
+ * Returns pointer to basename of filepath.
+ *
+ * @param name Filepath
+ *
+ * @return Basename for filepath
+ */
+char *basename(char *name) {
+   int i = strlen(name);
 
+   for (; i >= 0 && name[i] != '/'; i--);
+   if (name[i] != '/') i--;
+   return &name[i];
+}

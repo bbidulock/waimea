@@ -1937,6 +1937,10 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     WaMenu *menu = waimea->GetMenuNamed(ac->param);
 
     if (! menu) return;
+    if (menu->dynamic && menu->mapped) {
+        menu->Unmap(menu->has_focus);
+        if (! (menu = waimea->CreateDynamicMenu(ac->param))) return;
+    }
     if (waimea->eh->move_resize != EndMoveResizeType) return;
     
     if (XQueryPointer(display, wascreen->id, &w, &w, &rx, &ry, &i, &i, &ui)) {
@@ -2704,8 +2708,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
             XAutoRepeatOn(display);
             if ((*it)->replay && ! wait_release) replay = true;
             if ((*it)->delay.tv_sec || (*it)->delay.tv_usec) {
-                Interrupt *i = new Interrupt(*it, e);
-                i->win = id;
+                Interrupt *i = new Interrupt(*it, e, id);                
                 waimea->timer->AddInterrupt(i);
             } else {
                 if ((*it)->exec)

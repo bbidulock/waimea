@@ -16,7 +16,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libgen.h>
 #include <X11/Xlib.h>
 
 #ifdef PIXMAP
@@ -1774,8 +1773,9 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             }
         }
         if (strlen(par)) {
+            char *tmp;
             par[i] = '\0';
-            act_tmp->param = wastrdup(par);
+            act_tmp->param = param_eval(token, par, wascreen);
         }
         for (i = 0; token[i] != '('; i++);
         token[i] = '\0';
@@ -1817,11 +1817,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     if (detail) token = strtok(NULL, "=");
     else {
         if (mod) token = strtok(NULL, "&");
-        else {
-            token = strtok(NULL, "[");
-            //for (; *token != ' ' && *token != ':'; token++);
-            //for (; *token == '\0'; token++);
-        }
+        else token = strtok(NULL, "[");
     }
     token = strtrim(token);
     
@@ -1842,11 +1838,8 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     act_tmp->detail = 0;
     if (detail) {
         if (mod) token = strtok(NULL, "&");
-        else {
-            token = strtok(NULL, "[");
-            //token += strlen(token) + 1;
-            //for (; *token == '\0'; token++);
-        }
+        else token = strtok(NULL, "[");
+            
         token = strtrim(token);
         if (act_tmp->type == KeyPress || act_tmp->type == KeyRelease) {
             if (! strcasecmp(token, "anykey"))
@@ -1882,9 +1875,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     bool negative;
     act_tmp->mod = act_tmp->nmod = 0;
     if (mod) {
-        //token += strlen(token) + 1;
         token = strtok(NULL, "[");
-        //for (; *token == '\0'; token++);
         for (token = strtok(token, "&"); token; token = strtok(NULL, "&")) {
             token = strtrim(token);
             negative = false;
@@ -1949,8 +1940,11 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
  *
  * @param menu Menu to add items to
  * @param file File descriptor for menu file
+ *
+ * @return Poniter to new menu if menu was sucessfully parsed,
+ *         otherwise NULL
  */
-void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
+WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
     char *s, line[8192], *line1 = NULL, *line2 = NULL,
         *par = NULL, *tmp_par = NULL;
     WaMenuItem *m;
@@ -2105,10 +2099,10 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                 WARNING << "no elements in menu \"" << menu->name <<
                     "\"" << endl;
                 delete menu;
-                return;
+                return NULL;
             }
             waimea->wamenu_list->push_back(menu);
-            return;
+            return menu;
         }
         else if (! strncasecmp(s, "checkbox", 8)) {
             if (! strcasecmp(s + 9, "MAXIMIZED")) {
@@ -2238,7 +2232,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                 }
                 if (strlen(par)) {
                     par[i] = '\0';
-                    m->param1 = m->param = wastrdup(par);
+                    m->param1 = m->param = param_eval(s, par, wascreen);
                     delete [] tmp_par;
                 }
             }
@@ -2311,7 +2305,7 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                     }
                     if (strlen(par)) {
                         par[i] = '\0';
-                        m->param2 = wastrdup(par);
+                        m->param2 = param_eval(s, par, wascreen);
                         delete [] tmp_par;
                     }
                 }
@@ -2354,9 +2348,17 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         }
         menu->AddItem(m);
     }
-    if (menu)
-        WARNING << "(" << basename(menu_file) << ":" << linenr << "): " <<
-            "missing [end] statement" << endl;
+    if (menu) {
+        if (menu->item_list->empty()) {
+            WARNING << "no elements in menu \"" << menu->name <<
+                "\"" << endl;
+            delete menu;
+            return NULL;
+        }
+        waimea->wamenu_list->push_back(menu);
+        return menu;
+    }
+    return NULL;
 }
 
 /**
@@ -2493,4 +2495,41 @@ char *strwithin(char *s, char c1, char c2, bool eval_env) {
         }
     }
     return str;
+}
+
+/**
+ * @fn    param_eval(char *action, char *param, WaScreen *wascreen)
+ * @brief Evaluate parameter string
+ *
+ * Replaces special parameter characters and returns new parameter string.
+ *
+ * @param action Action name for parameter
+ * @param param Parameter string
+ * @param wascreen WaScreen object pointer
+ *
+ * @return New parameter
+ */
+char *param_eval(char *action, char *param, WaScreen *wascreen) {
+    char *tmp, *p = wastrdup(param);
+    int i;
+    
+    if (! strncasecmp(action, "viewport", 8)) {
+        for (i = 0; p[i] != '\0'; i++) {
+            if (p[i] == 'W' || p[i] == 'w') {
+                tmp = new char[strlen(p) + 5];
+                p[i] = '\0';
+                sprintf(tmp, "%s%d%s", p, wascreen->width, &p[i + 1]);
+                delete p;
+                p = tmp;
+            }
+            else if (p[i] == 'H' || p[i] == 'h') {
+                tmp = new char[strlen(p) + 5];
+                p[i] = '\0';
+                sprintf(tmp, "%s%d%s", p, wascreen->height, &p[i + 1]);
+                delete p;
+                p = tmp;
+            }
+        }
+    }
+    return p;
 }

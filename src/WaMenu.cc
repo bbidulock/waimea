@@ -34,7 +34,7 @@ WaMenu::WaMenu(char *n) {
     
     height = 0;
     width = 0;
-    mapped = has_focus = built = tasksw = false;
+    mapped = has_focus = built = tasksw = dynamic = false;
     root_menu = NULL;
     root_item = NULL;
     wf = (Window) 0;
@@ -57,6 +57,10 @@ WaMenu::WaMenu(char *n) {
 WaMenu::~WaMenu(void) {
     LISTCLEAR2(item_list);
     if (built) {
+        if (waimea->rh->menu_stacking == AlwaysOnTop)
+            waimea->always_on_top_list->remove(frame);
+        else if (waimea->rh->menu_stacking == AlwaysAtBottom)
+            waimea->always_at_bottom_list->remove(frame);
         XDestroyWindow(display, frame);
         waimea->always_on_top_list->remove(o_west);
         waimea->always_on_top_list->remove(o_east);
@@ -122,31 +126,43 @@ void WaMenu::Build(WaScreen *screen) {
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
         if ((*it)->func_mask & MenuSubMask) {
-            menu_it = waimea->wamenu_list->begin();
-            for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {
-                if (! strcmp((*menu_it)->name, (*it)->sub)) {
-                    (*it)->submenu = *menu_it;
-                    break;
+            for (i = 0; (*it)->sub[i] != '\0' && (*it)->sub[i] != '!'; i++);
+            if ((*it)->sub[i] == '!') {
+                (*it)->sdyn = (*it)->sdyn1 = true;
+            } else {
+                menu_it = waimea->wamenu_list->begin();
+                for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {
+                    if (! strcmp((*menu_it)->name, (*it)->sub)) {
+                        (*it)->submenu = *menu_it;
+                        break;
+                    }
                 }
-            }
-            if (menu_it == waimea->wamenu_list->end()) {
-                WARNING << "no menu named \"" << (*it)->sub << "\"" << endl;
-                delete *it;
-                it = item_list->begin();
+                if (menu_it == waimea->wamenu_list->end()) {
+                    WARNING << "no menu named \"" << (*it)->sub << "\"" <<
+                        endl;
+                    delete *it;
+                    it = item_list->begin();
+                }
             }
         }
         if ((*it)->func_mask2 & MenuSubMask) {
-            menu_it = waimea->wamenu_list->begin();
-            for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {
-                if (! strcmp((*menu_it)->name, (*it)->sub2)) {
-                    (*it)->submenu2 = *menu_it;
-                    break;
+            for (i = 0; (*it)->sub2[i] != '\0' && (*it)->sub2[i] != '!'; i++);
+            if ((*it)->sub2[i] == '!') {
+                (*it)->sdyn2 = true;
+            } else {
+                menu_it = waimea->wamenu_list->begin();
+                for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {
+                    if (! strcmp((*menu_it)->name, (*it)->sub2)) {
+                        (*it)->submenu2 = *menu_it;
+                        break;
+                    }
                 }
-            }
-            if (menu_it == waimea->wamenu_list->end()) {
-                WARNING << "no menu named \"" << (*it)->sub2 << "\"" << endl;
-                delete *it;
-                it = item_list->begin();
+                if (menu_it == waimea->wamenu_list->end()) {
+                    WARNING << "no menu named \"" << (*it)->sub2 << "\"" <<
+                        endl;
+                    delete *it;
+                    it = item_list->begin();
+                }
             }
         }
     }
@@ -480,7 +496,8 @@ void WaMenu::ReMap(int mx, int my) {
 void WaMenu::Move(int dx, int dy) {
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
-        if (((*it)->func_mask & MenuSubMask) && (*it)->submenu->root_menu &&
+        if (((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
+            (*it)->submenu->root_menu &&
             (*it)->submenu->mapped) {
             (*it)->submenu->Move(dx, dy);
         }
@@ -512,7 +529,8 @@ void WaMenu::Unmap(bool focus) {
     for (; it != item_list->end(); ++it) {
         if ((*it)->hilited) {
             if ((*it)->func_mask & MenuSubMask) {
-                if (! (*it)->submenu->mapped)
+                if ((! (*it)->submenu) || ((*it)->submenu->root_menu &&
+                                           (*it)->submenu->mapped))
                     (*it)->DeHilite();
             }
             else
@@ -533,8 +551,15 @@ void WaMenu::Unmap(bool focus) {
         if (! waimea->wawindow_list->empty())
             waimea->wawindow_list->front()->Focus(false);
     }
-    root_item = NULL;
-    mapped = false;
+    if (dynamic) {
+       waimea->wamenu_list->remove(this);
+       delete this;
+       if (root_item) root_item->submenu = NULL;
+    }
+    else {
+       root_item = NULL;
+       mapped = false;
+    }
 }
 
 /**
@@ -549,10 +574,12 @@ void WaMenu::Unmap(bool focus) {
 void WaMenu::UnmapSubmenus(bool focus) {
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
-        if (((*it)->func_mask & MenuSubMask) && (*it)->submenu->root_menu &&
-            (*it)->submenu->mapped) {
-            (*it)->submenu->UnmapSubmenus(focus);
-            (*it)->submenu->Unmap(focus);
+        if ((*it)->func_mask & MenuSubMask) {
+            if (! (*it)->submenu) (*it)->DeHilite();
+            else if ((*it)->submenu->root_menu && (*it)->submenu->mapped) {
+                (*it)->submenu->UnmapSubmenus(focus);
+                (*it)->submenu->Unmap(focus);
+            }
         }
     }
 }
@@ -566,8 +593,10 @@ void WaMenu::UnmapSubmenus(bool focus) {
  */
 void WaMenu::UnmapTree(void) {
     if (root_menu) {
-        root_menu->UnmapTree();
-    }
+        WaMenu *tmp = root_menu;
+        root_menu = NULL;
+        tmp->UnmapTree();
+    }  
     UnmapSubmenus(false);
     Unmap(false);
 }
@@ -617,8 +646,8 @@ void WaMenu::CreateOutlineWindows(void) {
 void WaMenu::ToggleOutline(void) {
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {        
-        if (((*it)->func_mask & MenuSubMask) && (*it)->submenu->root_menu &&
-            (*it)->submenu->mapped) {
+        if (((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
+            (*it)->submenu->root_menu && (*it)->submenu->mapped) {
             (*it)->submenu->ToggleOutline();
         }
     }
@@ -653,8 +682,8 @@ void WaMenu::ToggleOutline(void) {
 void WaMenu::DrawOutline(int dx, int dy) {
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {        
-        if (((*it)->func_mask & MenuSubMask) && (*it)->submenu->root_menu &&
-            (*it)->submenu->mapped) {
+        if (((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
+            (*it)->submenu->root_menu && (*it)->submenu->mapped) {
             (*it)->submenu->DrawOutline(dx, dy);
         }
     }
@@ -724,7 +753,7 @@ WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     submenu = submenu1 = submenu2 = NULL;
     exec = sub = exec1 = param1 = sub1 = label2 = exec2 = param2 =
         sub2 = cbox = NULL;
-    move_resize = false;
+    move_resize = sdyn = sdyn1 = sdyn2 = false;
     
 #ifdef XFT
     xftdraw = (Drawable) 0;
@@ -764,8 +793,8 @@ WaMenuItem::~WaMenuItem(void) {
 #endif // XRENDER
     
     if (id) {
-       XDestroyWindow(menu->display, id);
-       menu->waimea->window_table->erase(id);
+        menu->waimea->window_table->erase(id);
+        XDestroyWindow(menu->display, id);
     }
 }
 
@@ -956,7 +985,8 @@ void WaMenuItem::Hilite(void) {
     list<WaMenuItem *>::iterator it = menu->item_list->begin();
     for (; it != menu->item_list->end(); ++it) {        
         if ((*it)->hilited && menu->has_focus)
-            if (!(((*it)->func_mask & MenuSubMask) && (*it)->submenu->mapped))
+            if (!(((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
+                  (*it)->submenu->mapped))
                 (*it)->DeHilite();
     }
     hilited = true;
@@ -1023,7 +1053,11 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus) {
     int skip;
 
     if (! in_window) return;
-    if ((! (func_mask & MenuSubMask)) || submenu->mapped) return;
+    if (! (func_mask & MenuSubMask)) return;
+    if (sdyn && (! submenu)) {
+        if (! (submenu = menu->waimea->CreateDynamicMenu(sub))) return;
+    }
+    if (submenu->mapped) return;
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     
     Hilite();
@@ -1060,6 +1094,12 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
 
     if (! in_window) return;
     if (! (func_mask & MenuSubMask)) return;
+    if (sdyn) {
+       if (submenu) {
+           submenu->Unmap(submenu->has_focus);
+        }
+        if (! (submenu = menu->waimea->CreateDynamicMenu(sub))) return;
+    }
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     
     Hilite();
@@ -1494,8 +1534,7 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
             if ((*it)->delay.tv_sec || (*it)->delay.tv_usec) {
-                Interrupt *i = new Interrupt(*it, e);
-                i->wm = this;
+                Interrupt *i = new Interrupt(*it, e, id);
                 menu->waimea->timer->AddInterrupt(i);
             } else {
                 if ((*it)->exec)
@@ -1511,7 +1550,7 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     }
     else if (ed->type == LeaveNotify) {
         if (func_mask & MenuSubMask) {
-            if (! submenu->mapped) 
+            if (submenu && (! submenu->mapped)) 
                 DeHilite();
         } else DeHilite();
     }
@@ -1584,6 +1623,7 @@ void WaMenuItem::UpdateCBox(void) {
                         func_mask = func_mask2;
                         cb_width = cb_width2;
                         param = param2;
+                        sdyn = sdyn2;
                     }
                     else {
                         
@@ -1610,6 +1650,7 @@ void WaMenuItem::UpdateCBox(void) {
                         func_mask = func_mask1;
                         cb_width = cb_width1;
                         param = param1;
+                        sdyn = sdyn1;
                     }
                 }
             }
