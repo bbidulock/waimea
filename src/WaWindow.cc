@@ -573,13 +573,21 @@ void WaWindow::UpdateGrabs(void) {
     if (validateclient(id)) {
         XUngrabButton(display, AnyButton, AnyModifier, id);
         XUngrabKey(display, AnyKey, AnyModifier, id);
-        
-        XGrabButton(display, AnyButton, AnyModifier, id, True,
-                    ButtonPressMask | ButtonReleaseMask | ButtonMotionMask,
-                    GrabModeSync, GrabModeSync, None, None);
-        
-        XGrabKey(display, AnyKey, AnyModifier, id, True, GrabModeSync,
-                 GrabModeSync);
+        if (has_focus) tmp_list = waimea->rh->awinacts;
+        else tmp_list = waimea->rh->pwinacts;
+        it = tmp_list->begin();
+        for (; it != tmp_list->end(); ++it) {
+            if ((*it)->type == ButtonPress || (*it)->type == ButtonRelease ||
+                (*it)->type == DoubleClick) {
+                XGrabButton(display, (*it)->detail ? (*it)->detail: AnyButton,
+                            AnyModifier, id, True, ButtonPressMask |
+                            ButtonReleaseMask | ButtonMotionMask,
+                            GrabModeSync, GrabModeSync, None, None);
+            } else if ((*it)->type == KeyPress || (*it)->type == KeyRelease) {
+                XGrabKey(display, (*it)->detail ? (*it)->detail: AnyKey,
+                         AnyModifier, id, True, GrabModeSync, GrabModeSync);
+            }
+        }
     }
     XUngrabServer(display);
 }
@@ -2490,7 +2498,6 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
                 ((*this).*((*it)->winfunc))(e, *it);
         }
     }
-    if (type == DoubleClick && ! match) replay = True;
     XSync(display, False);
     while (XCheckTypedEvent(display, FocusOut, &fev))
         waimea->eh->EvFocus(&fev.xfocus);
