@@ -154,7 +154,7 @@ void NetHandler::GetWMHints(WaWindow *ww) {
                 XFreeStringList(list);
             }
         }
-    }
+    } else WW_DELETED;
     XUngrabServer(display);
 }
 
@@ -211,7 +211,7 @@ void NetHandler::GetMWMHints(WaWindow *ww) {
                 }
             }
         }
-    }
+    } else ww->deleted = true;
     XUngrabServer(display);
     ww->flags.all = ww->flags.title && ww->flags.handle && ww->flags.border;
 }
@@ -237,6 +237,7 @@ void NetHandler::GetWMNormalHints(WaWindow *ww) {
     XGrabServer(display);
     if (validateclient(ww->id))
         XGetWMNormalHints(display, ww->id, size_hints, &dummy);
+    else ww->deleted = true;
     XUngrabServer(display);
 
     if (size_hints->flags & PMaxSize) {
@@ -247,7 +248,6 @@ void NetHandler::GetWMNormalHints(WaWindow *ww) {
         ww->size.min_width = size_hints->min_width;
         ww->size.min_height = size_hints->min_height;
     }
-
     if (size_hints->flags & PResizeInc) {
         ww->size.width_inc = size_hints->width_inc;
         ww->size.height_inc = size_hints->height_inc;
@@ -255,6 +255,14 @@ void NetHandler::GetWMNormalHints(WaWindow *ww) {
     if (size_hints->flags & PBaseSize) {
         ww->size.base_width = size_hints->base_width;
         ww->size.base_height = size_hints->base_height;
+        if (ww->size.width_inc == 0) {
+            ww->size.base_width = 0;
+            ww->size.width_inc = 1;
+        }
+        if (ww->size.height_inc == 0) {
+            ww->size.base_height = 0;
+            ww->size.height_inc = 1;
+        }
     }
     if (size_hints->flags & PWinGravity)
         ww->size.win_gravity = size_hints->win_gravity;
@@ -279,7 +287,7 @@ void NetHandler::GetState(WaWindow *ww) {
 
     ww->state = WithdrawnState;
     XGrabServer(display);
-    if (validateclient(ww->id))
+    if (validateclient(ww->id)) {
         if (XGetWindowProperty(display, ww->id, wm_state, 0L, 1L, false,
                                wm_state, &real_type, &real_format, &items_read,
                                &items_left, (unsigned char **) &data) ==
@@ -287,8 +295,8 @@ void NetHandler::GetState(WaWindow *ww) {
             ww->state = *data;
             XFree(data);
         }
+    } else ww->deleted = true;
     XUngrabServer(display);
-    
 }
 
 /**
@@ -313,6 +321,7 @@ void NetHandler::SetState(WaWindow *ww, int newstate) {
         XGrabServer(display);
         if (validateclient(ww->id))
             XSetInputFocus(display, ww->id, RevertToPointerRoot, CurrentTime);
+        else WW_DELETED;
         XUngrabServer(display);
     }
 
@@ -325,6 +334,7 @@ void NetHandler::SetState(WaWindow *ww, int newstate) {
     if (validateclient(ww->id))
         XChangeProperty(display, ww->id, wm_state, wm_state,
                         32, PropModeReplace, (unsigned char *) data, 2);
+    else WW_DELETED;
     XUngrabServer(display);
     ww->SendConfig();
 }
@@ -344,59 +354,63 @@ void NetHandler::GetWmState(WaWindow *ww) {
     bool vert = false, horz = false, shaded = false, title = false,
         handle = false, border = false, decor = false;
     unsigned int i;
-    
-    if (XGetWindowProperty(display, ww->id, net_state, 0L, 10L,
-                           false, XA_ATOM, &real_type,
-                           &real_format, &items_read, &items_left, 
-                           (unsigned char **) &data) == Success && 
-        items_read) {
-        for (i = 0; i < items_read; i++) {
-            if (data[i] == net_state_sticky) ww->flags.sticky = true;
-            else if (data[i] == net_state_shaded) shaded = true;
-            else if (data[i] == net_maximized_vert) vert = true;
-            else if (data[i] == net_maximized_horz) horz = true;
-            else if (data[i] == net_state_decor) decor = true;
-            else if (data[i] == net_state_decortitle) title = true;
-            else if (data[i] == net_state_decorhandle) handle = true;
-            else if (data[i] == net_state_decorborder) border = true;
-            else if (data[i] == net_state_aot) {
-                ww->flags.alwaysontop = true;
-                ww->wascreen->wawindow_list_stacking_aot.push_back(ww);
-                ww->wascreen->WaRaiseWindow(0);
+
+    XGrabServer(display);
+    if (validateclient(ww->id)) {
+        if (XGetWindowProperty(display, ww->id, net_state, 0L, 10L,
+                               false, XA_ATOM, &real_type,
+                               &real_format, &items_read, &items_left, 
+                               (unsigned char **) &data) == Success && 
+            items_read) {
+            for (i = 0; i < items_read; i++) {
+                if (data[i] == net_state_sticky) ww->flags.sticky = true;
+                else if (data[i] == net_state_shaded) shaded = true;
+                else if (data[i] == net_maximized_vert) vert = true;
+                else if (data[i] == net_maximized_horz) horz = true;
+                else if (data[i] == net_state_decor) decor = true;
+                else if (data[i] == net_state_decortitle) title = true;
+                else if (data[i] == net_state_decorhandle) handle = true;
+                else if (data[i] == net_state_decorborder) border = true;
+                else if (data[i] == net_state_aot) {
+                    ww->flags.alwaysontop = true;
+                    ww->wascreen->wawindow_list_stacking_aot.push_back(ww);
+                    ww->wascreen->WaRaiseWindow(0);
+                }
+                else if (data[i] == net_state_aab) {
+                    ww->flags.alwaysatbottom = true;
+                    ww->wascreen->wawindow_list_stacking_aab.push_back(ww);
+                    ww->wascreen->WaLowerWindow(0);
+                }
             }
-            else if (data[i] == net_state_aab) {
-                ww->flags.alwaysatbottom = true;
-                ww->wascreen->wawindow_list_stacking_aab.push_back(ww);
-                ww->wascreen->WaLowerWindow(0);
+            if (decor) {
+                ww->flags.title = ww->flags.handle = ww->flags.border = false;
+                if (title) ww->flags.title = true;
+                if (handle) ww->flags.handle = true;
+                if (border) ww->flags.border = true;
+                ww->flags.all = ww->flags.title && ww->flags.handle &&
+                    ww->flags.border;
+                ww->UpdateAllAttributes();
             }
-        }
-        if (decor) {
-            ww->flags.title = ww->flags.handle = ww->flags.border = false;
-            if (title) ww->flags.title = true;
-            if (handle) ww->flags.handle = true;
-            if (border) ww->flags.border = true;
-            ww->flags.all = ww->flags.title && ww->flags.handle &&
-                ww->flags.border;
-            ww->UpdateAllAttributes();
-        }
-        XFree(data);
-        if (vert && horz) {
-            if (XGetWindowProperty(display, ww->id, net_maximized_restore,
-                                   0L, 6L, false, XA_CARDINAL, &real_type,
-                                   &real_format, &items_read, &items_left, 
-                                   (unsigned char **) &data) ==
-                Success && items_read >= 6) {
-                ww->_Maximize(data[4], data[5]);
-                ww->restore_max.x = data[0];
-                ww->restore_max.y = data[1];
-                ww->restore_max.width = data[2];
-                ww->restore_max.height = data[3];
-                XFree(data);
+            XFree(data);
+            if (vert && horz) {
+                if (XGetWindowProperty(display, ww->id, net_maximized_restore,
+                                       0L, 6L, false, XA_CARDINAL, &real_type,
+                                       &real_format, &items_read, &items_left, 
+                                       (unsigned char **) &data) ==
+                    Success && items_read >= 6) {
+                    ww->_Maximize(data[4], data[5]);
+                    ww->restore_max.x = data[0];
+                    ww->restore_max.y = data[1];
+                    ww->restore_max.width = data[2];
+                    ww->restore_max.height = data[3];
+                    XFree(data);
+                }
             }
+            if (shaded)
+                ww->Shade(e, ac);
         }
-        if (shaded)
-            ww->Shade(e, ac);
-    }
+    } else ww->deleted = true;
+    XUngrabServer(display);
 }
 
 /**
@@ -438,7 +452,7 @@ void NetHandler::SetWmState(WaWindow *ww) {
         }
         XChangeProperty(display, ww->id, net_state, XA_ATOM, 32,
                         PropModeReplace, (unsigned char *) &data, i);
-    }
+    } else ww->deleted = true;
     XUngrabServer(display);
 }
 
@@ -677,7 +691,7 @@ void NetHandler::GetVirtualPos(WaWindow *ww) {
     int *data;
     
     XGrabServer(display);
-    if (validateclient(ww->id))
+    if (validateclient(ww->id)) {
         if (XGetWindowProperty(display, ww->id, net_virtual_pos, 0L, 2L, 
                                false, XA_INTEGER, &real_type, &real_format, 
                                &items_read, &items_left, 
@@ -693,6 +707,7 @@ void NetHandler::GetVirtualPos(WaWindow *ww) {
                     data[1] % ww->wascreen->height;
             XFree(data);
         }
+    } else ww->deleted = true;
     XUngrabServer(display);
 }
 
@@ -716,6 +731,7 @@ void NetHandler::SetVirtualPos(WaWindow *ww) {
     if (validateclient(ww->id))
         XChangeProperty(display, ww->id, net_virtual_pos, XA_INTEGER, 32,
                         PropModeReplace, (unsigned char *) &data, 2);
+    else ww->deleted = true;
     XUngrabServer(display);
 }
 
@@ -732,36 +748,40 @@ void NetHandler::GetWmStrut(WaWindow *ww) {
     CARD32 *data;
     WMstrut *wm_strut;
     bool found = false;
-    
-    if (XGetWindowProperty(display, ww->id, net_wm_strut, 0L, 4L, 
-                           false, XA_CARDINAL, &real_type,
-                           &real_format, &items_read, &items_left, 
-                           (unsigned char **) &data) == Success && 
-        items_read >= 4) {
-        list<WMstrut *>::iterator it = ww->wascreen->strut_list.begin();
-        for (; it != ww->wascreen->strut_list.end(); ++it) {
-            if ((*it)->window == ww->id) {
-                (*it)->left = data[0];
-                (*it)->right = data[1];
-                (*it)->top = data[2];
-                (*it)->bottom = data[3];
-                found = true;
+
+    XGrabServer(display);
+    if (validateclient(ww->id)) {
+        if (XGetWindowProperty(display, ww->id, net_wm_strut, 0L, 4L, 
+                               false, XA_CARDINAL, &real_type,
+                               &real_format, &items_read, &items_left, 
+                               (unsigned char **) &data) == Success && 
+            items_read >= 4) {
+            list<WMstrut *>::iterator it = ww->wascreen->strut_list.begin();
+            for (; it != ww->wascreen->strut_list.end(); ++it) {
+                if ((*it)->window == ww->id) {
+                    (*it)->left = data[0];
+                    (*it)->right = data[1];
+                    (*it)->top = data[2];
+                    (*it)->bottom = data[3];
+                    found = true;
+                    ww->wascreen->UpdateWorkarea();
+                }
+            }
+            if (! found) {
+                wm_strut = new WMstrut;
+                wm_strut->window = ww->id;
+                wm_strut->left = data[0];
+                wm_strut->right = data[1];
+                wm_strut->top = data[2];
+                wm_strut->bottom = data[3];
+                ww->wm_strut = wm_strut;
+                ww->wascreen->strut_list.push_back(wm_strut);
                 ww->wascreen->UpdateWorkarea();
             }
+            XFree(data);
         }
-        if (! found) {
-            wm_strut = new WMstrut;
-            wm_strut->window = ww->id;
-            wm_strut->left = data[0];
-            wm_strut->right = data[1];
-            wm_strut->top = data[2];
-            wm_strut->bottom = data[3];
-            ww->wm_strut = wm_strut;
-            ww->wascreen->strut_list.push_back(wm_strut);
-            ww->wascreen->UpdateWorkarea();
-        }
-        XFree(data);
-    }
+    } else ww->deleted = true;
+    XUngrabServer(display);
 }
 
 /**
@@ -775,17 +795,21 @@ void NetHandler::GetWmStrut(WaWindow *ww) {
 void NetHandler::GetWmPid(WaWindow *ww) {
     char tmp[32];
     CARD32 *data;
-    
-    if (XGetWindowProperty(ww->display, ww->id, net_wm_pid, 0L, 1L, 
-                           false, XA_CARDINAL, &real_type,
-                           &real_format, &items_read, &items_left, 
-                           (unsigned char **) &data) == Success && 
-        items_read) {
-        sprintf(tmp, "%d" , (unsigned int) *data);
-        ww->pid = new char[strlen(tmp) + 1];
-        sprintf(ww->pid, "%s" , tmp);
-        XFree(data);
-    }
+
+    XGrabServer(display);
+    if (validateclient(ww->id)) {
+        if (XGetWindowProperty(ww->display, ww->id, net_wm_pid, 0L, 1L, 
+                               false, XA_CARDINAL, &real_type,
+                               &real_format, &items_read, &items_left, 
+                               (unsigned char **) &data) == Success && 
+            items_read) {
+            sprintf(tmp, "%d" , (unsigned int) *data);
+            ww->pid = new char[strlen(tmp) + 1];
+            sprintf(ww->pid, "%s" , tmp);
+            XFree(data);
+        }
+    } else ww->deleted = true;
+    XUngrabServer(display);
 }
 
 /**

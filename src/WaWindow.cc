@@ -140,6 +140,8 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     wascreen->wawindow_list.push_back(this);
     wascreen->wawindow_list_map_order.push_back(this);
     wascreen->wawindow_list_stacking.push_back(this);
+
+    if (deleted) delete this;
 }
 
 /**
@@ -170,7 +172,7 @@ WaWindow::~WaWindow(void) {
     }
     
     XGrabServer(display);
-    if ((! deleted) && validateclient_mapped(id)) {
+    if (validateclient(id) && validateclient_mapped(id)) {
         XRemoveFromSaveSet(display, id);
         Gravitate(RemoveGravity);
         if (flags.shaded) attrib.height = restore_shade;
@@ -355,7 +357,7 @@ void WaWindow::MapWindow(void) {
     if (validateclient(id)) {
         XMapWindow(display, id);
         RedrawWindow();
-    }
+    } else DELETED;
     XUngrabServer(display);
     if (flags.handle) {
         XMapRaised(display, grip_l->id);
@@ -479,7 +481,7 @@ void WaWindow::UpdateAllAttributes(void) {
     if (validateclient(id)) {
         if (flags.title) XMoveWindow(display, id, 0, title_w + border_w);
         else XMoveWindow(display, id, 0, title_w);
-    }
+    } else DELETED;
     XUngrabServer(display);
 
     int m_x, m_y, m_w, m_h;
@@ -621,7 +623,7 @@ void WaWindow::RedrawWindow(void) {
                 XResizeWindow(display, id, attrib.width, attrib.height);
             XResizeWindow(display, frame->id, frame->attrib.width,
                           frame->attrib.height);
-        }
+        } else DELETED;
         XUngrabServer(display);
 
 #ifdef SHAPE
@@ -675,7 +677,7 @@ void WaWindow::ReparentWin(void) {
         XFree(dummy);
 #endif // SHAPE
         
-    }
+    } else DELETED;
     XUngrabServer(display);
 }
 
@@ -703,7 +705,7 @@ void WaWindow::UpdateGrabs(void) {
                          AnyModifier, id, true, GrabModeSync, GrabModeSync);
             }
         }
-    }
+    } else DELETED;
     XUngrabServer(display);
 }
 
@@ -743,7 +745,7 @@ void WaWindow::Shape(void) {
             }
             XShapeCombineRectangles(display, frame->id, ShapeBounding, 0,
                                     0, xrect, n, ShapeUnion, Unsorted);
-        }
+        } else DELETED;
         XUngrabServer(display);
     }
 }
@@ -778,6 +780,7 @@ void WaWindow::SendConfig(void) {
     XGrabServer(display);
     if (validateclient(id)) 
         XSendEvent(display, id, true, NoEventMask, (XEvent *)&ce);
+    else DELETED;
     XUngrabServer(display);
 }
 
@@ -1201,7 +1204,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                      GrabModeAsync, None, waimea->move_cursor, CurrentTime);
         XGrabKeyboard(display, (mapped) ? id: wascreen->id, true,
                       GrabModeAsync, GrabModeAsync, CurrentTime);
-    }
+    } else DELETED;
     XUngrabServer(display);
     for (;;) {
         waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
@@ -1250,6 +1253,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                     if (started) DestroyOutline();
                     XUngrabKeyboard(display, CurrentTime);
                     XUngrabPointer(display, CurrentTime);
+                    waimea->eh->move_resize = EndMoveResizeType;
                     return;
                 }
                 waimea->eh->EvUnmapDestroy(&event);
@@ -1331,7 +1335,7 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                      GrabModeAsync, None, waimea->move_cursor, CurrentTime);
         XGrabKeyboard(display, (mapped) ? id: wascreen->id, true,
                       GrabModeAsync, GrabModeAsync, CurrentTime);
-    }
+    } else DELETED;
     XUngrabServer(display);
     for (;;) {
         waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
@@ -1375,6 +1379,7 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
                     XPutBackEvent(display, &event);
                     XUngrabKeyboard(display, CurrentTime);
                     XUngrabPointer(display, CurrentTime);
+                    waimea->eh->move_resize = EndMoveResizeType;
                     return;
                 }
                 waimea->eh->EvUnmapDestroy(&event);
@@ -1461,7 +1466,7 @@ void WaWindow::Resize(XEvent *e, int how) {
                      CurrentTime);
         XGrabKeyboard(display, (mapped) ? id: wascreen->id, true,
                       GrabModeAsync, GrabModeAsync, CurrentTime);
-    }
+    } else DELETED;
     XUngrabServer(display);
     for (;;) {
         waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
@@ -1529,6 +1534,7 @@ void WaWindow::Resize(XEvent *e, int how) {
                     if (started) DestroyOutline();
                     XUngrabKeyboard(display, CurrentTime);
                     XUngrabPointer(display, CurrentTime);
+                    waimea->eh->move_resize = EndMoveResizeType;
                     return;
                 }
                 waimea->eh->EvUnmapDestroy(&event);
@@ -1617,7 +1623,7 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                      CurrentTime);
         XGrabKeyboard(display, (mapped) ? id: wascreen->id, true,
                       GrabModeAsync, GrabModeAsync, CurrentTime);
-    }
+    } else DELETED;
     XUngrabServer(display);
     for (;;) {
         waimea->eh->EventLoop(waimea->eh->moveresize_return_mask, &event);
@@ -1671,6 +1677,7 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                     XPutBackEvent(display, &event);
                     XUngrabKeyboard(display, CurrentTime);
                     XUngrabPointer(display, CurrentTime);
+                    waimea->eh->move_resize = EndMoveResizeType;
                     return;
                 }
                 waimea->eh->EvUnmapDestroy(&event);
@@ -1849,6 +1856,7 @@ void WaWindow::Close(XEvent *, WaAction *) {
     XGrabServer(display);
     if (validateclient(id))
         XSendEvent(display, id, false, NoEventMask, &ev);
+    else DELETED;
     XUngrabServer(display);
 
 }
@@ -1864,6 +1872,7 @@ void WaWindow::Kill(XEvent *, WaAction *) {
     XGrabServer(display);
     if (validateclient(id))
         XKillClient(display, id);
+    else DELETED;
     XUngrabServer(display);
 }
 
@@ -1884,11 +1893,12 @@ void WaWindow::CloseKill(XEvent *e, WaAction *ac) {
     Atom del_atom = XInternAtom(display, "WM_DELETE_WINDOW", false);
 
     XGrabServer(display);
-    if (validateclient(id))
+    if (validateclient(id)) {
         if (XGetWMProtocols(display, id, &protocols, &n)) {
             for (i = 0; i < n; i++) if (protocols[i] == del_atom) close = true;
             XFree(protocols);
         }
+    } else DELETED;
     XUngrabServer(display);
     if (close) Close(e, ac);
     else Kill(e, ac);
@@ -2736,7 +2746,10 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
             }
         }
     }
-    if (waimea->eh->move_resize != EndMoveResizeType) return;
+    if (waimea->eh->move_resize != EndMoveResizeType) {
+        if (deleted) delete this;
+        return;
+    }
     
     XSync(display, false);
     while (XCheckTypedEvent(display, FocusOut, &fev))
@@ -2764,6 +2777,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
             }
             break;
     }
+    if (deleted) delete this;
 }
 
 

@@ -32,6 +32,9 @@ typedef void (WaWindow::*WwActionFn)(XEvent *, WaAction *);
 #include "EventHandler.hh"
 #include "NetHandler.hh"
 
+#define DELETED { deleted = true; XUngrabServer(display); return; }
+#define WW_DELETED { ww->deleted = true; XUngrabServer(display); return; }
+
 #define ApplyGravity   1
 #define RemoveGravity -1
 
