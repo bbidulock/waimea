@@ -19,7 +19,8 @@ DEF defaultAllDecor {
 
 DEF defaultAllTitle {
    defaultAllDecor,
-   StartOpaqueMove : ButtonPress = Button1 & !Mod1Mask
+   StartOpaqueMove : ButtonPress = Button1 & !Mod1Mask,
+   ToggleShade     : DoubleClick = Button1 & !Mod1Mask
 }
 
 window.frame { 

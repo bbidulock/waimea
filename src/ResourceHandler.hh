@@ -22,6 +22,7 @@
 
 class ResourceHandler;
 class Define;
+class WaActionExtList;
 class StrComp;
 
 typedef struct _WaAction WaAction;
@@ -43,6 +44,16 @@ typedef struct _DockStyle DockStyle;
         list->pop_back(); \
     } \
     delete list;
+
+#define ACTLISTCLEAR2(list) \
+    while (! list.empty()) { \
+        if (list.back()->exec) \
+            delete [] list.back()->exec; \
+        if (list.back()->param) \
+            delete [] list.back()->param; \
+        delete list.back(); \
+        list.pop_back(); \
+    }
 
 struct _WaAction {
     list<int> *defs;
@@ -107,6 +118,10 @@ public:
         *weacts, *eeacts, *neacts, *seacts, *mtacts, *miacts, *msacts,
         *mcbacts;
 
+    list<WaActionExtList *> ext_frameacts, ext_awinacts, ext_pwinacts,
+        ext_titleacts, ext_labelacts, ext_handleacts, ext_cbacts,
+        ext_ibacts, ext_mbacts, ext_rgacts, ext_lgacts;    
+
     list<DockStyle *> *dockstyles;
     
 private:
@@ -142,6 +157,20 @@ public:
     
     char *name;
     char *value;
+};
+
+class WaActionExtList {
+public:
+    inline WaActionExtList(char *n, char *c) { name = n; cl = c; }
+    inline ~WaActionExtList(void) {
+        if (name) delete name;
+        if (cl) delete cl;
+        ACTLISTCLEAR2(list);
+    }
+    
+    char *name;
+    char *cl;
+    list<WaAction *> list;
 };
 
 class StrComp {

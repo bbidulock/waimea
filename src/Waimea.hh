@@ -60,6 +60,12 @@ public:
     } \
     delete list;
 
+#define LISTCLEAR3(list) \
+    while (! list.empty()) { \
+        delete list.back(); \
+        list.pop_back(); \
+    }
+
 #define LISTDEL(list) \
     while (! list->empty()) { \
         list->pop_back(); \

@@ -250,6 +250,7 @@ private:
     inline void DrawHandlebar(void) { DrawHandle();
                                       DrawLeftGrip();
                                       DrawRightGrip(); }
+    list <WaAction *> *GetActionList(list<WaActionExtList *> *);
     
     WaImageControl *ic;
     Window o_west, o_north, o_south, o_east;

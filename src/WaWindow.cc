@@ -72,11 +72,23 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     frameacts = awinacts = pwinacts = titleacts = labelacts = handleacts =
         cbacts = ibacts = mbacts = lgacts = rgacts = NULL;
 
+    frameacts = GetActionList(&waimea->rh->ext_frameacts);
+    awinacts = GetActionList(&waimea->rh->ext_awinacts);
+    pwinacts = GetActionList(&waimea->rh->ext_pwinacts);
+    titleacts = GetActionList(&waimea->rh->ext_titleacts);
+    labelacts = GetActionList(&waimea->rh->ext_labelacts);
+    handleacts = GetActionList(&waimea->rh->ext_handleacts);
+    cbacts = GetActionList(&waimea->rh->ext_cbacts);
+    ibacts = GetActionList(&waimea->rh->ext_ibacts);
+    mbacts = GetActionList(&waimea->rh->ext_mbacts);
+    lgacts = GetActionList(&waimea->rh->ext_lgacts);
+    rgacts = GetActionList(&waimea->rh->ext_rgacts);
+
     net->GetWMHints(this);
     net->GetMWMHints(this);
     net->GetWMNormalHints(this);
     net->GetVirtualPos(this);
-
+    
     CreateOutlineWindows();
     
     Gravitate(ApplyGravity);
@@ -181,6 +193,22 @@ WaWindow::~WaWindow(void) {
         free(wm_strut);
         wascreen->UpdateWorkarea();
     }
+}
+
+list <WaAction *> *WaWindow::GetActionList(list<WaActionExtList *> *e) {
+    XClassHint *c_hint;
+    
+    c_hint = XAllocClassHint();
+    list<WaActionExtList *>::iterator it;
+    if (XGetClassHint(display, id, c_hint)) {
+        for (it = e->begin(); it != e->end(); ++it) {
+            if ((*it)->name && ! strcmp(c_hint->res_name, (*it)->name))
+                return &((*it)->list);
+            else if ((*it)->cl && ! strcmp(c_hint->res_class, (*it)->cl))
+                return &((*it)->list);
+        }
+    }
+    return NULL;
 }
 
 /**
