@@ -341,7 +341,7 @@ void WaWindow::UpdateAllAttributes(void) {
     if (flags.handle) frame->attrib.height += handle_w + border_w;
 
     XSetWindowBorderWidth(display, frame->id, border_w);
-    if (! flags.shaded)
+    if (! flags.shaded) 
         XResizeWindow(display, frame->id, frame->attrib.width,
                       frame->attrib.height);
     
@@ -447,6 +447,10 @@ void WaWindow::UpdateAllAttributes(void) {
     }
     else
         RedrawWindow();
+
+#ifdef SHAPE    
+    Shape();
+#endif // SHAPE
 }
 
 /**
@@ -666,16 +670,20 @@ void WaWindow::Shape(void) {
                 XShapeCombineShape(display, frame->id, ShapeBounding,
                                    border_w, title_w + border_w, id,
                                    ShapeBounding, ShapeSet);
-                n = 1;
-                xrect[0].x = -border_w;
-                xrect[0].y = -border_w;
-                xrect[0].width = attrib.width + border_w * 2;
-                xrect[0].height = title_w + border_w * 2;
+                n = 0;
+                if (title_w) {
+                    xrect[n].x = -border_w;
+                    xrect[n].y = -border_w;
+                    xrect[n].width = attrib.width + border_w * 2;
+                    xrect[n].height = title_w + border_w * 2;
+                    n++;
+                }
                 if (handle_w) {
-                    xrect[1].x = -border_w;
-                    xrect[1].y = attrib.height + title_w + border_w;
-                    xrect[1].width = attrib.width + border_w * 2;
-                    xrect[1].height = handle_w + border_w * 2;
+                    xrect[n].x = -border_w;
+                    xrect[n].y = attrib.height + title_w;
+                    if (title_w) xrect[n].y += border_w;
+                    xrect[n].width = attrib.width + border_w * 2;
+                    xrect[n].height = handle_w + border_w * 2;
                     n++;
                 }
                 XShapeCombineRectangles(display, frame->id, ShapeBounding, 0,
@@ -2885,9 +2893,8 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
     XSetWindowAttributes attrib_set;
     
     wa = wa_win;
-    int create_mask = CWOverrideRedirect | CWBackPixel | CWEventMask |
-        CWColormap | CWBorderPixel;
-    attrib_set.background_pixel = None;
+    int create_mask = CWOverrideRedirect | CWBorderPixel | CWEventMask |
+        CWColormap;
     attrib_set.border_pixel = wa->wascreen->wstyle.border_color.getPixel();
     attrib_set.colormap = wa->wascreen->colormap;
     attrib_set.override_redirect = true;
@@ -2901,6 +2908,8 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
     switch (type) {
         case FrameType:
             attrib_set.event_mask |= SubstructureRedirectMask;
+            create_mask |= CWBackPixmap;
+            attrib_set.background_pixmap = ParentRelative;
             attrib.x = wa->attrib.x - wa->border_w;
             attrib.y = wa->attrib.y - wa->title_w - wa->border_w * 2;
             attrib.width = wa->attrib.width;
@@ -2923,8 +2932,8 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
             break;
     }
     id = XCreateWindow(wa->display, parent, attrib.x, attrib.y,
-                       attrib.width, attrib.height, 0, wa->screen_number,
-                       CopyFromParent, wa->wascreen->visual, create_mask,
+                       attrib.width, attrib.height, 0, CopyFromParent,
+                       CopyFromParent, CopyFromParent, create_mask,
                        &attrib_set);
 
     wa->waimea->window_table->insert(make_pair(id, this));

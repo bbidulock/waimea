@@ -1,5 +1,4 @@
 /**
- *
  * @file   NetHandler.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   11-Oct-2001 22:36:12
@@ -82,10 +81,10 @@ public:
         net_state, net_state_sticky, net_state_shaded, net_maximized_vert,
         net_maximized_horz, net_state_decor, net_state_decortitle,
         net_state_decorhandle, net_state_decorborder, net_state_aot,
-        net_state_aab, net_maximized_restore, net_virtual_pos,
-        net_desktop_viewport, net_desktop_geometry, net_wm_strut,
-        net_workarea, xa_xdndaware, xa_xdndenter, xa_xdndleave,
-        net_wm_name, net_restart, net_shutdown;
+        net_state_aab, net_state_parentrelative_background,
+        net_maximized_restore, net_virtual_pos, net_desktop_viewport,
+        net_desktop_geometry, net_wm_strut, net_workarea, xa_xdndaware,
+        xa_xdndenter, xa_xdndleave, net_wm_name, net_restart, net_shutdown;
 
 private:
     XEvent event;

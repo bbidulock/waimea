@@ -68,6 +68,8 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_WM_STATE_ALWAYS_ON_TOP", false);
     net_state_aab =
         XInternAtom(display, "_NET_WM_STATE_ALWAYS_AT_BOTTOM", false);
+    net_state_parentrelative_background =
+        XInternAtom(display, "_NET_WM_STATE_PARENTRELATIVE_BACKGROUND", false);
     net_maximized_restore =
         XInternAtom(display, "_NET_MAXIMIZED_RESTORE", false);
     net_virtual_pos =
@@ -395,7 +397,7 @@ void NetHandler::SetWmState(WaWindow *ww) {
  * @param ws WaScreen object
  */
 void NetHandler::SetSupported(WaScreen *ws) {
-    CARD32 data[22];
+    CARD32 data[23];
 
     data[0]  = net_state;
     data[1]  = net_state_sticky;
@@ -416,12 +418,13 @@ void NetHandler::SetSupported(WaScreen *ws) {
     data[15] = net_state_decorborder;
     data[16] = net_state_aot;
     data[17] = net_state_aab;
-    data[18] = net_maximized_restore;
-    data[19] = net_virtual_pos;
-    data[20] = net_restart;
-    data[21] = net_shutdown;
+    data[18] = net_state_parentrelative_background;
+    data[19] = net_maximized_restore;
+    data[20] = net_virtual_pos;
+    data[21] = net_restart;
+    data[22] = net_shutdown;
     XChangeProperty(display, ws->id, net_supported, XA_ATOM, 32,
-                    PropModeReplace, (unsigned char *) &data, 22);
+                    PropModeReplace, (unsigned char *) &data, 23);
 }
 
 /**
