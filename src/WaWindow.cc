@@ -1711,9 +1711,11 @@ void WaWindow::Resize(XEvent *e, int how) {
                     wascreen->east->id == event.xcrossing.window ||
                     wascreen->north->id == event.xcrossing.window ||
                     wascreen->south->id == event.xcrossing.window) {
+                    int old_vx = wascreen->v_x;
+                    int old_vy = wascreen->v_y;
                     waimea->eh->HandleEvent(&event);
-                    XQueryPointer(display, wascreen->id, &w, &w, &px, &py,
-                                  &i, &i, &ui);
+                    px -= (wascreen->v_x - old_vx);
+                    py -= (wascreen->v_y - old_vy);
                     n_x = attrib.x;
                     if (how == WestType) n_x -= n_w - attrib.width;
                     DrawOutline(n_x, attrib.y, n_w, n_h);
@@ -1845,8 +1847,8 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
             case MotionNotify:
                 width  += (event.xmotion.x_root - px) * how;
                 height += event.xmotion.y_root - py;
-                px  = event.xmotion.x_root;
-                py  = event.xmotion.y_root;
+                px = event.xmotion.x_root;
+                py = event.xmotion.y_root;
                 if (IncSizeCheck(width, height, &n_w, &n_h)) {
                     if (how == WestType) attrib.x -= n_w - attrib.width;
                     attrib.width  = n_w;
@@ -1860,9 +1862,11 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
                     wascreen->east->id == event.xcrossing.window ||
                     wascreen->north->id == event.xcrossing.window ||
                     wascreen->south->id == event.xcrossing.window) {
+                    int old_vx = wascreen->v_x;
+                    int old_vy = wascreen->v_y;
                     waimea->eh->HandleEvent(&event);
-                    XQueryPointer(display, wascreen->id, &w, &w, &px, &py,
-                                  &i, &i, &ui);
+                    px -= (wascreen->v_x - old_vx);
+                    py -= (wascreen->v_y - old_vy);
                 } else {
                     width  += (event.xcrossing.x_root - px) * how;
                     height += event.xcrossing.y_root - py;

@@ -1,70 +1,74 @@
+Thu Apr 21 2002 David Reveman (c99drn@cs.umu.se)
+
+   Added support for libXft version 2
+
 Thu Feb  7 2002 David Reveman (c99drn@cs.umu.se)
 
-        *** Waimea v0.1.7 release ***
-	Gcc 3 support
+   *** Waimea v0.1.7 release ***
+   Added support for gcc 3
 
 Wed Feb  6 2002 David Reveman (c99drn@cs.umu.se)
 
-	*** Waimea v0.1.6 release ***
+   *** Waimea v0.1.6 release ***
 
 Tue Feb  5 2002 David Reveman (c99drn@cs.umu.se)
 
-	Added support for client pass-through actions
+   Added support for client pass-through actions
 
 Sat Jan 26 2002 David Reveman (c99drn@cs.umu.se)
 
-	*** Waimea v0.1.5 release ***
-        Added DoubleClick event to action system
+   *** Waimea v0.1.5 release ***
+   Added DoubleClick event to action system
 
 Fri Jan 25 2002 David Reveman (c99drn@cs.umu.se)
 
-	Added decoration control system
-	Finished (EWMH) specs support
+   Added decoration control system
+   Finished (EWMH) specs support
 
 Wed Jan 23 2002 David Reveman (c99drn@cs.umu.se)
 
-	Added checkbox item to menu system
+   Added checkbox item to menu system
 
 Sun Jan 20 2002 David Reveman (c99drn@cs.umu.se)
 
-	*** Waimea v0.1.4 release ***
+   *** Waimea v0.1.4 release ***
 
 Sat Jan 19 2002 David Reveman (c99drn@cs.umu.se)
 
-	Completed dockapp handler system
+   Completed dockapp handler system
 
 Sun Dec  2 2001 David Reveman (c99drn@cs.umu.se)
 
-	Made screenedges XDND aware
+   Made screenedges XDND aware
 
 Sat Dec  1 2001 David Reveman (c99drn@cs.umu.se)
 
-	*** Waimea v0.1.3 release ***
+   *** Waimea v0.1.3 release ***
 
 Fri Nov 30 2001 David Reveman (c99drn@cs.umu.se)
 
-	Added dockapp handler
+   Added dockapp handler
 
 Wed Nov 28 2001 David Reveman (c99drn@cs.umu.se)
 
-	Added TaskSwitcher
+   Added TaskSwitcher
 
-	*** Waimea v0.1.2 release ***
+   *** Waimea v0.1.2 release ***
 
 Mon Nov 26 2001 David Reveman (c99drn@cs.umu.se)
 
-        Added KeyEvent support
-        Added ViewportMove function
-        Added command line execution to action system
+   Added KeyEvent support
+   Added ViewportMove function
+   Added command line execution to action system
 			
 Sat Nov 24 2001 David Reveman (c99drn@cs.umu.se)
 
-        Added support for Blackbox menu files
-        Added support of the XShape extension
+   Added support for Blackbox menu files
+   Added support of the XShape extension
 
-        *** Waimea v0.1.1 release ***
+   *** Waimea v0.1.1 release ***
 
 Tue Nov 20 2001  David Reveman (c99drn@cs.umu.se)
 
-       *** Waimea v0.1.0 release ***
+   *** Waimea v0.1.0 release ***
        

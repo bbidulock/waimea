@@ -103,7 +103,13 @@ void EventHandler::HandleEvent(XEvent *event) {
         case ConfigureRequest:
             EvConfigureRequest(&event->xconfigurerequest); break;
         case Expose:
-            EvExpose(&event->xexpose); break;
+            if (event->xexpose.count == 0) {
+                while (XCheckTypedWindowEvent(waimea->display,
+                                              event->xexpose.window,
+                                              Expose, event));
+                EvExpose(&event->xexpose);
+            }
+            break;
         case PropertyNotify:
             EvProperty(&event->xproperty); break;
         case UnmapNotify:
