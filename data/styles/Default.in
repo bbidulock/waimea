@@ -13,8 +13,10 @@ menu.hilite:				flat gradient horizontal
   menu.hilite.colorTo:			#000000
   menu.hilite.textColor:		#e0f0ff
 
-menu.bulletlook:			>
+menu.bullet.look:			>
 menu.justify:				right
+menu.checkbox.true.look:		[x]
+menu.checkbox.false.look:               [ ]
 
 window.title.focus:			flat gradient crossdiagonal
   window.title.focus.color:		#8090c0
@@ -63,12 +65,13 @@ window.grip.unfocus:			sunken gradient crossdiagonal
 borderColor:				#000000
 borderWidth:				2
 handleWidth:				3
+
 ! menu.borderWidth:			2
 ! menu.title.height:			15
 ! menu.item.height:                     15
 
-*.font:					fixed
-*.xftfont:				arial
+! *.font:				fixed
+! *.xftfont:				arial
 ! *.xftfontsize:			8.0
 
 rootCommand: xv -rmode 2 -root -quit @pkgdatadir@/backgrounds/waimea.png

@@ -301,8 +301,8 @@ void WaWindow::RedrawWindow(void) {
         }
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
     }
-    if (resize & flags.max) {
-        if (old_attrib.width != attrib.width && !restore_shade_2) {
+    if (resize) {
+        if (flags.max && old_attrib.width != attrib.width && !restore_shade_2) {
             flags.max = False;
             net->SetWmState(this);
             DrawMaxButtonFg();
@@ -1571,6 +1571,8 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
 void WaWindow::_Maximize(bool save_old, int x, int y) {
     int n_w, n_h, new_width, new_height;
 
+    if (flags.max) return;
+    
     new_width = wascreen->workarea->width - (flags.border * border_w * 2);
     new_height = wascreen->workarea->height - (flags.border * border_w * 2) -
         title_w - handle_w - (border_w * flags.title) -

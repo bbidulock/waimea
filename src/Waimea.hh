@@ -78,6 +78,7 @@ enum {
     SEdgeType,
     MenuTitleType,
     MenuItemType,
+    MenuCBItemType,
     MenuSubType,
     DockAppType
 };

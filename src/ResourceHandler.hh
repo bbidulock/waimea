@@ -51,9 +51,11 @@ struct _DockStyle {
     bool centered;
 };
 
-#define LeftJustify   1
-#define RightJustify  2
-#define CenterJustify 3
+enum {
+    LeftJustify,
+    RightJustify,
+    CenterJustify
+};
 
 class ResourceHandler {
 public:
@@ -77,7 +79,8 @@ public:
     
     list<WaAction *> *frameacts, *awinacts, *pwinacts, *titleacts, *labelacts,
         *handleacts, *cbacts, *ibacts, *mbacts, *rgacts, *lgacts, *rootacts,
-        *weacts, *eeacts, *neacts, *seacts, *mtacts, *miacts, *msacts;
+        *weacts, *eeacts, *neacts, *seacts, *mtacts, *miacts, *msacts,
+        *mcbacts;
 
     list<DockStyle *> *dockstyles;
     

@@ -120,17 +120,18 @@ void WaMenu::Build(WaScreen *screen) {
         display = wascreen->display;
         ic = wascreen->ic;
     }
-    bullet_width = 0;
+    bullet_width = cb_width = 0;
 
     CreateOutlineWindows();
 
     f_height = wascreen->mstyle.item_height;
     t_height = wascreen->mstyle.title_height;
     
+    list<WaMenu *>::iterator menu_it;
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
         if ((*it)->func_mask & MenuSubMask) {
-            list<WaMenu *>::iterator menu_it = waimea->wamenu_list->begin();
+            menu_it = waimea->wamenu_list->begin();
             for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {
                 if (! strcmp((*menu_it)->name, (*it)->sub)) {
                     (*it)->submenu = *menu_it;
@@ -143,8 +144,22 @@ void WaMenu::Build(WaScreen *screen) {
                 it = item_list->begin();
             }
         }
+        if ((*it)->func_mask2 & MenuSubMask) {
+            menu_it = waimea->wamenu_list->begin();
+            for (; menu_it != waimea->wamenu_list->end(); ++menu_it) {
+                if (! strcmp((*menu_it)->name, (*it)->sub2)) {
+                    (*it)->submenu2 = *menu_it;
+                    break;
+                }
+            }
+            if (menu_it == waimea->wamenu_list->end()) {
+                WARNING << "no menu named \"" << (*it)->sub2 << "\"" << endl;
+                RemoveItem(*it);
+                it = item_list->begin();
+            }
+        }
     }
-    int b, lasttype = 0;
+    int b, cb, lasttype = 0;
     it = item_list->begin();
     for (i = 1; it != item_list->end(); ++it, ++i) {
 #ifdef XFT
@@ -165,8 +180,23 @@ void WaMenu::Build(WaScreen *screen) {
                             strlen(wascreen->mstyle.bullet), &extents);
             bullet_width = extents.width;
         }
+        else if ((*it)->type == MenuCBItemType) {
+            XftTextExtents8(display, wascreen->mstyle.ct_xftfont,
+                            (unsigned char *) wascreen->mstyle.checkbox_true,
+                            strlen(wascreen->mstyle.checkbox_true), &extents);
+            cb_width = extents.width;
+            XftTextExtents8(display, wascreen->mstyle.cf_xftfont,
+                            (unsigned char *) wascreen->mstyle.checkbox_false,
+                            strlen(wascreen->mstyle.checkbox_false), &extents);
+            if (extents.width > cb_width) cb_width = extents.width;
+            XftTextExtents8(display, font, (unsigned char *) (*it)->label2,
+                            strlen((*it)->label2), &extents);
+            if ((extents.width + 20) > (*it)->width)
+                (*it)->width = (extents.width + 20);
+        }
 #else // ! XFT
-	XFontStruct *font;
+        XFontStruct *font;
+        int tmp_w;
         if ((*it)->type == MenuTitleType)
             font = wascreen->mstyle.t_font;
         else
@@ -178,9 +208,22 @@ void WaMenu::Build(WaScreen *screen) {
             bullet_width = XTextWidth(wascreen->mstyle.b_font,
                                       wascreen->mstyle.bullet,
                                       strlen(wascreen->mstyle.bullet));
+        else if ((*it)->type == MenuCBItemType) {
+            cb_width = XTextWidth(wascreen->mstyle.ct_font,
+                                  wascreen->mstyle.checkbox_true,
+                                  strlen(wascreen->mstyle.checkbox_true));
+            tmp_w = XTextWidth(wascreen->mstyle.cf_font,
+                               wascreen->mstyle.checkbox_false,
+                               strlen(wascreen->mstyle.checkbox_false));
+            if (tmp_w > cb_width) cb_width = tmp_w;
+            tmp_w = XTextWidth(font, (*it)->label2, strlen((*it)->label2)) + 20;
+            if (tmp_w > (*it)->width) (*it)->width = tmp_w;
+        }
 #endif // XFT
-        b = ((*it)->type == MenuSubType)? bullet_width: 0;
-        if (((*it)->width + b) > width) width = (*it)->width + b;
+        extra_width = (bullet_width >= cb_width) ? bullet_width: cb_width;
+        
+        if (((*it)->width + extra_width) > width)
+            width = (*it)->width + extra_width;
         
         if ((*it)->type == MenuTitleType) {
             if ((i == 1) || (i == item_list->size()) ||
@@ -201,6 +244,7 @@ void WaMenu::Build(WaScreen *screen) {
         }
         lasttype = (*it)->type;
     }
+    
     if (width > (wascreen->width / 2)) width = wascreen->width / 2;
     WaTexture *texture = &wascreen->mstyle.back_frame;
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
@@ -578,10 +622,10 @@ void WaMenu::FocusFirst(void) {
 WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     label = s;
     id = (Window) 0;
-    func_mask = height = width = dy = realheight = 0;
-    wfunc = NULL;
-    rfunc = NULL;
-    mfunc = NULL;
+    func_mask = func_mask2 = height = width = dy = realheight = cb = 0;
+    wfunc = wfunc2 = NULL;
+    rfunc = rfunc2 = NULL;
+    mfunc = mfunc2 = NULL;
     sub = NULL;
     wf = (Window) 0;
 #ifdef XFT
@@ -617,6 +661,19 @@ WaMenuItem::~WaMenuItem(void) {
 void WaMenuItem::DrawFg(void) {
     int x, y, justify;
     
+    if (cb) UpdateCBox();
+#ifdef XFT    
+    XGlyphInfo extents;
+    if (type == MenuCBItemType) {
+        XftTextExtents8(menu->display, menu->wascreen->mstyle.f_xftfont,
+                        (unsigned char *) label, strlen(label), &extents);
+        width = extents.width + 20;
+    }
+#else // ! XFT
+    if (type == MenuCBItemType) {
+        width = XTextWidth(font, (*it)->label, strlen((*it)->label)) + 20;
+    }
+#endif // XFT
     if (type == MenuTitleType)
         justify = menu->wascreen->mstyle.t_justify;
     else
@@ -627,13 +684,17 @@ void WaMenuItem::DrawFg(void) {
         case LeftJustify: x = 10; break;
         case CenterJustify:
             if (type == MenuTitleType)
-                x = ((menu->width) / 2) - ((width - 20) / 2);
-            else x = ((menu->width - menu->bullet_width) / 2) -
-                     ((width - 20) / 2);
+                x = ((menu->width - menu->bullet_width) / 2) - ((width - 20) / 2);
+            else if (type == MenuCBItemType)
+                x = ((menu->width - menu->cb_width) / 2) - ((width - 20) / 2);
+            else x = ((menu->width - menu->extra_width) / 2) - ((width - 20) / 2);
             break;
         default:
-            if (type == MenuTitleType) x = (menu->width) - (width - 10);
-            else x = (menu->width - menu->bullet_width) - (width - 10);
+            if (type == MenuTitleType)
+                x = (menu->width - menu->bullet_width) - (width - 10);
+            else if (type == MenuCBItemType)
+                x = (menu->width - menu->cb_width) - (width - 10);
+            else x = (menu->width - menu->extra_width) - (width - 10);
     }
 #ifdef XFT
     XftFont *font;
@@ -660,16 +721,18 @@ void WaMenuItem::DrawFg(void) {
                        (unsigned char *) menu->wascreen->mstyle.bullet,
                        strlen(menu->wascreen->mstyle.bullet));
     }
+    else if (type == MenuCBItemType) {
+        XftDrawString8(xftdraw, xftcolor, cbox_xft_font,
+                       menu->width - (menu->cb_width + 5), cb_y,
+                       (unsigned char *) cbox, strlen(cbox));
+    }
 #else // ! XFT
-    XFontStruct *font;
     GC *gc, *bgc = NULL;
     
     if (type == MenuTitleType) {
-        font = menu->wascreen->mstyle.t_font;
         gc = &menu->wascreen->mstyle.t_text_gc;
         y = menu->wascreen->mstyle.t_y_pos;
     } else {
-        font = menu->wascreen->mstyle.f_font;
         if (hilited) {
             gc = &menu->wascreen->mstyle.fh_text_gc;
             bgc = &menu->wascreen->mstyle.bh_text_gc;
@@ -688,6 +751,11 @@ void WaMenuItem::DrawFg(void) {
                     menu->width - (menu->bullet_width + 5), y,
                     menu->wascreen->mstyle.bullet,
                     strlen(menu->wascreen->mstyle.bullet));
+    }
+    else if (type == MenuCBItemType) {
+        XDrawString(menu->display, (Drawable) id, *cbox_gc,
+                    menu->width - (menu->cb_width + 5), cb_y, cbox,
+                    strlen(cbox));
     }
 #endif // XFT
 }
@@ -754,8 +822,10 @@ void WaMenuItem::UnmapMenu(XEvent *, WaAction *, bool focus) {
  */
 void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus) {
     int skip;
-    if ((! (func_mask & MenuSubMask)) || submenu->mapped) return;
 
+    if (cb) UpdateCBox();
+    if ((! (func_mask & MenuSubMask)) || submenu->mapped) return;
+    
     Hilite();
     if (submenu->tasksw) menu->waimea->taskswitch->Build(menu->wascreen);
     submenu->root_menu = menu;
@@ -787,8 +857,10 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus) {
  */
 void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
     int skip;
+    
+    if (cb) UpdateCBox();
     if (! (func_mask & MenuSubMask)) return;
-
+    
     Hilite();
     if (submenu->tasksw) menu->waimea->taskswitch->Build(menu->wascreen);
     submenu->root_menu = menu;
@@ -827,6 +899,7 @@ void WaMenuItem::UnLinkMenu(XEvent *, WaAction *) {
  * This function executes menu items command line, if there is one.
  */
 void WaMenuItem::Exec(XEvent *, WaAction *) {
+    if (cb) UpdateCBox();
     if (! (func_mask & MenuExecMask)) return;
 
     waexec(exec, menu->wascreen->displaystring);
@@ -846,6 +919,8 @@ void WaMenuItem::Exec(XEvent *, WaAction *) {
 void WaMenuItem::Func(XEvent *e, WaAction *ac) {
     hash_map<Window, WindowObject *>::iterator it;
     Window func_win;
+
+    if (cb) UpdateCBox();
     
     if (wf) func_win = wf;
     else func_win = menu->wf;
@@ -862,6 +937,11 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
         ((*(menu->rf)).*(rfunc))(e, ac);
     else if ((func_mask & MenuMFuncMask) && (menu->ftype == MenuMFuncMask))
         ((*(menu->mf)).*(mfunc))(e, ac);
+
+    if (cb) {
+        UpdateCBox();
+        DrawFg();
+    }
 }
 
 /**
@@ -1168,8 +1248,76 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
         Hilite();
         if (menu->has_focus && type != MenuTitleType) Focus();
     }
-    else if (ed->type == LeaveNotify && type == MenuItemType)
+    else if (ed->type == LeaveNotify && type != MenuSubType)
         DeHilite();
+}
+
+/**
+ * @fn    UpdateCBox(void)
+ * @brief Update Checkbox
+ *
+ * Reads checkbox value and updates pointers so that checkbox is drawn and
+ * handled correct.
+ */
+void WaMenuItem::UpdateCBox(void) {
+    hash_map<Window, WindowObject *>::iterator it;
+    Window func_win;
+    bool true_false = False;
+    WaWindow *ww;
+
+    if (cb) {
+        if (wf) func_win = wf;
+        else func_win = menu->wf;
+        if ((func_mask & MenuWFuncMask) &&
+            ((menu->ftype == MenuWFuncMask) || wf)) {
+            if ((it = menu->waimea->window_table->find(func_win)) !=
+                menu->waimea->window_table->end()) {
+                if (((*it).second)->type == WindowType) {
+                    ww = (WaWindow *) (*it).second;
+                    switch (cb) {
+                        case MaxCBoxType:
+                            true_false = ww->flags.max; break;
+                        case ShadeCBoxType:
+                            true_false = ww->flags.shaded; break;
+                        case StickCBoxType:
+                            true_false = ww->flags.sticky;
+                    }
+                    if (true_false) {
+#ifdef XFT
+                        cbox_xft_font = menu->wascreen->mstyle.ct_xftfont;
+#else // ! XFT
+                        if (hilited) cbox_gc = &menu->wascreen->mstyle.cth_text_gc;
+                        else cbox_gc = &menu->wascreen->mstyle.ct_text_gc;
+#endif // XFT
+                        cb_y = menu->wascreen->mstyle.ct_y_pos;
+                        cbox = menu->wascreen->mstyle.checkbox_true;
+                        label = label2;
+                        sub = sub2;
+                        wfunc = wfunc2;
+                        rfunc = rfunc2;
+                        mfunc = mfunc2;
+                        func_mask = func_mask2;
+                    }
+                    else {
+#ifdef XFT
+                        cbox_xft_font = menu->wascreen->mstyle.cf_xftfont;
+#else // ! XFT
+                        if (hilited) cbox_gc = &menu->wascreen->mstyle.cfh_text_gc;
+                        else cbox_gc = &menu->wascreen->mstyle.cf_text_gc;
+#endif // XFT
+                        cb_y = menu->wascreen->mstyle.cf_y_pos;
+                        cbox = menu->wascreen->mstyle.checkbox_false;
+                        label = label1;
+                        sub = sub1;
+                        wfunc = wfunc1;
+                        rfunc = rfunc1;
+                        mfunc = mfunc1;
+                        func_mask = func_mask1;
+                    }
+                }
+            }
+        }
+    }
 }
 
 

@@ -156,15 +156,23 @@ WaScreen::~WaScreen(void) {
     XFree(wstyle.xftfont);
     XFree(mstyle.f_xftfont);
     XFree(mstyle.t_xftfont);
+    XFree(mstyle.ct_xftfont);
+    XFree(mstyle.cf_xftfont);
 #else // ! XFT    
     XFreeFont(display, wstyle.font);
     XFreeFont(display, mstyle.f_font);
     XFreeFont(display, mstyle.t_font);
+    XFreeFont(display, mstyle.ct_font);
+    XFreeFont(display, mstyle.cf_font);
     XFreeGC(display, wstyle.l_text_focus_gc);
     XFreeGC(display, wstyle.l_text_unfocus_gc);
     XFreeGC(display, mstyle.f_text_gc);
     XFreeGC(display, mstyle.fh_text_gc);
     XFreeGC(display, mstyle.t_text_gc);
+    XFreeGC(display, mstyle.cth_text_gc);
+    XFreeGC(display, mstyle.ct_text_gc);
+    XFreeGC(display, mstyle.cfh_text_gc);
+    XFreeGC(display, mstyle.cf_text_gc);
 #endif // XFT
     waimea->window_table->erase(id);
 }
@@ -217,10 +225,28 @@ void WaScreen::CreateFonts(void) {
         ERROR << "couldn't load font \"" << mstyle.b_xftfontname << "\"" << endl;
         quit(1);
     }
+    if (mstyle.ct_xftsize < 2.0) mstyle.ct_xftsize = default_font_size;
+    if (! (mstyle.ct_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
+                                          XftTypeString, mstyle.ct_xftfontname,
+                                          XFT_SIZE, XftTypeDouble,
+                                          mstyle.ct_xftsize, 0))) {
+        ERROR << "couldn't load font \"" << mstyle.ct_xftfontname << "\"" << endl;
+        quit(1);
+    }
+    if (mstyle.cf_xftsize < 2.0) mstyle.cf_xftsize = default_font_size;
+    if (! (mstyle.cf_xftfont = XftFontOpen(display, screen_number, XFT_FAMILY,
+                                          XftTypeString, mstyle.cf_xftfontname,
+                                          XFT_SIZE, XftTypeDouble,
+                                          mstyle.cf_xftsize, 0))) {
+        ERROR << "couldn't load font \"" << mstyle.cf_xftfontname << "\"" << endl;
+        quit(1);
+    }
     int w_diff = wstyle.xftfont->ascent - wstyle.xftfont->descent;
     int mf_diff = mstyle.f_xftfont->ascent - mstyle.f_xftfont->descent;
     int mt_diff = mstyle.t_xftfont->ascent - mstyle.t_xftfont->descent;
     int mb_diff = mstyle.b_xftfont->ascent - mstyle.b_xftfont->descent;
+    int mct_diff = mstyle.ct_xftfont->ascent - mstyle.ct_xftfont->descent;
+    int mcf_diff = mstyle.cf_xftfont->ascent - mstyle.cf_xftfont->descent;
 
     if (! wstyle.title_height)
         wstyle.title_height = wstyle.xftfont->height + 4;
@@ -245,18 +271,29 @@ void WaScreen::CreateFonts(void) {
         ERROR << "couldn't load font \"" << mstyle.b_fontname << "\"" << endl;
         quit(1);
     }
+    if (! (mstyle.ct_font = XLoadQueryFont(display, mstyle.ct_fontname))) {
+        ERROR << "couldn't load font \"" << mstyle.ct_fontname << "\"" << endl;
+        quit(1);
+    }
+    if (! (mstyle.cf_font = XLoadQueryFont(display, mstyle.cf_fontname))) {
+        ERROR << "couldn't load font \"" << mstyle.cf_fontname << "\"" << endl;
+        quit(1);
+    }
     int w_diff = wstyle.font->ascent - wstyle.font->descent;
     int mf_diff = mstyle.f_font->ascent - mstyle.f_font->descent;
     int mt_diff = mstyle.t_font->ascent - mstyle.t_font->descent;
     int mb_diff = mstyle.b_font->ascent - mstyle.b_font->descent;
+    int mct_diff = mstyle.ct_font->ascent - mstyle.ct_font->descent;
+    int mcf_diff = mstyle.cf_font->ascent - mstyle.cf_font->descent;
+
     
     if (! wstyle.title_height)
         wstyle.title_height = wstyle.font->ascent + wstyle.font->descent + 4;
     if (! mstyle.title_height)
         mstyle.title_height = mstyle.t_font->ascent +
             mstyle.t_font->descent + 2;
-    if (! mstyle.item_height) mstyle.item_height = wstyle.font->ascent + 
-	    wstyle.font->descent + 2;
+    if (! mstyle.item_height) mstyle.item_height = mstyle.t_font->ascent + 
+	    mstyle.t_font->descent + 2;
 #endif // XFT
     if (wstyle.title_height < 10) mstyle.title_height = 10;
     if (mstyle.title_height < 4) mstyle.title_height = 4;
@@ -266,6 +303,8 @@ void WaScreen::CreateFonts(void) {
     mstyle.f_y_pos = (mstyle.item_height / 2) + mf_diff / 2 + mf_diff % 2;
     mstyle.t_y_pos = (mstyle.title_height / 2) + mt_diff / 2 + mt_diff % 2;
     mstyle.b_y_pos = (mstyle.item_height / 2) + mb_diff / 2 + mb_diff % 2;
+    mstyle.ct_y_pos = (mstyle.item_height / 2) + mct_diff / 2 + mct_diff % 2;
+    mstyle.cf_y_pos = (mstyle.item_height / 2) + mcf_diff / 2 + mcf_diff % 2;
 }
 
 /**
@@ -321,6 +360,22 @@ void WaScreen::CreateColors(void) {
     gcv.foreground = mstyle.f_hilite_text.getPixel();
     gcv.font = mstyle.b_font->fid;
     mstyle.bh_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
+
+    gcv.foreground = mstyle.f_text.getPixel();
+    gcv.font = mstyle.ct_font->fid;
+    mstyle.ct_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
+    
+    gcv.foreground = mstyle.f_hilite_text.getPixel();
+    gcv.font = mstyle.ct_font->fid;
+    mstyle.cth_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
+
+    gcv.foreground = mstyle.f_text.getPixel();
+    gcv.font = mstyle.cf_font->fid;
+    mstyle.cf_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
+    
+    gcv.foreground = mstyle.f_hilite_text.getPixel();
+    gcv.font = mstyle.cf_font->fid;
+    mstyle.cfh_text_gc = XCreateGC(display, id, GCForeground | GCFont, &gcv);
 #endif // XFT
 }
 

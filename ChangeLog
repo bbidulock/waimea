@@ -1,14 +1,18 @@
+Wed Jan 23 2002 David Reveman (c99drn@cs.umu.se)
+
+	Added checkbox item to menu system
+
 Sun Jan 20 2002 David Reveman (c99drn@cs.umu.se)
 
 	*** Waimea v0.1.4 release ***
 
 Sat Jan 19 2002 David Reveman (c99drn@cs.umu.se)
 
-	Completed dockapp handler system.	
+	Completed dockapp handler system
 
 Sun Dec  2 2001 David Reveman (c99drn@cs.umu.se)
 
-	Made screenedges XDND aware. 
+	Made screenedges XDND aware
 
 Fri Nov 30 2001 David Reveman (c99drn@cs.umu.se)
 

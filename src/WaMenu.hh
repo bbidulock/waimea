@@ -37,6 +37,10 @@ typedef void (WaMenuItem::*MenuActionFn)(XEvent *, WaAction *);
 #define MenuRFuncMask (1L << 3)
 #define MenuMFuncMask (1L << 4)
 
+#define MaxCBoxType   1
+#define ShadeCBoxType 2
+#define StickCBoxType 3
+
 class WaMenu {
 public:
     WaMenu(char *);
@@ -64,7 +68,7 @@ public:
     list<WaMenuItem *> *item_list;    
 
     Window frame, o_west, o_north, o_south, o_east;
-    int x, y, width, height, bullet_width;
+    int x, y, width, height, bullet_width, cb_width, extra_width;
     bool mapped, built, o_mapped;
     char *name;
     Pixmap pbackframe, pframe, ptitle, philite, psub, psubhilite;
@@ -150,19 +154,27 @@ public:
     void PreviousItem(XEvent *, WaAction *);
     
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);
+    void UpdateCBox(void);
     
     
-    int func_mask, height, width, dy, realheight;
+    int func_mask, func_mask1, func_mask2, height, width, dy, realheight,
+                   cb, cb_y;
     bool hilited;
     char *label, *exec, *sub;
-    WwActionFn wfunc;
-    MenuActionFn mfunc;
-    RootActionFn rfunc;
+    char *label1, *exec1, *sub1;
+    char *label2, *exec2, *sub2;
+    char *cbox;
+    WwActionFn wfunc, wfunc1, wfunc2;
+    MenuActionFn mfunc, mfunc1, mfunc2;
+    RootActionFn rfunc, rfunc1, rfunc2;
     WaMenu *menu;
-    WaMenu *submenu;
+    WaMenu *submenu, *submenu1, *submenu2;
     Window wf;
 #ifdef XFT        
     XftDraw *xftdraw;
+    XftFont *cbox_xft_font;
+#else // !XFT
+    GC *cbox_gc;
 #endif // XFT
 };
 

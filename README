@@ -82,6 +82,7 @@ CONFIG FILE
 
 
 	Dockapp Holders
+	
 	It is possible to have more than one dockapp holder running.
 	First dockapp handler should be named dock0 and the second dock1
 	and so on. One dockapp holder is always running whether you have a 
@@ -137,10 +138,20 @@ STYLES
         style file. If you want to force Waimea to read a specified style 
         file use '--stylefile' switch.
 
-        menu.bullet
+        menu.bullet.look
                 Could be a string, or character ASCII-code within two "'". 
                 The string or character is used for submenu bullet. By default
                 ">" string is used.
+
+	menu.checkbox.true.look
+                Could be a string, or character ASCII-code within two "'".
+                The string or character is used as checkbox symbol 'True'. 
+		By default "[x]" string is used.
+
+	menu.checkbox.true.look
+                Could be a string, or character ASCII-code within two "'".
+                The string or character is used as checkbox symbol 'False'. 
+                By default "[ ]" string is used.	
 
         menu.borderWidth
                 Border width of all menus, By default 2.
@@ -162,7 +173,8 @@ STYLES
                 and can be used for all items as the above option can be 
                 used for. This option specifies the size of the xft font to 
 		use. This is not really in pixels but instead in a percentage 
-		of the screen height (read xft manual page for info about this). 		By default the size is calculated from the height of your screen
+		of the screen height (read xft manual page for info about this).
+		By default the size is calculated from the height of your screen
 		(size = (17 / 2400) * screenHeight).
 
         window.button.hilite.picColor
@@ -228,6 +240,7 @@ ACTIONS
                 menu.title
                 menu.item
                 menu.sub
+		menu.checkbox
                 root
                 westedge
                 eastedge
@@ -408,6 +421,23 @@ MENUS
 
         Predefined menu named "__taskswitcher__" can be used in menu file
 	and action file to access the taskswitcher menu.
+
+	A checkbox item is a item that have two modes and a flag decides which
+	mode the item is in. 
+	Example:
+	
+	[checkbox=STICKY] @FALSE (Sticky) "sticky" @TRUE (Sticky) "unsticky"
+
+	Flag to decide which mode to be in for this checkbox is STICKY (the
+	sticky flag for a window). If STICKY flag is 'False' the checkbox item
+	will be in mode defined by menu string after @FALSE and if STICKY flag
+	is 'True' the checkbox item will be in mode defined by the menu string
+	after @TRUE.
+
+	List of flags:
+	STICKY
+	MAXIMIZED
+	SHADED
 	
 	See data/menu for good example of menu file.
 

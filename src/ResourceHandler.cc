@@ -279,6 +279,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     mtacts     = new list<WaAction *>;
     miacts     = new list<WaAction *>;
     msacts     = new list<WaAction *>;
+    mcbacts    = new list<WaAction *>;
 
     dockstyles = new list<DockStyle *>;
 }
@@ -505,6 +506,12 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
                      &mstyle->t_fontname, mstyle->f_fontname);
     ReadDatabaseFont("menu.bullet.font", "Menu.Bullet.Font",
                      &mstyle->b_fontname, mstyle->f_fontname);
+    ReadDatabaseFont("menu.checkbox.true.font",
+                     "Menu.Checkbox.True.Font",
+                     &mstyle->ct_fontname, mstyle->f_fontname);
+    ReadDatabaseFont("menu.checkbox.false.font",
+                     "Menu.Checkbox.False.Font",
+                     &mstyle->cf_fontname, mstyle->ct_fontname);
 #ifdef XFT
     if (XrmGetResource(database, "window.xftfontsize",
                        "Window.XftFontSize", &value_type, &value)) {
@@ -549,15 +556,43 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         }
     } else
         mstyle->b_xftsize = mstyle->f_xftsize;
+
+    if (XrmGetResource(database, "menu.checkbox.true.xftfontsize",
+                       "Menu.Checkbox.True.XftFontSize", &value_type, &value)) {
+        if (! (mstyle->ct_xftsize = strtod(value.addr, 0))) {
+            mstyle->ct_xftsize = mstyle->ct_xftsize;
+        } else {
+            if (mstyle->ct_xftsize < 2.0) mstyle->ct_xftsize = 2.0;
+            if (mstyle->ct_xftsize > 100.0) mstyle->ct_xftsize = 100.0;
+        }
+    } else
+        mstyle->ct_xftsize = mstyle->f_xftsize;
+
+    if (XrmGetResource(database, "menu.checkbox.false.xftfontsize",
+                       "Menu.Checkbox.False.XftFontSize", &value_type, &value)) {
+        if (! (mstyle->cf_xftsize = strtod(value.addr, 0))) {
+            mstyle->cf_xftsize = mstyle->cf_xftsize;
+        } else {
+            if (mstyle->cf_xftsize < 2.0) mstyle->cf_xftsize = 2.0;
+            if (mstyle->cf_xftsize > 100.0) mstyle->cf_xftsize = 100.0;
+        }
+    } else
+        mstyle->cf_xftsize = mstyle->ct_xftsize;
     
     ReadDatabaseFont("window.xftfont", "Window.xftFont",
-                     &wstyle->xftfontname, wstyle->fontname);
+                     &wstyle->xftfontname, "arial");
     ReadDatabaseFont("menu.frame.xftfont", "Menu.Frame.xftFont",
-                     &mstyle->f_xftfontname, mstyle->f_fontname);
+                     &mstyle->f_xftfontname, wstyle->xftfontname);
     ReadDatabaseFont("menu.title.xftfont", "Menu.Title.xftFont",
-                     &mstyle->t_xftfontname, mstyle->t_fontname);
+                     &mstyle->t_xftfontname, mstyle->f_xftfontname);
     ReadDatabaseFont("menu.bullet.xftfont", "Menu.Bullet.xftFont",
-                     &mstyle->b_xftfontname, mstyle->b_fontname);
+                     &mstyle->b_xftfontname, mstyle->f_xftfontname);
+    ReadDatabaseFont("menu.checkbox.true.xftfont",
+                     "Menu.Checkbox.True.xftFont",
+                     &mstyle->ct_xftfontname, mstyle->f_xftfontname);
+    ReadDatabaseFont("menu.checkbox.false.xftfont",
+                     "Menu.Checkbox.False.xftFont",
+                     &mstyle->cf_xftfontname, mstyle->f_xftfontname);
 #endif // XFT
     ReadDatabaseTexture("window.title.focus", "Window.Title.Focus",
                         &wstyle->t_focus, WhitePixel(display, screen), ic,
@@ -684,22 +719,48 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
             mstyle->t_justify = LeftJustify;
     }
 
-    char bullet[2];
+    char look_tmp[2];
     int ch = (int) '>';
-    if (XrmGetResource(database, "menu.bulletlook", "Menu.Bulletlook",
+    if (XrmGetResource(database, "menu.bullet.look", "Menu.Bullet.Look",
                        &value_type, &value)) {
         if (sscanf(value.addr, "'%u'", &ch) != 1) {
             mstyle->bullet = strdup(value.addr);
         } else {
-            bullet[0] = (char) ch;
-            bullet[1] = '\0';
-            mstyle->bullet = strdup(bullet);
+            look_tmp[0] = (char) ch;
+            look_tmp[1] = '\0';
+            mstyle->bullet = strdup(look_tmp);
         }
     } else {
-        bullet[0] = (char) ch;
-        bullet[1] = '\0';
-        mstyle->bullet = strdup(bullet);
+        look_tmp[0] = (char) ch;
+        look_tmp[1] = '\0';
+        mstyle->bullet = strdup(look_tmp);
     }
+
+    ch = 'X';
+    if (XrmGetResource(database, "menu.checkbox.true.look",
+                       "Menu.Checkbox.True.Look", &value_type, &value)) {
+        if (sscanf(value.addr, "'%u'", &ch) != 1) {
+            mstyle->checkbox_true = strdup(value.addr);
+        } else {
+            look_tmp[0] = (char) ch;
+            look_tmp[1] = '\0';
+            mstyle->checkbox_true = strdup(look_tmp);
+        }
+    } else
+        mstyle->checkbox_true = strdup("[x]");
+
+    ch = '_';
+    if (XrmGetResource(database, "menu.checkbox.false.look",
+                       "Menu.Checkbox.False.Look", &value_type, &value)) {
+        if (sscanf(value.addr, "'%u'", &ch) != 1) {
+            mstyle->checkbox_false = strdup(value.addr);
+        } else {
+            look_tmp[0] = (char) ch;
+            look_tmp[1] = '\0';
+            mstyle->checkbox_false = strdup(look_tmp);
+        }
+    } else 
+        mstyle->checkbox_false = strdup("[ ]");
 
     ReadDatabaseColor("borderColor", "BorderColor",
                       &wstyle->border_color, BlackPixel(display, screen), ic);
@@ -879,6 +940,8 @@ void ResourceHandler::LoadActions(Waimea *waimea) {
                         macts, miacts);
     ReadDatabaseActions("menu.sub", "Menu.Sub",
                         macts, msacts);
+    ReadDatabaseActions("menu.checkbox", "Menu.Checkbox",
+                        macts, mcbacts);
     
     XrmDestroyDatabase(database);
 
@@ -1317,10 +1380,11 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
  * @param file File descriptor for menu file
  */
 void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
-    char *s, line[8192];
+    char *s, line[8192], *line1, *line2;
     WaMenuItem *m;
-    int i, type;
+    int i, type, cb;
     WaMenu *tmp_menu;
+    list<StrComp *>::iterator it;
     
     while (fgets(line, 8192, file)) {
         linenr++;
@@ -1328,6 +1392,8 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         if (line[i] == '\n') continue;
         if (line[i] == '#') continue;
         if (line[i] == '!') continue;
+
+        cb = 0;
         
         if (! (s = strwithin(line, '[', ']'))) {
             WARNING << "failed to find menu item type at line " << 
@@ -1419,6 +1485,50 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             waimea->wamenu_list->push_back(menu);
             return;
         }
+        else if (! strncasecmp(s, "checkbox", 8)) {
+            if (! strcasecmp(s + 9, "MAXIMIZED")) {
+                type = MenuCBItemType;
+                cb = MaxCBoxType;
+            }
+            else if (! strcasecmp(s + 9, "SHADED")) {
+                type = MenuCBItemType;
+                cb = ShadeCBoxType;
+            }
+            else if (! strcasecmp(s + 9, "STICKY")) {
+                type = MenuCBItemType;
+                cb = StickCBoxType;
+            }
+            else {
+                WARNING << "at line " << linenr << ": '"<< s + 9 << "'" <<
+                    " unknown checkbox" << endl;
+                free(s);
+                continue;
+            }
+            for (i = 0; strncasecmp(&line[i], "@TRUE", 5) &&
+                     line[i + 5] != '\0'; i++);
+            if (line[i + 5] == '\0') {
+                WARNING << "at line " << linenr << ": No '@TRUE' linepart" <<
+                    " for checkbox item" << endl;
+                free(s);
+                continue;
+            }
+            line2 = &line[i + 5];
+            for (i = 0; strncasecmp(&line[i], "@FALSE", 6) &&
+                     line[i + 6] != '\0'; i++);
+            if (line[i + 6] == '\0') {
+                WARNING << "at line " << linenr << ": No '@FALSE' linepart" <<
+                    " for checkbox item" << endl;
+                free(s);
+                continue;
+            }
+            line1 = &line[i + 6];
+            for (i = 0; strncasecmp(&line1[i], "@TRUE", 5) &&
+                     line1[i + 5] != '\0'; i++);
+            if (line1[i + 5] != '\0') line1[i] = '\0';
+            for (i = 0; strncasecmp(&line2[i], "@FALSE", 6) &&
+                     line2[i + 6] != '\0'; i++);
+            if (line2[i + 6] != '\0') line2[i] = '\0';
+        }
         else if (! strcasecmp(s, "title"))
             type = MenuTitleType;
         else if (! strcasecmp(s, "item"))
@@ -1432,26 +1542,34 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             continue;
         }
         free(s);
-        if (s = strwithin(line, '(', ')'))
+        if (! cb) line1 = line;
+        if (s = strwithin(line1, '(', ')'))
             m = new WaMenuItem(s);
         else m = new WaMenuItem("");
+        m->label1 = m->label;
         m->type = type;
-        if (s = strwithin(line, '{', '}')) {
+        m->cb = cb;
+        if (s = strwithin(line1, '{', '}')) {
             if (*s != '\0') {
-                m->exec = s;
+                m->exec = m->exec1 = s;
                 m->func_mask |= MenuExecMask;
+                m->func_mask1 |= MenuExecMask;
             }
         }
-        if (s = strwithin(line, '<', '>')) {
+        if (s = strwithin(line1, '<', '>')) {
             m->sub = s;
+            m->sub1 = s;
             m->func_mask |= MenuSubMask;
+            m->func_mask1 |= MenuSubMask;
         }
-        if (s = strwithin(line, '"', '"')) {
-            list<StrComp *>::iterator it = wacts->begin();
+        if (s = strwithin(line1, '"', '"')) {
+            it = wacts->begin();
             for (; it != wacts->end(); ++it) {
                 if ((*it)->Comp(s)) {
                     m->wfunc = (*it)->winfunc;
+                    m->wfunc1 = (*it)->winfunc;
                     m->func_mask |= MenuWFuncMask;
+                    m->func_mask1 |= MenuWFuncMask;
                     break;
                 }
             }
@@ -1459,7 +1577,9 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             for (; it != racts->end(); ++it) {
                 if ((*it)->Comp(s)) {
                     m->rfunc = (*it)->rootfunc;
+                    m->rfunc1 = (*it)->rootfunc;
                     m->func_mask |= MenuRFuncMask;
+                    m->func_mask1 |= MenuRFuncMask;
                     break;
                 }
             }
@@ -1467,7 +1587,9 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
             for (; it != macts->end(); ++it) {
                 if ((*it)->Comp(s)) {
                     m->mfunc = (*it)->menufunc;
+                    m->mfunc1 = (*it)->menufunc;
                     m->func_mask |= MenuMFuncMask;
+                    m->func_mask1 |= MenuMFuncMask;
                     break;
                 }
             }
@@ -1476,6 +1598,55 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                     "\" not available" << endl;
                 free(s);
                 continue;
+            }
+        }
+        free(s);
+
+        if (cb) {
+            if (s = strwithin(line2, '(', ')'))
+                m->label2 = s;
+            else m->label2 = "";
+            if (s = strwithin(line2, '{', '}')) {
+                if (*s != '\0') {
+                    m->exec2 = s;
+                    m->func_mask2 |= MenuExecMask;
+                }
+            }
+            if (s = strwithin(line2, '<', '>')) {
+                m->sub2 = s;
+                m->func_mask2 |= MenuSubMask;
+            }
+            if (s = strwithin(line2, '"', '"')) {
+                it = wacts->begin();
+                for (; it != wacts->end(); ++it) {
+                    if ((*it)->Comp(s)) {
+                        m->wfunc2 = (*it)->winfunc;
+                        m->func_mask2 |= MenuWFuncMask;
+                        break;
+                    }
+                }
+                it = racts->begin();
+                for (; it != racts->end(); ++it) {
+                    if ((*it)->Comp(s)) {
+                        m->rfunc2 = (*it)->rootfunc;
+                        m->func_mask2 |= MenuRFuncMask;
+                        break;
+                    }
+                }
+                it = macts->begin();
+                for (; it != macts->end(); ++it) {
+                    if ((*it)->Comp(s)) {
+                        m->mfunc2 = (*it)->menufunc;
+                        m->func_mask2 |= MenuMFuncMask;
+                        break;
+                    }
+                }
+                if (! (m->wfunc2 || m->rfunc2 || m->mfunc2)) {
+                    WARNING << "at line " << linenr << ": function \"" << s <<
+                        "\" not available" << endl;
+                    free(s);
+                    continue;
+                }
             }
             free(s);
         }

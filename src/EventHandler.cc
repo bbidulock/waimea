@@ -227,6 +227,7 @@ void EventHandler::EvExpose(XExposeEvent *e) {
             case MenuTitleType:
             case MenuItemType:
             case MenuSubType:
+            case MenuCBItemType:
                 ((WaMenuItem *) (*it).second)->DrawFg();
         }
     }
@@ -516,6 +517,8 @@ void EventHandler::EvAct(XEvent *e, Window win) {
                 ((WaMenuItem *) wo)->EvAct(e, &ed, rh->mtacts); break;
             case MenuItemType:
                 ((WaMenuItem *) wo)->EvAct(e, &ed, rh->miacts); break;
+            case MenuCBItemType:
+                ((WaMenuItem *) wo)->EvAct(e, &ed, rh->mcbacts); break;
             case MenuSubType:
                 ((WaMenuItem *) wo)->EvAct(e, &ed, rh->msacts); break;
             case WEdgeType:

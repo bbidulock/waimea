@@ -42,11 +42,11 @@
 !
 [start] (window)
   [title] (Window Menu)
+  [checkbox=MAXIMIZED] @FALSE (Maximized) "maximize" @TRUE (Maximized) "unmaximize"
+  [checkbox=SHADED]    @FALSE (Shaded)    "shade"    @TRUE (Shaded)    "unshade"
+  [checkbox=STICKY]    @FALSE (Sticky)    "sticky"   @TRUE (Sticky)    "unsticky"
   [item]  (Raise)         "raise"
   [item]  (Lower)         "lower"
-  [item]  (Un-/ Maximize) "togglemaximize"
-  [item]  (Un-/ Shade)    "toggleshade"
-  [item]  (Un-/ Sticky)   "togglesticky"
   [item]  (Kill Client)   "kill"
   [item]  (Close)         "close"
 [end]

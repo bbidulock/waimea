@@ -140,6 +140,20 @@ menu.item.17: Exec         : KeyPress = Return
 menu.item.18: Func         : KeyPress = Return
 menu.item.19: UnmapTree    : KeyPress = Escape
 !
+menu.checkbox.5:  UnmapSubs    : EnterNotify
+menu.checkbox.6:  Exec         : ButtonRelease = AnyButton
+menu.checkbox.7:  Func         : ButtonRelease = AnyButton
+menu.checkbox.8:  UnmapFocused : KeyRelease = Alt_L
+menu.checkbox.9:  Func         : KeyRelease = Alt_L
+menu.checkbox.10: NextItem     : KeyPress = Tab
+menu.checkbox.11: NextItem     : KeyPress = Down
+menu.checkbox.12: PreviousItem : KeyPress = Up
+menu.checkbox.13: UnmapSubs    : KeyPress = Left
+menu.checkbox.14: UnmapFocused : KeyPress = Left
+menu.checkbox.15: Exec         : KeyPress = Return
+menu.checkbox.16: Func         : KeyPress = Return
+menu.checkbox.17: UnmapTree    : KeyPress = Escape
+!
 menu.sub.5:  UnmapSubs       : EnterNotify
 menu.sub.6:  MapSub          : EnterNotify
 menu.sub.7:  RemapSub        : ButtonPress = AnyButton
