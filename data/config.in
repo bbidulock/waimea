@@ -3,7 +3,7 @@
 ! --rcfile switch is used, waimea reads configuration options from 
 ! this file.
 !
-styleFile:         @pkgdatadir@/styles/Default
+styleFile:         @pkgdatadir@/styles/Default.style
 menuFile:          @pkgdatadir@/menu
 actionFile:        @pkgdatadir@/actions/action
 colorsPerChannel:  4

@@ -657,10 +657,10 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     
     database = (XrmDatabase) 0;
     
-    if (! (database = XrmGetFileDatabase(style_file))) {
-        ERROR << "can't open stylefile\"" << style_file << "\" for reading" <<
-            endl; exit(1);
-    }
+    if (! (database = XrmGetFileDatabase(style_file)))
+        WARNING << "can't open stylefile \"" << style_file << 
+            "\" for reading" << endl;
+    
     int slen = strlen(style_file) - 1;
     for (; slen >= 1 && style_file[slen] != '/'; slen--);
     style_file[slen] = '\0';
@@ -722,14 +722,14 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
         wstyle->justify = LeftJustify;
 
     ReadDatabaseTexture("menu.frame", "Menu.Frame",
-                        &mstyle->back_frame, BlackPixel(display, screen), ic);
+                        &mstyle->back_frame, WhitePixel(display, screen), ic);
     ReadDatabaseTexture("menu.hilite", "Menu.Hilite",
                         &mstyle->hilite, WhitePixel(display, screen), ic);
     ReadDatabaseTexture("menu.title", "Menu.Title",
                         &mstyle->title, WhitePixel(display, screen), ic);
 
     ReadDatabaseColor("menu.frame.textColor", "Menu.Frame.TextColor",
-                      &mstyle->f_text, WhitePixel(display, screen), ic);
+                      &mstyle->f_text, BlackPixel(display, screen), ic);
     ReadDatabaseColor("menu.hilite.textColor", "Menu.Hilite.TextColor",
                       &mstyle->f_hilite_text, BlackPixel(display, screen), ic);
     ReadDatabaseColor("menu.title.textColor", "Menu.Title.TextColor",

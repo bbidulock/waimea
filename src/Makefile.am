@@ -1,5 +1,5 @@
 DEFAULT_MENU=$(pkgdatadir)/menu
-DEFAULT_STYLE=$(pkgdatadir)/styles/Default
+DEFAULT_STYLE=$(pkgdatadir)/styles/Default.style
 DEFAULT_ACTION=$(pkgdatadir)/actions/action
 DEFAULT_RCFILE=$(pkgdatadir)/config
 DEFAULT_SCRIPT_DIR=$(pkgdatadir)/scripts
