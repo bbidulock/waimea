@@ -4,7 +4,7 @@
 !
 styleFile:		@pkgdatadir@/styles/Default
 menuFile:		@pkgdatadir@/menu
-actionFile:		@pkgdatadir@/action
+actionFile:		@pkgdatadir@/actions/action
 colorsPerChannel:	4
 cacheMax:		200
 virtualSize:		1x1
