@@ -1781,8 +1781,6 @@ void ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
     WaMenu *tmp_menu;
     list<StrComp *>::iterator it;
 
-    WARNING << "newmenu: " << menu->name << endl;
-    
     while (fgets(line, 8192, file)) {
         linenr++;
         for (i = 0; line[i] == ' ' || line[i] == '\t'; i++);

@@ -99,10 +99,10 @@ southedge {
 }
 
 DEF allMenuWindows {
-   Raise           : ButtonPress = Button1 & Mod1Mask,
-   StartOpaqueMove : ButtonPress = Button1 & Mod1Mask,
-   UnLink          : ButtonPress = Button1 & Mod1Mask,
-   EndMoveResize   : ButtonRelease = Button1 & MoveResizeMask
+   Raise         : ButtonPress = Button1 & Mod1Mask,
+   StartMove     : ButtonPress = Button1 & Mod1Mask,
+   UnLink        : ButtonPress = Button1 & Mod1Mask,
+   EndMoveResize : ButtonRelease = Button1 & MoveResizeMask
 }
 
 DEF allMenuItems {
@@ -122,10 +122,10 @@ DEF allMenuItems {
 
 menu.title {
    allMenuWindows,
-   UnLink          : ButtonPress = Button1 & !Mod1Mask,
-   StartopaqueMove : ButtonPress = Button1 & !Mod1Mask,
-   UnmapSubs       : ButtonPress = Button3,
-   Unmap           : ButtonPress = Button3
+   UnLink    : ButtonPress = Button1 & !Mod1Mask,
+   StartMove : ButtonPress = Button1 & !Mod1Mask,
+   UnmapSubs : ButtonPress = Button3,
+   Unmap     : ButtonPress = Button3
 }
 menu.item {
    allMenuItems,

@@ -1136,6 +1136,7 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
                 maprequest_list->push_front(&event); break;
             case ButtonPress:
             case ButtonRelease:
+                WARNING << "butt" << endl;
                 event.xbutton.window = id;
             case KeyPress:
             case KeyRelease:
@@ -1250,6 +1251,7 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
  */
 void WaMenuItem::EndMoveResize(XEvent *, WaAction *) {
     menu->waimea->eh->move_resize = EndMoveResizeType;
+    WARNING << "butt" << endl;    
 }
 
 /**
@@ -1380,14 +1382,16 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     Window w;
     unsigned int ui;
     int xp, yp, i;
+    bool in_window = true;
 
-    if (ed->type == ButtonPress || ed->type == ButtonRelease ||
-        ed->type == DoubleClick) {
+    if (e->type == ButtonPress || e->type == ButtonRelease ||
+        e->type == DoubleClick) {
         XQueryPointer(menu->display, id, &w, &w, &i, &i, &xp, &yp, &ui);
         if (xp < 0 || yp < 0 || xp > menu->width || yp > height)
-            return;
+            in_window = false;
     }
-
+                        
+   
     if (menu->waimea->eh->move_resize != EndMoveResizeType)
         ed->mod |= MoveResizeMask;
     
@@ -1396,8 +1400,11 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
         if (eventmatch(*it, ed)) {
             if ((*it)->exec)
                 waexec((*it)->exec, menu->wascreen->displaystring);
-            else
+            else {
+                if ((*it)->menufunc != &WaMenuItem::EndMoveResize &&
+                    !in_window) return;
                 ((*this).*((*it)->menufunc))(e, *it);
+            }
         }
     }
     if (ed->type == EnterNotify) {

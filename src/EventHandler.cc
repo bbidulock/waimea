@@ -575,9 +575,7 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
     if ((it = waimea->window_table->find(win)) !=
         waimea->window_table->end()) {
         wo = (*it).second;
-        
         switch (wo->type) {
-            
             case FrameType:
                 wa = ((WaChildWindow *) wo)->wa;
                 if (wa->frameacts) wa->EvAct(e, ed, wa->frameacts, wo->type);
