@@ -1085,10 +1085,10 @@ void WaWindow::Focus(XEvent *, WaAction *, bool vis) {
         XGrabServer(display);
         if (validateclient(id)) {
             if (vis) {
-                if (attrib.x > wascreen->width ||
-                    attrib.y > wascreen->height ||
-                    (attrib.x + attrib.width) < 0 ||
-                    (attrib.y + attrib.height) < 0) {
+                if (attrib.x >= wascreen->width ||
+                    attrib.y >= wascreen->height ||
+                    (attrib.x + attrib.width) <= 0 ||
+                    (attrib.y + attrib.height) <= 0) {
                     x = wascreen->v_x + attrib.x;
                     y = wascreen->v_y + attrib.y;
                     newvx = (x / wascreen->width) * wascreen->width;
