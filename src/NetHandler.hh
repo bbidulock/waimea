@@ -47,17 +47,15 @@ public:
     void GetWMHints(WaWindow *);
     void GetMWMHints(WaWindow *);
     void GetWMNormalHints(WaWindow *);
-    void SetState(WaWindow *, int);
     void GetState(WaWindow *);
-    void GetStateSticky(WaWindow *);
-    void SetStateSticky(WaWindow *, int);
-    void GetStateShaded(WaWindow *);
-    void SetStateShaded(WaWindow *, int);
-    void SetVirtualPos(WaWindow *);
+    void SetState(WaWindow *, int);
+    void GetWmState(WaWindow *);
+    void SetWmState(WaWindow *);
     void GetVirtualPos(WaWindow *);
+    void SetVirtualPos(WaWindow *);
 
-    void SetDesktopViewPort(WaScreen *);
     void GetDesktopViewPort(WaScreen *);
+    void SetDesktopViewPort(WaScreen *);
     void SetDesktopGeometry(WaScreen *);
 
     void wXDNDMakeAwareness(Window);
@@ -71,10 +69,11 @@ public:
     XSizeHints *size_hints;
     MwmHints *mwm_hints;
 
-    Atom mwm_hints_atom, wm_state, net_state_sticky, net_state_shaded,
-        net_virtual_pos, net_desktop_viewport, net_desktop_geometry,
-        net_wm_strut, net_workarea, xa_xdndaware, xa_xdndenter,
-        xa_xdndleave;
+    Atom mwm_hints_atom, wm_state, net_state, net_state_sticky,
+        net_state_shaded, net_maximized_vert, net_maximized_horz,
+        net_maximized_restore, net_virtual_pos, net_desktop_viewport,
+        net_desktop_geometry, net_wm_strut, net_workarea,
+        xa_xdndaware, xa_xdndenter, xa_xdndleave;
 
 private:
     XEvent event;

@@ -62,7 +62,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
 
     border_w = title_w = handle_w = 0;
     has_focus = True;
-    flags.sticky = flags.shaded = flags.max_v = flags.max_h = False;
+    flags.sticky = flags.shaded = flags.max = False;
 
     net->GetWMHints(this);
     net->GetMWMHints(this);
@@ -97,8 +97,8 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     UnFocusWin();
     ReparentWin();
     Shape();
-    net->GetStateSticky(this);
-    net->GetStateShaded(this);
+    
+    net->GetWmState(this);
     
     waimea->window_table->insert(make_pair(id, this));
     waimea->wawindow_list->push_back(this);
@@ -122,7 +122,7 @@ WaWindow::~WaWindow(void) {
     if ((! deleted) && validateclient(id)) {
         XRemoveFromSaveSet(display, id);
         Gravitate(RemoveGravity);
-        if (flags.shaded) attrib.height = restore_shade.height;
+        if (flags.shaded) attrib.height = restore_shade_1;
         XReparentWindow(display, id, wascreen->id, attrib.x -
                         (attrib.x / wascreen->width) * wascreen->width,
                         attrib.y -
@@ -195,13 +195,12 @@ void WaWindow::Gravitate(int multiplier) {
 void WaWindow::InitPosition(void) {
     if (size.min_width > attrib.width) attrib.width = size.min_width;
     if (size.min_height > attrib.height) attrib.height = size.min_height;
-    old_attrib.x = restore_shade.x = restore_max.x = attrib.x;
-    old_attrib.y = restore_shade.y = restore_max.y = attrib.y;
-    old_attrib.width = restore_shade.width = restore_max.width =
-        attrib.width;
-    old_attrib.height = restore_shade.height = restore_max.height =
-        attrib.height;
-    restore_shade.width = 0;
+    old_attrib.x = restore_max.x = attrib.x;
+    old_attrib.y = restore_max.y = attrib.y;
+    old_attrib.width = restore_max.width = attrib.width;
+    old_attrib.height = restore_shade_1  =
+        restore_max.height = attrib.height;
+    restore_max.misc0 = restore_max.misc1 = restore_shade_2 = 0;
 }
 
 /**
@@ -217,30 +216,18 @@ void WaWindow::RedrawWindow(void) {
     WaAction *ac;
     
     if (old_attrib.x != attrib.x) {
-        if (flags.max_h) {
-            flags.max_h = False;
-            DrawMaxButtonFg();
-        }
         frame->attrib.x = attrib.x - border_w;
         old_attrib.x = attrib.x;
 
         move = True;
     }
     if (old_attrib.y != attrib.y) {
-        if (flags.max_v) {
-            flags.max_v = False;
-            DrawMaxButtonFg();
-        }
         frame->attrib.y = attrib.y - title_w - border_w * 2;
         old_attrib.y = attrib.y;
             
         move = True;
     }
     if (old_attrib.width != attrib.width) {
-        if (flags.max_h) {
-            flags.max_h = False;
-            DrawMaxButtonFg();
-        }
         frame->attrib.width = attrib.width;
         old_attrib.width = attrib.width;
 
@@ -282,10 +269,6 @@ void WaWindow::RedrawWindow(void) {
         }
     }
     if (old_attrib.height != attrib.height) {
-        if (flags.max_v) {
-            flags.max_v = False;
-            DrawMaxButtonFg();
-        }
         frame->attrib.height = attrib.height + title_w + handle_w +
             border_w * 2;
         old_attrib.height = attrib.height;
@@ -305,13 +288,23 @@ void WaWindow::RedrawWindow(void) {
         }
     }
     if (move) {
+        if (flags.max) {
+            restore_max.misc0 = wascreen->v_x + frame->attrib.x;
+            restore_max.misc1 = wascreen->v_y + frame->attrib.y;
+            net->SetWmState(this);
+        }
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
     }
     if (resize) {
+        if (flags.max) {
+            flags.max = False;
+            net->SetWmState(this);
+            DrawMaxButtonFg();
+        }
         XGrabServer(display);
         if (validateclient(id)) {    
             if (flags.shaded) XResizeWindow(display, id, attrib.width,
-                                      restore_shade.height);
+                                            restore_shade_1);
             else XResizeWindow(display, id, attrib.width, attrib.height);
             XResizeWindow(display, frame->id, frame->attrib.width,
                           frame->attrib.height);
@@ -804,7 +797,7 @@ void WaWindow::DrawMaxButton(void) {
  */
 void WaWindow::DrawMaxButtonFg(void) {
     XClearWindow(display, button_max->id);
-    if (flags.max_v && flags.max_h) {
+    if (flags.max) {
         int w = (2*(title_w - 8))/3;
         int h = (2*(title_w - 8))/3 - 1;
         int y = (title_w - 8) - h + 1;
@@ -1009,7 +1002,7 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
     *n_h = attrib.height;
     if ((width >= (attrib.width + size.width_inc)) ||
         (width <= (attrib.width - size.width_inc)) ||
-	attrib.width == width) {
+        attrib.width == width) {
         if (width >= size.min_width && width <= size.max_width) {
             resize = True;
             if (size.width_inc == 1)
@@ -1022,19 +1015,19 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
         if (! flags.shaded) {
             resize = True;
             flags.shaded = True;
-            restore_shade.height = attrib.height;
+            restore_shade_1 = attrib.height;
         }
         *n_h = -(handle_w + border_w * 2);
         return resize;
     }
     if ((height >= (attrib.height + size.height_inc)) ||
         (height <= (attrib.height - size.height_inc)) ||
-	attrib.height == height) {
+        attrib.height == height) {
         if ((height < 1) && (size.min_height <= 1) && title_w) {
             resize = True;
             if (! flags.shaded) {
                 flags.shaded = True;
-                restore_shade.height = attrib.height;
+                restore_shade_1 = attrib.height;
             }
             if (size.height_inc == 1)
                 *n_h = height;
@@ -1501,32 +1494,74 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
 }
 
 /**
- * @fn    Maximize(XEvent *e, WaAction *ac)
+ * @fn    _Maximize(bool save_old, int x, int y)
  * @brief Maximize the window
  *
  * Maximizes the window so that the window with it's decorations fills up
- * the hole screen.
+ * the hole workarea.
  *
- * @param e XEvent causing function call
- * @param ac WaAction object
+ * @param save_old True if we should save old position and size.
+ * @param x Virtual x pos where window should be maximized, ignored if negative
+ * @param y Virtual y pos where window should be maximized, ignored if negative
  */
-void WaWindow::Maximize(XEvent *e, WaAction *ac) {
-    MaximizeHorz(e, ac);
-    MaximizeVert(e, ac);
+void WaWindow::_Maximize(bool save_old, int x, int y) {
+    int n_w, n_h, new_width, new_height;
+
+    new_width = wascreen->workarea->width - (flags.border * border_w * 2);
+    new_height = wascreen->workarea->height - (flags.border * border_w * 2) -
+        title_w - handle_w - (border_w * flags.title) -
+        (border_w * flags.handle);
+
+    if (flags.shaded) restore_shade_2 = restore_shade_1;
+    if (IncSizeCheck(new_width, new_height, &n_w, &n_h)) {
+        if (save_old) {
+            restore_max.x = attrib.x;
+            restore_max.y = attrib.y;
+            restore_max.width = attrib.width;
+            restore_max.height = attrib.height;
+        }
+        attrib.x = wascreen->workarea->x + border_w;
+        attrib.y = wascreen->workarea->y + title_w + border_w +
+            (border_w * flags.title);
+        attrib.width = n_w;
+        attrib.height = n_h;
+        if (x >= 0 && y >= 0) {
+            attrib.x += (x - wascreen->v_x);
+            attrib.y += (y - wascreen->v_y);
+            restore_max.misc0 = x;
+            restore_max.misc1 = y;
+        } else {
+            restore_max.misc0 = wascreen->v_x;
+            restore_max.misc1 = wascreen->v_y;
+        }    
+        RedrawWindow();
+        flags.max = True;
+        DrawMaxButtonFg();
+        net->SetWmState(this);
+    }
 }
 
 /**
- * @fn    UnMaximize(XEvent *e, WaAction *ac)
+ * @fn    UnMaximize(XEvent *, WaAction *)
  * @brief Unmaximize the window
  *
  * Restores size and position of maximized window.
- *
- * @param e XEvent causing function call
- * @param ac WaAction object
  */
-void WaWindow::UnMaximize(XEvent *e, WaAction *ac) {
-    UnMaximizeHorz(e, ac);
-    UnMaximizeVert(e, ac);
+void WaWindow::UnMaximize(XEvent *, WaAction *) {
+    int n_w, n_h;
+    
+    if (flags.max) {
+        if (IncSizeCheck(restore_max.width, restore_max.height, &n_w, &n_h)) {
+            attrib.x = restore_max.x + (restore_max.misc0 - wascreen->v_x);
+            attrib.y = restore_max.y + (restore_max.misc1 - wascreen->v_y);
+            attrib.width = n_w;
+            attrib.height = n_h;
+            flags.max = False;
+            RedrawWindow();
+            DrawMaxButtonFg();
+            net->SetWmState(this);
+        }
+    }
 }
 
 /**
@@ -1540,179 +1575,8 @@ void WaWindow::UnMaximize(XEvent *e, WaAction *ac) {
  * @param ac WaAction object
  */
 void WaWindow::ToggleMaximize(XEvent *e, WaAction *ac) {
-    if (flags.max_v == flags.max_h) {
-        ToggleMaximizeHorz(e, ac);
-        ToggleMaximizeVert(e, ac);
-    }
-    else if (flags.max_v)
-        UnMaximizeVert(e, ac);
-    else
-        UnMaximizeHorz(e, ac);
-}
-
-/**
- * @fn    MaximizeHorz(XEvent *, WaAction *)
- * @brief Maximize the window horizontally
- *
- * Maximizes the window so that the window with it's decorations fills up
- * the hole screen.
- */
-void WaWindow::MaximizeHorz(XEvent *, WaAction *) {
-    int n_w, n_h, new_width;
-    
-    new_width = wascreen->workarea->width - (flags.border * border_w * 2);
-        
-    if (IncSizeCheck(new_width, attrib.height, &n_w, &n_h)) {
-        restore_max.x = attrib.x;
-        restore_max.width = attrib.width;
-        attrib.x = wascreen->workarea->x + border_w;
-        attrib.width = n_w;
-        RedrawWindow();
-        flags.max_h = True;
-        DrawMaxButtonFg();
-    }
-}
-
-/**
- * @fn    MaximizeHorzIgn(XEvent *, WaAction *)
- * @brief Maximize the window horizontally
- *
- * Maximizes the window so that the window with it's decorations fills up
- * the hole screen, don't save old size.
- */
-void WaWindow::MaximizeHorzIgn(XEvent *, WaAction *) {
-    int n_w, n_h, new_width;
-    
-    new_width = wascreen->workarea->width - (flags.border * border_w * 2);
-        
-    if (IncSizeCheck(new_width, attrib.height, &n_w, &n_h)) {
-        attrib.x = wascreen->workarea->x + border_w;
-        attrib.width = n_w;
-        RedrawWindow();
-        flags.max_h = True;
-        DrawMaxButtonFg();
-    }
-}
-
-/**
- * @fn    UnMaximizeHorz(XEvent *, WaAction *)
- * @brief Unmaximize the window horizontally
- *
- * Restores size and position of maximized window.
- */
-void WaWindow::UnMaximizeHorz(XEvent *, WaAction *) {
-    int n_w, n_h;
-    
-    if (flags.max_h) {
-        if (IncSizeCheck(restore_max.width, attrib.height, &n_w, &n_h)) {
-            attrib.x = restore_max.x;
-            attrib.width = n_w;
-            flags.max_h = False;
-            RedrawWindow();
-            DrawMaxButtonFg();
-        }
-    }
-}
-
-/**
- * @fn    ToggleMaximizeHorz(XEvent *e, WaAction *ac)
- * @brief Maximizes or unmaximize window horizontally
- *
- * If window isn't maximized this function maximizes it and if it is already
- * maximized then function will unmaximized window.
- *
- * @param e XEvent causing function call
- * @param ac WaAction object
- */
-void WaWindow::ToggleMaximizeHorz(XEvent *e, WaAction *ac) {
-    if (flags.max_h) UnMaximizeHorz(e, ac);
-    else MaximizeHorz(e, ac);
-}
-
-/**
- * @fn    MaximizeVert(XEvent *, WaAction *)
- * @brief Maximize the window vertically
- *
- * Maximizes the window so that the window with it's decorations fills up
- * the hole screen.
- */
-void WaWindow::MaximizeVert(XEvent *, WaAction *) {
-    int n_w, n_h, new_height;
-
-    new_height = wascreen->workarea->height - (flags.border * border_w * 2) -
-        title_w - handle_w - (border_w * flags.title) -
-        (border_w * flags.handle);
-
-    if (flags.shaded) restore_shade.width = restore_shade.height;
-    if (IncSizeCheck(attrib.width, new_height, &n_w, &n_h)) {
-        restore_max.y = attrib.y;
-        restore_max.height = attrib.height;
-        attrib.y = wascreen->workarea->y + title_w + border_w +
-            (border_w * flags.title);
-        attrib.height = n_h;
-        RedrawWindow();
-        flags.max_v = True;
-        DrawMaxButtonFg();
-    }
-}
-
-/**
- * @fn    MaximizeVertIgn(XEvent *, WaAction *)
- * @brief Maximize the window vertically
- *
- * Maximizes the window so that the window with it's decorations fills up
- * the hole screen, don't save old size.
- */
-void WaWindow::MaximizeVertIgn(XEvent *, WaAction *) {
-    int n_w, n_h, new_height;
-
-    new_height = wascreen->workarea->height - (flags.border * border_w * 2) -
-        title_w - handle_w - (border_w * flags.title) -
-        (border_w * flags.handle);
-
-    if (IncSizeCheck(attrib.width, new_height, &n_w, &n_h)) {
-        attrib.y = wascreen->workarea->y + title_w + border_w +
-            (border_w * flags.title);
-        attrib.height = n_h;
-        RedrawWindow();
-        flags.max_v = True;
-        DrawMaxButtonFg();
-    }
-}
-
-/**
- * @fn    UnMaximizeHorz(XEvent *, WaAction *)
- * @brief Unmaximize the window vertically
- *
- * Restores size and position of maximized window.
- */
-void WaWindow::UnMaximizeVert(XEvent *, WaAction *) {
-    int n_w, n_h;
-
-    if (flags.max_v) {
-        if (IncSizeCheck(attrib.width, restore_max.height, &n_w, &n_h)) {
-            attrib.height = n_h;
-            attrib.y = restore_max.y;
-            flags.max_v = False;
-            RedrawWindow();
-            DrawMaxButtonFg();
-        }
-    }
-}
-
-/**
- * @fn    ToggleMaximizeVert(XEvent *e, WaAction *ac)
- * @brief Maximizes or unmaximize window vertically
- *
- * If window isn't maximized this function maximizes it and if it is already
- * maximized then function will unmaximized window.
- *
- * @param e XEvent causing function call
- * @param ac WaAction object
- */
-void WaWindow::ToggleMaximizeVert(XEvent *e, WaAction *ac) {
-    if (flags.max_v) UnMaximizeVert(e, ac);
-    else MaximizeVert(e, ac);
+    if (! flags.max) Maximize(e, ac);
+    else UnMaximize(e, ac);
 }
 
 /**
@@ -1855,7 +1719,16 @@ void WaWindow::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
  * height of window that will be restored when unshading.
  */
 void WaWindow::Shade(XEvent *, WaAction *) {
-    net->SetStateShaded(this, True);
+    int n_w, n_h;
+    bool mv = False, mh = False;
+    
+    if (IncSizeCheck(attrib.width, -(handle_w + border_w * 2), &n_w, &n_h)) {
+        attrib.width = n_w;
+        attrib.height = n_h;
+        flags.max = False;
+        RedrawWindow();
+    }
+    net->SetWmState(this);
 }
 
 /**
@@ -1865,7 +1738,17 @@ void WaWindow::Shade(XEvent *, WaAction *) {
  * Restores height of shaded window.
  */
 void WaWindow::UnShade(XEvent *, WaAction *) {
-    net->SetStateShaded(this, False);
+    if (flags.shaded) {
+        flags.shaded = False;
+        if (restore_shade_2) {
+            attrib.height = restore_shade_2;
+            restore_shade_2 = 0;
+        } else
+            attrib.height = restore_shade_1;
+        
+        RedrawWindow();
+    }
+    net->SetWmState(this);
 }
 
 /**
@@ -1880,7 +1763,8 @@ void WaWindow::UnShade(XEvent *, WaAction *) {
  *
  */
 void WaWindow::ToggleShade(XEvent *e, WaAction *ac) {
-    net->SetStateShaded(this, ! flags.shaded);
+    if (flags.shaded) UnShade(e, ac);
+    else Shade(e, ac);
 }
 
 /**
@@ -1891,7 +1775,8 @@ void WaWindow::ToggleShade(XEvent *e, WaAction *ac) {
  * to ignore this window.
  */
 void WaWindow::Sticky(XEvent *, WaAction *) {
-    net->SetStateSticky(this, True);
+    flags.sticky = True;
+    net->SetWmState(this);
 }
 
 /**
@@ -1902,7 +1787,8 @@ void WaWindow::Sticky(XEvent *, WaAction *) {
  * treat this window as a normal window.
  */
 void WaWindow::UnSticky(XEvent *, WaAction *) {
-    net->SetStateSticky(this, False);
+    flags.sticky = False;
+    net->SetWmState(this);
 }
 
 /**
@@ -1912,7 +1798,8 @@ void WaWindow::UnSticky(XEvent *, WaAction *) {
  * Inverts the sticky flag.
  */
 void WaWindow::ToggleSticky(XEvent *, WaAction *) {
-    net->SetStateSticky(this, ! flags.sticky);
+    flags.sticky = !flags.sticky;
+    net->SetWmState(this);
 }
 
 /**
@@ -2120,7 +2007,6 @@ WaChildWindow::~WaChildWindow(void) {
 
 
 /**
- *
  * Viewport functions.
  */
 inline void WaWindow::ViewportMove(XEvent *e, WaAction *wa) {

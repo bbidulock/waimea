@@ -34,10 +34,18 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_MOTIF_WM_HINTS", False);
     wm_state =
         XInternAtom(display, "WM_STATE", False);
+    net_state =
+        XInternAtom(display, "_NET_WM_STATE", False);
     net_state_sticky =
         XInternAtom(display, "_NET_WM_STATE_STICKY", False);
     net_state_shaded =
         XInternAtom(display, "_NET_WM_STATE_SHADED", False);
+    net_maximized_vert =
+        XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+    net_maximized_horz =
+        XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+    net_maximized_restore =
+        XInternAtom(display, "_NET_MAXIMIZED_RESTORE", False);
     net_virtual_pos =
         XInternAtom(display, "_NET_VIRTUAL_POS", False);
     net_desktop_viewport =
@@ -47,7 +55,7 @@ NetHandler::NetHandler(Waimea *wa) {
     net_wm_strut =
         XInternAtom(display, "_NET_WM_STRUT", False);
     net_workarea =
-        XInternAtom(display, "_NET_WORKAREA", False);
+        XInternAtom(display, "_NET_WORKAREA", False);    
     
     xa_xdndaware = XInternAtom(display, "XdndAware", False);
     xa_xdndenter = XInternAtom(display, "XdndEnter", False);
@@ -190,7 +198,7 @@ void NetHandler::GetState(WaWindow *ww) {
     ww->state = WithdrawnState;
     XGrabServer(display);
     if (validateclient(ww->id))
-        if (XGetWindowProperty(display, ww->id, wm_state, 0L, 2L, False,
+        if (XGetWindowProperty(display, ww->id, wm_state, 0L, 1L, False,
                                wm_state, &real_type, &real_format, &items_read,
                                &items_left, (unsigned char **) &data) == Success &&
             items_read) {
@@ -258,132 +266,90 @@ void NetHandler::SetState(WaWindow *ww, int newstate) {
 }
 
 /**
- * @fn    GetStateSticky(WaWindow *wa)
- * @brief Reads sticky state
+ * @fn    GetWmState(WaWindow *ww)
+ * @brief Reads _NET_WM_STATE atom
  *
- * Reads WaWindows sticky state
- *
- * @param wa WaWindow object
- */
-void NetHandler::GetStateSticky(WaWindow *ww) {
-    CARD32 *data;
-    
-    if (XGetWindowProperty(display, ww->id, net_state_sticky, 0L, 2L, 
-                           False, XA_CARDINAL, &real_type,
-                           &real_format, &items_read, &items_left, 
-                           (unsigned char **) &data) == Success && 
-        items_read) { 
-        ww->flags.sticky = *data;
-        XFree(data);
-    }
-}
-
-/**
- * @fn    SetStateSticky(WaWindow *ww, int newstate)
- * @brief Sets sticky state
- *
- * Sets sticky state for WaWindow.
+ * Reads _NET_WM_STATE atom to get the current state of the window.
  *
  * @param ww WaWindow object
- * @param newstate New sticky state
  */
-void NetHandler::SetStateSticky(WaWindow *ww, int newstate) {
-    CARD32 data[1];
-
-    ww->flags.sticky = newstate;
-    data[0] = newstate;
-
-    XGrabServer(display);
-    if (validateclient(ww->id))
-        XChangeProperty(display, ww->id, net_state_sticky, XA_CARDINAL, 32,
-                        PropModeReplace, (unsigned char *) &data, 1);
-    XUngrabServer(display);
-}
-
-/**
- * @fn    GetStateShaded(WaWindow *wa)
- * @brief Reads shaded state
- *
- * Reads WaWindows shaded state
- *
- * @param wa WaWindow object
- */
-void NetHandler::GetStateShaded(WaWindow *ww) {
+void NetHandler::GetWmState(WaWindow *ww) {
     CARD32 *data;
-    int n_w, n_h;
-    bool mv = False, mh = False;
+    XEvent *e;
+    WaAction *ac;
+    bool vert = False, horz = False;
+    int i;
     
-    if (XGetWindowProperty(display, ww->id, net_state_shaded, 0L, 2L, 
-                           False, XA_CARDINAL, &real_type,
+    if (XGetWindowProperty(display, ww->id, net_state, 0L, 2L,
+                           False, XA_ATOM, &real_type,
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
         items_read) {
-        if (*data) {
-            if (ww->IncSizeCheck(ww->attrib.width,
-                                 -(ww->handle_w + ww->border_w * 2),
-                                 &n_w, &n_h)) {
-                ww->attrib.width = n_w;
-                ww->attrib.height = n_h;
-                ww->flags.max_h = False;
-                ww->RedrawWindow();
-            }
-        } else {
-            if (ww->flags.shaded) {
-                ww->flags.shaded = False;
-                if (ww->restore_shade.width) {
-                    ww->attrib.height = ww->restore_shade.width;
-                    ww->restore_shade.width = 0;
-                } else
-                    ww->attrib.height = ww->restore_shade.height;
-                
-                ww->RedrawWindow();
+        for (i = 0; i < items_read; i++) {
+            if (data[i] == net_state_sticky) ww->flags.sticky = True;
+            else if (data[i] == net_state_shaded) ww->Shade(e, ac);
+            else if (data[i] == net_maximized_vert) vert = True;
+            else if (data[i] == net_maximized_horz) horz = True;
+        }
+        XFree(data);
+        if (vert && horz) {
+            if (XGetWindowProperty(display, ww->id, net_maximized_restore,
+                                   0L, 7L, False, XA_CARDINAL, &real_type,
+                                   &real_format, &items_read, &items_left, 
+                                   (unsigned char **) &data) ==
+                Success && items_read >= 7) {
+                ww->restore_max.x = data[0];
+                ww->restore_max.y = data[1];
+                ww->restore_max.width = data[2];
+                ww->restore_max.height = data[3];
+                ww->restore_shade_2 = data[4];
+                ww->_Maximize(False, data[5], data[6]);
+                XFree(data);
             }
         }
-        XFree(data); 
     }
 }
 
 /**
- * @fn    SetStateShaded(WaWindow *ww, int newstate)
- * @brief Sets shade state
+ * @fn    SetWmState(WaWindow *ww)
+ * @brief Sets _NET_WM_STATE atom
  *
- * Sets shade state of WaWindow.
+ * Sets _NET_WM_STATE atom to the state of the window.
  *
  * @param ww WaWindow object
- * @param newstate New shade state
  */
-void NetHandler::SetStateShaded(WaWindow *ww, int newstate) {
-    CARD32 data[1];
-    int n_w, n_h;
-    bool mv = False, mh = False;
-    
-    if (newstate) {
-        if (ww->IncSizeCheck(ww->attrib.width,
-                             -(ww->handle_w + ww->border_w * 2),
-                             &n_w, &n_h)) {
-            ww->attrib.width = n_w;
-            ww->attrib.height = n_h;
-            ww->flags.max_h = False;
-            ww->RedrawWindow();
-        }
-    } else {
-        if (ww->flags.shaded) {
-            ww->flags.shaded = False;
-            if (ww->restore_shade.width) {
-                ww->attrib.height = ww->restore_shade.width;
-                ww->restore_shade.width = 0;
-            } else
-                ww->attrib.height = ww->restore_shade.height;
-            
-            ww->RedrawWindow();
-        }
-    }
-    data[0] = ww->flags.shaded;
+void NetHandler::SetWmState(WaWindow *ww) {
+    int i = 0;
+    CARD32 data[4];
+    CARD32 data2[7];
 
     XGrabServer(display);
-    if (validateclient(ww->id))
-        XChangeProperty(display, ww->id, net_state_shaded, XA_CARDINAL, 32,
-                        PropModeReplace, (unsigned char *) &data, 1);
+    if (validateclient(ww->id)) {
+        if (ww->flags.sticky) data[i++] = net_state_sticky;
+        if (ww->flags.shaded) data[i++] = net_state_shaded;
+        if (ww->flags.max) {
+            data[i++] = net_maximized_vert;
+            data[i++] = net_maximized_horz;
+            
+            data2[0] = ww->restore_max.x;
+            data2[1] = ww->restore_max.y;
+            data2[2] = ww->restore_max.width;
+            data2[3] = ww->restore_max.height;
+            data2[4] = ww->restore_shade_2;
+            data2[5] = ww->restore_max.misc0;
+            data2[6] = ww->restore_max.misc1;
+            XChangeProperty(display, ww->id, net_maximized_restore,
+                            XA_CARDINAL, 32, PropModeReplace,
+                            (unsigned char *) &data2, 7);
+        } else
+            XDeleteProperty(display, ww->id, net_maximized_restore);
+        
+        if (i > 0)
+            XChangeProperty(display, ww->id, net_state, XA_ATOM, 32,
+                            PropModeReplace, (unsigned char *) &data, i);
+        else
+            XDeleteProperty(display, ww->id, net_state);
+    }
     XUngrabServer(display);
 }
 
@@ -513,7 +479,7 @@ void NetHandler::GetWmStrut(Window window, WaScreen *ws) {
     WMstrut *wm_strut;
     bool found = False;
     
-    if (XGetWindowProperty(display, window, net_wm_strut, 0L, 2L, 
+    if (XGetWindowProperty(display, window, net_wm_strut, 0L, 4L, 
                            False, XA_CARDINAL, &real_type,
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
@@ -560,8 +526,8 @@ void NetHandler::SetWorkarea(WaScreen *ws) {
     data[2] = ws->workarea->width;
     data[3] = ws->workarea->height;
     
-    XChangeProperty(waimea->display, ws->id, net_workarea, XA_ATOM,
-                    32, PropModeAppend, (unsigned char *) &data, 4);
+    XChangeProperty(waimea->display, ws->id, net_workarea, XA_CARDINAL,
+                    32, PropModeReplace, (unsigned char *) &data, 4);
 }
 
 /**
@@ -576,7 +542,7 @@ void NetHandler::wXDNDMakeAwareness(Window window) {
     long int xdnd_version = 3;
 
     XChangeProperty(waimea->display, window, xa_xdndaware, XA_ATOM,
-            32, PropModeAppend, (unsigned char *) &xdnd_version, 1);
+            32, PropModeReplace, (unsigned char *) &xdnd_version, 1);
 }
 
 /**

@@ -1234,7 +1234,6 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
 
 
 /**
- *
  * Viewport functions.
  */
 inline void WaMenuItem::ViewportMove(XEvent *e, WaAction *wa) {

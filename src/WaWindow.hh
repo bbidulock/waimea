@@ -62,8 +62,7 @@ typedef struct {
     bool handle;
     bool sticky;
     bool shaded;
-    bool max_v;
-    bool max_h;
+    bool max;
 } WaWindowFlags;
 
 typedef struct {
@@ -71,6 +70,8 @@ typedef struct {
     int y;
     int width;
     int height;
+    int misc0;
+    int misc1;
     Colormap colormap;
 } WaWindowAttributes;
 
@@ -96,6 +97,7 @@ public:
     void MenuRemap(XEvent *, WaAction *, bool);
     void MenuUnmap(XEvent *, WaAction *, bool);
     void Focus(XEvent *, WaAction *, bool);
+    void _Maximize(bool, int, int);
 
 #ifdef SHAPE
     void Shape(void);
@@ -123,17 +125,9 @@ public:
     inline void ResizeLeftOpaque(XEvent *e, WaAction *) {
         ResizeOpaque(e, WestType);
     }
-    void Maximize(XEvent *, WaAction *);
+    inline void Maximize(XEvent *, WaAction *) { _Maximize(True, -1, -1); } 
     void UnMaximize(XEvent *, WaAction *);
     void ToggleMaximize(XEvent *, WaAction *);
-    void MaximizeHorz(XEvent *, WaAction *);
-    void MaximizeHorzIgn(XEvent *, WaAction *);
-    void UnMaximizeHorz(XEvent *, WaAction *);
-    void ToggleMaximizeHorz(XEvent *, WaAction *);
-    void MaximizeVert(XEvent *, WaAction *);
-    void MaximizeVertIgn(XEvent *, WaAction *);
-    void UnMaximizeVert(XEvent *, WaAction *);
-    void ToggleMaximizeVert(XEvent *, WaAction *);
     void Close(XEvent *, WaAction *);
     void Kill(XEvent *, WaAction *);
     void CloseKill(XEvent *, WaAction *);
@@ -193,10 +187,11 @@ public:
     Display *display;
     Waimea *waimea;
     WaScreen *wascreen;
-    int border_w, title_w, handle_w, screen_number, state;
+    int border_w, title_w, handle_w, screen_number, state, restore_shade_1,
+                   restore_shade_2;
     WaChildWindow *frame, *title, *label, *handle, *button_c, *button_max,
-        *button_min, *grip_r, *grip_l;
-    WaWindowAttributes attrib, old_attrib, restore_max, restore_shade;
+                   *button_min, *grip_r, *grip_l;
+    WaWindowAttributes attrib, old_attrib, restore_max;
     WaWindowFlags flags;
     SizeStruct size;
     NetHandler *net;

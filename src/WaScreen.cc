@@ -425,8 +425,9 @@ void WaScreen::UpdateWorkarea(void) {
 
         list<WaWindow *>::iterator wa_it = waimea->wawindow_list->begin();
         for (; wa_it != waimea->wawindow_list->end(); ++wa_it) {
-            if ((*wa_it)->flags.max_h) (*wa_it)->MaximizeHorzIgn(e, ac);
-            if ((*wa_it)->flags.max_v) (*wa_it)->MaximizeVertIgn(e, ac);
+            if ((*wa_it)->flags.max)
+                (*wa_it)->_Maximize(False, (*wa_it)->restore_max.misc0,
+                                    (*wa_it)->restore_max.misc1);
         }
     }
 }
