@@ -214,8 +214,7 @@ public:
     Waimea *waimea;
     WaScreen *wascreen;
     int border_w, title_w, handle_w, screen_number, state, restore_shade;
-    WaChildWindow *frame, *title, *label, *handle, *grip_r, *grip_l,
-                   *button_max;
+    WaChildWindow *frame, *title, *label, *handle, *grip_r, *grip_l;
     list<WaChildWindow *> buttons;
     WaWindowAttributes attrib, old_attrib, restore_max;
     WaWindowFlags flags;

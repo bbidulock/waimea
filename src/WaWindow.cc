@@ -98,7 +98,6 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     int left_end = 2;
     int right_end = -2;
     int tw = (signed) wascreen->wstyle.title_height;
-    button_max = NULL;
     list<ButtonStyle *>::iterator bit =
         wascreen->wstyle.buttonstyles->begin();
     for (i = 0; bit != wascreen->wstyle.buttonstyles->end(); ++bit, ++i) {
@@ -106,7 +105,6 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
         button->bstyle = *bit;
         button->f_texture = &(*bit)->t_focused;
         button->u_texture = &(*bit)->t_unfocused;
-        if (i == 2 && (*bit)->fg) button_max = button;
         if ((*bit)->autoplace == WestType)
             button->g_x = left_end;
         else if ((*bit)->autoplace == EastType)
@@ -575,7 +573,12 @@ void WaWindow::RedrawWindow(void) {
                           ! flags.shaded)) {
             flags.max = false;
             net->SetWmState(this);
-            if (button_max) button_max->Draw();
+            if (title_w) {
+                list<WaChildWindow *>::iterator bit = buttons.begin();
+                for (; bit != buttons.end(); ++bit) {
+                    if ((*bit)->bstyle->cb == ShadeCBoxType) (*bit)->Render();
+                }
+            }
             waimea->UpdateCheckboxes(MaxCBoxType);
         }
         XGrabServer(display);
@@ -853,12 +856,8 @@ void WaWindow::DrawTitlebar(void) {
         title->Render();
         label->Render();
         list<WaChildWindow *>::iterator bit = buttons.begin();
-        for (; bit != buttons.end(); ++bit) {
+        for (; bit != buttons.end(); ++bit)
             (*bit)->Render();
-            (*bit)->Draw();
-        }
-        title->Draw();
-        label->Draw();
     }
 }
 
@@ -876,9 +875,6 @@ void WaWindow::DrawHandlebar(void) {
         handle->Render();
         grip_r->Render();
         grip_l->Render();
-        handle->Draw();
-        grip_r->Draw();
-        grip_l->Draw();
     }
 }
 
@@ -929,7 +925,6 @@ void WaWindow::ButtonPressed(WaChildWindow *button) {
 
     button->pressed = true;
     button->Render();
-    button->Draw();
     for (;;) {
         XMaskEvent(display, ButtonReleaseMask | EnterWindowMask |
                    LeaveWindowMask, &e);
@@ -938,18 +933,15 @@ void WaWindow::ButtonPressed(WaChildWindow *button) {
                 in_window = true;
                 button->pressed = true;
                 button->Render();
-                button->Draw();
                 break;
             case LeaveNotify:
                 button->pressed = false;
                 button->Render();
-                button->Draw();
                 in_window = false;
                 break;
             case ButtonRelease:
                 button->pressed = false;
                 button->Render();
-                button->Draw();
                 if (in_window) XPutBackEvent(display, &e);
                 UpdateGrabs();
                 waimea->eh->move_resize = EndMoveResizeType;
@@ -995,6 +987,11 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
             flags.shaded = true;
             restore_shade = attrib.height;
             net->SetWmState(this);
+            if (title_w) {
+                list<WaChildWindow *>::iterator bit = buttons.begin();
+                for (; bit != buttons.end(); ++bit)
+                    if ((*bit)->bstyle->cb == ShadeCBoxType) (*bit)->Render();
+            }
             waimea->UpdateCheckboxes(ShadeCBoxType);
         }
         *n_h = -(handle_w + border_w);
@@ -1010,6 +1007,12 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
                 flags.shaded = true;
                 restore_shade = attrib.height;
                 net->SetWmState(this);
+                if (title_w) {
+                    list<WaChildWindow *>::iterator bit = buttons.begin();
+                    for (; bit != buttons.end(); ++bit)
+                        if ((*bit)->bstyle->cb == ShadeCBoxType)
+                            (*bit)->Render();
+                }
                 waimea->UpdateCheckboxes(ShadeCBoxType);
             }
             if (size.height_inc == 1)
@@ -1023,6 +1026,13 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
             if (flags.shaded) {
                 flags.shaded = false;
                 net->SetWmState(this);
+                if (title_w) {
+                    list<WaChildWindow *>::iterator bit = buttons.begin();
+                    for (; bit != buttons.end(); ++bit)
+                        if ((*bit)->bstyle->cb == ShadeCBoxType)
+                            (*bit)->Render();
+                    
+                }
                 waimea->UpdateCheckboxes(ShadeCBoxType);
             }
             if (size.height_inc == 1)
@@ -1714,7 +1724,12 @@ void WaWindow::_Maximize(int x, int y) {
         }    
         RedrawWindow();
         flags.max = true;
-        if (title_w) button_max->Draw();
+        
+        if (title_w) {
+            list<WaChildWindow *>::iterator bit = buttons.begin();
+            for (; bit != buttons.end(); ++bit)
+                if ((*bit)->bstyle->cb == MaxCBoxType) (*bit)->Render();
+        }
         net->SetWmState(this);
         waimea->UpdateCheckboxes(MaxCBoxType);
     }
@@ -1743,7 +1758,11 @@ void WaWindow::UnMaximize(XEvent *, WaAction *) {
             flags.max = false;
             RedrawWindow();
             if (flags.shaded) restore_shade = tmp_shade_height;
-            if (title_w) button_max->Draw();
+            if (title_w) {
+                list<WaChildWindow *>::iterator bit = buttons.begin();
+                for (; bit != buttons.end(); ++bit)
+                    if ((*bit)->bstyle->cb == MaxCBoxType) (*bit)->Render();
+            }
             net->SetWmState(this);
             waimea->UpdateCheckboxes(MaxCBoxType);
         }
@@ -1923,6 +1942,11 @@ void WaWindow::Shade(XEvent *, WaAction *) {
         attrib.height = n_h;
         RedrawWindow();
         net->SetWmState(this);
+        if (title_w) {
+            list<WaChildWindow *>::iterator bit = buttons.begin();
+            for (; bit != buttons.end(); ++bit)
+                if ((*bit)->bstyle->cb == ShadeCBoxType) (*bit)->Render();
+        }
         waimea->UpdateCheckboxes(ShadeCBoxType);
     }
 }
@@ -1939,6 +1963,11 @@ void WaWindow::UnShade(XEvent *, WaAction *) {
         RedrawWindow();
         flags.shaded = false;
         net->SetWmState(this);
+        if (title_w) {
+            list<WaChildWindow *>::iterator bit = buttons.begin();
+            for (; bit != buttons.end(); ++bit)
+                if ((*bit)->bstyle->cb == ShadeCBoxType) (*bit)->Render();
+        }
         waimea->UpdateCheckboxes(ShadeCBoxType);
     }
 }
@@ -1968,6 +1997,11 @@ void WaWindow::ToggleShade(XEvent *e, WaAction *ac) {
 void WaWindow::Sticky(XEvent *, WaAction *) {
     flags.sticky = true;
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == StickCBoxType) (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(StickCBoxType);
 }
 
@@ -1981,6 +2015,11 @@ void WaWindow::Sticky(XEvent *, WaAction *) {
 void WaWindow::UnSticky(XEvent *, WaAction *) {
     flags.sticky = false;
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == StickCBoxType) (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(StickCBoxType);
 }
 
@@ -1993,6 +2032,11 @@ void WaWindow::UnSticky(XEvent *, WaAction *) {
 void WaWindow::ToggleSticky(XEvent *, WaAction *) {
     flags.sticky = !flags.sticky;
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == StickCBoxType) (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(StickCBoxType);
 }
 
@@ -2059,6 +2103,13 @@ void WaWindow::DecorTitleOn(XEvent *, WaAction *) {
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == TitleCBoxType ||
+                (flags.all && (*bit)->bstyle->cb == AllCBoxType))
+                (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(TitleCBoxType);
     if (flags.all) waimea->UpdateCheckboxes(AllCBoxType);
 }
@@ -2077,6 +2128,13 @@ void WaWindow::DecorHandleOn(XEvent *, WaAction *) {
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == TitleCBoxType ||
+                (flags.all && (*bit)->bstyle->cb == AllCBoxType))
+                (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(HandleCBoxType);
     if (flags.all) waimea->UpdateCheckboxes(AllCBoxType);
 }
@@ -2095,6 +2153,13 @@ void WaWindow::DecorBorderOn(XEvent *, WaAction *) {
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == BorderCBoxType ||
+                (flags.all && (*bit)->bstyle->cb == AllCBoxType))
+                (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(BorderCBoxType);
     if (flags.all) waimea->UpdateCheckboxes(AllCBoxType);
 }
@@ -2115,6 +2180,15 @@ void WaWindow::DecorAllOn(XEvent *, WaAction *) {
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == TitleCBoxType ||
+                (*bit)->bstyle->cb == HandleCBoxType ||
+                (*bit)->bstyle->cb == BorderCBoxType ||
+                (*bit)->bstyle->cb == AllCBoxType)
+                (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(TitleCBoxType);
     waimea->UpdateCheckboxes(HandleCBoxType);
     waimea->UpdateCheckboxes(BorderCBoxType);
@@ -2135,6 +2209,13 @@ void WaWindow::DecorTitleOff(XEvent *, WaAction *) {
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == TitleCBoxType ||
+                (flags.all && (*bit)->bstyle->cb == AllCBoxType))
+                (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(TitleCBoxType);
     waimea->UpdateCheckboxes(AllCBoxType);
 }
@@ -2153,6 +2234,13 @@ void WaWindow::DecorHandleOff(XEvent *, WaAction *) {
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == HandleCBoxType ||
+                (flags.all && (*bit)->bstyle->cb == AllCBoxType))
+                (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(HandleCBoxType);
     waimea->UpdateCheckboxes(AllCBoxType);
 }
@@ -2171,6 +2259,13 @@ void WaWindow::DecorBorderOff(XEvent *, WaAction *) {
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == BorderCBoxType ||
+                (flags.all && (*bit)->bstyle->cb == AllCBoxType))
+                (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(BorderCBoxType);
     waimea->UpdateCheckboxes(AllCBoxType);
 }
@@ -2191,6 +2286,15 @@ void WaWindow::DecorAllOff(XEvent *, WaAction *) {
     UpdateAllAttributes();
     MapWindow();
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == TitleCBoxType ||
+                (*bit)->bstyle->cb == HandleCBoxType ||
+                (*bit)->bstyle->cb == BorderCBoxType ||
+                (*bit)->bstyle->cb == AllCBoxType)
+                (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(TitleCBoxType);
     waimea->UpdateCheckboxes(HandleCBoxType);
     waimea->UpdateCheckboxes(BorderCBoxType);
@@ -2253,6 +2357,13 @@ void WaWindow::AlwaysontopOn(XEvent *, WaAction *) {
     waimea->always_on_top_list->push_back(frame->id);
     waimea->WaRaiseWindow(0);
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == AOTCBoxType ||
+                (*bit)->bstyle->cb == AABCBoxType)
+                (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(AOTCBoxType);
     waimea->UpdateCheckboxes(AABCBoxType);
     waimea->wawindow_list_stacking->remove(this);
@@ -2275,6 +2386,13 @@ void WaWindow::AlwaysatbottomOn(XEvent *, WaAction *) {
     waimea->always_at_bottom_list->push_back(frame->id);
     waimea->WaLowerWindow(0);
     net->SetWmState(this);
+        if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == AOTCBoxType ||
+                (*bit)->bstyle->cb == AABCBoxType)
+                (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(AOTCBoxType);
     waimea->UpdateCheckboxes(AABCBoxType);
     waimea->wawindow_list_stacking->remove(this);
@@ -2294,6 +2412,12 @@ void WaWindow::AlwaysontopOff(XEvent *, WaAction *) {
     waimea->always_on_top_list->remove(frame->id);
     waimea->WaRaiseWindow(0);
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == AOTCBoxType)
+                (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(AOTCBoxType);
     waimea->wawindow_list_stacking_aot->remove(this);
     waimea->wawindow_list_stacking->push_front(this);
@@ -2311,6 +2435,12 @@ void WaWindow::AlwaysatbottomOff(XEvent *, WaAction *) {
     waimea->always_at_bottom_list->remove(frame->id);
     waimea->WaLowerWindow(0);
     net->SetWmState(this);
+    if (title_w) {
+        list<WaChildWindow *>::iterator bit = buttons.begin();
+        for (; bit != buttons.end(); ++bit)
+            if ((*bit)->bstyle->cb == AABCBoxType)
+                (*bit)->Render();
+    }
     waimea->UpdateCheckboxes(AABCBoxType);
     waimea->wawindow_list_stacking_aab->remove(this);
     waimea->wawindow_list_stacking->push_back(this);
@@ -2781,7 +2911,8 @@ void WaChildWindow::Render(void) {
 #ifdef XRENDER
     if (texture->getOpacity()) XFreePixmap(display, pixmap);
 #endif // XRENDER
-            
+
+    Draw();
 }
 
 /**

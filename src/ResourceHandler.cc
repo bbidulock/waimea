@@ -1077,79 +1077,120 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
                 b->cb = CloseCBoxType;
             found = true;
         }
-        char rc_state[6], rc_statec[6];
-        int i;
-        sprintf(rc_state, "false");
-        sprintf(rc_statec, "False");
-        for (i = 0; i < 2; i++) {
-            sprintf(rc_name, "window.button%d.%s.focus", num, rc_state);
-            sprintf(rc_class, "Window.Button%d.%s.Focus", num, rc_statec);
-            if (XrmGetResource(database, rc_name, rc_class, &value_type,
-                               &value)) {
-                if (first) { BSCLEAR(buttonstyles); first = false; }
-                ReadDatabaseTexture(rc_name, rc_class, &b->t_focused,
-                                    WhitePixel(display, screen), ic);
-                found = true;
-            }        
-            sprintf(rc_name, "window.button%d.%s.focus.picColor", num,
-                    rc_state);
-            sprintf(rc_class, "Window.Button%d.%s.Focus.PicColor", num,
-                    rc_statec);
-            if (XrmGetResource(database, rc_name, rc_class, &value_type,
-                               &value)) {
-                if (first) { BSCLEAR(buttonstyles); first = false; }
-                ReadDatabaseColor(rc_name, rc_class, &b->c_focused,
-                                  BlackPixel(display, screen), ic);
-                found = true;
-            }
-            sprintf(rc_name, "window.button%d.%s.unfocus", num, rc_state);
-            sprintf(rc_class, "Window.Button%d.%s.Unfocus", num, rc_statec);
-            if (XrmGetResource(database, rc_name, rc_class, &value_type,
-                               &value)) {
-                if (first) { BSCLEAR(buttonstyles); first = false; }
-                ReadDatabaseTexture(rc_name, rc_class, &b->t_unfocused,
-                                    WhitePixel(display, screen), ic);
-                found = true;
-            }
-            sprintf(rc_name, "window.button%d.%s.unfocus.picColor", num,
-                    rc_state);
-            sprintf(rc_class, "Window.Button%d.%s.Unfocus.PicColor", num,
-                    rc_statec);
-            if (XrmGetResource(database, rc_name, rc_class, &value_type,
-                               &value)) {
-                if (first) { BSCLEAR(buttonstyles); first = false; }
-                ReadDatabaseColor(rc_name, rc_class, &b->c_unfocused,
-                                  BlackPixel(display, screen), ic);
-                found = true;
-            }
-            sprintf(rc_name, "window.button%d.%s.pressed", num, rc_state);
-            sprintf(rc_class, "Window.Button%d.%s.Pressed", num, rc_statec);
-            if (XrmGetResource(database, rc_name, rc_class, &value_type,
-                               &value)) {
-                if (first) { BSCLEAR(buttonstyles); first = false; }
-                ReadDatabaseTexture(rc_name, rc_class, &b->t_pressed,
-                                    WhitePixel(display, screen), ic);
-                found = true;
-            }
-            sprintf(rc_name, "window.button%d.%s.pressed.picColor", num,
-                    rc_state);
-            sprintf(rc_class, "Window.Button%d.%s.Pressed.PicColor", num,
-                    rc_statec);
-            if (XrmGetResource(database, rc_name, rc_class, &value_type,
-                               &value)) {
-                if (first) { BSCLEAR(buttonstyles); first = false; }
-                ReadDatabaseColor(rc_name, rc_class, &b->c_pressed,
-                                  BlackPixel(display, screen), ic);
-                found = true;
-            }
-            b->t_focused2 = b->t_focused;
-            b->c_focused2 = b->c_focused;
-            b->t_unfocused2 = b->t_unfocused;
-            b->c_unfocused2 = b->c_unfocused;
-            b->t_pressed2 = b->t_pressed;
-            b->c_pressed2 = b->c_pressed;
-            sprintf(rc_state, "true");
-            sprintf(rc_statec, "True");
+        sprintf(rc_name, "window.button%d.false.focus", num);
+        sprintf(rc_class, "Window.Button%d.False.Focus", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            ReadDatabaseTexture(rc_name, rc_class, &b->t_focused,
+                                WhitePixel(display, screen), ic);
+            found = true;
+        }        
+        sprintf(rc_name, "window.button%d.false.focus.picColor", num);
+        sprintf(rc_class, "Window.Button%d.False.Focus.PicColor", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            ReadDatabaseColor(rc_name, rc_class, &b->c_focused,
+                              BlackPixel(display, screen), ic);
+            found = true;
+        }
+        sprintf(rc_name, "window.button%d.false.unfocus", num);
+        sprintf(rc_class, "Window.Button%d.False.Unfocus", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            ReadDatabaseTexture(rc_name, rc_class, &b->t_unfocused,
+                                WhitePixel(display, screen), ic);
+            found = true;
+        }
+        sprintf(rc_name, "window.button%d.false.unfocus.picColor", num);
+        sprintf(rc_class, "Window.Button%d.False.Unfocus.PicColor", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            ReadDatabaseColor(rc_name, rc_class, &b->c_unfocused,
+                              BlackPixel(display, screen), ic);
+            found = true;
+        }
+        sprintf(rc_name, "window.button%d.false.pressed", num);
+        sprintf(rc_class, "Window.Button%d.False.Pressed", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            ReadDatabaseTexture(rc_name, rc_class, &b->t_pressed,
+                                WhitePixel(display, screen), ic);
+            found = true;
+        }
+        sprintf(rc_name, "window.button%d.false.pressed.picColor", num);
+        sprintf(rc_class, "Window.Button%d.False.Pressed.PicColor", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            ReadDatabaseColor(rc_name, rc_class, &b->c_pressed,
+                              BlackPixel(display, screen), ic);
+            found = true;
+        }
+        b->t_focused2 = b->t_focused;
+        b->c_focused2 = b->c_focused;
+        b->t_unfocused2 = b->t_unfocused;
+        b->c_unfocused2 = b->c_unfocused;
+        b->t_pressed2 = b->t_pressed;
+        b->c_pressed2 = b->c_pressed;
+        
+        sprintf(rc_name, "window.button%d.true.focus", num);
+        sprintf(rc_class, "Window.Button%d.True.Focus", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            ReadDatabaseTexture(rc_name, rc_class, &b->t_focused2,
+                                WhitePixel(display, screen), ic);
+            found = true;
+        }        
+        sprintf(rc_name, "window.button%d.true.focus.picColor", num);
+        sprintf(rc_class, "Window.Button%d.True.Focus.PicColor", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            ReadDatabaseColor(rc_name, rc_class, &b->c_focused2,
+                              BlackPixel(display, screen), ic);
+            found = true;
+        }
+        sprintf(rc_name, "window.button%d.true.unfocus", num);
+        sprintf(rc_class, "Window.Button%d.True.Unfocus", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            ReadDatabaseTexture(rc_name, rc_class, &b->t_unfocused2,
+                                WhitePixel(display, screen), ic);
+            found = true;
+        }
+        sprintf(rc_name, "window.button%d.true.unfocus.picColor", num);
+        sprintf(rc_class, "Window.Button%d.True.Unfocus.PicColor", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            ReadDatabaseColor(rc_name, rc_class, &b->c_unfocused2,
+                              BlackPixel(display, screen), ic);
+            found = true;
+        }
+        sprintf(rc_name, "window.button%d.true.pressed", num);
+        sprintf(rc_class, "Window.Button%d.True.Pressed", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            ReadDatabaseTexture(rc_name, rc_class, &b->t_pressed2,
+                                WhitePixel(display, screen), ic);
+            found = true;
+        }
+        sprintf(rc_name, "window.button%d.true.pressed.picColor", num);
+        sprintf(rc_class, "Window.Button%d.True.Pressed.PicColor", num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type,
+                           &value)) {
+            if (first) { BSCLEAR(buttonstyles); first = false; }
+            ReadDatabaseColor(rc_name, rc_class, &b->c_pressed2,
+                              BlackPixel(display, screen), ic);
+            found = true;
         }
         if (found) buttonstyles->push_back(b);
         else delete b;
