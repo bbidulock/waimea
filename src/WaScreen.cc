@@ -156,13 +156,13 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     v_xmax = (config.virtual_x - 1) * width;
     v_ymax = (config.virtual_y - 1) * height;
     west = new ScreenEdge(this, 0, 0, 2, height, WEdgeType);
-    west->actionlist = &config.weacts;
+    west->SetActionlist(&config.weacts);
     east = new ScreenEdge(this, width - 2, 0, 2, height, EEdgeType);
-    east->actionlist = &config.eeacts;
+    east->SetActionlist(&config.eeacts);
     north = new ScreenEdge(this, 0, 0, width, 2, NEdgeType);
-    north->actionlist = &config.neacts;
+    north->SetActionlist(&config.neacts);
     south = new ScreenEdge(this, 0, height - 2, width, 2, SEdgeType);
-    south->actionlist = &config.seacts;
+    south->SetActionlist(&config.seacts);
     net->SetDesktopHints(this);
     net->GetDesktopViewPort(this);
     net->SetDesktopViewPort(this);
@@ -1700,11 +1700,25 @@ ScreenEdge::ScreenEdge(WaScreen *wascrn, int x, int y, int width, int height,
                        CWOverrideRedirect | CWEventMask, &attrib_set);
 
     wa->waimea->net->wXDNDMakeAwareness(id);
-    
-    XMapWindow(wa->display, id);
-    wa->always_on_top_list.push_back(id);
-    wa->WaRaiseWindow(0);
-    wa->waimea->window_table.insert(make_pair(id, this));
+}
+
+/**
+ * @fn    ScreenEdge::SetActionlist(list<WaAction *> *list)
+ * @brief Sets actionlist
+ *
+ * Sets screenedge actionlist and if list is other than empty screenedge
+ * window is mapped.
+ *
+ * @param list Actionlist to set
+ */
+void ScreenEdge::SetActionlist(list<WaAction *> *list) {
+    actionlist = list;
+    if (! actionlist->empty()) {
+        XMapWindow(wa->display, id);
+        wa->always_on_top_list.push_back(id);
+        wa->WaRaiseWindow(0);
+        wa->waimea->window_table.insert(make_pair(id, this));
+    }
 }
 
 /**
@@ -1714,7 +1728,9 @@ ScreenEdge::ScreenEdge(WaScreen *wascrn, int x, int y, int width, int height,
  * Destroys ScreenEdge window
  */
 ScreenEdge::~ScreenEdge(void) {
-    wa->always_on_top_list.remove(id);
-    wa->waimea->window_table.erase(id);
+    if (! actionlist->empty()) {
+        wa->always_on_top_list.remove(id);
+        wa->waimea->window_table.erase(id);
+    }
     XDestroyWindow(wa->display, id);
 }

@@ -257,6 +257,8 @@ class ScreenEdge : public WindowObject {
 public:
     ScreenEdge(WaScreen *, int, int, int, int, int);
     virtual ~ScreenEdge(void);
+
+    void SetActionlist(list<WaAction *> *);
     
     WaScreen *wa;
 };

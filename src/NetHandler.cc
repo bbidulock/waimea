@@ -768,6 +768,11 @@ void NetHandler::GetVirtualPos(WaWindow *ww) {
             if (data[1] >= (ww->wascreen->v_ymax + ww->wascreen->height))
                 ww->attrib.y = ww->wascreen->v_ymax +
                     data[1] % ww->wascreen->height;
+            
+            if (ww->flags.sticky) {
+                ww->attrib.x = ww->attrib.x % ww->wascreen->width;
+                ww->attrib.y = ww->attrib.y % ww->wascreen->height;
+            }
             XFree(data);
         }
     } else ww->deleted = true;
@@ -1172,7 +1177,7 @@ void NetHandler::GetWmType(WaWindow *ww) {
                     ww->wascreen->wawindow_list_stacking_aab.remove(ww);
                 ww->flags.alwaysontop = true;
                 ww->wascreen->wawindow_list_stacking_aot.push_front(ww);
-                ww->wascreen->WaRaiseWindow(0);                
+                ww->wascreen->WaRaiseWindow(0);
             }
             else if (data[i] == net_wm_window_type_splash ||
                      data[i] == net_wm_window_type_menu) {
@@ -1190,7 +1195,7 @@ void NetHandler::GetWmType(WaWindow *ww) {
             else {
                 if (ww->attrib.x == 0) {
                     if (ww->wascreen->workarea->x > ww->attrib.x)
-                ww->attrib.x = ww->wascreen->workarea->x;
+                        ww->attrib.x = ww->wascreen->workarea->x;
                 }
                 if (ww->attrib.y == 0) {
                     if (ww->wascreen->workarea->y > ww->attrib.y)
