@@ -86,8 +86,7 @@ DockappHandler::~DockappHandler(void) {
         waimea->always_on_top_list->remove(id);
     else
         waimea->always_at_bottom_list->remove(id);
-    while (! dockapp_list->empty())
-        delete dockapp_list->front();
+    LISTCLEAR2(dockapp_list);
     XDestroyWindow(display, id);
     wascreen->strut_list->remove(wm_strut);
     free(wm_strut);

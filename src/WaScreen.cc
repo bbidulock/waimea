@@ -415,12 +415,15 @@ void WaScreen::UpdateWorkarea(void) {
     list<WMstrut *>::iterator it = strut_list->begin();
     for (; it != strut_list->end(); ++it) {
         if ((*it)->left > workarea->x) workarea->x = (*it)->left;
-        if ((width - (*it)->right) < workarea->width)
-            workarea->width = width - (*it)->right;
         if ((*it)->top > workarea->y) workarea->y = (*it)->top;
-        if ((height - (*it)->bottom) < workarea->height)
-            workarea->height = height - (*it)->bottom;
+        if (((workarea->width + old_x) - (*it)->right) < workarea->width)
+            workarea->width = width - (*it)->right - workarea->x;
+        if (((workarea->height + old_y) - (*it)->bottom) < workarea->height)
+            workarea->height = height - (*it)->bottom - workarea->y;
     }
+    workarea->width = workarea->width + old_x - workarea->x;
+    workarea->height = workarea->height + old_y - workarea->y;
+    
     XEvent *e;
     WaAction *ac;
     if (old_x != workarea->x || old_y != workarea->y ||

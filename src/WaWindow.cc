@@ -114,6 +114,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
 WaWindow::~WaWindow(void) {
     waimea->window_table->erase(id);
     waimea->wawindow_list->remove(this);
+    
 #ifdef XFT
     if (title_w)
         XftDrawDestroy(xftdraw);
