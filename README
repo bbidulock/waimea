@@ -446,7 +446,7 @@ MENUS
 
         $USER$ will be replaced with USER environment variable.
 
-        Predefined menu named "__taskswitcher__" can be used in menu file
+        Predefined menu named "__windowlist__" can be used in menu file
 	and action file to access the taskswitcher menu.
 
 	A checkbox item is a item that have two modes and a flag decides which
@@ -462,9 +462,15 @@ MENUS
 	after @TRUE.
 
 	List of flags:
-	STICKY
 	MAXIMIZED
 	SHADED
+	STICKY
+	ALWAYSONTOP
+	ALWAYSATBOTTOM
+	DECORTITLE
+	DECORHANDLE
+	DECORBORDER
+	DECORALL
 	
 	See data/menu for good example of menu file.
 

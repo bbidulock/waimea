@@ -74,14 +74,13 @@ public:
 
     Window frame, o_west, o_north, o_south, o_east;
     int x, y, width, height, bullet_width, cb_width, extra_width;
-    bool mapped, built, o_mapped;
+    bool mapped, built, o_mapped, has_focus, tasksw;
     char *name;
     Pixmap pbackframe, pframe, ptitle, philite, psub, psubhilite;
     unsigned long backframe_pixel, frame_pixel, title_pixel, hilite_pixel,
         sub_pixel, subhilite_pixel;
     WaMenu *root_menu;
     WaMenuItem *root_item;
-    bool tasksw, has_focus;
 
     int ftype; 
     Window wf;

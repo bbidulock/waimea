@@ -115,12 +115,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     for (; dit != waimea->rh->dockstyles->end(); ++dit) {
         docks->push_back(new DockappHandler(this, *dit));
     }
-
-    waimea->taskswitch->Build(this);
-    list<WaMenu *>::iterator mit = waimea->wamenu_list->begin();
-    for (; mit != waimea->wamenu_list->end(); ++mit)
-    	(*mit)->Build(this);    
-    
+        
     WaWindow *newwin;
     XWMHints *wm_hints;
     wm_hints = XAllocWMHints();
@@ -665,9 +660,9 @@ void WaScreen::MoveViewport(int direction, bool warp) {
  */
 void WaScreen::ScrollViewport(int direction, bool warp, WaAction *ac) {
     int vd;
-    unsigned long scroll = 30;
+    int scroll = 30;
 
-    if (ac->param) scroll = (unsigned long) atol(ac->param);
+    if (ac->param) scroll = atoi(ac->param);
     if (scroll > v_xmax) scroll = v_xmax;
     if (scroll < 2) scroll = 2;
     

@@ -89,13 +89,17 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     rh = new ResourceHandler(this, options);
     rh->LoadConfig();
     rh->LoadMenus();
-    taskswitch = new TaskSwitcher();
-    wamenu_list->push_back(taskswitch);
     rh->LoadActions(this);
 
     net = new NetHandler(this);
     wascreen = new WaScreen(display, DefaultScreen(display), this);
 
+    taskswitch = new TaskSwitcher();
+    waimea->wamenu_list->push_back(taskswitch);
+    list<WaMenu *>::iterator mit = wamenu_list->begin();
+    for (; mit != wamenu_list->end(); ++mit)
+    	(*mit)->Build(wascreen);
+    
     WaRaiseWindow((Window) 0);
     eh = new EventHandler(this);
 }
@@ -150,12 +154,8 @@ void Waimea::WaRaiseWindow(Window win) {
         }
         if (win) stack[i++] = win;
         
-        XGrabServer(display);
-        if ((! win) || validateclient(win)) {
-            XRaiseWindow(display, stack[0]);
-            XRestackWindows(display, stack, i);
-        }
-        XUngrabServer(display);
+        XRaiseWindow(display, stack[0]);
+        XRestackWindows(display, stack, i);
         
         delete [] stack;
     } else
@@ -191,13 +191,8 @@ void Waimea::WaLowerWindow(Window win) {
         for (; it != always_at_bottom_list->rend(); ++it) {
             stack[i++] = *it;
         }
-        
-        XGrabServer(display);
-        if ((! win) || validateclient(win)) {
-            XLowerWindow(display, stack[0]);
-            XRestackWindows(display, stack, i);
-        }
-        XUngrabServer(display);
+        XLowerWindow(display, stack[0]);
+        XRestackWindows(display, stack, i);
         
         delete [] stack;
     } else

@@ -35,14 +35,12 @@ WaMenu::WaMenu(char *n) {
     
     height = 0;
     width = 0;
-    mapped = has_focus = False;
+    mapped = has_focus = built = tasksw = False;
     root_menu = NULL;
     root_item = NULL;
     wf = (Window) 0;
     rf = NULL;
     mf = NULL;
-    built = False;
-    tasksw = False;
     
     item_list = new list<WaMenuItem *>;
 }
@@ -105,10 +103,9 @@ void WaMenu::Build(WaScreen *screen) {
         waimea = wascreen->waimea;
         display = wascreen->display;
         ic = wascreen->ic;
+        CreateOutlineWindows();
     }
     bullet_width = cb_width = 0;
-
-    CreateOutlineWindows();
 
     f_height = wascreen->mstyle.item_height;
     t_height = wascreen->mstyle.title_height;
@@ -145,6 +142,7 @@ void WaMenu::Build(WaScreen *screen) {
             }
         }
     }
+    
     int lasttype = 0;
     it = item_list->begin();
     for (i = 1; it != item_list->end(); ++it, ++i) {
@@ -259,16 +257,16 @@ void WaMenu::Build(WaScreen *screen) {
     
     texture = &wascreen->mstyle.frame;
     pframe  = ic->renderImage(width, f_height, texture);
-   
-    if (! built) {
-        attrib_set.background_pixel = None;
-        attrib_set.border_pixel = wascreen->mstyle.border_color.getPixel();
-        attrib_set.colormap = wascreen->colormap;
-        attrib_set.override_redirect = True;
-        attrib_set.event_mask =  ButtonPressMask | ButtonReleaseMask |
-            EnterWindowMask | LeaveWindowMask | PointerMotionMask | 
-            ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask;
 
+    attrib_set.background_pixel = None;
+    attrib_set.border_pixel = wascreen->mstyle.border_color.getPixel();
+    attrib_set.colormap = wascreen->colormap;
+    attrib_set.override_redirect = True;
+    attrib_set.event_mask =  ButtonPressMask | ButtonReleaseMask |
+        EnterWindowMask | LeaveWindowMask | PointerMotionMask | 
+        ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask;
+    
+    if (! built) {
         frame = XCreateWindow(display, wascreen->id, 0, 0, width, height,
                               wascreen->mstyle.border_width,
                               wascreen->screen_number,
@@ -276,7 +274,7 @@ void WaMenu::Build(WaScreen *screen) {
                               CWOverrideRedirect | CWBackPixel | CWEventMask |
                               CWColormap | CWBorderPixel, &attrib_set);
     } else XResizeWindow(display, frame, width, height);
-
+    
     if (pbackframe)
         XSetWindowBackgroundPixmap(display, frame, pbackframe);
     else
@@ -293,24 +291,19 @@ void WaMenu::Build(WaScreen *screen) {
             if ((y == 0) || (lasttype == MenuTitleType))
                 y -= bw;
         }
-        if (! built) {
-            (*it)->id = XCreateWindow(display, frame, x, y, width,
-                                      (*it)->height, bw,
-                                      wascreen->screen_number, CopyFromParent,
-                                      wascreen->visual, CWOverrideRedirect | 
-                                      CWBackPixel | CWEventMask | CWColormap,
-                                      &attrib_set);
-            waimea->window_table->insert(make_pair((*it)->id, (*it)));
-        }
-        else XMoveResizeWindow(display, (*it)->id, x, y, (*it)->width,
-                               (*it)->height);
+        (*it)->id = XCreateWindow(display, frame, x, y, width,
+                                  (*it)->height, bw,
+                                  wascreen->screen_number, CopyFromParent,
+                                  wascreen->visual, CWOverrideRedirect | 
+                                  CWBackPixel | CWEventMask | CWColormap,
+                                  &attrib_set);
+        waimea->window_table->insert(make_pair((*it)->id, (*it)));
         (*it)->dy = y;
         y += (*it)->height + bw * 2;
 #ifdef XFT
-        if (! built) 
-            (*it)->xftdraw = XftDrawCreate(display, (Drawable) (*it)->id,
-                                           wascreen->visual,
-                                           wascreen->colormap);
+        (*it)->xftdraw = XftDrawCreate(display, (Drawable) (*it)->id,
+                                       wascreen->visual,
+                                       wascreen->colormap);
 #endif // XFT
         if ((*it)->type == MenuTitleType) {
             if (ptitle)
@@ -338,7 +331,7 @@ void WaMenu::Build(WaScreen *screen) {
  * @param my Y coordinate to map menu at
  */
 void WaMenu::Map(int mx, int my) {
-    if (this == waimea->taskswitch && item_list->size() < 2) return;
+    if (tasksw && item_list->size() < 2) return;
     if (mapped) return;
     x = mx;
     y = my;
@@ -365,7 +358,7 @@ void WaMenu::Map(int mx, int my) {
  * @param my Y coordinate to remap menu at
  */
 void WaMenu::ReMap(int mx, int my) {
-    if (this == waimea->taskswitch && item_list->size() < 2) return;
+    if (tasksw && item_list->size() < 2) return;
     if (mapped) Move(mx - x, my - y);
     x = mx;
     y = my;
@@ -648,16 +641,13 @@ WaMenuItem::~WaMenuItem(void) {
     if (param2) delete [] param2;
 
     menu->item_list->remove(this);
-    
-    if (menu->built) {
         
 #ifdef XFT
-        XftDrawDestroy(xftdraw);
+    XftDrawDestroy(xftdraw);
 #endif // XFT
-        
-        XDestroyWindow(menu->display, id);
-        menu->waimea->window_table->erase(id);
-    }
+    
+    XDestroyWindow(menu->display, id);
+    menu->waimea->window_table->erase(id);
 }
 
 /**
@@ -1355,15 +1345,20 @@ void WaMenuItem::UpdateCBox(void) {
 
 
 /** 
- * @fn    TaskSwitcher(void) : WaMenu(wastrdup("__taskswitcher__"))
+ * @fn    TaskSwitcher(void) : WaMenu(wastrdup("__windowlist__"))
  * @brief Constructor for TaskSwitcher class
  *
  * Creates a TaskSwitcher object, used for fast switching between windows.
  * This is a WaMenu with some extra functionality.
  * 
  */
-TaskSwitcher::TaskSwitcher(void) : WaMenu(wastrdup("__taskswitcher__")) {
+TaskSwitcher::TaskSwitcher(void) : WaMenu(wastrdup("__windowlist__")) {
+    WaMenuItem *m;
+    
     tasksw = True;
+    m = new WaMenuItem(wastrdup("Window List"));
+    m->type = MenuTitleType;
+    AddItem(m);
 }
 
 /** 
@@ -1379,13 +1374,10 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
     WaWindow *ww;
     WaMenuItem *m;
     wawindow_list = wascrn->waimea->wawindow_list;
+    
+    LISTCLEAR2(item_list);
+    item_list = new list<WaMenuItem *>;
 
-    while (! item_list->empty()) {
-        delete item_list->back();
-        item_list->pop_back();
-    }
-    built = False;
-   
     m = new WaMenuItem(wastrdup("Window List"));
     m->type = MenuTitleType;
     AddItem(m);
@@ -1397,6 +1389,7 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
         m->type = MenuItemType;
         m->wfunc = &WaWindow::RaiseFocus;
         m->func_mask |= MenuWFuncMask;
+        m->func_mask1 |= MenuWFuncMask;
         m->wf = ww->id;
         AddItem(m);
     }
@@ -1406,10 +1399,11 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
         m->type = MenuItemType;
         m->wfunc = &WaWindow::RaiseFocus;
         m->func_mask |= MenuWFuncMask;
+        m->func_mask1 |= MenuWFuncMask;
         m->wf = ww->id;
         AddItem(m);
     }
-
+    
     WaMenu::Build(wascrn);
 }
 
