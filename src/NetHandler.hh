@@ -62,6 +62,7 @@ public:
 
     void SetDesktopViewPort(WaScreen *);
     void GetDesktopViewPort(WaScreen *);
+    void SetDesktopGeometry(WaScreen *);
 
     void wXDNDMakeAwareness(Window);
     void wXDNDClearAwareness(Window);
@@ -74,7 +75,7 @@ public:
 
     Atom mwm_hints_atom, wm_state, net_state_sticky, net_state_shaded,
         net_state_max_v, net_state_max_h, net_virtual_pos,
-        net_desktop_viewport, net_change_desktop_viewport, xa_xdndaware,
+        net_desktop_viewport, net_desktop_geometry, xa_xdndaware,
         xa_xdndenter, xa_xdndleave;
 
 private:

@@ -46,8 +46,8 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_VIRTUAL_POS", False);
     net_desktop_viewport =
         XInternAtom(display, "_NET_DESKTOP_VIEWPORT", False);
-    net_change_desktop_viewport =
-        XInternAtom(display, "_NET_CHANGE_DESKTOP_VIEWPORT", False);
+    net_desktop_geometry =
+        XInternAtom(display, "_NET_DESKTOP_GEOMETRY", False);
     
     xa_xdndaware = XInternAtom(display, "XdndAware", False);
     xa_xdndenter = XInternAtom(display, "XdndEnter", False);
@@ -657,6 +657,24 @@ void NetHandler::SetDesktopViewPort(WaScreen *ws) {
     data[1] = ws->v_y;
     
     XChangeProperty(display, ws->id, net_desktop_viewport, XA_CARDINAL, 32,
+                    PropModeReplace, (unsigned char *) &data, 2);
+}
+
+/**
+ * @fn    GetDesktopGeometry(WaScreen *ws)
+ * @brief Reads viewport hint
+ *
+ * Sets desktop geometry hint.
+ *
+ * @param ws WaScreen object
+ */
+void NetHandler::SetDesktopGeometry(WaScreen *ws) {
+    CARD32 data[2];
+
+    data[0] = ws->v_xmax + ws->width;
+    data[1] = ws->v_ymax + ws->height;
+    
+    XChangeProperty(display, ws->id, net_desktop_geometry, XA_CARDINAL, 32,
                     PropModeReplace, (unsigned char *) &data, 2);
 }
 

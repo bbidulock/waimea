@@ -86,6 +86,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     east = new ScreenEdge(this, width - 1, 0, 1, height, EEdgeType);
     north = new ScreenEdge(this, 0, 0, width, 1, NEdgeType);
     south = new ScreenEdge(this, 0, height - 1, width, 1, SEdgeType);
+    net->SetDesktopGeometry(this);
     net->GetDesktopViewPort(this);
     net->SetDesktopViewPort(this);
 

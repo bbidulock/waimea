@@ -404,7 +404,7 @@ void EventHandler::EvClientMessage(XEvent *e) {
         EvAct(e, e->xclient.window);
     }
     else if (e->xclient.message_type ==
-             waimea->net->net_change_desktop_viewport) {
+             waimea->net->net_desktop_viewport) {
         waimea->wascreen->MoveViewportTo(e->xclient.data.l[0],
                                          e->xclient.data.l[1]);
     }
