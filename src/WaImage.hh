@@ -102,7 +102,7 @@ public:
     inline void addTexture(unsigned long t) { texture |= t; }
     
 #ifdef XFT
-    inline int getOpacity(void) { return opacity; }
+    int getOpacity(void);
     inline void setOpacity(int o) { opacity = o; }
     inline void setAlphaPicture(Picture p) { alphaPicture = p; }
     inline void setSolidPicture(Picture p) { solidPicture = p; }

@@ -39,6 +39,8 @@ typedef unsigned int u_int32_t;
 
 #include "WaImage.hh"
 
+Pixmap *rootpix = NULL;
+
 static unsigned long bsqrt(unsigned long x) {
     if (x <= 0) return 0;
     if (x == 1) return 1;
@@ -54,6 +56,13 @@ static unsigned long bsqrt(unsigned long x) {
 }
 
 #ifdef XFT
+int WaTexture::getOpacity(void) {
+    if (rootpix && *rootpix)
+        return opacity;
+
+    return 0;
+}
+
 void WaColor::createXftColor(Display *display, Window id, Colormap colormap) {
     XGCValues gcv;
     XColor tmp_color;
@@ -1781,6 +1790,7 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
     window        = scrn->id;
     colormap      = scrn->colormap;
     visual        = scrn->visual;
+    rootpix       = &scrn->xrootpmap_id;
     
     setDither(_dither);
     setColorsPerChannel(_cpc);
@@ -1839,7 +1849,8 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
         }
         case PseudoColor:
         case StaticColor: {
-            ncolors = colors_per_channel * colors_per_channel * colors_per_channel;
+            ncolors = colors_per_channel * colors_per_channel *
+                colors_per_channel;
             
             if (ncolors > (1 << screen_depth)) {
                 colors_per_channel = (1 << screen_depth) / 3;
@@ -1868,15 +1879,18 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
             red_bits = green_bits = blue_bits = bits;
             
             for (i = 0; i < 256; i++)
-                red_color_table[i] = green_color_table[i] = blue_color_table[i] =
-                    i / bits;
+                red_color_table[i] = green_color_table[i] =
+                    blue_color_table[i] = i / bits;
             
             for (r = 0, i = 0; r < colors_per_channel; r++) {
                 for (g = 0; g < colors_per_channel; g++) {
                     for (b = 0; b < colors_per_channel; b++, i++) {
-                        colors[i].red = (r * 0xffff) / (colors_per_channel - 1);
-                        colors[i].green = (g * 0xffff) / (colors_per_channel - 1);
-                        colors[i].blue = (b * 0xffff) / (colors_per_channel - 1);
+                        colors[i].red = (r * 0xffff) /
+                            (colors_per_channel - 1);
+                        colors[i].green = (g * 0xffff) /
+                            (colors_per_channel - 1);
+                        colors[i].blue = (b * 0xffff) /
+                            (colors_per_channel - 1);
                         colors[i].flags = DoRed|DoGreen|DoBlue;
                     }
                 }
@@ -1886,8 +1900,9 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
             
             for (i = 0; i < ncolors; i++)
                 if (! XAllocColor(display, colormap, &colors[i])) {
-                    WARNING << "couldn't alloc color " << colors[i].red << " " <<
-                        colors[i].green << " " << colors[i].blue << endl;
+                    WARNING << "couldn't alloc color " << colors[i].red <<
+                        " " << colors[i].green << " " << colors[i].blue <<
+                        endl;
                     colors[i].flags = 0;
                     } else
                         colors[i].flags = DoRed|DoGreen|DoBlue;
@@ -1968,8 +1983,8 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
             red_bits = green_bits = blue_bits = bits;
             
             for (i = 0; i < 256; i++)
-                red_color_table[i] = green_color_table[i] = blue_color_table[i] =
-                        i / bits;
+                red_color_table[i] = green_color_table[i] =
+                    blue_color_table[i] = i / bits;
             
             XGrabServer(display);
             for (i = 0; i < ncolors; i++) {
@@ -1979,8 +1994,9 @@ WaImageControl::WaImageControl(Display *dpy, WaScreen *scrn, bool _dither,
                 colors[i].flags = DoRed|DoGreen|DoBlue;
                 
                 if (! XAllocColor(display, colormap, &colors[i])) {
-                    WARNING << "couldn't alloc color " << colors[i].red << " " <<
-                        colors[i].green << " " << colors[i].blue << endl;
+                    WARNING << "couldn't alloc color " << colors[i].red <<
+                        " " << colors[i].green << " " << colors[i].blue <<
+                        endl;
                     colors[i].flags = 0;
                 } else
                     colors[i].flags = DoRed|DoGreen|DoBlue;

@@ -395,7 +395,6 @@ void WaMenu::Map(int mx, int my) {
 #ifdef XFT
         if ((*it)->texture->getOpacity()) {
             (*it)->Draw();
-            (*it)->DrawFg();
         }
 #endif // XFT
 
@@ -903,8 +902,8 @@ void WaMenuItem::Draw(void) {
         XSetWindowBackgroundPixmap(menu->display, id, pixmap);
     }
     else {
-        pixmap = menu->wascreen->ic->xrender(menu->philite, menu->width, height,
-                                             texture,
+        pixmap = menu->wascreen->ic->xrender(menu->philite, menu->width,
+                                             height, texture,
                                              menu->wascreen->xrootpmap_id,
                                              menu->x, menu->y + dy, pixmap);
         XSetWindowBackgroundPixmap(menu->display, id, pixmap);
