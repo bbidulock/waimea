@@ -108,6 +108,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     workarea->x = workarea->y = 0;
     workarea->width = width;
     workarea->height = height;
+    net->SetWorkarea(this);
 
     docks = new list<DockappHandler *>;
     list<DockStyle *>::iterator dit = waimea->rh->dockstyles->begin();
@@ -498,18 +499,29 @@ void WaScreen::UpdateWorkarea(void) {
     }
     workarea->width = workarea->width - workarea->x;
     workarea->height = workarea->height - workarea->y;
-    
+
     XEvent *e;
     WaAction *ac;
+    int res_x, res_y, res_w, res_h;
     if (old_x != workarea->x || old_y != workarea->y ||
         old_width != workarea->width || old_height != workarea->height) {
         net->SetWorkarea(this);
         
         list<WaWindow *>::iterator wa_it = waimea->wawindow_list->begin();
         for (; wa_it != waimea->wawindow_list->end(); ++wa_it) {
-            if ((*wa_it)->flags.max)
+            if ((*wa_it)->flags.max) {
+                (*wa_it)->flags.max = False;
+                res_x = (*wa_it)->restore_max.x;
+                res_y = (*wa_it)->restore_max.y;
+                res_w = (*wa_it)->restore_max.width;
+                res_h = (*wa_it)->restore_max.height;
                 (*wa_it)->_Maximize((*wa_it)->restore_max.misc0,
                                     (*wa_it)->restore_max.misc1);
+                (*wa_it)->restore_max.x = res_x;
+                (*wa_it)->restore_max.y = res_y;
+                (*wa_it)->restore_max.width = res_w;
+                (*wa_it)->restore_max.height = res_h;
+            }
         }
     }
 }

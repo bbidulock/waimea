@@ -82,6 +82,8 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_WORKAREA", False);
     net_wm_name =
         XInternAtom(display, "_NET_WM_NAME", False);
+    net_restart =
+        XInternAtom(display, "_NET_RESTART", False);
     
     xa_xdndaware = XInternAtom(display, "XdndAware", False);
     xa_xdndenter = XInternAtom(display, "XdndEnter", False);

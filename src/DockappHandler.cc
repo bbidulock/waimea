@@ -90,7 +90,6 @@ DockappHandler::~DockappHandler(void) {
     XDestroyWindow(display, id);
     wascreen->strut_list->remove(wm_strut);
     free(wm_strut);
-    wascreen->UpdateWorkarea();
 }
 
 
@@ -110,6 +109,11 @@ void DockappHandler::Update(void) {
     height = style->gridspace;
     
     if (dockapp_list->empty()) {
+        wm_strut->left = 0;
+        wm_strut->right = 0;
+        wm_strut->top = 0;
+        wm_strut->bottom = 0;
+        wascreen->UpdateWorkarea();
         XUnmapWindow(display, id);
         return;
     }
