@@ -1240,7 +1240,8 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
             net->SetWmState(this);
             waimea->UpdateCheckboxes(ShadeCBoxType);
         }
-        *n_h = -(handle_w + 1 + border_w * 2);
+        *n_h = -(handle_w + border_w);
+        if (handle_w) *n_h -= border_w;
         return resize;
     }
     if ((height >= (attrib.height + size.height_inc)) ||
