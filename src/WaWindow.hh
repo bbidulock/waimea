@@ -20,6 +20,11 @@
 #include <X11/Xutil.h>
 #include <X11/Xmd.h>
 
+#ifdef SHAPE
+#include <X11/extensions/shape.h>
+#endif //SHAPE
+
+
 class WaWindow;
 class WaChildWindow;
 
@@ -83,6 +88,10 @@ public:
     void UnFocusWin(void);
     void ButtonHilite(int);
     void ButtonDehilite(int);
+
+#ifdef SHAPE
+    void Shape(void);
+#endif // SHAPE
     
     void Raise(XEvent *, WaAction *);
     void Lower(XEvent *, WaAction *);
@@ -161,7 +170,6 @@ private:
                                       DrawRightGrip(); }
     
     WaImageControl *ic;
-
     Window o_west, o_north, o_south, o_east;
     bool o_mapped;
     Pixmap ftitle, fhandle, flabel;
@@ -172,12 +180,17 @@ private:
     unsigned long utitle_pixel, uhandle_pixel, ulabel_pixel;
     unsigned long *title_pixel, *handle_pixel, *label_pixel, *grip_pixel,
         *button_pixel;
+    
 #ifdef XFT        
     XftDraw *xftdraw;
     XftColor *xftcolor;
 #else // ! XFT
     GC *l_text_gc;
 #endif // XFT
+    
+#ifdef SHAPE
+    bool shaped;
+#endif // SHAPE
 };
 
 class WaChildWindow : public WindowObject {

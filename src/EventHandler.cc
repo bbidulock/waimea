@@ -119,6 +119,16 @@ XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
                 event->xbutton.y_root = ry;
                 event->type = ButtonRelease;
                 EvAct(event, event->xmaprequest.window);
+                break;
+            default:
+                hash_map<int, WindowObject *>::iterator it;
+                if ((it = waimea->window_table->find(event->xany.window)) !=
+                    waimea->window_table->end())
+                    if (((*it).second)->type == WindowType)
+                        if (((WaWindow *) (*it).second)->wascreen->shape &&
+                            event->type ==
+                            ((WaWindow *) (*it).second)->wascreen->shape_event)
+                            ((WaWindow *) (*it).second)->Shape();
         }
     }
 }

@@ -57,6 +57,11 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     attrib.height = init_attrib.height;
     
     want_focus = mapped = shaded = maximized = dontsend = False;
+    
+#ifdef SHAPE
+    shaped = False;
+#endif //SHAPE
+    
     border_w = title_w = handle_w = 0;
     has_focus = True;
     flags.sticky = False;
@@ -289,6 +294,7 @@ void WaWindow::RedrawWindow(void) {
                           frame->attrib.height);
         }
         XUngrabServer(display);
+        Shape();
     }
     if ((move || resize) && (! shaded) && (! dontsend)) SendConfig();
 }
@@ -311,6 +317,13 @@ void WaWindow::ReparentWin(void) {
         XLowerWindow(display, id);
         XSelectInput(display, id, FocusChangeMask | PropertyChangeMask |
                      StructureNotifyMask);
+
+#ifdef SHAPE
+        if (wascreen->shape) {
+            XShapeSelectInput(display, frame->id, ShapeNotifyMask);
+            Shape();
+        }
+#endif // SHAPE
         
         int tmp;
         list<WaAction *>::iterator it = waimea->rh->winacts->begin();
@@ -325,6 +338,55 @@ void WaWindow::ReparentWin(void) {
     }
     XUngrabServer(display);
 }
+
+#ifdef SHAPE
+/**
+ * @fn    Shape(void)
+ * @brief Set Shape of frame window
+ *
+ * Shapes frame window after shape of client.
+ */
+void WaWindow::Shape(void) {
+        int n, order;
+        XRectangle temp, *dummy;
+
+        XGrabServer(display);
+        if (validateclient(id)) {
+            dummy = XShapeGetRectangles(display, id, ShapeBounding, &n, &order);
+        }
+        XUngrabServer(display);
+        if (n > 1) {            
+            XShapeCombineShape(display, frame->id, ShapeBounding,
+                               0, title_w + 2 * border_w, id,
+                               ShapeBounding, ShapeSet);
+            temp.x = -border_w;
+            temp.y = -border_w;   
+            temp.width = attrib.width + 2 * border_w;
+            temp.height = title_w + 2 * border_w;
+            
+            XShapeCombineRectangles(display, frame->id, ShapeBounding,
+                                    0, 0, &temp, 1, ShapeUnion, YXBanded);
+            temp.x = 0;
+            temp.y = 0;
+            temp.width = attrib.width;
+            temp.height = title_w;
+            
+            XShapeCombineRectangles(display, frame->id, ShapeClip,
+                                    0, title_w + 2 * border_w, &temp, 1,
+                                    ShapeUnion, YXBanded);
+            shaped = True;
+        } else if (shaped) {
+            temp.x = -border_w;
+            temp.y = -border_w;
+            temp.width = attrib.width + 2 * border_w;
+            temp.height = attrib.height + title_w + 2 * border_w;
+            
+            XShapeCombineRectangles(display, frame->id, ShapeBounding,
+                                    0, 0, &temp, 1, ShapeSet, YXBanded);
+        }
+        XFree(dummy);
+}
+#endif // SHAPE
 
 /**
  * @fn    SendConfig(void)

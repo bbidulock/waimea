@@ -22,6 +22,11 @@
 #include <X11/Xft/Xft.h>
 #endif // XFT
 
+#ifdef SHAPE
+#include <X11/extensions/shape.h>
+#endif //SHAPE
+
+
 class WaScreen;
 class ScreenEdge;
 
@@ -132,6 +137,10 @@ public:
     char displaystring[1024];
     ScreenEdge *west, *east, *north, *south;
 
+#ifdef SHAPE
+    int shape, shape_event;
+#endif // SHAPE
+
 private:
     void CreateVerticalEdges(void);
     void CreateHorizontalEdges(void);
@@ -140,6 +149,7 @@ private:
     void RenderCommonImages(void);
     void MoveViewport(int);
     void ScrollViewport(int, WaAction *);
+
 #ifdef XFT
     void CreateXftColor(WaColor *, XftColor *);
 #endif // XFT

@@ -89,6 +89,11 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     net->GetDesktopViewPort(this);
     net->SetDesktopViewPort(this);
 
+#ifdef SHAPE
+    int dummy;
+    shape = XShapeQueryExtension(display, &shape_event, &dummy);
+#endif // SHAPE
+
     WaWindow *newwin;
     XQueryTree(display, id, &ro, &pa, &children, &nchild);
     for (i = 0; i < (int) nchild; ++i) {

@@ -69,4 +69,4 @@ menu.borderWidth:			2
 *.xftfont:	arial
 *.xftfontsize:	8
 
-rootCommand: bsetbg @pkgdatadir@/backgrounds/waimea.png
+rootCommand: xv -rmode 2 -root -quit @pkgdatadir@/backgrounds/waimea.png
