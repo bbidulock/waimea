@@ -35,6 +35,8 @@ typedef void (WaWindow::*WwActionFn)(XEvent *, WaAction *);
 #define DELETED { deleted = true; XUngrabServer(display); return; }
 #define WW_DELETED { ww->deleted = true; XUngrabServer(display); return; }
 
+#define KEYBIT(c, x) (c[x / 8] & (1 << (x % 8)))
+
 #define ApplyGravity   1
 #define RemoveGravity -1
 
