@@ -22,10 +22,14 @@
 ! Screen edge enter event moves viewport one screen in screen edge direction.
 ! Screen edge enter event with control key down scroll viewport 25 (20)
 !    pixels in screen edge direction.
+! Middle mouse button on root window moves viewport after mouse movement.
 ! Alt-F1  Toggle shade
 ! Alt-F2  Toggle maximize
 ! Alt-F4  Close window
 ! Alt-F10 Kill client
+! Alt-Tab Maps TaskSwitcher
+! Control-Esc Maps rootmenu with focus
+! Arrow Keys can be used to to navigate a focused menu
 !
 !
 ! == Normal Window ==
@@ -58,12 +62,15 @@ window.handle.5: Raise      : ButtonPress = Button1 & !Mod1Mask
 window.handle.6: Lower      : ButtonPress = Button2 & !Mod1Mask
 window.handle.7: MoveOpaque : ButtonPress = Button1 & !Mod1Mask
 !
-window.client.5:  ToggleShade    : KeyPress = F1 & Mod1Mask
-window.client.6:  ToggleMaximize : KeyPress = F2 & Mod1Mask
-window.client.7:  Close          : KeyPress = F4 & Mod1Mask
-window.client.8:  Kill           : KeyPress = F10 & Mod1Mask
-window.client.9:  Raise          : MapRequest
-window.client.10: Move           : MapRequest & ControlMask
+window.client.5:  ToggleShade                : KeyPress = F1 & Mod1Mask
+window.client.6:  ToggleMaximize             : KeyPress = F3 & Mod1Mask
+window.client.7:  Close                      : KeyPress = F4 & Mod1Mask
+window.client.8:  Kill                       : KeyPress = F10 & Mod1Mask
+window.client.9:  TaskSwitcher               : KeyPress = Tab & Mod1Mask
+
+window.client.10: MenuRemapFocused(rootmenu) : KeyPress = Esc & ControlMask
+window.client.11: Raise                      : MapRequest
+window.client.12: Move                       : MapRequest & ControlMask
 !
 window.closebutton.5: Close : ButtonRelease = AnyButton
 !
@@ -78,9 +85,11 @@ window.rightgrip.5: ResizeRightOpaque : ButtonPress = AnyButton & !Mod1Mask
 !
 ! == Root Window ==
 !
-root.1: MenuRemap(rootmenu) : ButtonPress = Button3
-root.2: MenuUnmap(rootmenu) : ButtonPress = Button1
-root.3: ViewportMove        : ButtonPress = Button2
+root.1: MenuRemap(rootmenu)        : ButtonPress = Button3
+root.2: MenuUnmap(rootmenu)        : ButtonPress = Button1
+root.3: ViewportMove               : ButtonPress = Button2
+root.4: TaskSwitcher               : KeyPress = Tab & Mod1Mask
+root.5: MenuRemapFocused(rootmenu) : KeyPress = Esc & ControlMask
 !
 !
 ! == Screen Edges ==
@@ -112,11 +121,31 @@ menu.title.8:  Lower      : ButtonPress = Button2 & !Mod1Mask
 menu.title.9:  UnmapSubs  : ButtonPress = Button3
 menu.title.10: Unmap      : ButtonPress = Button3
 !
-menu.item.5: UnmapSubs : EnterNotify
-menu.item.6: UnmapTree : ButtonRelease = AnyButton
-menu.item.7: Exec      : ButtonRelease = AnyButton
-menu.item.8: Func      : ButtonRelease = AnyButton
+menu.item.5:  UnmapSubs    : EnterNotify
+menu.item.6:  UnmapTree    : ButtonRelease = AnyButton
+menu.item.7:  Exec         : ButtonRelease = AnyButton
+menu.item.8:  Func         : ButtonRelease = AnyButton
+menu.item.9:  UnmapFocused : KeyRelease = Alt
+menu.item.10: Func         : KeyRelease = Alt 
+menu.item.11: NextItem     : KeyPress = Tab
+menu.item.12: NextItem     : KeyPress = Down
+menu.item.13: PreviousItem : KeyPress = Up
+menu.item.14: UnmapSubs    : KeyPress = Left
+menu.item.15: UnmapFocused : KeyPress = Left
+menu.item.16: UnmapTree    : KeyPress = Return
+menu.item.17: Exec         : KeyPress = Return
+menu.item.18: Func         : KeyPress = Return
+menu.item.19: UnmapTree    : KeyPress = Esc
 !
-menu.sub.5: UnmapSubs : EnterNotify
-menu.sub.6: MapSub    : EnterNotify
-menu.sub.7: ReMapSub  : ButtonRelease = AnyButton
+menu.sub.5:  UnmapSubs       : EnterNotify
+menu.sub.6:  MapSub          : EnterNotify
+menu.sub.7:  RemapSub        : ButtonRelease = AnyButton
+menu.sub.8:  NextItem        : KeyPress = Tab
+menu.sub.9:  NextItem        : KeyPress = Down
+menu.sub.10: PreviousItem    : KeyPress = Up
+menu.sub.11: RemapSubFocused : KeyPress = Right
+menu.sub.12: RemapSubFocused : KeyPress = Return
+menu.sub.13: UnmapSubs       : KeyPress = Left
+menu.sub.14: UnmapFocused    : KeyPress = Left
+menu.sub.15: UnmapTree       : KeyPress = Esc
+

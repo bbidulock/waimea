@@ -4,7 +4,7 @@
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   02-Aug-2001 22:40:20
  *
- * @brief Implementation of WaMenu and WaMenuItem classes  
+ * @brief Implementation of WaMenu, WaMenuItem and TaskSwitcher classes  
  *
  * Implementation of menu system. A menu consists of a list of menu items
  * each menu item can be one of these three kinds Title, Item or Sub. The only
@@ -34,14 +34,15 @@ WaMenu::WaMenu(char *n) {
     name = n;
     
     height = 0;
-    width  = 0;
-    mapped = False;
+    width = 0;
+    mapped = focus = False;
     root_menu = NULL;
     root_item = NULL;
     wf = (Window) 0;
     rf = NULL;
     mf = NULL;
     built = False;
+    tasksw = False;
     
     item_list = new list<WaMenuItem *>;
 }
@@ -109,6 +110,9 @@ void WaMenu::RemoveItem(WaMenuItem *item) {
 void WaMenu::Build(WaScreen *screen) {
     XSetWindowAttributes attrib_set;
     unsigned int i;
+
+    height = 0;
+    width = 0;
     
     if (! built) {
         wascreen = screen;
@@ -229,7 +233,7 @@ void WaMenu::Build(WaScreen *screen) {
         attrib_set.override_redirect = True;
         attrib_set.event_mask =  ButtonPressMask | ButtonReleaseMask |
             EnterWindowMask | LeaveWindowMask | PointerMotionMask | 
-            ExposureMask;
+            ExposureMask | KeyPressMask | KeyReleaseMask;
 
         frame = XCreateWindow(display, wascreen->id, 0, 0, width, height,
                               wascreen->mstyle.border_width,
@@ -362,33 +366,53 @@ void WaMenu::Move(int dx, int dy) {
 }
 
 /**
- * @fn    Unmap(void)
+ * @fn    Unmap(bool focus)
  * @brief Unmaps menu
  *
  * Unmaps menu and dehilites root menu item if menu was mapped as a submenu.
+ *
+ * @param focus True if we should set focus to root item
  */
-void WaMenu::Unmap(void) {
-    if (root_item)
-        root_item->DeHilite();
+void WaMenu::Unmap(bool focus) {
+    XEvent e;
+    
+    list<WaMenuItem *>::iterator it = item_list->begin();
+    for (; it != item_list->end(); ++it) {        
+        if ((*it)->hilited && (*it)->type == MenuItemType)
+            (*it)->DeHilite();
+    }
     XUnmapWindow(display, frame);
-    XUnmapSubwindows(display, frame);
     mapped = False;
+
+    if (focus) {
+        // Bad!!
+        XSync(display, False);
+        while (XCheckTypedEvent(display, EnterNotify, &e));
+    }
+    if (root_item) {
+        if (focus)
+            root_item->Focus();
+        else
+            root_item->DeHilite();
+    }
 }
 
 /**
- * @fn    UnmapSubmenus(void)
+ * @fn    UnmapSubmenus(bool focus)
  * @brief Unmaps submenus
  *
  * Recursive function for unmapping submenu trees. Unmaps all submenus in the 
  * current subtree that are still linked.
+ *
+ * @param focus True if we should set focus to root item
  */
-void WaMenu::UnmapSubmenus(void) {
+void WaMenu::UnmapSubmenus(bool focus) {
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end(); ++it) {
         if (((*it)->func_mask & MenuSubMask) && (*it)->submenu->root_menu &&
             (*it)->submenu->mapped) {
-            (*it)->submenu->UnmapSubmenus();
-            (*it)->submenu->Unmap();
+            (*it)->submenu->UnmapSubmenus(focus);
+            (*it)->submenu->Unmap(focus);
         }
     }
 }
@@ -404,8 +428,8 @@ void WaMenu::UnmapTree(void) {
     if (root_menu) {
         root_menu->UnmapTree();
     }
-    UnmapSubmenus();
-    Unmap();
+    UnmapSubmenus(False);
+    Unmap(False);
 }
 
 /**
@@ -521,6 +545,22 @@ void WaMenu::Raise(void) {
         (*it)->DrawFg();
 }
 
+/**
+ * @fn    FocusFirst(void)
+ * @brief Focus first selectable item in menu
+ *
+ * Set input focus to first element of type [item] or [sub] in menu.
+ */
+void WaMenu::FocusFirst(void) {
+    XEvent e;
+    // Bad!!!
+    while (XCheckTypedEvent(display, EnterNotify, &e));
+    
+    list<WaMenuItem *>::iterator it = item_list->begin();
+    for (; it != item_list->end() &&
+             (*it)->type == MenuTitleType; ++it);
+    if (it != item_list->end()) (*it)->Focus();
+}
 
 /**
  * @fn    WaMenuItem(char *s) : WindowObject(0, 0)
@@ -533,11 +573,12 @@ void WaMenu::Raise(void) {
 WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     label = s;
     id = (Window) 0;
-    func_mask = height = width = dy = realheight = 0;
+    func_mask = height = width = dy = realheight = focus = 0;
     wfunc = NULL;
     rfunc = NULL;
     mfunc = NULL;
     sub = NULL;
+    wf = (Window) 0;
 #ifdef XFT
     xftdraw = (Drawable) 0;
 #endif // XFT    
@@ -656,6 +697,11 @@ void WaMenuItem::DrawFg(void) {
 void WaMenuItem::Hilite(void) {
     if (type == MenuTitleType) return;
     
+    list<WaMenuItem *>::iterator it = menu->item_list->begin();
+    for (; it != menu->item_list->end(); ++it) {        
+        if ((*it)->hilited && focus)
+            (*it)->DeHilite();
+    }
     hilited = True;
     if (menu->philite)
         XSetWindowBackgroundPixmap(menu->display, id, menu->philite);
@@ -680,13 +726,15 @@ void WaMenuItem::DeHilite(void) {
 }
 
 /**
- * @fn    UnmapMenu(XEvent *, WaAction *)
+ * @fn    UnmapMenu(XEvent *, WaAction *, bool focus)
  * @brief Unmaps menu
  *
  * Unmaps the menu holding the menu item.
+ *
+ * @param bool True if we should focus root item
  */
-void WaMenuItem::UnmapMenu(XEvent *, WaAction *) {
-    menu->Unmap();
+void WaMenuItem::UnmapMenu(XEvent *, WaAction *, bool focus) {
+    menu->Unmap(focus);
 }
 
 /**
@@ -695,12 +743,15 @@ void WaMenuItem::UnmapMenu(XEvent *, WaAction *) {
  *
  * Maps menu items submenu, if there is one, at a good position close to the
  * menu item. If the submenu is already mapped then we do nothing.
+ *
+ * @param bool True if we should focus first item in submenu
  */
-void WaMenuItem::MapSubmenu(XEvent *, WaAction *) {
+void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus) {
     int skip;
     if ((! (func_mask & MenuSubMask)) || submenu->mapped) return;
 
     Hilite();
+    if (submenu->tasksw) menu->waimea->taskswitch->Build(menu->wascreen);
     submenu->root_menu = menu;
     submenu->root_item = this;
     submenu->wf = menu->wf;
@@ -715,21 +766,25 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *) {
     }
     submenu->Map(menu->x + menu->width + menu->wascreen->mstyle.border_width,
                  menu->y + dy - skip);
+    if (focus) submenu->FocusFirst();
 }
 
 /**
- * @fn    ReMapSubmenu(XEvent *, WaAction * )
+ * @fn    RemapSubmenu(XEvent *, WaAction * )
  * @brief Remaps Submenu
  *
  * Maps menu items submenu, if there is one, at a good position close to the
  * menu item. If the submenu is already mapped then we just move it to
- * the position we want to remap it to. 
+ * the position we want to remap it to.
+ *
+ * @param bool True if we should focus first item in submenu
  */
-void WaMenuItem::ReMapSubmenu(XEvent *, WaAction *) {
+void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
     int skip;
     if (! (func_mask & MenuSubMask)) return;
 
     Hilite();
+    if (submenu->tasksw) menu->waimea->taskswitch->Build(menu->wascreen);
     submenu->root_menu = menu;
     submenu->root_item = this;
     submenu->wf = menu->wf;
@@ -744,6 +799,7 @@ void WaMenuItem::ReMapSubmenu(XEvent *, WaAction *) {
     }
     submenu->ReMap(menu->x + menu->width + menu->wascreen->mstyle.border_width,
                  menu->y + dy - skip);
+    if (focus) submenu->FocusFirst();
 } 
 
 /**
@@ -783,9 +839,13 @@ void WaMenuItem::Exec(XEvent *, WaAction *) {
  */
 void WaMenuItem::Func(XEvent *e, WaAction *ac) {
     hash_map<int, WindowObject *>::iterator it;
-    
-    if ((func_mask & MenuWFuncMask) && (menu->ftype == MenuWFuncMask)) {
-        if ((it = menu->waimea->window_table->find(menu->wf)) !=
+    Window func_win;
+
+    if (wf) func_win = wf;
+    else func_win = menu->wf;
+    if ((func_mask & MenuWFuncMask) &&
+        ((menu->ftype == MenuWFuncMask) || wf)) {
+        if ((it = menu->waimea->window_table->find(func_win)) !=
             menu->waimea->window_table->end()) {
             if (((*it).second)->type == WindowType) {
                 (*((WaWindow *) (*it).second).*(wfunc))(e, ac);
@@ -809,13 +869,15 @@ void WaMenuItem::Lower(XEvent *, WaAction *) {
 }
 
 /**
- * @fn    Focus(XEvent *, WaAction *)
+ * @fn    Focus(void)
  * @brief Focus menu
  *
  * Sets input focus to the menu item window.
  */
-void WaMenuItem::Focus(XEvent *, WaAction *) {
+void WaMenuItem::Focus(void) {
     XSetInputFocus(menu->display, id, RevertToPointerRoot, CurrentTime);
+    menu->focus = focus = True;
+    Hilite();
 }
 
 /**
@@ -966,6 +1028,116 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
 }
 
 /**
+ * @fn    TaskSwitcher(XEvent *, WaAction *)
+ * @brief Maps task switcher menu
+ *
+ * Maps task switcher menu at middle of screen and sets input focus to
+ * first window in list.
+ */
+void WaMenuItem::TaskSwitcher(XEvent *, WaAction *) {
+    menu->waimea->taskswitch->Build(menu->wascreen);
+    menu->waimea->taskswitch->Map(menu->wascreen->width / 2 -
+                                  menu->waimea->taskswitch->width / 2,
+                                  menu->wascreen->height / 2 -
+                                  menu->waimea->taskswitch->height / 2);
+    menu->waimea->taskswitch->FocusFirst();
+}
+
+/**
+ * @fn    PreviousTask(XEvent *e, WaAction *ac)
+ * @brief Switches to previous task
+ *
+ * Switches to the previous focused window.
+ *
+ * @param e X event that have occurred
+ * @param ed Event details
+ */
+void WaMenuItem::PreviousTask(XEvent *e, WaAction *ac) {
+    list<WaWindow *>::iterator it = menu->waimea->wawindow_list->begin();
+    it++;
+    (*it)->Raise(e, ac);
+    (*it)->FocusVis(e, ac);
+}
+
+/**
+ * @fn    NextTask(XEvent *e, WaAction *ac)
+ * @brief Switches to next task
+ *
+ * Switches to the window that haven't had focus for longest time.
+ *
+ * @param e X event that have occurred
+ * @param ed Event details
+ */
+void WaMenuItem::NextTask(XEvent *e, WaAction *ac) {
+    menu->waimea->wawindow_list->back()->Raise(e, ac);
+    menu->waimea->wawindow_list->back()->FocusVis(e, ac);
+}
+
+/**
+ * @fn    NextItem(XEvent *e, WaAction *ac)
+ * @brief Hilite and focus next item
+ *
+ * Hilites and sets input focus to menu item beneath this menu item.
+ *
+ * @param e X event that have occurred
+ * @param ed Event details
+ */
+void WaMenuItem::NextItem(XEvent *e, WaAction *ac) {
+    list<WaMenuItem *>::iterator it = menu->item_list->begin();
+    for (; it != menu->item_list->end(); ++it) {
+        if (*it == this) {
+            for (++it; it != menu->item_list->end() &&
+                     (*it)->type == MenuTitleType; ++it);
+            if (it == menu->item_list->end()) {
+                it = menu->item_list->begin();
+                for (; *it != this && (*it)->type == MenuTitleType; ++it);
+                if (*it != this) {
+                    (*it)->Hilite();
+                    (*it)->Focus(e, ac);
+                    return;
+                }
+            } else {
+                (*it)->Hilite();
+                (*it)->Focus(e, ac);
+                return;
+            }
+        }
+    }
+}
+
+/**
+ * @fn    PreviousItem(XEvent *e, WaAction *ac)
+ * @brief Hilite and focus previous item
+ *
+ * Hilites and sets input focus to menu item above this menu item.
+ *
+ * @param e X event that have occurred
+ * @param ed Event details
+ */
+void WaMenuItem::PreviousItem(XEvent *e, WaAction *ac) {
+    list<WaMenuItem *>::reverse_iterator it = menu->item_list->rbegin();
+    for (; it != menu->item_list->rend(); ++it) {
+        if (*it == this) {
+            for (++it; it != menu->item_list->rend() &&
+                     (*it)->type == MenuTitleType; ++it);
+            if (it == menu->item_list->rend()) {
+                it = menu->item_list->rbegin();
+                for (; *it != this && (*it)->type == MenuTitleType; ++it);
+                if (*it != this) {
+                    (*it)->Hilite();
+                    (*it)->Focus(e, ac);
+                    return;
+                }
+            } else {
+                (*it)->Hilite();
+                (*it)->Focus(e, ac);
+                return;
+            }
+        }
+    }
+}
+
+/**
  * @fn    EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts)
  * @brief Calls menu item function
  *
@@ -988,12 +1160,76 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     }
     if (ed->type == EnterNotify) {
         Hilite();
+        if (menu->focus && type != MenuTitleType) Focus();
     }
-    else if (ed->type == LeaveNotify)
+    else if (ed->type == LeaveNotify && type == MenuItemType)
         DeHilite();
 }
 
 
+/** 
+ * @fn    TaskSwitcher(void) : WaMenu(strdup("__taskswitcher__")
+ * @brief Constructor for TaskSwitcher class
+ *
+ * Creates a TaskSwitcher object, used for fast switching between windows.
+ * This is a WaMenu with some extra functionality.
+ * 
+ */
+TaskSwitcher::TaskSwitcher(void) : WaMenu(strdup("__taskswitcher__")) {
+    tasksw = True;
+}
+
+/** 
+ * @fn    Build(WaScreen *wascrn) 
+ * @brief Builds Task Switcher menu
+ *
+ * Overloaded Build function to make Task Switcher build a menu from
+ * current windows.
+ *
+ * @param wascrn WaScreen to map menu on.
+ */
+void TaskSwitcher::Build(WaScreen *wascrn) {
+    WaWindow *ww;
+    WaMenuItem *m;
+    wawindow_list = wascrn->waimea->wawindow_list;
+
+    while (! item_list->empty()) {
+        delete item_list->back();
+        item_list->pop_back();
+    }
+    built = False;
+    focus = True;
+    
+    m = new WaMenuItem("Window List");
+    m->type = MenuTitleType;
+    AddItem(m);
+
+    list<WaWindow *>::iterator it = wawindow_list->begin();
+    for (++it; it != wawindow_list->end(); ++it) {
+        ww = (WaWindow *) *it;
+        m = new WaMenuItem(ww->name);
+        m->type = MenuItemType;
+        m->wfunc = &WaWindow::RaiseFocus;
+        m->func_mask |= MenuWFuncMask;
+        m->wf = ww->id;
+        AddItem(m);
+    }
+    ww = (WaWindow *) wawindow_list->front();
+    m = new WaMenuItem(ww->name);
+    m->type = MenuItemType;
+    m->wfunc = &WaWindow::RaiseFocus;
+    m->func_mask |= MenuWFuncMask;
+    m->wf = ww->id;
+    AddItem(m);
+
+    WaMenu::Build(wascrn);
+}
+
+
+/**
+ *
+ * Viewport functions.
+ */
 inline void WaMenuItem::ViewportMove(XEvent *e, WaAction *wa) {
     menu->wascreen->ViewportMove(e, wa);
 }

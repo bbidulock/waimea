@@ -1,16 +1,23 @@
-Tue Nov 20 2001  David Reveman (c99drn@cs.umu.se)
+Wed Nov 28 2001 David Reveman (c99drn@cs.umu.se)
+	Many important bugfixes
+	Added TaskSwitcher
 
-        *** Waimea v0.1.0 release ***
+	*** Waimea v0.1.2 release ***
 
-Sat Nov 24 2001 David Reveman (c99drn@cs.umu.se)
-
-	Added support for Blackbox menu files
-	Added support of the XShape extension
-		
-	*** Waimea v0.1.1 release ***
-	
 Mon Nov 26 2001 David Reveman (c99drn@cs.umu.se)
 
-	Added KeyEvent support
-	Added ViewportMove function
-	Added command line execution to action system
+        Added KeyEvent support
+        Added ViewportMove function
+        Added command line execution to action system
+			
+Sat Nov 24 2001 David Reveman (c99drn@cs.umu.se)
+
+        Added support for Blackbox menu files
+        Added support of the XShape extension
+
+        *** Waimea v0.1.1 release ***
+
+Tue Nov 20 2001  David Reveman (c99drn@cs.umu.se)
+
+       *** Waimea v0.1.0 release ***
+       

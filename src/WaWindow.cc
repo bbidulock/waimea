@@ -127,6 +127,7 @@ WaWindow::~WaWindow(void) {
                         attrib.y -
                         (attrib.y / wascreen->height) * wascreen->height);
     }
+    XSync(display, False);
     XUngrabServer(display);
     XDestroyWindow(display, frame->id);
     delete frame;
@@ -342,7 +343,7 @@ void WaWindow::ReparentWin(void) {
         }
         XFree(dummy);
 #endif // SHAPE
-        
+
         list<WaAction *>::iterator it = waimea->rh->winacts->begin();
         for (; it != waimea->rh->winacts->end(); ++it) {
             if ((*it)->type == ButtonPress || (*it)->type == ButtonRelease) {
@@ -1076,10 +1077,28 @@ void WaWindow::Lower(XEvent *, WaAction *) {
  *
  * Gives window keyboard input focus.
  */
-void WaWindow::Focus(XEvent *, WaAction *) {
+void WaWindow::Focus(XEvent *, WaAction *, bool vis) {
+    int newvx, newvy, x, y;
+    XEvent e;
+    
     if (mapped) {
         XGrabServer(display);
         if (validateclient(id)) {
+            if (vis) {
+                if (attrib.x > wascreen->width ||
+                    attrib.y > wascreen->height ||
+                    (attrib.x + attrib.width) < 0 ||
+                    (attrib.y + attrib.height) < 0) {
+                    x = wascreen->v_x + attrib.x;
+                    y = wascreen->v_y + attrib.y;
+                    newvx = (x / wascreen->width) * wascreen->width;
+                    newvy = (y / wascreen->height) * wascreen->height;
+                    wascreen->MoveViewportTo(newvx, newvy);
+                    // Bad!!!
+                    XSync(display, False);
+                    while (XCheckTypedEvent(display, EnterNotify, &e));
+                }
+            }
             XSetInputFocus(display, id, RevertToPointerRoot, CurrentTime);
             XInstallColormap(display, attrib.colormap);
             waimea->wawindow_list->remove(this);
@@ -1656,59 +1675,64 @@ void WaWindow::CloseKill(XEvent *e, WaAction *ac) {
  * Links the window to the menu and maps it at the position of the button
  * event causing mapping. If menu is already mapped nothing is done.
  *
- * @param e XEvent causing mapping of menu
  * @param ac WaAction object
+ * @param bool True if we should focus first item in menu
  */
-void WaWindow::MenuMap(XEvent *e, WaAction *ac) {
+void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
     Window w;
     int i, rx, ry;
     unsigned int ui;
     WaMenu *menu = (WaMenu *) ac->param;
     
     if (XQueryPointer(display, wascreen->id, &w, &w, &rx, &ry, &i, &i, &ui)) {
+        if (menu->tasksw) waimea->taskswitch->Build(wascreen);
         menu->wf = id;
         menu->ftype = MenuWFuncMask;
         menu->Map(rx - (menu->width / 2),
                   ry - (menu->item_list->front()->height / 2));
+        if (focus) menu->FocusFirst();
     }
 }
 
 /**
- * @fn    MenuMap(XEvent *e)
+ * @fn    MenuRemap(XEvent *e)
  * @brief Remaps a menu
  *
  * Links the window to the menu and maps it at the position of the button
  * event causing mapping. If the window is already mapped then we just move
  * it to the new position.
  *
- * @param e XEvent causing remapping of menu
  * @param ac WaAction object
+ * @param bool True if we should focus first item in menu
  */
-void WaWindow::MenuReMap(XEvent *e, WaAction *ac) {
+void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     Window w;
     int i, rx, ry;
     unsigned int ui;
     WaMenu *menu = (WaMenu *) ac->param;
     
     if (XQueryPointer(display, wascreen->id, &w, &w, &rx, &ry, &i, &i, &ui)) {
+        if (menu->tasksw) waimea->taskswitch->Build(wascreen);
         menu->wf = id;
         menu->ftype = MenuWFuncMask;
         menu->ReMap(rx - (menu->width / 2),
                     ry - (menu->item_list->front()->height / 2));
+        if (focus) menu->FocusFirst();
     }
 }
 
 /**
- * @fn    MenuUnmap(XEvent *, WaAction *ac)
+ * @fn    MenuUnmap(XEvent *, WaAction *ac, bool focus)
  * @brief Unmaps a menu
  *
  * Unmaps a menu and all its submenus.
  *
  * @param ac WaAction object
+ * @param bool True if we should focus root item
  */
-void WaWindow::MenuUnmap(XEvent *, WaAction *ac) {
-    ((WaMenu *)(ac->param))->Unmap();
-    ((WaMenu *)(ac->param))->UnmapSubmenus();
+void WaWindow::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
+    ((WaMenu *)(ac->param))->Unmap(focus);
+    ((WaMenu *)(ac->param))->UnmapSubmenus(focus);
 }
 
 /**
@@ -1777,6 +1801,52 @@ void WaWindow::UnSticky(XEvent *, WaAction *) {
  */
 void WaWindow::ToggleSticky(XEvent *, WaAction *) {
     net->SetStateSticky(this, ! flags.sticky);
+}
+
+/**
+ * @fn    TaskSwitcher(XEvent *, WaAction *)
+ * @brief Maps task switcher menu
+ *
+ * Maps task switcher menu at middle of screen and sets input focus to
+ * first window in list.
+ */
+void WaWindow::TaskSwitcher(XEvent *, WaAction *) {
+    waimea->taskswitch->Build(wascreen);
+    waimea->taskswitch->Map(wascreen->width / 2 -
+                            waimea->taskswitch->width / 2,
+                            wascreen->height / 2 -
+                            waimea->taskswitch->height / 2);
+    waimea->taskswitch->FocusFirst();
+}
+
+/**
+ * @fn    PreviousTask(XEvent *e, WaAction *ac)
+ * @brief Switches to previous task
+ *
+ * Switches to the previous focused window.
+ *
+ * @param e X event that have occurred
+ * @param ed Event details
+ */
+void WaWindow::PreviousTask(XEvent *e, WaAction *ac) {
+    list<WaWindow *>::iterator it = waimea->wawindow_list->begin();
+    it++;
+    (*it)->Raise(e, ac);
+    (*it)->FocusVis(e, ac);
+}
+
+/**
+ * @fn    NextTask(XEvent *e, WaAction *ac)
+ * @brief Switches to next task
+ *
+ * Switches to the window that haven't had focus for longest time.
+ *
+ * @param e X event that have occurred
+ * @param ed Event details
+ */
+void WaWindow::NextTask(XEvent *e, WaAction *ac) {
+    waimea->wawindow_list->back()->Raise(e, ac);
+    waimea->wawindow_list->back()->FocusVis(e, ac);
 }
 
 /**
@@ -1937,6 +2007,10 @@ WaChildWindow::~WaChildWindow(void) {
 }
 
 
+/**
+ *
+ * Viewport functions.
+ */
 inline void WaWindow::ViewportMove(XEvent *e, WaAction *wa) {
     wascreen->ViewportMove(e, wa);
 }
@@ -1951,7 +2025,7 @@ inline void WaWindow::MoveViewportUp(XEvent *, WaAction *) {
 }
 inline void WaWindow::MoveViewportDown(XEvent *, WaAction *) {
     wascreen->MoveViewport(SouthDirection, True);
-    }
+}
 inline void WaWindow::ScrollViewportLeft(XEvent *, WaAction *ac) {
     wascreen->ScrollViewport(WestDirection, True, ac);
 }

@@ -73,8 +73,14 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     wacts->push_back(new StrComp("kill", &WaWindow::Kill));
     wacts->push_back(new StrComp("closekill", &WaWindow::CloseKill));    
     wacts->push_back(new StrComp("menumap", &WaWindow::MenuMap));
-    wacts->push_back(new StrComp("menuremap", &WaWindow::MenuReMap));
+    wacts->push_back(new StrComp("menuremap", &WaWindow::MenuRemap));
+    wacts->push_back(new StrComp("menumapfocused",
+                                 &WaWindow::MenuMapFocused));
+    wacts->push_back(new StrComp("menuremapfocused",
+                                 &WaWindow::MenuRemapFocused));
     wacts->push_back(new StrComp("menuunmap", &WaWindow::MenuUnmap));
+    wacts->push_back(new StrComp("menuunmapfocused",
+                                 &WaWindow::MenuUnmapFocus));
     wacts->push_back(new StrComp("shade", &WaWindow::Shade));
     wacts->push_back(new StrComp("unshade", &WaWindow::UnShade));
     wacts->push_back(new StrComp("toggleshade", &WaWindow::ToggleShade));
@@ -125,14 +131,21 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaWindow::ScrollViewportUpNoWarp));
     wacts->push_back(new StrComp("scrollviewportdownnowarp",
                                  &WaWindow::ScrollViewportDownNoWarp));
-    wacts->push_back(new StrComp("viewportmove",
-                                 &WaWindow::ViewportMove));
+    wacts->push_back(new StrComp("viewportmove", &WaWindow::ViewportMove));
+    wacts->push_back(new StrComp("taskswitcher", &WaWindow::TaskSwitcher));
+    wacts->push_back(new StrComp("previoustask", &WaWindow::PreviousTask));
+    wacts->push_back(new StrComp("nexttask", &WaWindow::NextTask));
+    wacts->push_back(new StrComp("raisefocus", &WaWindow::RaiseFocus));
     
     racts = new list<StrComp *>;
     racts->push_back(new StrComp("focus", &WaScreen::Focus));
     racts->push_back(new StrComp("menumap", &WaScreen::MenuMap));
-    racts->push_back(new StrComp("menuremap", &WaScreen::MenuReMap));
+    racts->push_back(new StrComp("menuremap", &WaScreen::MenuRemap));
+    racts->push_back(new StrComp("menumapfocused", &WaScreen::MenuMapFocused));
+    racts->push_back(new StrComp("menuremapfocused",
+                                 &WaScreen::MenuRemapFocused));
     racts->push_back(new StrComp("menuunmap", &WaScreen::MenuUnmap));
+    racts->push_back(new StrComp("menuunmapfocused", &WaScreen::MenuUnmapFocus));
     racts->push_back(new StrComp("restart", &WaScreen::Restart));
     racts->push_back(new StrComp("exit", &WaScreen::Exit));
     racts->push_back(new StrComp("viewportleft", &WaScreen::MoveViewportLeft));
@@ -148,8 +161,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaScreen::ScrollViewportUp));
     racts->push_back(new StrComp("scrollviewportdown",
                                  &WaScreen::ScrollViewportDown));
-    racts->push_back(new StrComp("viewportmove",
-                                 &WaScreen::ViewportMove));
+    racts->push_back(new StrComp("viewportmove", &WaScreen::ViewportMove));
     racts->push_back(new StrComp("viewportleftnowarp",
                                  &WaScreen::MoveViewportLeftNoWarp));
     racts->push_back(new StrComp("viewportrightnowarp",
@@ -165,18 +177,27 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     racts->push_back(new StrComp("scrollviewportupnowarp",
                                  &WaScreen::ScrollViewportUpNoWarp));
     racts->push_back(new StrComp("scrollviewportdownnowarp",
-                                 &WaScreen::ScrollViewportDownNoWarp));    
+                                 &WaScreen::ScrollViewportDownNoWarp));
+    racts->push_back(new StrComp("taskswitcher", &WaScreen::TaskSwitcher));
+    racts->push_back(new StrComp("previoustask", &WaScreen::PreviousTask));
+    racts->push_back(new StrComp("nexttask", &WaScreen::NextTask));
     
     macts = new list<StrComp *>;
     macts->push_back(new StrComp("unlink", &WaMenuItem::UnLinkMenu));
     macts->push_back(new StrComp("mapsub", &WaMenuItem::MapSubmenu));
-    macts->push_back(new StrComp("remapsub", &WaMenuItem::ReMapSubmenu));
+    macts->push_back(new StrComp("remapsub", &WaMenuItem::RemapSubmenu));
+    macts->push_back(new StrComp("mapsubfocused",
+                                 &WaMenuItem::MapSubmenuFocused));
+    macts->push_back(new StrComp("remapsubfocused",
+                                 &WaMenuItem::RemapSubmenuFocused));
     macts->push_back(new StrComp("unmap", &WaMenuItem::UnmapMenu));
+    macts->push_back(new StrComp("unmapfocused", &WaMenuItem::UnmapMenuFocus));
     macts->push_back(new StrComp("unmapsubs", &WaMenuItem::UnmapSubmenus));
     macts->push_back(new StrComp("unmaptree", &WaMenuItem::UnmapTree));
     macts->push_back(new StrComp("exec", &WaMenuItem::Exec));
     macts->push_back(new StrComp("func", &WaMenuItem::Func));
     macts->push_back(new StrComp("raise", &WaMenuItem::Raise));
+    macts->push_back(new StrComp("focus", &WaMenuItem::Focus));
     macts->push_back(new StrComp("lower", &WaMenuItem::Lower));
     macts->push_back(new StrComp("move", &WaMenuItem::Move));
     macts->push_back(new StrComp("moveopaque", &WaMenuItem::MoveOpaque));
@@ -209,8 +230,12 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaMenuItem::ScrollViewportUpNoWarp));
     macts->push_back(new StrComp("scrollviewportdownnowarp",
                                  &WaMenuItem::ScrollViewportDownNoWarp));
-    macts->push_back(new StrComp("viewportmove",
-                                 &WaMenuItem::ViewportMove));
+    macts->push_back(new StrComp("viewportmove", &WaMenuItem::ViewportMove));
+    macts->push_back(new StrComp("taskswitcher", &WaMenuItem::TaskSwitcher));
+    macts->push_back(new StrComp("previoustask", &WaMenuItem::PreviousTask));
+    macts->push_back(new StrComp("nexttask", &WaMenuItem::NextTask));
+    macts->push_back(new StrComp("nextitem", &WaMenuItem::NextItem));
+    macts->push_back(new StrComp("previousitem", &WaMenuItem::PreviousItem));
     
     types = new list<StrComp *>;
     types->push_back(new StrComp("keypress", KeyPress));
@@ -233,11 +258,18 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
 
     kdetails = new list<StrComp *>;
     kdetails->push_back(new StrComp("anykey", (unsigned long) 0));
-    kdetails->push_back(new StrComp("alt_l", 64));
-    kdetails->push_back(new StrComp("control_l", 37));
+    kdetails->push_back(new StrComp("alt", 64));
+    kdetails->push_back(new StrComp("control", 37));
     kdetails->push_back(new StrComp("tab", 23));
+    kdetails->push_back(new StrComp("shift", 50));
     kdetails->push_back(new StrComp("shift_l", 50));
     kdetails->push_back(new StrComp("shift_r", 62));
+    kdetails->push_back(new StrComp("esc", 9));
+    kdetails->push_back(new StrComp("up", 80));
+    kdetails->push_back(new StrComp("down", 88));
+    kdetails->push_back(new StrComp("left", 83));
+    kdetails->push_back(new StrComp("right", 85));
+    kdetails->push_back(new StrComp("return", 36));
     kdetails->push_back(new StrComp("f1", 67));
     kdetails->push_back(new StrComp("f2", 68));
     kdetails->push_back(new StrComp("f3", 69));
@@ -549,6 +581,25 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
                       &mstyle->f_hilite_text, BlackPixel(display, screen), ic);
     ReadDatabaseColor("menu.title.textColor", "Menu.Title.TextColor",
                       &mstyle->t_text, BlackPixel(display, screen), ic);
+
+    if (XrmGetResource(database, "menu.justify", "Menu.Justify",
+                       &value_type, &value)) {
+        if (strstr(value.addr, "right") || strstr(value.addr, "Right")) {
+            mstyle->f_justify = RightJustify;
+            mstyle->t_justify = RightJustify;
+        }
+        else if (strstr(value.addr, "center") || strstr(value.addr, "Center")) {
+            mstyle->f_justify = CenterJustify;
+            mstyle->t_justify = CenterJustify;
+        }
+        else {
+            mstyle->f_justify = LeftJustify;
+            mstyle->t_justify = LeftJustify;
+        }
+    } else {
+        mstyle->f_justify = LeftJustify;
+        mstyle->t_justify = LeftJustify;
+    }
     
     if (XrmGetResource(database, "menu.frame.justify", "Menu.Frame.Justify",
                        &value_type, &value)) {
@@ -558,8 +609,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
             mstyle->f_justify = CenterJustify;
         else
             mstyle->f_justify = LeftJustify;
-    } else
-        mstyle->f_justify = LeftJustify;
+    }
     
     if (XrmGetResource(database, "menu.title.justify", "Menu.Title.Justify",
                        &value_type, &value)) {
@@ -569,8 +619,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
             mstyle->t_justify = CenterJustify;
         else
             mstyle->t_justify = LeftJustify;
-    } else
-        mstyle->t_justify = LeftJustify;
+    }
 
     char bullet[2];
     int ch = (int) '>';
@@ -1135,7 +1184,14 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
             }
             if (! *it) {
                 if (sscanf(token, "'%u'", &act_tmp->detail) != 1) {
-                    act_tmp->detail = *token - 29;
+                    if (strlen(token) == 1)
+                        act_tmp->detail = *token - 29;
+                    else {
+                        WARNING << "\"" << token << "\" unknown detail" << endl;
+                        free(act_tmp);
+                        free(line);
+                        return;
+                    }
                 }
                 else {
                     if (act_tmp->detail > 255 || act_tmp->detail < 0)
@@ -1422,8 +1478,9 @@ bool StrComp::Comp(char *s) {
  * @return Trimmed string
  */
 char *strtrim(char *s) {
-    for (; *s == ' '; s++);
-    for (; s[strlen(s) - 1] == ' '; s[strlen(s) - 1] = '\0');
+    for (; *s == ' ' || *s == '\t'; s++);
+    while (s[strlen(s) - 1] == ' ' || s[strlen(s) - 1] == '\t')
+        s[strlen(s) - 1] = '\0';
     return s;
 }
 

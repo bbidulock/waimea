@@ -4,10 +4,10 @@
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   02-Aug-2001 22:40:01
  *
- * @brief Definition of WaMenu and WaMenuItem classes
+ * @brief Definition of WaMenu, WaMenuItem and TaskSwitcher classes
  *
- * Function declarations and variable definitions for WaMenu and WaMenuItem
- * classes.
+ * Function declarations and variable definitions for WaMenu, WaMenuItem
+ * and TaskSwitcher classes.
  *
  * Copyright (C) David Reveman. All rights reserved.
  *
@@ -20,6 +20,7 @@
 
 class WaMenu;
 class WaMenuItem;
+class TaskSwitcher;
 
 typedef struct _WaAction WaAction;
 typedef void (WaMenuItem::*MenuActionFn)(XEvent *, WaAction *);
@@ -47,13 +48,14 @@ public:
     void Map(int, int);
     void ReMap(int, int);
     void Move(int, int);
-    void Unmap(void);
-    void UnmapSubmenus(void);
+    void Unmap(bool);
+    void UnmapSubmenus(bool);
     void UnmapTree(void);
     void CreateOutlineWindows(void);
     void ToggleOutline(void);
     void DrawOutline(int, int);
     void Raise(void);
+    void FocusFirst(void);
     
     Waimea *waimea;
     Display *display;
@@ -70,6 +72,7 @@ public:
         sub_pixel, subhilite_pixel;
     WaMenu *root_menu;
     WaMenuItem *root_item;
+    bool tasksw, focus;
 
     int ftype; 
     Window wf;
@@ -88,20 +91,39 @@ public:
 
     void DrawFg(void);
     
-    void Hilite();
-    void DeHilite();
+    void Hilite(void);
+    void DeHilite(void);
+    void Focus(void);
+    void MapSubmenu(XEvent *, WaAction *, bool);
+    void RemapSubmenu(XEvent *, WaAction *, bool);
+    void UnmapMenu(XEvent *, WaAction *, bool);
     
     void UnLinkMenu(XEvent *, WaAction *);
-    void MapSubmenu(XEvent *, WaAction *);
-    void ReMapSubmenu(XEvent *, WaAction *);
-    void UnmapMenu(XEvent *, WaAction *);
+    inline void MapSubmenu(XEvent *e, WaAction *ac) {
+        MapSubmenu(e, ac, False);
+    }
+    inline void MapSubmenuFocused(XEvent *e, WaAction *ac) {
+        MapSubmenu(e, ac, True);
+    }
+    inline void RemapSubmenu(XEvent *e, WaAction *ac) {
+        RemapSubmenu(e, ac, False);
+    }
+    inline void RemapSubmenuFocused(XEvent *e, WaAction *ac) {
+        RemapSubmenu(e, ac, True);
+    }
+    inline void UnmapMenu(XEvent *e, WaAction *wa) {
+        UnmapMenu(e, wa, False);
+    }
+    inline void UnmapMenuFocus(XEvent *e, WaAction *wa) {
+        UnmapMenu(e, wa, True);
+    }
     void Exec(XEvent *, WaAction *);
     void Func(XEvent *, WaAction *);
     void Move(XEvent *, WaAction *);
     void MoveOpaque(XEvent *, WaAction *);
     void Lower(XEvent *, WaAction *);
-    void Focus(XEvent *, WaAction *);
-    inline void UnmapSubmenus(XEvent *, WaAction *) { menu->UnmapSubmenus(); }
+    inline void Focus(XEvent *, WaAction *) { Focus(); }
+    inline void UnmapSubmenus(XEvent *, WaAction *) { menu->UnmapSubmenus(False); }
     inline void UnmapTree(XEvent *, WaAction *) { menu->UnmapTree(); }
     inline void Raise(XEvent *, WaAction *) { menu->Raise(); }
     void ViewportMove(XEvent *e, WaAction *);
@@ -121,21 +143,38 @@ public:
     void ScrollViewportRightNoWarp(XEvent *, WaAction *);
     void ScrollViewportUpNoWarp(XEvent *, WaAction *);
     void ScrollViewportDownNoWarp(XEvent *, WaAction *);
-
+    void TaskSwitcher(XEvent *, WaAction *);
+    void PreviousTask(XEvent *, WaAction *);
+    void NextTask(XEvent *, WaAction *);
+    void NextItem(XEvent *, WaAction *);
+    void PreviousItem(XEvent *, WaAction *);
+    
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);
     
     
     int func_mask, height, width, dy, realheight;
-    bool hilited;
+    bool hilited, focus;
     char *label, *exec, *sub;
     WwActionFn wfunc;
     MenuActionFn mfunc;
     RootActionFn rfunc;
     WaMenu *menu;
     WaMenu *submenu;
+    Window wf;
 #ifdef XFT        
     XftDraw *xftdraw;
 #endif // XFT
+};
+
+
+class TaskSwitcher : public WaMenu {
+public:
+    TaskSwitcher(void);
+
+    void Build(WaScreen *);
+    
+private:
+    list<WaWindow *> *wawindow_list;
 };
 
 #endif // __WaMenu_hh

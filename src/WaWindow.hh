@@ -92,6 +92,10 @@ public:
     void UnFocusWin(void);
     void ButtonHilite(int);
     void ButtonDehilite(int);
+    void MenuMap(XEvent *, WaAction *, bool);
+    void MenuRemap(XEvent *, WaAction *, bool);
+    void MenuUnmap(XEvent *, WaAction *, bool);
+    void Focus(XEvent *, WaAction *, bool);
 
 #ifdef SHAPE
     void Shape(void);
@@ -99,7 +103,12 @@ public:
     
     void Raise(XEvent *, WaAction *);
     void Lower(XEvent *, WaAction *);
-    void Focus(XEvent *, WaAction *);
+    inline void Focus(XEvent *e, WaAction *ac) {
+        Focus(e, ac, False);
+    }
+    inline void FocusVis(XEvent *e, WaAction *ac) {
+        Focus(e, ac, True);
+    }
     void Move(XEvent *, WaAction *);
     void MoveOpaque(XEvent *, WaAction *);
     inline void ResizeRight(XEvent *e, WaAction *) {
@@ -126,9 +135,24 @@ public:
     void Close(XEvent *, WaAction *);
     void Kill(XEvent *, WaAction *);
     void CloseKill(XEvent *, WaAction *);
-    void MenuMap(XEvent *, WaAction *);
-    void MenuReMap(XEvent *, WaAction *);
-    void MenuUnmap(XEvent *, WaAction *);
+    inline void MenuMap(XEvent *e, WaAction *ac) {
+        MenuMap(e, ac, False);
+    }
+    inline void MenuMapFocused(XEvent *e, WaAction *ac) {
+        MenuMap(e, ac, True);
+    }
+    inline void MenuRemap(XEvent *e, WaAction *ac) {
+        MenuRemap(e, ac, False);
+    }
+    inline void MenuRemapFocused(XEvent *e, WaAction *ac) {
+        MenuRemap(e, ac, True);
+    }
+    inline void MenuUnmap(XEvent *e, WaAction *wa) {
+        MenuUnmap(e, wa, False);
+    }
+    inline void MenuUnmapFocus(XEvent *e, WaAction *wa) {
+        MenuUnmap(e, wa, True);
+    }
     void Shade(XEvent *, WaAction *);
     void UnShade(XEvent *, WaAction *);
     void ToggleShade(XEvent *, WaAction *);
@@ -152,6 +176,13 @@ public:
     void ScrollViewportRightNoWarp(XEvent *, WaAction *);
     void ScrollViewportUpNoWarp(XEvent *, WaAction *);
     void ScrollViewportDownNoWarp(XEvent *, WaAction *);
+    void TaskSwitcher(XEvent *, WaAction *);
+    void PreviousTask(XEvent *, WaAction *);
+    void NextTask(XEvent *, WaAction *);
+    inline void RaiseFocus(XEvent *e, WaAction *ac) {
+        Raise(e, ac);
+        Focus(e, ac, True);
+    }
 
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
     

@@ -14,10 +14,10 @@ WAIMEA WINDOW MANAGER
         - Standard X core fonts
         - Xrender extension support for rendering anti-aliased fonts
         - Virtual desktop
+	- Task switcher
 
         Features under development:
          - Dockapp holder
-         - Task switcher
          - New revolutionary of pager utility
 
         Planned features:
@@ -191,6 +191,7 @@ ACTIONS
 			 You can specify a command line to execute instead of
 			 a function. Command line must be between a '{' 
 			 character and a '}' character.
+		focus
 	        viewportleft
                 viewportright
                 viewportup
@@ -213,11 +214,16 @@ ACTIONS
 		viewportmove
 			Moves viewport after mouse motion events (kind of 
 			the same way as you move windows).
+		taskswicher
+			Maps task switcher menu.
+		nexttask
+			Switches to next task
+		previoustask
+			Switches to previous task
 
         List of actions for window.* windows:
                 raise
                 lower
-                focus
                 move
                 resizeright
                 resizeleft
@@ -230,6 +236,9 @@ ACTIONS
                 menumap(menu_name)
                 menuremap(menu_name)
                 menuunmap(menu_name)
+		menumapfocused(menu_name)
+                menuremapfocused(menu_name)
+                menuunmapfocused(menu_name)
                 shade
                 unshade
                 toggleshade
@@ -244,7 +253,11 @@ ACTIONS
                 unlink
                 mapsub
                 remapsub
+		mapsubfocused
+                remapsubfocused
                 unmap
+		unmapfocused
+                unmapsubs
                 unmapsubs
                 unmaptree
                 exec
@@ -255,10 +268,11 @@ ACTIONS
                 moveopaque
 
         List of actions for root, *edge windows:
-                focus
                 menumap(menu_name)
                 menuremap(menu_name)
                 menuunmap(menu_name)
+		menumapfocused(menu_name)
+                menuremapfocused(menu_name)
                 restart
                 exit
 
@@ -277,10 +291,17 @@ ACTIONS
                 	button1-7
 		For KeyEvents:
 			anykey
-			alt_l
-			control_l
+			alt
+			control
+			shift
 			shift_l
 			shift_r
+			esc
+			up
+			down
+			left
+			right
+			return
 			tab
 			f1
 			f2
@@ -357,7 +378,10 @@ MENUS
 
         $USER$ will be replaced with USER environment variable.
 
-        See data/menu for good example of menu file.
+        Predefined menu named "__taskswitcher__" can be used in menu file
+	and action file to access the taskswitcher menu.
+	
+	See data/menu for good example of menu file.
 
 
 BUGS

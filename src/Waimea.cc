@@ -87,11 +87,14 @@ Waimea::Waimea(char **av, struct waoptions *options) {
     rh = new ResourceHandler(this, options);
     rh->LoadConfig();
     rh->LoadMenus();
+    taskswitch = new TaskSwitcher();
+    wamenu_list->push_back(taskswitch);
     rh->LoadActions(this);
-       
+           
     net = new NetHandler(this);
     wascreen = new WaScreen(display, DefaultScreen(display), this);
 
+    taskswitch->Build(wascreen);
     list<WaMenu *>::iterator it = wamenu_list->begin();
     for (; it != wamenu_list->end(); ++it)
         (*it)->Build(wascreen);
@@ -110,7 +113,7 @@ Waimea::Waimea(char **av, struct waoptions *options) {
 Waimea::~Waimea(void) {
     delete eh;
     LISTCLEAR(wamenu_list);
-    LISTCLEAR(wawindow_list);
+    LISTCLEAR2(wawindow_list);
     delete wascreen;
     delete net;
     delete rh;

@@ -91,13 +91,33 @@ public:
     void MoveViewportTo(int, int);
     void MoveViewport(int, bool);
     void ScrollViewport(int, bool, WaAction *);
+    void MenuMap(XEvent *, WaAction *, bool);
+    void MenuRemap(XEvent *, WaAction *, bool);
+    void MenuUnmap(XEvent *, WaAction *, bool);
+    
+    inline void MenuMap(XEvent *e, WaAction *ac) {
+        MenuMap(e, ac, False);
+    }
+    inline void MenuMapFocused(XEvent *e, WaAction *ac) {
+        MenuMap(e, ac, True);
+    }
+    inline void MenuRemap(XEvent *e, WaAction *ac) {
+        MenuRemap(e, ac, False);
+    }
+    inline void MenuRemapFocused(XEvent *e, WaAction *ac) {
+        MenuRemap(e, ac, True);
+    }
     void ViewportMove(XEvent *, WaAction *);
     void Focus(XEvent *, WaAction *);
-    void MenuMap(XEvent *, WaAction *);
-    void MenuReMap(XEvent *, WaAction *);
-    void MenuUnmap(XEvent *, WaAction *);
+    inline void MenuUnmap(XEvent *e, WaAction *wa) {
+        MenuUnmap(e, wa, False);
+    }
+    inline void MenuUnmapFocus(XEvent *e, WaAction *wa) {
+        MenuUnmap(e, wa, True);
+    }
     void Restart(XEvent *, WaAction *);
     void Exit(XEvent *, WaAction *);
+    void TaskSwitcher(XEvent *, WaAction *);
     inline void MoveViewportLeft(XEvent *, WaAction *) {
         MoveViewport(WestDirection, True);
     }
@@ -146,6 +166,9 @@ public:
     inline void ScrollViewportDownNoWarp(XEvent *, WaAction *ac) {
         ScrollViewport(SouthDirection, False, ac);
     }
+    void PreviousTask(XEvent *, WaAction *);
+    void NextTask(XEvent *, WaAction *);
+    
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);
 
     Display *display;

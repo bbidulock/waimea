@@ -585,59 +585,64 @@ void WaScreen::Focus(XEvent *, WaAction *) {
  *
  * Maps a menu at the current mouse position.
  *
- * @param e X event causing function call
  * @param ac WaAction object
+ * @param bool True if we should focus first item in menu
  */
-void WaScreen::MenuMap(XEvent *e, WaAction *ac) {
+void WaScreen::MenuMap(XEvent *, WaAction *ac, bool focus) {
     Window w;
     int i, rx, ry;
     unsigned int ui;
     WaMenu *menu = (WaMenu *) ac->param;
 
     if (XQueryPointer(display, id, &w, &w, &rx, &ry, &i, &i, &ui)) {
+        if (menu->tasksw) menu->Build(this);
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
         menu->Map(rx - (menu->width / 2),
                   ry - (menu->item_list->front()->height / 2));
+        if (focus) menu->FocusFirst();
     }
 }
 
 /**
- * @fn    MenuReMap(XEvent *e, WaAction *ac)
+ * @fn    MenuRemap(XEvent *e, WaAction *ac)
  * @brief Maps a menu
  *
  * Remaps a menu at the current mouse position.
  *
- * @param e X event causing function call
  * @param ac WaAction object
+ * @param bool True if we should focus first item in menu
  */
-void WaScreen::MenuReMap(XEvent *e, WaAction *ac) {
+void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
     Window w;
     int i, rx, ry;
     unsigned int ui;
     WaMenu *menu = (WaMenu *) ac->param;
     
     if (XQueryPointer(display, id, &w, &w, &rx, &ry, &i, &i, &ui)) {
+        if (menu->tasksw) waimea->taskswitch->Build(this);
         menu->rf = this;
         menu->ftype = MenuRFuncMask;
         menu->ReMap(rx - (menu->width / 2),
                     ry - (menu->item_list->front()->height / 2));
+        if (focus) menu->FocusFirst();
     }
 }
 
 /**
- * @fn    MenuUnmap(XEvent *, WaAction *ac)
+ * @fn    MenuUnmap(XEvent *, WaAction *ac, bool focus)
  * @brief Unmaps menu
  *
  * Unmaps a menu and its linked submenus.
  *
  * @param ac WaAction object
+ * @param bool True if we should focus root item
  */
-void WaScreen::MenuUnmap(XEvent *, WaAction *ac) {
+void WaScreen::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
     WaMenu *menu = (WaMenu *) ac->param;
     
-    menu->Unmap();
-    menu->UnmapSubmenus();
+    menu->Unmap(focus);
+    menu->UnmapSubmenus(focus);
 }
 
 /**
@@ -659,6 +664,50 @@ void WaScreen::Restart(XEvent *, WaAction *) {
  */
 void WaScreen::Exit(XEvent *, WaAction *) {
     quit(EXIT_SUCCESS);
+}
+
+/**
+ * @fn    TaskSwitcher(XEvent *, WaAction *)
+ * @brief Maps task switcher menu
+ *
+ * Maps task switcher menu at middle of screen and sets input focus to
+ * first window in list.
+ */
+void WaScreen::TaskSwitcher(XEvent *, WaAction *) {
+    waimea->taskswitch->Build(this);
+    waimea->taskswitch->Map(width / 2 - waimea->taskswitch->width / 2,
+                            height / 2 - waimea->taskswitch->height / 2);
+    waimea->taskswitch->FocusFirst();
+}
+
+/**
+ * @fn    PreviousTask(XEvent *e, WaAction *ac)
+ * @brief Switches to previous task
+ *
+ * Switches to the previous focused window.
+ *
+ * @param e X event that have occurred
+ * @param ed Event details
+ */
+void WaScreen::PreviousTask(XEvent *e, WaAction *ac) {
+    list<WaWindow *>::iterator it = waimea->wawindow_list->begin();
+    it++;
+    (*it)->Raise(e, ac);
+    (*it)->FocusVis(e, ac);
+}
+
+/**
+ * @fn    NextTask(XEvent *e, WaAction *ac)
+ * @brief Switches to next task
+ *
+ * Switches to the window that haven't had focus for longest time.
+ *
+ * @param e X event that have occurred
+ * @param ed Event details
+ */
+void WaScreen::NextTask(XEvent *e, WaAction *ac) {
+    waimea->wawindow_list->back()->Raise(e, ac);
+    waimea->wawindow_list->back()->FocusVis(e, ac);
 }
 
 /**

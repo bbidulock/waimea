@@ -76,7 +76,7 @@ CPPFLAGS = @CPPFLAGS@ @SHAPE@ @XFT@ @INTERLACE@ @ORDEREDPSEUDO@ -DDEFAULTSTYLE=\
 
 
 bin_PROGRAMS = waimea
-waimea_SOURCES = main.cc 		 Waimea.cc 		 WaScreen.cc 		 WaWindow.cc 		 ResourceHandler.cc 		 EventHandler.cc 		 WaImage.cc 		 WaMenu.cc 		 NetHandler.cc 		 TaskSwitcher.cc
+waimea_SOURCES = main.cc 		 Waimea.cc 		 WaScreen.cc 		 WaWindow.cc 		 ResourceHandler.cc 		 EventHandler.cc 		 WaImage.cc 		 WaMenu.cc 		 NetHandler.cc
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -91,8 +91,7 @@ X_LIBS = @X_LIBS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 waimea_OBJECTS =  main.o Waimea.o WaScreen.o WaWindow.o \
-ResourceHandler.o EventHandler.o WaImage.o WaMenu.o NetHandler.o \
-TaskSwitcher.o
+ResourceHandler.o EventHandler.o WaImage.o WaMenu.o NetHandler.o
 waimea_LDADD = $(LDADD)
 waimea_DEPENDENCIES = 
 waimea_LDFLAGS = 
@@ -108,9 +107,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/EventHandler.P .deps/NetHandler.P \
-.deps/ResourceHandler.P .deps/TaskSwitcher.P .deps/WaImage.P \
-.deps/WaMenu.P .deps/WaScreen.P .deps/WaWindow.P .deps/Waimea.P \
-.deps/main.P
+.deps/ResourceHandler.P .deps/WaImage.P .deps/WaMenu.P .deps/WaScreen.P \
+.deps/WaWindow.P .deps/Waimea.P .deps/main.P
 SOURCES = $(waimea_SOURCES)
 OBJECTS = $(waimea_OBJECTS)
 

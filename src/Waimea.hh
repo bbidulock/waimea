@@ -54,6 +54,12 @@ public:
     } \
     delete list;
 
+#define LISTCLEAR2(list) \
+    while (! list->empty()) { \
+        delete list->back(); \
+    } \
+    delete list;
+
 enum {
     FrameType,
     WindowType,
@@ -87,6 +93,7 @@ public:
     ResourceHandler *rh;
     EventHandler *eh;
     NetHandler *net;
+    TaskSwitcher *taskswitch;
     Cursor session_cursor, move_cursor, resizeleft_cursor, resizeright_cursor;
     
     hash_map<int, WindowObject *> *window_table;
