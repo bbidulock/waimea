@@ -1260,6 +1260,32 @@ void WaWindow::Focus(bool vis) {
                         break;
                     }
             }
+            bool x_toolarge = false, y_toolarge = false;
+            
+            if ((wascreen->v_x + attrib.x) >=
+                (wascreen->v_xmax + wascreen->width))
+                x_toolarge = true;
+            
+            if ((wascreen->v_y + attrib.y) >=
+                (wascreen->v_ymax + wascreen->height))
+                y_toolarge = true;
+
+            if (x_toolarge || y_toolarge) {
+                int bw = flags.border * border_w;
+                int handleh = handle_w + flags.handle * bw;
+                
+                int th = attrib.height + bw + handleh;
+                int tw = attrib.width + bw;
+                
+                if (x_toolarge)
+                    attrib.x = (wascreen->v_xmax + wascreen->width -
+                                wascreen->v_x) - tw;
+                if (y_toolarge)
+                    attrib.y = (wascreen->v_ymax + wascreen->height -
+                                wascreen->v_y) - th;
+                RedrawWindow();
+            }
+            
             if (attrib.x >= wascreen->width ||
                 attrib.y >= wascreen->height ||
                 (attrib.x + attrib.width) <= 0 ||

@@ -774,13 +774,6 @@ void NetHandler::GetVirtualPos(WaWindow *ww) {
             items_read >= 2) {
             ww->attrib.x = data[0] - ww->wascreen->v_x;
             ww->attrib.y = data[1] - ww->wascreen->v_y;
-            if (data[0] >= (ww->wascreen->v_xmax + ww->wascreen->width))
-                ww->attrib.x = ww->wascreen->v_xmax +
-                    data[0] % ww->wascreen->width;
-            if (data[1] >= (ww->wascreen->v_ymax + ww->wascreen->height))
-                ww->attrib.y = ww->wascreen->v_ymax +
-                    data[1] % ww->wascreen->height;
-            
             if (ww->flags.sticky) {
                 ww->attrib.x = ww->attrib.x % ww->wascreen->width;
                 ww->attrib.y = ww->attrib.y % ww->wascreen->height;

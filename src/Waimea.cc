@@ -125,7 +125,6 @@ Waimea::Waimea(char **av, struct waoptions *_options) {
 
 #ifdef RANDR
     randr = XRRQueryExtension(display, &randr_event, &dummy);
-    //cout << "randr: " << randr << endl;
 #endif // RANDR
     
     rh = new ResourceHandler(this, options);
