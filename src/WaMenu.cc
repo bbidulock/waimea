@@ -50,7 +50,8 @@ WaMenu::WaMenu(char *n) {
     
     height = 0;
     width = 0;
-    mapped = has_focus = built = tasksw = dynamic = ignore = false;
+    mapped = has_focus = built = tasksw = dynamic = dynamic_root =
+        ignore = false;
     root_menu = NULL;
     root_item = NULL;
     wf = (Window) 0;
@@ -449,14 +450,15 @@ void WaMenu::Map(int mx, int my) {
     if (tasksw && item_list->size() < 2) return;
     if (mapped) return;
 
-    if (waimea->rh->menu_stacking == AlwaysOnTop) {
-        waimea->wamenu_list_stacking_aot->push_front(this);
-        waimea->WaRaiseWindow(frame);
-    }
-    else if (waimea->rh->menu_stacking == AlwaysAtBottom) {
+    if (waimea->rh->menu_stacking == AlwaysAtBottom) {
         waimea->wamenu_list_stacking_aab->push_back(this);
         waimea->WaLowerWindow(frame);
     }
+    else {
+        if (waimea->rh->menu_stacking == AlwaysOnTop)
+            waimea->wamenu_list_stacking_aot->push_front(this);
+        waimea->WaRaiseWindow(frame);
+    }                
     x = mx;
     y = my;
     mapped = true;
@@ -487,14 +489,15 @@ void WaMenu::ReMap(int mx, int my) {
     
     if (mapped) Move(mx - x, my - y);
     else {
-        if (waimea->rh->menu_stacking == AlwaysOnTop) {
-            waimea->wamenu_list_stacking_aot->push_front(this);
-            waimea->WaRaiseWindow(frame);
-        }
-        else if (waimea->rh->menu_stacking == AlwaysAtBottom) {
+        if (waimea->rh->menu_stacking == AlwaysAtBottom) {
             waimea->wamenu_list_stacking_aab->push_back(this);
             waimea->WaLowerWindow(frame);
         }
+        else {
+            if (waimea->rh->menu_stacking == AlwaysOnTop)
+                waimea->wamenu_list_stacking_aot->push_front(this);
+            waimea->WaRaiseWindow(frame);
+        }    
     }
     x = mx;
     y = my;
@@ -587,12 +590,18 @@ void WaMenu::Unmap(bool focus) {
         if (! waimea->wawindow_list->empty())
             waimea->wawindow_list->front()->Focus(false);
     }
-    if (dynamic) {
+    if (dynamic_root) {
         waimea->wamenu_list->remove(this);
         if (root_item) root_item->submenu = NULL;
         it = item_list->begin();
         for (; it != item_list->end(); ++it) {
-            if ((*it)->submenu) (*it)->submenu->root_item = NULL;
+            if ((*it)->submenu) {
+                (*it)->submenu->root_item = NULL;
+                if ((*it)->submenu->dynamic) {
+                    (*it)->submenu->dynamic_root = true;
+                    (*it)->submenu->Unmap(focus);
+                }
+            }
         }
         delete this;
     }
@@ -636,13 +645,14 @@ void WaMenu::UnmapSubmenus(bool focus) {
  * are still linked in the current menu tree.
  */
 void WaMenu::UnmapTree(void) {
+    WaMenu *tmp = NULL;
     if (root_menu) {
-        WaMenu *tmp = root_menu;
+        tmp = root_menu;
         root_menu = NULL;
-        tmp->UnmapTree();
-    }  
+    }
     UnmapSubmenus(false);
     Unmap(false);
+    if (tmp) tmp->UnmapTree();
 }
 
 /**
@@ -1149,7 +1159,7 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus, bool only) {
     if (diff > 0) y -= diff;
     if (y < 0) y = 0;
     if ((x + submenu->width + menu->wascreen->mstyle.border_width * 2) >
-        menu->wascreen->width)
+        (unsigned int) menu->wascreen->width)
         x = menu->x - submenu->width - menu->wascreen->mstyle.border_width;
     submenu->Map(x, y);
     if (focus) submenu->FocusFirst();
@@ -1205,7 +1215,7 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
     if (diff > 0) y -= diff;
     if (y < 0) y = 0;
     if ((x + submenu->width + menu->wascreen->mstyle.border_width * 2) >
-        menu->wascreen->width)
+        (unsigned int) menu->wascreen->width)
         x = menu->x - submenu->width - menu->wascreen->mstyle.border_width;
     menu->ignore = true;
     submenu->ReMap(x, y);

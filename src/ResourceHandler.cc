@@ -422,28 +422,30 @@ void ResourceHandler::LoadConfig(void) {
         if (XrmGetResource(database, "styleFile", "StyleFile",
                            &value_type, &value)) {
             delete [] style_file;
-            style_file = wastrdup(value.addr);
+            style_file = environment_expansion(wastrdup(value.addr));
         }
 
     if (! action_forced)
         if (XrmGetResource(database, "actionFile", "ActionFile",
                            &value_type, &value)) {
             delete [] action_file;
-            action_file = wastrdup(value.addr);
+            action_file = environment_expansion(wastrdup(value.addr));
         }
 
     if (! menu_forced)
         if (XrmGetResource(database, "menuFile", "MenuFile",
                            &value_type, &value)) {
             delete [] menu_file;
-            menu_file = wastrdup(value.addr);
+            menu_file = environment_expansion(wastrdup(value.addr));
         }
    
     char *path = getenv("PATH");
     if (XrmGetResource(database, "scriptDir", "ScriptDir",
                        &value_type, &value)) {
-        pathenv = new char[strlen(path) + strlen(value.addr) + 7];
-        sprintf(pathenv, "PATH=%s:%s", value.addr, path);
+        char *sdir = environment_expansion(wastrdup(value.addr));
+        pathenv = new char[strlen(path) + strlen(sdir) + 7];
+        sprintf(pathenv, "PATH=%s:%s", sdir, path);
+        delete [] sdir;
     }
     else { 
         pathenv = new char[strlen(path) + strlen(DEFAULTSCRIPTDIR) + 7];
@@ -2056,8 +2058,15 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
         if (! strcasecmp(s, "start")) {
             delete [] s;
             if ((s = strwithin(line, '(', ')', true))) {                
-                tmp_menu = new WaMenu(wastrdup(s));                
-                if (menu) ParseMenu(tmp_menu, file);
+                tmp_menu = new WaMenu(wastrdup(s));
+                if (menu) {
+                    if (menu->dynamic) {
+                        tmp_menu->dynamic = true;
+                        if (ParseMenu(tmp_menu, file))
+                            tmp_menu->Build(wascreen);
+                    } else
+                        ParseMenu(tmp_menu, file);
+                }
                 else menu = tmp_menu;
             } else
                 WARNING << "(" << basename(menu_file) << ":" << linenr << 
@@ -2079,7 +2088,14 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file) {
                 m = new WaMenuItem(wastrdup(s));
                 m->type = MenuTitleType;
                 tmp_menu->AddItem(m);
-                if (menu) ParseMenu(tmp_menu, file);
+                if (menu) {
+                    if (menu->dynamic) {
+                        tmp_menu->dynamic = true;
+                        if (ParseMenu(tmp_menu, file))
+                            tmp_menu->Build(wascreen);
+                    } else
+                        ParseMenu(tmp_menu, file);
+                }
                 else menu = tmp_menu;
             } else
                 WARNING << "(" << basename(menu_file) << ":" << linenr << 
@@ -2487,8 +2503,8 @@ char *strtrim(char *s) {
  * @return String within c1 and c2
  */
 char *strwithin(char *s, char c1, char c2, bool eval_env) {
-    int i, n, tmp_char;
-    char *str, *tmp, *env, *env_name;
+    int i, n;
+    char *str;
     
     for (i = 0;; i++) {
         if (s[i] == '\0') break;
@@ -2507,27 +2523,7 @@ char *strwithin(char *s, char c1, char c2, bool eval_env) {
     s[n] = c2;
     
     if (eval_env) {
-        i = 0;
-        for (; str[i] != '\0'; i++) {
-            if (str[i] == '\\') {
-                if (str[i + 1] != '\0') i++;
-            }
-            else if (str[i] == '$' && IS_ENV_CHAR(str[i + 1])) {
-                str[i] = '\0';
-                env_name = &str[++i];
-                for (; IS_ENV_CHAR(str[i]); i++);
-                tmp_char = str[i];
-                str[i] = '\0';
-                if ((env = getenv(env_name)) == NULL) env = "";
-                str[i] = tmp_char;
-                tmp = new char[strlen(str) + strlen(env) +
-                               strlen(&str[i]) + 1];
-                sprintf(tmp, "%s%s%s", str, env, &str[i]);
-                i = strlen(str) + strlen(env);
-                delete [] str;
-                str = tmp;
-            }
-        }
+        str = environment_expansion(str);
     }
     for (i = 0; str[i] != '\0'; i++) {
         if (str[i] == '\\' && 
@@ -2551,6 +2547,57 @@ char *strwithin(char *s, char c1, char c2, bool eval_env) {
 }
 
 /**
+ * @fn    environment_expansion(char *s)
+ * @brief Expand '~' and environment variables
+ *
+ * Replaces all '~' characters with HOME environment variable and all
+ * $ENVIRONMENT_VARIABLE with environment variable value.
+ *
+ * @param s	String to expand
+ * @return Pointer to expanded string
+ */
+char *environment_expansion(char *s) {
+    char *tmp, *env, *env_name;
+    int i, tmp_char;
+    
+    for (i = 0; s[i] != '\0'; i++) {
+        switch (s[i]) {
+            case '\\':
+                if (s[i + 1] != '\0') i++;
+                break;
+            case '$':
+                if (IS_ENV_CHAR(s[i + 1])) {
+                    s[i] = '\0';
+                    env_name = &s[++i];
+                    for (; IS_ENV_CHAR(s[i]); i++);
+                    tmp_char = s[i];
+                    s[i] = '\0';
+                    if ((env = getenv(env_name)) == NULL) env = "";
+                    s[i] = tmp_char;
+                    tmp = new char[strlen(s) + strlen(env) +
+                                   strlen(&s[i]) + 1];
+                    sprintf(tmp, "%s%s%s", s, env, &s[i]);
+                    i = strlen(s) + strlen(env);
+                    delete [] s;
+                    s = tmp;
+                }
+                break;
+            case '~': 
+                s[i] = '\0';
+                if ((env = getenv("HOME")) == NULL) env = "~";
+                tmp = new char[strlen(s) + strlen(env) +
+                               strlen(&s[i + 1]) + 1];
+                sprintf(tmp, "%s%s%s", s, env, &s[i + 1]);
+                i = strlen(s) + strlen(env);
+                delete [] s;
+                s = tmp;
+                break;
+        }
+    }
+    return s;
+}
+
+/**
  * @fn    param_eval(char *action, char *param, WaScreen *wascreen)
  * @brief Evaluate parameter string
  *
@@ -2563,10 +2610,14 @@ char *strwithin(char *s, char c1, char c2, bool eval_env) {
  * @return New parameter
  */
 char *param_eval(char *action, char *param, WaScreen *wascreen) {
-    char *tmp, *p = wastrdup(param);
+    char *tmp, *p;
     int i;
+
+    if (! param) return param;
     
-    if (! strncasecmp(action, "viewport", 8)) {
+    p = wastrdup(param);
+    if ((! strncasecmp(action, "viewport", 8)) ||
+        (! strncasecmp(action, "moveresize", 10))) {
         for (i = 0; p[i] != '\0'; i++) {
             if (p[i] == 'W' || p[i] == 'w') {
                 tmp = new char[strlen(p) + 5];

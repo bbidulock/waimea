@@ -112,6 +112,7 @@ DEF allMenuItems {
 
 menu.title {
    allMenuWindows,
+   Raise           : ButtonPress = Button1,   
    UnLink    : ButtonPress = Button1 & !Mod1Mask,
    StartMove : ButtonPress = Button1 & !Mod1Mask,
    UnmapSubs : ButtonPress = Button3,

@@ -78,7 +78,7 @@ sub print_directory {
     my @output = "";
     my $mode;
     opendir(DIR, $dir) || die "can't opendir $dir: $!";
-    @dir_list = grep { /^[^\.].*/ || /^\.\..*/} readdir(DIR);
+    @dir_list = grep { /^[^\.].*/ } readdir(DIR);
     closedir DIR;
     
     $i = 0;

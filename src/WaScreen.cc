@@ -980,7 +980,7 @@ void WaScreen::MenuMap(XEvent *, WaAction *ac, bool focus) {
         diff = (y + menu->height + mstyle.border_width * 2) - height;
         if (diff > 0) y -= diff;
         if (y < 0) y = 0;
-        if ((x + menu->width + mstyle.border_width * 2) > width)
+        if ((x + menu->width + mstyle.border_width * 2) > (unsigned int) width)
             x = width - menu->width - mstyle.border_width * 2;
         if (x < 0) x = 0;
         menu->Map(x, y);
@@ -1019,7 +1019,7 @@ void WaScreen::MenuRemap(XEvent *, WaAction *ac, bool focus) {
         diff = (y + menu->height + mstyle.border_width * 2) - height;
         if (diff > 0) y -= diff;
         if (y < 0) y = 0;
-        if ((x + menu->width + mstyle.border_width * 2) > width)
+        if ((x + menu->width + mstyle.border_width * 2) > (unsigned int) width)
             x = width - menu->width - mstyle.border_width * 2;
         if (x < 0) x = 0;
         menu->ignore = true;

@@ -52,7 +52,7 @@
     [checkbox=DECORBORDER]    @FALSE (Border)           "decorborderon"    @TRUE (Border)           "decorborderoff"
     [checkbox=DECORALL]       @FALSE (All Decorations)  "decorallon"       @TRUE (All Decorations)  "decoralloff"
   [end]
-  [sub]     (Process Info) <!procinfo.pl \"\p\" \"\h\">
+  [sub]     (Process Info) <!procinfo.pl -host \"\h\" -pid \"\p\">
   [item]    (Raise)        "raise"
   [item]    (Lower)        "lower"
   [item]    (Kill Client)  "kill"

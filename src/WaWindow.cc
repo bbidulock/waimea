@@ -73,7 +73,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     frameacts = awinacts = pwinacts = titleacts = labelacts = handleacts =
         lgacts = rgacts = NULL;
     transient_for = (Window) 0;
-    cmd = host = pid = NULL;
+    host = pid = NULL;
     
     int i;
     bacts = new list<WaAction *>*[wascreen->wstyle.b_num];
@@ -214,7 +214,6 @@ WaWindow::~WaWindow(void) {
     XDestroyWindow(display, o_south);
     
     delete [] name;
-    if (cmd) delete [] cmd;
     if (host) delete [] host;
     if (pid) delete [] pid;
     if (classhint->res_name) XFree(classhint->res_name);
@@ -1930,7 +1929,7 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
         if (diff > 0) my -= diff;
         if (my < 0) my = 0;
         if ((mx + menu->width + wascreen->mstyle.border_width * 2) >
-            wascreen->width)
+            (unsigned int) wascreen->width)
             mx = wascreen->width - menu->width -
                 wascreen->mstyle.border_width * 2;
         if (mx < 0) mx = 0;
@@ -1978,7 +1977,7 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
         if (diff > 0) my -= diff;
         if (my < 0) my = 0;
         if ((mx + menu->width + wascreen->mstyle.border_width * 2) >
-            wascreen->width)
+            (unsigned int) wascreen->width)
             mx = wascreen->width - menu->width -
                 wascreen->mstyle.border_width * 2;
         if (mx < 0) mx = 0;

@@ -197,7 +197,7 @@ public:
 
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
     
-    char *name, *cmd, *host, *pid;
+    char *name, *host, *pid;
     bool has_focus, want_focus, mapped, dontsend, deleted, ign_config_req;
     Display *display;
     Waimea *waimea;

@@ -4,7 +4,7 @@
 .\" This manual page may be freely distributed and modified.
 .\" Author: David Reveman <c99drn@cs.umu.se>
 .\" 
-.TH WAIMEA 1 "Jun 5 2002" "0.3.3" "User Manual"
+.TH WAIMEA 1 "Aug 20 2002" "0.3.4" "User Manual"
 
 
 .SH NAME
@@ -96,7 +96,7 @@ resource file in the users home directory. If file doesn't exist,
 .I waimea
 falls back to 
 .I @pkgdatadir@/config, 
-the system wide config file. To force 
+the system wide configuration file. To force 
 .I waimea 
 to read a different configuration file use 
 .I --rcfile
@@ -152,7 +152,7 @@ Default value is
 .B  cacheMax:     Integer
 This tells 
 .I waimea 
-how much memory (in Kb) it may use to store cached pixmaps on the X server.
+how much memory (in KB) it may use to store cached pixmaps on the X server.
 If your machine runs short of memory, you may lower this value. 
 Default value is 
 .I 200.
@@ -166,7 +166,7 @@ to dither images on none TrueColor screens. Default value is
 
 .TP
 .B doubleClickInterval:     Integer
-Adjust the delay (in ms) between mouse clicks for 
+Adjust the delay (in milliseconds) between mouse clicks for 
 .I waimea
 to consider it a double click. Default value is 
 .I 300.
@@ -203,14 +203,14 @@ Default value is
 .I True.
 
 .PP
-Dockapp Holder Resources
+Dockappholder Resources
 .PP
-It is possible to have more than one dockapp holder running.
-First dockapp holder should be named 
+It is possible to have more than one dockappholder running.
+First dockappholder should be named 
 .I dock0
 and the second 
 .I dock1
-and so on. One dockapp holder is always running whether you have a
+and so on. One dockappholder is always running whether you have a
 .I dock0
 line in your 
 .I CONFIGFILE  
@@ -218,14 +218,14 @@ or not.
 
 .TP
 .B dock[num].geometry:     OffsetString
-Define dockapp holder position, X offset string of form:
+Define dockappholder position, X offset string of form:
 [{+-}<xoffset>{+-}<yoffset>]. See 
 .BR X(1).
 
 .TP
 .B dock[num].order:     OrderList
 A whitespace separated list describing how to order the
-dockapps in the dockapp holder. Dockapps can be ordered
+dockapps in the dockappholder. Dockapps can be ordered
 by window name and class. For window name use 
 .I "name[NAME]" 
 , NAME is the window name. For window class use 
@@ -237,7 +237,7 @@ Example:
 dock0.order:    name[cpumeter] class[pager] UNKNOWN
 
 This will put dockapp window named cpumeter at the first
-position in dockapp holder and pager dockapp at second
+position in dockappholder and pager dockapp at second
 position. All dockapp windows that doesn't match any 
 .I "name[NAME]"
 or
@@ -248,28 +248,28 @@ string.
 The 
 .I UNKNOWN 
 string MUST exist in ONE AND ONLY ONE of the
-dockapp holder order resources.
+dockappholder order resources.
 
 .TP
 .B dock[num].direction:     Direction
-Dockapp holder direction {Vertical, Horizontal}
+Dockappholder direction {Vertical, Horizontal}
 
 .TP
 .B dock[num].centered:     Boolean
-True if you want the dockapp holder to be centered. If
+True if you want the dockappholder to be centered. If
 direction is Vertical, yoffset from geometry resource will
-be ignored and dockapp holder will be centered vertically.
+be ignored and dockappholder will be centered vertically.
 If direction is Horizontal, xoffset from geometry resource
-will be ignored and dockapp holder will be centered
+will be ignored and dockappholder will be centered
 horizontally.
 
 .TP
 .B dock[num].gridSpace:     Integer
-Number of pixels spacing between dockapps in dockapp holder.
+Number of pixels spacing between dockapps in dockappholder.
 
 .TP
 .B dock[num].stacking:     StackingType
-Stacking order for dockapp holder {AlwaysOnTop, AlwaysAtBottom}.
+Stacking order for dockappholder {AlwaysOnTop, AlwaysAtBottom}.
 
 .TP
 .B dock[num].inworkspace:     Boolean
@@ -301,7 +301,7 @@ for this.
 .PP
 .I Waimea 
 allows you to configure the style of menus and the windows.
-Dockapp holders uses the same style as the windows.
+Dockappholders uses the same style as the windows.
 .PP 
 Here are the different types of values:
 .TP
@@ -565,7 +565,7 @@ or
 .br
 .B window.*.focus.pixmap:     Pixmap
 .RS
-Texure type, opacity level, colors and pixmap used for focused window textures.
+Texture type, opacity level, colors and pixmap used for focused window textures.
 .RE
 
 .PP
@@ -579,7 +579,7 @@ Texure type, opacity level, colors and pixmap used for focused window textures.
 .br
 .B window.*.unfocus.pixmap:     Pixmap
 .RS
-Texure type, opacity level and colors used for unfocused window textures.
+Texture type, opacity level and colors used for unfocused window textures.
 .RE
 
 .PP
@@ -665,7 +665,7 @@ or
 .br
 .B menu.*.pixmap:     Pixmap
 .RS
-Texure type, opacity level and colors used for menu textures.
+Texture type, opacity level and colors used for menu textures.
 .RE
 
 .PP
@@ -738,7 +738,7 @@ the rc-file.
 .br
 .B dockappholder.dock[ID].frame.pixmap:     Pixmap
 .RS
-Texure type, opacity level and colors used for dockappholder 'dock[ID]'s frame 
+Texture type, opacity level and colors used for dockappholder 'dock[ID]'s frame 
 texture.
 .RE
 
@@ -809,7 +809,7 @@ DECORALL
 None
 .br
 
-When set to None titlebar button will only have one state (false state).
+When set to None, titlebar button will only have one state (false state).
 Default is None.
 
 .PP
@@ -944,9 +944,9 @@ and the control modifier is not active.
 also supports delayed actions. A delay is defined within brackets at the
 end of the action line. A delay definition consists of a delay time in 
 milliseconds followed by an optional delay break event list. The delay 
-break list is a list of events that if occuring during the delay time will
-discard the action. The delay time and the delay break list are seperated 
-with a colon and the events in the delay break list are seperated with
+break list is a list of events that if occurring during the delay time will
+discard the action. The delay time and the delay break list are separated 
+with a colon and the events in the delay break list are separated with
 pipe signs. e.g.:
 .nf
 
@@ -1386,7 +1386,11 @@ MUST have an X11 geometry string as parameter:
 [<width>{xX}<height>][{+-}<xoffset>{+-}<yoffset>] See
 .BR X(1).
 Sets window geometry. moveresize action moves window to a actual screen 
-position. moveresizevirtual action moves window to a virtual screen position.
+position. moveresizevirtual action moves window to a virtual screen
+position. A 'W' character in the OffsetString is replaced with
+screenwidth. A 'H' character in the OffsetString is replace with
+screenheight.
+
 .RE
 
 .PP
@@ -1621,7 +1625,7 @@ with an [end] tag. Between the [start] and the [end] tag a number of
 The looks and action lists are the only things separating the first three 
 menu item types. All three of these tags could be
 followed by a (string), "string", {string} and <string>.
-A [checkbox] tag is basicly an [item] tag with two states.
+A [checkbox] tag is basically an [item] tag with two states.
 
 .PP
 .I Waimea
@@ -1688,7 +1692,7 @@ contain environment variables. e.g.:
 .fi
 $USER will be replaced with USER environment variable. 
 .PP
-Menu mapped by event occuring on a window.* window can contain
+Menu mapped by event occurring on a window.* window can contain
 special window info character sequences. These character sequences
 are expanded with the current window info when menu is mapped. e.g.:
 .nf
@@ -1705,13 +1709,13 @@ Will be expanded to:
 Where windowname is the actual class name of the window.
 .br
 These are the character sequences that
-.I waimea recognizes:
+.I waimea 
+recognizes:
 .nf
 
-"\\l" Window class
+"\\c" Window class
 "\\n" Window class name
 "\\h" Host name for window owner
-"\\c" Command line that started window owner
 "\\p" PID of window owner
 
 .fi
@@ -1786,8 +1790,8 @@ line is executed and a new menu is generated. A dynamic menu is defined
 as a submenu link in the
 .I MENUFILE
 or as a menu_name parameter to one of the 
-.I MenuMap actions.
-A dynamic menu definition must start with a '!' character and be
+.I menumap 
+actions. A dynamic menu definition must start with a '!' character and be
 followed by a command line. e.g.:
 .nf
 
@@ -1826,7 +1830,7 @@ section for further details.
 
 .TP
 .B @pkgdatadir@/config
-The system wide config file. See
+The system wide configuration file. See
 .I "CONFIG FILE"
 section for further details.
 

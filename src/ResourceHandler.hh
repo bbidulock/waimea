@@ -232,6 +232,7 @@ public:
 
 char *strtrim(char *);
 char *strwithin(char *, char, char, bool = false);
+char *environment_expansion(char *s);
 char *param_eval(char *, char *, WaScreen *);
 
 #endif // __ResourceHandler_hh

@@ -371,7 +371,7 @@ WaMenu *Waimea::CreateDynamicMenu(char *name) {
         rh->menu_file = new char[strlen(*tmp_argv) + 8];
         sprintf(rh->menu_file, "%s:STDOUT", *tmp_argv);
         dmenu = new WaMenu(wastrdup(name));
-        dmenu->dynamic = true;
+        dmenu->dynamic = dmenu->dynamic_root = true;
         dmenu = rh->ParseMenu(dmenu, fdopen(m_pipe[0], "r"));
         close(m_pipe[0]);
         if (waitpid(pid, &status, 0) == -1) {
@@ -663,7 +663,7 @@ char **commandline_to_argv(char *s, char **tmp_argv) {
  */
 char *expand(char *org, WaWindow *w) {
     int i;
-    char *insert, *expanded, *tmp, t;
+    char *insert, *expanded, *tmp;
     bool cont, found = false;
 
     if (! org) return NULL;
@@ -678,10 +678,6 @@ char *expand(char *org, WaWindow *w) {
                 if (w->pid) insert = w->pid;
                 else insert = "";
                 break;
-            case 'c':
-                if (w->cmd) insert = w->cmd;
-                else insert = "";
-                break;
             case 'h':
                 if (w->host) insert = w->host;
                 else insert = "";
@@ -690,7 +686,7 @@ char *expand(char *org, WaWindow *w) {
                 if (w->classhint->res_name) insert = w->classhint->res_name;
                 else insert = "";
                 break;
-            case 'l':
+            case 'c':
                 if (w->classhint->res_class) insert = w->classhint->res_class;
                 else insert = "";
                 break;

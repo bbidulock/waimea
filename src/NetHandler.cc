@@ -133,7 +133,7 @@ NetHandler::~NetHandler(void) {
 void NetHandler::GetWMHints(WaWindow *ww) {
     XTextProperty text_prop;
     char **list, *tmp_name;
-    int num, status;
+    int num;
     
     ww->state = NormalState;
     XGrabServer(display);
@@ -154,18 +154,6 @@ void NetHandler::GetWMHints(WaWindow *ww) {
                 ww->host = wastrdup(*list);
                 XFreeStringList(list);
             }
-        }
-        num = 0;
-        if (XGetCommand(ww->display, ww->id, &list, &num)) {
-            int len = 0;
-            int i;
-            for (i = 0; i < num; i++)
-                len += strlen(list[i]) + 3;
-            ww->cmd = new char[len + 1];
-            ww->cmd[0] = '\0';
-            for (i = 0; i < num; i++)
-                sprintf(ww->cmd, "%s \"%s\"", ww->cmd, list[i]);
-            XFreeStringList(list);
         }
     }
     XUngrabServer(display);
@@ -794,7 +782,7 @@ void NetHandler::GetWmPid(WaWindow *ww) {
                            &real_format, &items_read, &items_left, 
                            (unsigned char **) &data) == Success && 
         items_read) {
-        sprintf(tmp, "%d" , *data);
+        sprintf(tmp, "%d" , (unsigned int) *data);
         ww->pid = new char[strlen(tmp) + 1];
         sprintf(ww->pid, "%s" , tmp);
         XFree(data);
