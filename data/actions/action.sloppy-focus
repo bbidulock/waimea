@@ -1,7 +1,7 @@
 ! Waimea Action configuration file
 !
 ! Focus model:   Sloppy-focus
-! Move method:	  Opaque
+! Move method:   Opaque
 ! Move window:   Left mouse button click on titlebar
 !                Left mouse button click on handlebar 
 !                Alt + left mouse button click anywhere in window
@@ -42,7 +42,7 @@ window.*.3: StartOpaqueResizeRight : ButtonPress = Button3 & Mod1Mask
 window.*.4: EndMoveResize          : ButtonRelease = Button1 & MoveResizeMask
 window.*.5: EndMoveResize          : ButtonRelease = Button3 & MoveResizeMask
 window.*.6: EndMoveResize          : ButtonPress = Button1 & MoveResizeMask
-window.*.7: Lower                  : ButtonPress = Button2 & Move1Mask
+window.*.7: Lower                  : ButtonPress = Button2 & Mod1Mask
 !
 window.frame.8:  Focus           : EnterNotify
 window.frame.9:  Raise           : ButtonPress = Button1 & !Mod1Mask
@@ -85,9 +85,9 @@ window.client.active.13: Kill                       : KeyPress = F10 & Mod1Mask
 window.client.active.14: TaskSwitcher               : KeyPress = Tab & Mod1Mask
 window.client.active.15: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
 !
-window.client.passive.8:  Raise : MapRequest
-window.client.passive.9:  Focus : MapRequest & ControlMask
-window.client.passive.10: Move  : MapRequest & ControlMask
+window.client.passive.8:  Raise     : MapRequest
+window.client.passive.9:  Focus     : MapRequest & ControlMask
+window.client.passive.10: StartMove : MapRequest & ControlMask
 !
 window.closebutton.8: Close : ButtonRelease = AnyButton
 !

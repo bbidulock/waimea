@@ -43,7 +43,7 @@ window.*.3: StartOpaqueResizeRight : ButtonPress = Button3 & Mod1Mask
 window.*.4: EndMoveResize          : ButtonRelease = Button1 & MoveResizeMask
 window.*.5: EndMoveResize          : ButtonRelease = Button3 & MoveResizeMask
 window.*.6: EndMoveResize          : ButtonPress = Button1 & MoveResizeMask
-window.*.7: Lower                  : ButtonPress = Button2 & Move1Mask
+window.*.7: Lower                  : ButtonPress = Button2 & Mod1Mask
 !
 window.frame.8:  Focus           : ButtonPress = AnyButton
 window.frame.9:  Raise           : ButtonPress = Button1 & !Mod1Mask
@@ -86,12 +86,12 @@ window.client.active.14: TaskSwitcher               : KeyPress = Tab & Mod1Mask
 window.client.active.15: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
 window.client.active.16: *Raise                     : ButtonPress = AnyButton
 !
-window.client.passive.8:  *Focus : ButtonPress = AnyButton
-window.client.passive.9:  *Raise : ButtonPress = AnyButton
-window.client.passive.10: Focus  : MapRequest & !ControlMask
-window.client.passive.11: Raise  : MapRequest
-window.client.passive.12: Focus  : MapRequest & ControlMask
-window.client.passive.13: Move   : MapRequest & ControlMask
+window.client.passive.8:  *Focus    : ButtonPress = AnyButton
+window.client.passive.9:  *Raise    : ButtonPress = AnyButton
+window.client.passive.10: Focus     : MapRequest & !ControlMask
+window.client.passive.11: Raise     : MapRequest
+window.client.passive.12: Focus     : MapRequest & ControlMask
+window.client.passive.13: StartMove : MapRequest & ControlMask
 !
 window.closebutton.8:  Focus : ButtonPress = AnyButton & !Mod1Mask
 window.closebutton.9:  Raise : ButtonPress = AnyButton & !Mod1Mask
