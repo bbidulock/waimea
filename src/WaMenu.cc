@@ -35,7 +35,7 @@ WaMenu::WaMenu(char *n) {
     
     height = 0;
     width = 0;
-    mapped = focus = False;
+    mapped = has_focus = False;
     root_menu = NULL;
     root_item = NULL;
     wf = (Window) 0;
@@ -309,6 +309,7 @@ void WaMenu::Map(int mx, int my) {
     x = mx;
     y = my;
     mapped = True;
+    has_focus = False;
     XMoveWindow(display, frame, x, y);
     XMapSubwindows(display, frame);
     XMapWindow(display, frame);
@@ -335,6 +336,7 @@ void WaMenu::ReMap(int mx, int my) {
     x = mx;
     y = my;
     mapped = True;
+    has_focus = False;
     XMoveWindow(display, frame, x, y);
     XMapSubwindows(display, frame);
     XMapWindow(display, frame);
@@ -385,7 +387,6 @@ void WaMenu::Unmap(bool focus) {
             (*it)->DeHilite();
     }
     XUnmapWindow(display, frame);
-    mapped = False;
 
     if (focus) {
         // Bad!!
@@ -398,7 +399,7 @@ void WaMenu::Unmap(bool focus) {
         else
             root_item->DeHilite();
     }
-    focus = False;
+    mapped = False;
 }
 
 /**
@@ -577,7 +578,7 @@ void WaMenu::FocusFirst(void) {
 WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
     label = s;
     id = (Window) 0;
-    func_mask = height = width = dy = realheight = focus = 0;
+    func_mask = height = width = dy = realheight = 0;
     wfunc = NULL;
     rfunc = NULL;
     mfunc = NULL;
@@ -703,7 +704,7 @@ void WaMenuItem::Hilite(void) {
     
     list<WaMenuItem *>::iterator it = menu->item_list->begin();
     for (; it != menu->item_list->end(); ++it) {        
-        if ((*it)->hilited && focus)
+        if ((*it)->hilited && menu->has_focus)
             if (!(((*it)->func_mask & MenuSubMask) && (*it)->submenu->mapped))
                 (*it)->DeHilite();
     }
@@ -845,7 +846,7 @@ void WaMenuItem::Exec(XEvent *, WaAction *) {
 void WaMenuItem::Func(XEvent *e, WaAction *ac) {
     hash_map<int, WindowObject *>::iterator it;
     Window func_win;
-
+    
     if (wf) func_win = wf;
     else func_win = menu->wf;
     if ((func_mask & MenuWFuncMask) &&
@@ -881,7 +882,7 @@ void WaMenuItem::Lower(XEvent *, WaAction *) {
  */
 void WaMenuItem::Focus(void) {
     XSetInputFocus(menu->display, id, RevertToPointerRoot, CurrentTime);
-    menu->focus = focus = True;
+    menu->has_focus = True;
     Hilite();
 }
 
@@ -1165,7 +1166,7 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     }
     if (ed->type == EnterNotify) {
         Hilite();
-        if (menu->focus && type != MenuTitleType) Focus();
+        if (menu->has_focus && type != MenuTitleType) Focus();
     }
     else if (ed->type == LeaveNotify && type == MenuItemType)
         DeHilite();
@@ -1203,7 +1204,6 @@ void TaskSwitcher::Build(WaScreen *wascrn) {
         item_list->pop_back();
     }
     built = False;
-    focus = True;
    
     m = new WaMenuItem("Window List");
     m->type = MenuTitleType;

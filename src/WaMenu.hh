@@ -72,7 +72,7 @@ public:
         sub_pixel, subhilite_pixel;
     WaMenu *root_menu;
     WaMenuItem *root_item;
-    bool tasksw, focus;
+    bool tasksw, has_focus;
 
     int ftype; 
     Window wf;
@@ -153,7 +153,7 @@ public:
     
     
     int func_mask, height, width, dy, realheight;
-    bool hilited, focus;
+    bool hilited;
     char *label, *exec, *sub;
     WwActionFn wfunc;
     MenuActionFn mfunc;
