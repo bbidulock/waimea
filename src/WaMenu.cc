@@ -262,9 +262,7 @@ void WaMenu::Build(WaScreen *screen) {
     attrib_set.border_pixel = wascreen->mstyle.border_color.getPixel();
     attrib_set.colormap = wascreen->colormap;
     attrib_set.override_redirect = True;
-    attrib_set.event_mask =  ButtonPressMask | ButtonReleaseMask |
-        EnterWindowMask | LeaveWindowMask | PointerMotionMask | 
-        ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask;
+    attrib_set.event_mask =  NoEventMask;
     
     if (! built) {
         frame = XCreateWindow(display, wascreen->id, 0, 0, width, height,
@@ -333,6 +331,11 @@ void WaMenu::Build(WaScreen *screen) {
 void WaMenu::Map(int mx, int my) {
     if (tasksw && item_list->size() < 2) return;
     if (mapped) return;
+
+    int mask = ButtonPressMask | ButtonReleaseMask |
+        EnterWindowMask | LeaveWindowMask | PointerMotionMask | 
+        ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask;
+    
     x = mx;
     y = my;
     mapped = True;
@@ -342,8 +345,10 @@ void WaMenu::Map(int mx, int my) {
     XMapWindow(display, frame);
     waimea->WaRaiseWindow(frame);
     list<WaMenuItem *>::iterator it = item_list->begin();
-    for (; it != item_list->end(); ++it)
+    for (; it != item_list->end(); ++it) {
         (*it)->DrawFg();
+        XSelectInput(display, (*it)->id, mask);
+    }
     XUngrabPointer(display, CurrentTime);
 }
 
@@ -359,6 +364,11 @@ void WaMenu::Map(int mx, int my) {
  */
 void WaMenu::ReMap(int mx, int my) {
     if (tasksw && item_list->size() < 2) return;
+
+    int mask = ButtonPressMask | ButtonReleaseMask |
+        EnterWindowMask | LeaveWindowMask | PointerMotionMask | 
+        ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask;
+    
     if (mapped) Move(mx - x, my - y);
     x = mx;
     y = my;
@@ -369,8 +379,10 @@ void WaMenu::ReMap(int mx, int my) {
     XMapWindow(display, frame);
     waimea->WaRaiseWindow(frame);
     list<WaMenuItem *>::iterator it = item_list->begin();
-    for (; it != item_list->end(); ++it)
+    for (; it != item_list->end(); ++it) {
         (*it)->DrawFg();
+        XSelectInput(display, (*it)->id, mask);
+    }
     XUngrabPointer(display, CurrentTime);
 }
 
@@ -410,7 +422,8 @@ void WaMenu::Unmap(bool focus) {
     XUnmapWindow(display, frame);
 
     list<WaMenuItem *>::iterator it = item_list->begin();
-    for (; it != item_list->end(); ++it) {        
+    for (; it != item_list->end(); ++it) {
+        XSelectInput(display, (*it)->id, NoEventMask);
         if ((*it)->hilited) {
             if ((*it)->func_mask & MenuSubMask) {
                 if (! (*it)->submenu->mapped)
@@ -593,9 +606,6 @@ void WaMenu::Raise(void) {
  * Set input focus to first element of type [item] or [sub] in menu.
  */
 void WaMenu::FocusFirst(void) {
-    XEvent e;
-    while (XCheckTypedEvent(display, EnterNotify, &e));
-    
     list<WaMenuItem *>::iterator it = item_list->begin();
     for (; it != item_list->end() &&
              (*it)->type == MenuTitleType; ++it);
