@@ -271,6 +271,15 @@ int wmrunningerror(Display *d, XErrorEvent *) {
  * @param signal The signal we received
  */
 void signalhandler(int signal) {
+    struct sigaction act;
+    
+    act.sa_handler = signalhandler;
+    act.sa_flags = 0;
+    sigaction(SIGTERM, &act, NULL);
+    sigaction(SIGINT, &act, NULL);
+    sigaction(SIGHUP, &act, NULL);
+    sigaction(SIGCHLD, &act, NULL);
+    
     switch(signal) {
         case SIGINT:
         case SIGTERM:

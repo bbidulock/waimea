@@ -12,22 +12,9 @@
  */
 
 #include <stdio.h>
-#include <getopt.h>
 #include <hash_set>
 
 #include "Waimea.hh"
-
-static struct option const long_options[] = {
-  {"display", required_argument, NULL, 'd'},
-  {"rcfile", required_argument, NULL, 'r'},
-  {"stylefile", required_argument, NULL, 's'},
-  {"actionfile", required_argument, NULL, 'a'},
-  {"menufile", required_argument, NULL, 'm'},
-  {"usage", no_argument, NULL, 'u'},
-  {"help", no_argument, NULL, 'h'},
-  {"version", no_argument, NULL, 'v'},
-  {NULL, 0, NULL, 0}
-};
 
 void usage(void);
 void help(void);
@@ -46,44 +33,57 @@ char program_name[128];
  * @return     0 on successful execution else >0
  */
 int main(int argc, char **argv) {
-    int opt;
     struct waoptions options;
     sprintf(program_name, "%s", argv[0]);
+    int i;
 
     options.menufile = options.actionfile = options.stylefile =
         options.rcfile = options.display = NULL;
-    
-    while ((opt = getopt_long(argc, argv, "", long_options, NULL)) != -1) {
-        switch (opt) {
-            case 'd':
-                options.display = optarg;
-                break;
-            case 'r':
-                options.rcfile = optarg;
-                break;
-            case 'a':
-                options.actionfile = optarg;
-                break;
-            case 's':
-                options.stylefile = optarg;
-                break;
-            case 'm':
-                options.menufile = optarg;
-                break;
-            case 'u':
-                usage();
-                return 0 ;
-            case 'h':
-                help();
-                return 0;
-            case 'v':
-                cout << PACKAGE << " " << VERSION << endl;
-                return 0;
-            default:
-                usage();
-                return 1;
+
+    for (i = 1; i < argc; i++) {
+        if (! strcmp(argv[i], "--display")) {
+            if (i + 1 < argc) options.display = argv[i++ + 1];
+            else { cerr << program_name << ": option `" <<
+                     argv[i] << "' requires an argument" << endl; return 1; }
+        } else if (! strncmp(argv[i], "--display=", 10) &&
+                   strlen(argv[i]) >= 11) { options.display = argv[i] + 10;
+        } else if (! strcmp(argv[i], "--rcfile")) {
+            if (i + 1 < argc) options.rcfile = argv[i++ + 1];
+            else { cerr << program_name << ": option `" <<
+                       argv[i] << "' requires an argument" << endl; return 1; }
+        } else if (! strncmp(argv[i], "--rcfile=", 9) &&
+                   strlen(argv[i]) >= 10) { options.rcfile = argv[i] + 9;
+        } else if (! strcmp(argv[i], "--stylefile")) {
+            if (i + 1 < argc) options.stylefile = argv[i++ + 1];
+            else { cerr << program_name << ": option `" <<
+                       argv[i] << "' requires an argument" << endl; return 1; }
+        } else if (! strncmp(argv[i], "--stylefile=", 12) &&
+                   strlen(argv[i]) >= 13) { options.stylefile = argv[i] + 12;
+        } else if (! strcmp(argv[i], "--actionfile")) {
+            if (i + 1 < argc) options.actionfile = argv[i++ + 1];
+            else { cerr << program_name << ": option `" <<
+                       argv[i] << "' requires an argument" << endl; return 1; }
+        } else if (! strncmp(argv[i], "--actionfile=", 13) &&
+                   strlen(argv[i]) >= 14) { options.actionfile = argv[i] + 13;
+        } else if (! strcmp(argv[i], "--menufile")) {
+            if (i + 1 < argc) options.menufile = argv[i++ + 1];
+            else { cerr << program_name << ": option `" <<
+                       argv[i] << "' requires an argument" << endl; return 1; }
+        } else if (! strncmp(argv[i], "--menufile=", 11) &&
+                   strlen(argv[i]) >= 12) {
+            options.menufile = argv[i] + 11;
+        } else if (! strcmp(argv[i], "--usage")) {
+            usage(); return 0;
+        } else if (! strcmp(argv[i], "--help")) {
+            help(); return 0;
+        } else if (! strcmp(argv[i], "--version")) {
+            cout << PACKAGE << " " << VERSION << endl; return 0;
+        } else {
+            cerr << program_name << ": unrecognized option `" <<
+                argv[i] << "'" << endl; usage(); return 1;
         }
     }
+    
     Waimea *waimea = new Waimea(argv, &options);
     waimea->eh->EventLoop(new hash_set<int>);
     
