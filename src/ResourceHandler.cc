@@ -572,6 +572,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     ReadDatabaseFont("menu.checkbox.false.font",
                      "Menu.Checkbox.False.Font",
                      &mstyle->cf_fontname, mstyle->ct_fontname);
+    
 #ifdef XFT
     if (XrmGetResource(database, "window.xftfontsize",
                        "Window.XftFontSize", &value_type, &value)) {
@@ -653,6 +654,7 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     ReadDatabaseFont("menu.checkbox.false.xftfont",
                      "Menu.Checkbox.False.xftFont",
                      &mstyle->cf_xftfontname, mstyle->f_xftfontname);
+
 #endif // XFT
     ReadDatabaseTexture("window.title.focus", "Window.Title.Focus",
                         &wstyle->t_focus, WhitePixel(display, screen), ic,
@@ -1235,6 +1237,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     list<StrComp *>::iterator it;
     
     act_tmp = new WaAction;
+    act_tmp->replay = False;
     
     line = wastrdup((char *) s);
     
@@ -1242,6 +1245,10 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     mod    = strchr(line, '&') ? 1: 0;
     token  = strtok(line, ":");
     token  = strtrim(token);
+    if (*token == '*') {
+        act_tmp->replay = True;
+        token++;
+    }
     
     tmp_par = wastrdup(token);
     par = tmp_par;

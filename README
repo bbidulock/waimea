@@ -336,6 +336,10 @@ ACTIONS
 		alwaysatbottomoff
 		alwaysatbottomtoggle
 
+	All actions for window.client.* can be prefixed with a '*' character
+	to make them pass-through actions (Events matching pass-throught actions
+	will also be sent to the client window).
+
         List of actions for menu.* windows:
                 unlink
                 mapsub

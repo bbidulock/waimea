@@ -39,6 +39,7 @@ public:
 
     void EventLoop(hash_set<int> *, XEvent *);
     void EvExpose(XExposeEvent *);
+    void EvFocus(XFocusChangeEvent *);
     void EvUnmapDestroy(XEvent *);
     void EvConfigureRequest(XConfigureRequestEvent *);
     void EvAct(XEvent *, Window);
@@ -51,7 +52,6 @@ public:
 
 private:
     void EvProperty(XPropertyEvent *);
-    void EvFocus(XFocusChangeEvent *);
     void EvColormap(XColormapEvent *);
     void EvMapRequest(XMapRequestEvent *);
     void EvClientMessage(XEvent *);

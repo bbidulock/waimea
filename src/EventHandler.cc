@@ -455,6 +455,7 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
  */
 void EventHandler::EvUnmapDestroy(XEvent *e) {
     DockappHandler *dh;
+    WaAction *ac;
     
     hash_map<Window, WindowObject *>::iterator it;
     if ((it = waimea->window_table->find((e->type == UnmapNotify)?
@@ -465,6 +466,8 @@ void EventHandler::EvUnmapDestroy(XEvent *e) {
             if (e->type == DestroyNotify)
                 ((WaWindow *) (*it).second)->deleted = True;
             delete ((WaWindow *) (*it).second);
+            if (waimea->wascreen->focus) waimea->wascreen->Focus(e, ac);
+            else waimea->wawindow_list->front()->Focus(False);
         }
         else if (((*it).second)->type == DockAppType) {
             if (e->type == DestroyNotify)

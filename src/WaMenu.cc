@@ -405,7 +405,8 @@ void WaMenu::Move(int dx, int dy) {
  * @param focus True if we should set focus to root item
  */
 void WaMenu::Unmap(bool focus) {
-    XEvent e;    
+    XEvent e;
+    WaAction *ac;
 
     XUnmapWindow(display, frame);
 
@@ -427,8 +428,10 @@ void WaMenu::Unmap(bool focus) {
         else
             root_item->DeHilite();
     }
-    else
-        waimea->wawindow_list->front()->Focus(False);
+    else {
+        if (wascreen->focus) wascreen->Focus(&e, ac);
+        else waimea->wawindow_list->front()->Focus(False);
+    }
     
     root_item = NULL;
     mapped = False;
@@ -666,9 +669,11 @@ void WaMenuItem::DrawFg(void) {
 #else // ! XFT
     cbox_gc = &menu->wascreen->mstyle.cf_text_gc;
 #endif // XFT
+    
     cb_y = menu->wascreen->mstyle.cf_y_pos;
-    cbox = menu->wascreen->mstyle.checkbox_false;								    
+    cbox = menu->wascreen->mstyle.checkbox_false;
     if (cb) UpdateCBox();
+    
 #ifdef XFT    
     XGlyphInfo extents;
     if (type == MenuCBItemType) {
@@ -682,6 +687,7 @@ void WaMenuItem::DrawFg(void) {
                             strlen(label)) + 20;
     }
 #endif // XFT
+    
     if (type == MenuTitleType)
         justify = menu->wascreen->mstyle.t_justify;
     else
@@ -704,6 +710,7 @@ void WaMenuItem::DrawFg(void) {
                 x = (menu->width - menu->cb_width) - (width - 10);
             else x = (menu->width - menu->extra_width) - (width - 10);
     }
+
 #ifdef XFT
     XftFont *font;
     XftColor *xftcolor;
@@ -766,6 +773,7 @@ void WaMenuItem::DrawFg(void) {
                     strlen(cbox));
     }
 #endif // XFT
+    
 }
 
 /**

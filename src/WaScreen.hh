@@ -209,6 +209,7 @@ public:
     ScreenEdge *west, *east, *north, *south;
     Workarea *workarea;
     Window wm_check;
+    bool focus;
     
     list<WMstrut *> *strut_list;
     list<DockappHandler *> *docks;

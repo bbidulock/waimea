@@ -52,6 +52,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     waimea = wa;
     net = waimea->net;
     rh = wa->rh;
+    focus = True;
     
     eventmask = SubstructureRedirectMask | StructureNotifyMask |
         PropertyChangeMask | ColormapChangeMask | KeyPressMask |
@@ -780,6 +781,7 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
  * Sets the keyboard input focus to the WaScreens root window.
  */
 void WaScreen::Focus(XEvent *, WaAction *) {
+    focus = True;
     XSetInputFocus(display, id, RevertToPointerRoot, CurrentTime);
 }
 

@@ -584,10 +584,10 @@ void WaWindow::UpdateGrabs(void) {
                 XGrabButton(display, (*it)->detail ? (*it)->detail: AnyButton,
                             (*it)->mod, id, True, ButtonPressMask |
                             ButtonReleaseMask | ButtonMotionMask,
-                            GrabModeAsync, GrabModeAsync, None, None);
+                            GrabModeSync, GrabModeSync, None, None);                
             } else if ((*it)->type == KeyPress || (*it)->type == KeyRelease) {
                 XGrabKey(display, (*it)->detail ? (*it)->detail: AnyKey,
-                         (*it)->mod, id, True, GrabModeAsync, GrabModeAsync); 
+                         (*it)->mod, id, True, GrabModeSync, GrabModeSync); 
             }
         }
     }
@@ -1357,8 +1357,9 @@ void WaWindow::Focus(bool vis) {
                     while (XCheckTypedEvent(display, EnterNotify, &e));
                 }
             }
-            XSetInputFocus(display, id, RevertToPointerRoot, CurrentTime);
             XInstallColormap(display, attrib.colormap);
+            XSetInputFocus(display, id, RevertToPointerRoot, CurrentTime);
+            wascreen->focus = False;
             waimea->wawindow_list->remove(this);
             waimea->wawindow_list->push_front(this);
         }
@@ -2470,20 +2471,39 @@ void WaWindow::AlwaysatbottomToggle(XEvent *e, WaAction *ac) {
  */
 void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
                 int etype) {
+    XEvent fev;
+    bool replay = False, match = False;
     list<WaAction *>::iterator it = acts->begin();
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {
+            match = True;
+            if ((*it)->replay) replay = True;
             if ((*it)->exec)
                 waexec((*it)->exec, wascreen->displaystring);
             else
                 ((*this).*((*it)->winfunc))(e, *it);
         }
     }
+    if (ed->type == DoubleClick && ! match) replay = True;
+    XSync(display, False);
+    while (XCheckTypedEvent(display, FocusOut, &fev))
+        waimea->eh->EvFocus(&fev.xfocus);
+    while (XCheckTypedEvent(display, FocusIn, &fev))
+        waimea->eh->EvFocus(&fev.xfocus);
     switch (etype) {
         case WindowType:
             if (ed->type == MapRequest) {
                 net->SetState(this, NormalState);
                 net->SetVirtualPos(this);
+            }
+            if (ed->type == ButtonPress || ed->type == ButtonRelease ||
+                ed->type == DoubleClick) {
+                if (replay) XAllowEvents(display, ReplayPointer, e->xbutton.time);
+                else XAllowEvents(display, AsyncPointer, e->xbutton.time);
+            }
+            if (ed->type == KeyPress || ed->type == KeyRelease) {
+                if (replay) XAllowEvents(display, ReplayKeyboard, e->xbutton.time);
+                else XAllowEvents(display, AsyncKeyboard, e->xbutton.time);
             }
             break;
         case CButtonType:

@@ -49,6 +49,7 @@ struct _WaAction {
     char *exec;
     char *param;
     unsigned int type, detail, mod, nmod;
+    bool replay;
 };
 
 struct _DockStyle {
