@@ -30,6 +30,8 @@ struct _EventDetail {
     unsigned int type, mod, detail;
 };
 
+#define MoveResizeMask (1L << 25)
+
 #define DoubleClick 36
 
 class EventHandler {
@@ -38,23 +40,25 @@ public:
     virtual ~EventHandler(void);
 
     void EventLoop(hash_set<int> *, XEvent *);
+    void HandleEvent(XEvent *);
     void EvExpose(XExposeEvent *);
     void EvFocus(XFocusChangeEvent *);
     void EvUnmapDestroy(XEvent *);
     void EvConfigureRequest(XConfigureRequestEvent *);
-    void EvAct(XEvent *, Window);
-
-    EventDetail ed;
+    void EvAct(XEvent *, Window, EventDetail *);
+    
     XEvent *event;
     hash_set<int> *empty_return_mask;
     hash_set<int> *moveresize_return_mask;
     hash_set<int> *menu_viewport_move_return_mask;
 
+    int move_resize;
+
 private:
     void EvProperty(XPropertyEvent *);
     void EvColormap(XColormapEvent *);
     void EvMapRequest(XMapRequestEvent *);
-    void EvClientMessage(XEvent *);
+    void EvClientMessage(XEvent *, EventDetail *);
     
     Waimea *waimea;
     ResourceHandler *rh;

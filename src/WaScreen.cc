@@ -719,14 +719,19 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
     Window w;
     unsigned int ui;
     list<WaWindow *>::iterator it;
+
+    if (waimea->eh->move_resize != EndMoveResizeType) return;
+    waimea->eh->move_resize = MoveOpaqueType;
     
     XQueryPointer(display, id, &w, &w, &px, &py, &i, &i, &ui);
     
     maprequest_list = new list<XEvent *>;
-    XGrabPointer(display, id, True, ButtonReleaseMask |
-                 ButtonPressMask | PointerMotionMask | EnterWindowMask |
-                 LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
-                 waimea->move_cursor, CurrentTime);
+    XGrabPointer(display, id, True, ButtonReleaseMask | ButtonPressMask |
+                 PointerMotionMask | EnterWindowMask | LeaveWindowMask,
+                 GrabModeAsync, GrabModeAsync, None, waimea->move_cursor,
+                 CurrentTime);
+    XGrabKeyboard(display, id, True, GrabModeAsync, GrabModeAsync,
+                  CurrentTime);
     for (;;) {
         waimea->eh->EventLoop(waimea->eh->menu_viewport_move_return_mask,
                               &event);
@@ -743,17 +748,26 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                 break;
             case LeaveNotify:
             case EnterNotify:
-                break;
-            case DestroyNotify:
-            case UnmapNotify:
-                waimea->eh->EvUnmapDestroy(&event);
+                it = waimea->wawindow_list->begin();
+                for (; it != waimea->wawindow_list->end(); ++it) {
+                    (*it)->dontsend = True;
+                }    
+                MoveViewportTo(v_x - (event.xcrossing.x_root - px),
+                               v_y - (event.xcrossing.y_root - py));
+                px = event.xcrossing.x_root;
+                py = event.xcrossing.y_root;
                 break;
             case MapRequest:
                 maprequest_list->push_front(&event); break;
             case ButtonPress:
             case ButtonRelease:
-                if (e->type == event.type) break;
-                XUngrabPointer(display, CurrentTime);
+                event.xbutton.window = id;
+            case KeyPress:
+            case KeyRelease:
+                if (event.type == KeyPress || event.type == KeyRelease)
+                    event.xkey.window = id;
+                waimea->eh->HandleEvent(&event);
+                if (waimea->eh->move_resize != EndMoveResizeType) break;
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
                     maprequest_list->pop_front();
@@ -769,9 +783,21 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                         (*it)->SendConfig();
                     net->SetVirtualPos(*it);
                 }
+                XUngrabKeyboard(display, CurrentTime);
+                XUngrabPointer(display, CurrentTime);
                 return;
         }
     }
+}
+
+/**
+ * @fn    EndMoveResize(XEvent *e, WaAction *)
+ * @brief Ends move
+ *
+ * Ends viewport moving process.
+ */
+void WaScreen::EndMoveResize(XEvent *, WaAction *) {
+    waimea->eh->move_resize = EndMoveResizeType;
 }
 
 /**
@@ -943,7 +969,7 @@ void WaScreen::NextTask(XEvent *e, WaAction *ac) {
 void WaScreen::PointerWarp(XEvent *e, WaAction *ac) {
     int x, y, mask, i, o_x, o_y;
     unsigned int ui, w = 0, h = 0;
-    Window dw, dest_w = None;
+    Window dw;
     
     mask = XParseGeometry(ac->param, &x, &y, &w, &h);
     if (mask & (WidthValue | HeightValue)) {
@@ -968,6 +994,8 @@ void WaScreen::PointerWarp(XEvent *e, WaAction *ac) {
  * @param acts List with actions to match event with
  */
 void WaScreen::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
+    if (waimea->eh->move_resize != EndMoveResizeType)
+        ed->mod |= MoveResizeMask;
     list<WaAction *>::iterator it = acts->begin();
     for (; it != acts->end(); ++it) {
         if (eventmatch(*it, ed)) {

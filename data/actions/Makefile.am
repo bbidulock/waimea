@@ -1,7 +1,8 @@
 actionsdir = $(pkgdatadir)/actions
 actions_DATA = action.sloppy-focus \
                action.click-to-focus \
-	       action.non-opaque
+               action.non-opaque \
+               action.no-mouse
 
 install-data-local:
 	cd $(pkgdatadir)/actions && \

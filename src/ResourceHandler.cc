@@ -61,14 +61,15 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     wacts->push_back(new StrComp("raise", &WaWindow::Raise));
     wacts->push_back(new StrComp("lower", &WaWindow::Lower));
     wacts->push_back(new StrComp("focus", &WaWindow::Focus));
-    wacts->push_back(new StrComp("move", &WaWindow::Move));
-    wacts->push_back(new StrComp("resizeright", &WaWindow::ResizeRight));
-    wacts->push_back(new StrComp("resizeleft", &WaWindow::ResizeLeft));
-    wacts->push_back(new StrComp("moveopaque", &WaWindow::MoveOpaque));
-    wacts->push_back(new StrComp("resizerightopaque",
+    wacts->push_back(new StrComp("startmove", &WaWindow::Move));
+    wacts->push_back(new StrComp("startresizeright", &WaWindow::ResizeRight));
+    wacts->push_back(new StrComp("startresizeleft", &WaWindow::ResizeLeft));
+    wacts->push_back(new StrComp("startopaquemove", &WaWindow::MoveOpaque));
+    wacts->push_back(new StrComp("startopaqueresizeright",
                              &WaWindow::ResizeRightOpaque));
-    wacts->push_back(new StrComp("resizeleftopaque",
+    wacts->push_back(new StrComp("startopaqueresizeleft",
                               &WaWindow::ResizeLeftOpaque));
+    wacts->push_back(new StrComp("endmoveresize", &WaWindow::EndMoveResize));
     wacts->push_back(new StrComp("close", &WaWindow::Close));
     wacts->push_back(new StrComp("kill", &WaWindow::Kill));
     wacts->push_back(new StrComp("closekill", &WaWindow::CloseKill));    
@@ -119,7 +120,8 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaWindow::ScrollViewportUpNoWarp));
     wacts->push_back(new StrComp("scrollviewportdownnowarp",
                                  &WaWindow::ScrollViewportDownNoWarp));
-    wacts->push_back(new StrComp("viewportmove", &WaWindow::ViewportMove));
+    wacts->push_back(new StrComp("startviewportmove",
+                                 &WaWindow::ViewportMove));
     wacts->push_back(new StrComp("taskswitcher", &WaWindow::TaskSwitcher));
     wacts->push_back(new StrComp("previoustask", &WaWindow::PreviousTask));
     wacts->push_back(new StrComp("nexttask", &WaWindow::NextTask));
@@ -178,7 +180,9 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaScreen::ScrollViewportUp));
     racts->push_back(new StrComp("scrollviewportdown",
                                  &WaScreen::ScrollViewportDown));
-    racts->push_back(new StrComp("viewportmove", &WaScreen::ViewportMove));
+    racts->push_back(new StrComp("startviewportmove",
+                                 &WaScreen::ViewportMove));
+    racts->push_back(new StrComp("endmoveresize", &WaScreen::EndMoveResize));
     racts->push_back(new StrComp("viewportleftnowarp",
                                  &WaScreen::MoveViewportLeftNoWarp));
     racts->push_back(new StrComp("viewportrightnowarp",
@@ -218,8 +222,9 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     macts->push_back(new StrComp("raise", &WaMenuItem::Raise));
     macts->push_back(new StrComp("focus", &WaMenuItem::Focus));
     macts->push_back(new StrComp("lower", &WaMenuItem::Lower));
-    macts->push_back(new StrComp("move", &WaMenuItem::Move));
-    macts->push_back(new StrComp("moveopaque", &WaMenuItem::MoveOpaque));
+    macts->push_back(new StrComp("startmove", &WaMenuItem::Move));
+    macts->push_back(new StrComp("startopaquemove", &WaMenuItem::MoveOpaque));
+    macts->push_back(new StrComp("endmoveresize", &WaMenuItem::EndMoveResize));
     macts->push_back(new StrComp("viewportleft",
                                  &WaMenuItem::MoveViewportLeft));
     macts->push_back(new StrComp("viewportright",
@@ -251,7 +256,8 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
                                  &WaMenuItem::ScrollViewportUpNoWarp));
     macts->push_back(new StrComp("scrollviewportdownnowarp",
                                  &WaMenuItem::ScrollViewportDownNoWarp));
-    macts->push_back(new StrComp("viewportmove", &WaMenuItem::ViewportMove));
+    macts->push_back(new StrComp("startviewportmove",
+                                 &WaMenuItem::ViewportMove));
     macts->push_back(new StrComp("taskswitcher", &WaMenuItem::TaskSwitcher));
     macts->push_back(new StrComp("previoustask", &WaMenuItem::PreviousTask));
     macts->push_back(new StrComp("nexttask", &WaMenuItem::NextTask));
@@ -294,6 +300,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     mods->push_back(new StrComp("button3mask", Button3Mask));
     mods->push_back(new StrComp("button4mask", Button4Mask));
     mods->push_back(new StrComp("button5mask", Button5Mask));
+    mods->push_back(new StrComp("moveresizemask", MoveResizeMask));
     
     frameacts  = new list<WaAction *>;
     awinacts   = new list<WaAction *>;
@@ -447,6 +454,15 @@ void ResourceHandler::LoadConfig(void) {
         double_click = 300;
 
     if (double_click > 999) double_click = 999;
+
+    if (XrmGetResource(database, "menuStacking", "MenuStacking",
+                       &value_type, &value)) {
+        if (! strncasecmp("AlwaysAtBottom", value.addr, value.size))
+            menu_stacking = AlwaysAtBottom;
+        else if (! strncasecmp("AlwaysOnTop", value.addr, value.size))
+            menu_stacking = AlwaysOnTop;
+    } else
+        menu_stacking = NormalStacking;    
 
     unsigned int dummy;
     char *token;
@@ -1388,8 +1404,7 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
     bool negative;
     act_tmp->mod = act_tmp->nmod = 0;
     if (mod) {
-        token += strlen(token) + 1;        
-        it = mods->begin();
+        token += strlen(token) + 1;
         for (; *token == '\0'; token++);
         for (token = strtok(token, "&"); token; token = strtok(NULL, "&")) {
             token = strtrim(token);
@@ -1398,12 +1413,12 @@ void ResourceHandler::ParseAction(const char *s, list<StrComp *> *comp,
                 negative = True;
                 token = strtrim(token + 1);
             }
-            for (; it != mods->end(); ++it) {
+            for (it = mods->begin(); it != mods->end(); ++it) {
                 if ((*it)->Comp(token)) {
                     if (negative)
-                        act_tmp->nmod = (*it)->value;
+                        act_tmp->nmod |= (*it)->value;
                     else
-                        act_tmp->mod = (*it)->value;
+                        act_tmp->mod |= (*it)->value;
                     break;
                 }
             }

@@ -1,7 +1,7 @@
 ! Waimea Action configuration file
 !
 ! Focus model:   Sloppy-focus
-! Move method:	 Opaque
+! Move method:	  Opaque
 ! Move window:   Left mouse button click on titlebar
 !                Left mouse button click on handlebar 
 !                Alt + left mouse button click anywhere in window
@@ -36,105 +36,109 @@
 !
 ! == Normal Window ==
 !
-window.*.1: Raise             : ButtonPress = Button1 & Mod1Mask
-window.*.2: MoveOpaque        : ButtonPress = Button1 & Mod1Mask
-window.*.3: ResizeRightOpaque : ButtonPress = Button3 & Mod1Mask
-window.*.4: Lower             : ButtonPress = Button2 & Mod1Mask
+window.*.1: Raise                  : ButtonPress = Button1 & Mod1Mask
+window.*.2: StartOpaqueMove        : ButtonPress = Button1 & Mod1Mask
+window.*.3: StartOpaqueResizeRight : ButtonPress = Button3 & Mod1Mask
+window.*.4: EndMoveResize          : ButtonRelease = Button1 & MoveResizeMask
+window.*.5: EndMoveResize          : ButtonRelease = Button3 & MoveResizeMask
+window.*.6: EndMoveResize          : ButtonPress = Button1 & MoveResizeMask
+window.*.7: Lower                  : ButtonPress = Button2 & Move1Mask
 !
-window.frame.5:	Focus      : EnterNotify
-window.frame.6: Raise      : ButtonPress = Button1 & !Mod1Mask
-window.frame.7: Focus      : ButtonPress = Button1 & !Mod1Mask
-window.frame.8: Lower      : ButtonPress = Button2 & !Mod1Mask
-window.frame.9: MoveOpaque : ButtonPress = Button1 & !Mod1Mask
+window.frame.8:  Focus           : EnterNotify
+window.frame.9:  Raise           : ButtonPress = Button1 & !Mod1Mask
+window.frame.10: Focus           : ButtonPress = Button1 & !Mod1Mask
+window.frame.11: Lower           : ButtonPress = Button2 & !Mod1Mask
+window.frame.12: StartOpaqueMove : ButtonPress = Button1 & !Mod1Mask
 !
-window.title.5:  Raise             : ButtonPress = Button1 & !Mod1Mask
-window.title.6:  Focus             : ButtonPress = Button1 & !Mod1Mask
-window.title.7:  Lower             : ButtonPress = Button2 & !Mod1Mask
-window.title.8:  ToggleShade       : DoubleClick = Button1 & !Mod1Mask
-window.title.9:  MoveOpaque        : ButtonPress = Button1 & !Mod1Mask
-window.title.10: MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
-window.title.11: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
-window.title.12: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
+window.title.8:  Raise             : ButtonPress = Button1 & !Mod1Mask
+window.title.9:  Focus             : ButtonPress = Button1 & !Mod1Mask
+window.title.10: Lower             : ButtonPress = Button2 & !Mod1Mask
+window.title.11: ToggleShade       : DoubleClick = Button1 & !Mod1Mask
+window.title.12: StartOpaqueMove   : ButtonPress = Button1 & !Mod1Mask
+window.title.13: MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
+window.title.14: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
+window.title.15: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
 !
-window.label.5:  Raise             : ButtonPress = Button1 & !Mod1Mask
-window.label.6:  Focus             : ButtonPress = Button1 & !Mod1Mask
-window.label.7:  Lower             : ButtonPress = Button2 & !Mod1Mask
-window.label.8:  ToggleShade       : DoubleClick = Button1 & !Mod1Mask
-window.label.9:  MoveOpaque        : ButtonPress = Button1 & !Mod1Mask
-window.label.10: MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
-window.label.11: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
-window.label.12: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
+window.label.8:  Raise             : ButtonPress = Button1 & !Mod1Mask
+window.label.9:  Focus             : ButtonPress = Button1 & !Mod1Mask
+window.label.10: Lower             : ButtonPress = Button2 & !Mod1Mask
+window.label.11: ToggleShade       : DoubleClick = Button1 & !Mod1Mask
+window.label.12: StartOpaqueMove   : ButtonPress = Button1 & !Mod1Mask
+window.label.13: MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
+window.label.14: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
+window.label.15: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
 !
-window.handle.5:  Raise             : ButtonPress = Button1 & !Mod1Mask
-window.handle.6:  Focus             : ButtonPress = Button1 & !Mod1Mask
-window.handle.7:  Lower             : ButtonPress = Button2 & !Mod1Mask
-window.handle.8:  MoveOpaque        : ButtonPress = Button1 & !Mod1Mask
-window.handle.9:  MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
-window.handle.10: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
-window.handle.11: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
+window.handle.8:  Raise             : ButtonPress = Button1 & !Mod1Mask
+window.handle.9:  Focus             : ButtonPress = Button1 & !Mod1Mask
+window.handle.10: Lower             : ButtonPress = Button2 & !Mod1Mask
+window.handle.11: StartOpaqueMove   : ButtonPress = Button1 & !Mod1Mask
+window.handle.12: MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask
+window.handle.13: MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask
+window.handle.14: MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
 !
-window.client.active.5:  ToggleShade                : KeyPress = F1 & Mod1Mask
-window.client.active.6:  ToggleMaximize             : KeyPress = F2 & Mod1Mask
-window.client.active.7:  Raise                      : KeyPress = F2 & Mod1Mask
-window.client.active.8:  MenuRemapFocused(window)   : KeyPress = F3 & Mod1Mask
-window.client.active.9:  Close                      : KeyPress = F4 & Mod1Mask
-window.client.active.10: Kill                       : KeyPress = F10 & Mod1Mask
-window.client.active.11: TaskSwitcher               : KeyPress = Tab & Mod1Mask
-window.client.active.12: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+window.client.active.8:  ToggleShade                : KeyPress = F1 & Mod1Mask
+window.client.active.9:  ToggleMaximize             : KeyPress = F2 & Mod1Mask
+window.client.active.10: Raise                      : KeyPress = F2 & Mod1Mask
+window.client.active.11: MenuRemapFocused(window)   : KeyPress = F3 & Mod1Mask
+window.client.active.12: Close                      : KeyPress = F4 & Mod1Mask
+window.client.active.13: Kill                       : KeyPress = F10 & Mod1Mask
+window.client.active.14: TaskSwitcher               : KeyPress = Tab & Mod1Mask
+window.client.active.15: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
 !
-window.client.passive.5: Raise : MapRequest
-window.client.passive.6: Move  : MapRequest & ControlMask
-window.client.passive.7: Focus : MapRequest & ControlMask
+window.client.passive.8:  Raise : MapRequest
+window.client.passive.9:  Focus : MapRequest & ControlMask
+window.client.passive.10: Move  : MapRequest & ControlMask
 !
-window.closebutton.5: Close : ButtonRelease = AnyButton
+window.closebutton.8: Close : ButtonRelease = AnyButton
 !
-window.iconifybutton.5: ToggleShade : ButtonRelease = AnyButton
+window.iconifybutton.8: ToggleShade : ButtonRelease = AnyButton
 !
-window.maximizebutton.5: ToggleMaximize : ButtonRelease = AnyButton
-window.maximizebutton.6: Raise          : ButtonRelease = AnyButton
+window.maximizebutton.8: ToggleMaximize : ButtonRelease = AnyButton
+window.maximizebutton.9: Raise          : ButtonRelease = AnyButton
 !
-window.leftgrip.5: ResizeLeftOpaque : ButtonPress = AnyButton & !Mod1Mask
+window.leftgrip.8: StartOpaqueResizeLeft : ButtonPress = AnyButton & !Mod1Mask
 !
-window.rightgrip.5: ResizeRightOpaque : ButtonPress = AnyButton & !Mod1Mask
+window.rightgrip.8: StartOpaqueResizeRight : ButtonPress = AnyButton & !Mod1Mask
 !
 !
 ! == Root Window ==
 !
 root.1: MenuRemap(rootmenu)        : ButtonPress = Button3
 root.2: MenuUnmap(rootmenu)        : ButtonPress = Button1
-root.3: ViewportMove               : ButtonPress = Button2
-root.4: TaskSwitcher               : KeyPress = Tab & Mod1Mask
-root.5: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+root.3: StartViewportMove          : ButtonPress = Button2
+root.4: EndMoveResize              : ButtonRelease = Button2 & MoveResizeMask
+root.5: TaskSwitcher               : KeyPress = Tab & Mod1Mask
+root.6: MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
 !
 !
 ! == Screen Edges ==
 !
-westedge.1: ViewportLeft          : EnterNotify & !ControlMask
+westedge.1: ViewportLeft           : EnterNotify & !ControlMask
 westedge.2: ScrollViewportLeft(25) : EnterNotify & ControlMask
 !
-eastedge.1: ViewportRight          : EnterNotify & !ControlMask
+eastedge.1: ViewportRight           : EnterNotify & !ControlMask
 eastedge.2: ScrollViewportRight(25) : EnterNotify & ControlMask
 !
-northedge.1: ViewportUp          : EnterNotify & !ControlMask
+northedge.1: ViewportUp           : EnterNotify & !ControlMask
 northedge.2: ScrollViewportUp(20) : EnterNotify & ControlMask
 !
-southedge.1: ViewportDown          : EnterNotify & !ControlMask
+southedge.1: ViewportDown           : EnterNotify & !ControlMask
 southedge.2: ScrollViewportDown(20) : EnterNotify & ControlMask
 !
 !
 ! == Menu ==
 !
-menu.*.1: Raise      : ButtonPress = Button1 & Mod1Mask
-menu.*.2: MoveOpaque : ButtonPress = Button1 & Mod1Mask
-menu.*.3: UnLink     : ButtonPress = Button1 & Mod1Mask
-menu.*.4: Lower      : ButtonPress = Button2 & Mod1Mask
+menu.*.1: Raise           : ButtonPress = Button1 & Mod1Mask
+menu.*.2: StartOpaqueMove : ButtonPress = Button1 & Mod1Mask
+menu.*.3: UnLink          : ButtonPress = Button1 & Mod1Mask
+menu.*.4: Lower           : ButtonPress = Button2 & Mod1Mask
 !
-menu.title.5:  UnLink     : ButtonPress = Button1 & !Mod1Mask
-menu.title.6:  Raise      : ButtonPress = Button1 & !Mod1Mask
-menu.title.7:  MoveOpaque : ButtonPress = Button1 & !Mod1Mask
-menu.title.8:  Lower      : ButtonPress = Button2 & !Mod1Mask
-menu.title.9:  UnmapSubs  : ButtonPress = Button3
-menu.title.10: Unmap      : ButtonPress = Button3
+menu.title.5:  UnLink          : ButtonPress = Button1 & !Mod1Mask
+menu.title.6:  Raise           : ButtonPress = Button1 & !Mod1Mask
+menu.title.7:  StartOpaqueMove : ButtonPress = Button1 & !Mod1Mask
+menu.title.8:  Lower           : ButtonPress = Button2 & !Mod1Mask
+menu.title.9:  UnmapSubs       : ButtonPress = Button3
+menu.title.10: Unmap           : ButtonPress = Button3
 !
 menu.item.5:  UnmapSubs    : EnterNotify
 menu.item.6:  UnmapTree    : ButtonRelease = AnyButton

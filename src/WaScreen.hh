@@ -129,6 +129,7 @@ public:
         MenuRemap(e, ac, True);
     }
     void ViewportMove(XEvent *, WaAction *);
+    void EndMoveResize(XEvent *, WaAction *);
     void Focus(XEvent *, WaAction *);
     inline void MenuUnmap(XEvent *e, WaAction *wa) {
         MenuUnmap(e, wa, False);
@@ -231,6 +232,8 @@ private:
 #ifdef XFT
     void CreateXftColor(WaColor *, XftColor *);
 #endif // XFT
+
+    int move;
 };
 
 class ScreenEdge : public WindowObject {

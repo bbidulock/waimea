@@ -4,15 +4,17 @@
 ! Waimea default configuration. If no ~/.waimearc is found and no
 ! --rcfile option is used, these are the settings used.
 !
-styleFile:		@pkgdatadir@/styles/Default
-menuFile:		@pkgdatadir@/menu
-actionFile:		@pkgdatadir@/actions/action
+styleFile:			@pkgdatadir@/styles/Default
+menuFile:			@pkgdatadir@/menu
+actionFile:			@pkgdatadir@/actions/action
 colorsPerChannel:	4
-cacheMax:		200
+cacheMax:			200
+imageDither:      True
 virtualSize:		3x3
-dock0.geometry:         -0+0
-dock0.order:            UNKNOWN
-dock0.direction:        Vertical
-dock0.centered:         True
-dock0.gridSpace:        2
-dock0.stacking:		AlwaysOnTop
+menuStacking:     Normal
+dock0.geometry:	-0+0
+dock0.order:		UNKNOWN
+dock0.direction:	Vertical
+dock0.centered:	True
+dock0.gridSpace:	2
+dock0.stacking:	AlwaysOnTop

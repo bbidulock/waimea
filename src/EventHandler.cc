@@ -28,6 +28,7 @@ EventHandler::EventHandler(Waimea *wa) {
     waimea = wa;
     rh = waimea->rh;
     focused = last_click_win = (Window) 0;
+    move_resize = EndMoveResizeType;
 
     empty_return_mask = new hash_set<int>;
     
@@ -35,6 +36,8 @@ EventHandler::EventHandler(Waimea *wa) {
     moveresize_return_mask->insert(MotionNotify);
     moveresize_return_mask->insert(ButtonPress);
     moveresize_return_mask->insert(ButtonRelease);
+    moveresize_return_mask->insert(KeyPress);
+    moveresize_return_mask->insert(KeyRelease);
     moveresize_return_mask->insert(MapRequest);
     moveresize_return_mask->insert(UnmapNotify);
     moveresize_return_mask->insert(DestroyNotify);
@@ -46,6 +49,8 @@ EventHandler::EventHandler(Waimea *wa) {
     menu_viewport_move_return_mask->insert(MotionNotify);
     menu_viewport_move_return_mask->insert(ButtonPress);
     menu_viewport_move_return_mask->insert(ButtonRelease);
+    menu_viewport_move_return_mask->insert(KeyPress);
+    menu_viewport_move_return_mask->insert(KeyRelease);
     menu_viewport_move_return_mask->insert(MapRequest);
     menu_viewport_move_return_mask->insert(EnterNotify);
     menu_viewport_move_return_mask->insert(LeaveNotify);
@@ -77,65 +82,66 @@ EventHandler::~EventHandler(void) {
  * @param return_mask hash_set to use as return_mask
  * @param event Pointer to allocated event structure
  */
-void EventHandler::EventLoop(hash_set<int> *return_mask, XEvent *event) {
-    Window w;
-    int i, rx, ry;
-    struct timeb click_time;
-    
+void EventHandler::EventLoop(hash_set<int> *return_mask, XEvent *event) {    
     for (;;) {
         XNextEvent(waimea->display, event);
         
         if (return_mask->find(event->type) != return_mask->end()) return;
-        
-        switch (event->type) {
-            case Expose:
-                EvExpose(&event->xexpose); break;
-            case PropertyNotify:
-                EvProperty(&event->xproperty); break;
-            case UnmapNotify:
-            case DestroyNotify:
-                EvUnmapDestroy(event); break;
-            case FocusOut:
-            case FocusIn:
-                EvFocus(&event->xfocus); break;
-            case LeaveNotify:
-            case EnterNotify:
-                if (event->xcrossing.mode == NotifyGrab) break;
-                ed.type = event->type;
-                ed.mod = event->xcrossing.state;
-                ed.detail = 0;
-                EvAct(event, event->xcrossing.window);
-                break;
-            case KeyPress:
-            case KeyRelease:
-                ed.type = event->type;
-                ed.mod = event->xkey.state;
-                ed.detail = event->xkey.keycode;
-                EvAct(event, event->xkey.window);
-                break;
-            case ButtonPress:
-                ed.type = ButtonPress;
-                if (last_click_win == event->xbutton.window) {
-                    ftime(&click_time);
-                    if (click_time.time <= last_click.time + 1) {
-                        if (click_time.time == last_click.time &&
-                            (unsigned int)
-                            (click_time.millitm - last_click.millitm) <
-                            waimea->rh->double_click) {
-                            ed.type = DoubleClick;
+
+        HandleEvent(event);
+    }
+}
+
+void EventHandler::HandleEvent(XEvent *event) {
+    Window w;
+    int i, rx, ry;
+    struct timeb click_time;
+    
+    EventDetail *ed = new EventDetail;
+
+    switch (event->type) {
+        case Expose:
+            EvExpose(&event->xexpose); break;
+        case PropertyNotify:
+            EvProperty(&event->xproperty); break;
+        case UnmapNotify:
+        case DestroyNotify:
+            EvUnmapDestroy(event); break;
+        case FocusOut:
+        case FocusIn:
+            EvFocus(&event->xfocus); break;
+        case LeaveNotify:
+        case EnterNotify:
+            if (event->xcrossing.mode == NotifyGrab) break;
+            ed->type = event->type;
+            ed->mod = event->xcrossing.state;
+            ed->detail = 0;
+            EvAct(event, event->xcrossing.window, ed);
+            break;
+        case KeyPress:
+        case KeyRelease:
+            ed->type = event->type;
+            ed->mod = event->xkey.state;
+            ed->detail = event->xkey.keycode;
+            EvAct(event, event->xkey.window, ed);
+            break;
+        case ButtonPress:
+            ed->type = ButtonPress;
+            if (last_click_win == event->xbutton.window) {
+                ftime(&click_time);
+                if (click_time.time <= last_click.time + 1) {
+                    if (click_time.time == last_click.time &&
+                        (unsigned int)
+                        (click_time.millitm - last_click.millitm) <
+                        waimea->rh->double_click) {
+                        ed->type = DoubleClick;
+                        last_click_win = (Window) 0;
+                    }
+                    else if ((1000 - last_click.millitm) +
+                             (unsigned int) click_time.millitm <
+                             waimea->rh->double_click) {
+                        ed->type = DoubleClick;
                             last_click_win = (Window) 0;
-                        }
-                        else if ((1000 - last_click.millitm) +
-                                 (unsigned int) click_time.millitm <
-                                 waimea->rh->double_click) {
-                            ed.type = DoubleClick;
-                            last_click_win = (Window) 0;
-                        }
-                        else {
-                            last_click_win = event->xbutton.window;
-                            last_click.time = click_time.time;
-                            last_click.millitm = click_time.millitm;
-                        }
                     }
                     else {
                         last_click_win = event->xbutton.window;
@@ -145,49 +151,54 @@ void EventHandler::EventLoop(hash_set<int> *return_mask, XEvent *event) {
                 }
                 else {
                     last_click_win = event->xbutton.window;
-                    ftime(&last_click);
+                    last_click.time = click_time.time;
+                    last_click.millitm = click_time.millitm;
                 }
-            case ButtonRelease:
-                if (event->type == ButtonRelease) ed.type = ButtonRelease;
-                ed.mod = event->xbutton.state;
-                ed.detail = event->xbutton.button;
-                EvAct(event, event->xbutton.window);
-                break;
-            case ColormapNotify:
-                EvColormap(&event->xcolormap); break;
-            case ConfigureRequest:
-                EvConfigureRequest(&event->xconfigurerequest); break;
-            case MapRequest:
-                EvMapRequest(&event->xmaprequest);
-                ed.type = event->type;
-                XQueryPointer(waimea->wascreen->display,
-                              waimea->wascreen->id, &w, &w, &rx, &ry, &i, &i,
-                              &(ed.mod));
-                ed.detail = 0;
-                event->xbutton.x_root = rx;
-                event->xbutton.y_root = ry;
-                event->type = ButtonRelease;
-                EvAct(event, event->xmaprequest.window);
-                break;
-            case ClientMessage:
-                EvClientMessage(event);
-                break;
-                
+            }
+            else {
+                last_click_win = event->xbutton.window;
+                ftime(&last_click);
+            }
+        case ButtonRelease:
+            if (event->type == ButtonRelease) ed->type = ButtonRelease;
+            ed->mod = event->xbutton.state;
+            ed->detail = event->xbutton.button;
+            EvAct(event, event->xbutton.window, ed);
+            break;
+        case ColormapNotify:
+            EvColormap(&event->xcolormap); break;
+        case ConfigureRequest:
+            EvConfigureRequest(&event->xconfigurerequest); break;
+        case MapRequest:
+            EvMapRequest(&event->xmaprequest);
+            ed->type = event->type;
+            XQueryPointer(waimea->wascreen->display,
+                          waimea->wascreen->id, &w, &w, &rx, &ry, &i, &i,
+                          &(ed->mod));
+            ed->detail = 0;
+            event->xbutton.x_root = rx;
+            event->xbutton.y_root = ry;
+            EvAct(event, event->xmaprequest.window, ed);
+            break;
+        case ClientMessage:
+            EvClientMessage(event, ed);
+            break;
+            
 #ifdef SHAPE
-            default:                
-                if (event->type == waimea->wascreen->shape_event) {
-                    hash_map<Window, WindowObject *>::iterator it;
-                    if ((it = waimea->window_table->find(event->xany.window)) !=
-                        waimea->window_table->end()) {
-                        if (((*it).second)->type == WindowType)
-                            if (((WaWindow *) (*it).second)->wascreen->shape)
-                                ((WaWindow *) (*it).second)->Shape();
-                    }
+        default:                
+            if (event->type == waimea->wascreen->shape_event) {
+                hash_map<Window, WindowObject *>::iterator it;
+                if ((it = waimea->window_table->find(event->xany.window)) !=
+                    waimea->window_table->end()) {
+                    if (((*it).second)->type == WindowType)
+                        if (((WaWindow *) (*it).second)->wascreen->shape)
+                            ((WaWindow *) (*it).second)->Shape();
                 }
+            }
 #endif // SHAPE
-                
-        }
+            
     }
+    delete ed;
 }
 
 /**
@@ -351,6 +362,7 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
         waimea->window_table->end()) {
         if (((*it).second)->type == WindowType) {
             ww = (WaWindow *) (*it).second;
+            waimea->net->GetWMNormalHints(ww);
             ww->Gravitate(RemoveGravity);
             if (e->value_mask & CWX) ww->attrib.x = e->x;
             if (e->value_mask & CWY) ww->attrib.y = e->y;
@@ -405,7 +417,7 @@ void EventHandler::EvColormap(XColormapEvent *e) {
  * @fn    EvMapRequest(XMapRequestEvent *e)
  * @brief MapRequestEvent handler
  *
- * We receive this event then a window wants to be mapped. If the window 
+ * We receive this event then a window wants to be mapped-> If the window 
  * isn't in our window hash_map already it's a new window and we create 
  * a WaWindow for it. If the window already is managed we just set its
  * state to NormalState.
@@ -443,7 +455,7 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
  * @fn    EvUnmapDestroy(XEvent *e)
  * @brief UnmapEvent and DestroyEvent handler
  *
- * We receive this event then a window has been unmapped or destroyed.
+ * We receive this event then a window has been unmapped or destroyed->
  * If we can find a WaWindow for this window then the delete that WaWindow.
  * If we couldn't find a WaWindow we check if the windows is a dockapp window
  * and if it is, we update the dockapp handler holding the dockapp.
@@ -476,14 +488,15 @@ void EventHandler::EvUnmapDestroy(XEvent *e) {
 }
 
 /**
- * @fn    EvClientMessage(XEvent *e)
+ * @fn    EvClientMessage(XEvent *e, EventDetail *ed)
  * @brief ClientMessageEvent handler
  *
  * This function handles all client message events received.
  *
  * @param e	The XEvent
+ * @param ed Structure containing event details
  */
-void EventHandler::EvClientMessage(XEvent *e) {
+void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
     Window w;
     int i, rx, ry;
     
@@ -491,19 +504,19 @@ void EventHandler::EvClientMessage(XEvent *e) {
         e->xclient.message_type == waimea->net->xa_xdndleave) {
         if (e->xclient.message_type == waimea->net->xa_xdndenter) {
             e->type = EnterNotify;
-            ed.type = EnterNotify;
+            ed->type = EnterNotify;
         } else {
             e->type = LeaveNotify;
-            ed.type = LeaveNotify;
+            ed->type = LeaveNotify;
         }
         XQueryPointer(waimea->wascreen->display,
                       waimea->wascreen->id, &w, &w, &rx, &ry, &i, &i,
-                      &(ed.mod));
-        ed.detail = 0;
+                      &(ed->mod));
+        ed->detail = 0;
         e->xcrossing.x_root = rx;
         e->xcrossing.y_root = ry;
         
-        EvAct(e, e->xclient.window);
+        EvAct(e, e->xclient.window, ed);
     }
     else if (e->xclient.message_type == waimea->net->net_desktop_viewport) {
         waimea->wascreen->MoveViewportTo(e->xclient.data.l[0],
@@ -528,8 +541,9 @@ void EventHandler::EvClientMessage(XEvent *e) {
  *
  * @param e	The Event
  * @param win The window we should use in the WindowObject search
+ * @param ed Structure containing event details
  */
-void EventHandler::EvAct(XEvent *e, Window win) {
+void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
     WindowObject *wo;
 
     hash_map<Window, WindowObject *>::iterator it;
@@ -539,56 +553,56 @@ void EventHandler::EvAct(XEvent *e, Window win) {
         
         switch (wo->type) {
             case FrameType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->frameacts,
+                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->frameacts,
                                                     wo->type); break;
             case WindowType:
                 if (((WaWindow *) wo)->has_focus)
-                    ((WaWindow *) wo)->EvAct(e, &ed, rh->awinacts, wo->type);
+                    ((WaWindow *) wo)->EvAct(e, ed, rh->awinacts, wo->type);
                 else
-                    ((WaWindow *) wo)->EvAct(e, &ed, rh->pwinacts, wo->type);
+                    ((WaWindow *) wo)->EvAct(e, ed, rh->pwinacts, wo->type);
                 break;
             case TitleType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->titleacts,
+                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->titleacts,
                                                     wo->type); break;
             case LabelType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->labelacts,
+                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->labelacts,
                                                     wo->type); break;
             case HandleType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->handleacts,
+                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->handleacts,
                                                     wo->type); break;
             case CButtonType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->cbacts,
+                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->cbacts,
                                                     wo->type); break;
             case IButtonType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->ibacts,
+                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->ibacts,
                                                     wo->type); break;
             case MButtonType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->mbacts,
+                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->mbacts,
                                                     wo->type); break;
             case LGripType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->lgacts,
+                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->lgacts,
                                                     wo->type); break;
             case RGripType:
-                (((WaChildWindow *) wo)->wa)->EvAct(e, &ed, rh->rgacts,
+                (((WaChildWindow *) wo)->wa)->EvAct(e, ed, rh->rgacts,
                                                     wo->type); break;
             case MenuTitleType:
-                ((WaMenuItem *) wo)->EvAct(e, &ed, rh->mtacts); break;
+                ((WaMenuItem *) wo)->EvAct(e, ed, rh->mtacts); break;
             case MenuItemType:
-                ((WaMenuItem *) wo)->EvAct(e, &ed, rh->miacts); break;
+                ((WaMenuItem *) wo)->EvAct(e, ed, rh->miacts); break;
             case MenuCBItemType:
-                ((WaMenuItem *) wo)->EvAct(e, &ed, rh->mcbacts); break;
+                ((WaMenuItem *) wo)->EvAct(e, ed, rh->mcbacts); break;
             case MenuSubType:
-                ((WaMenuItem *) wo)->EvAct(e, &ed, rh->msacts); break;
+                ((WaMenuItem *) wo)->EvAct(e, ed, rh->msacts); break;
             case WEdgeType:
-                (((ScreenEdge *) wo)->wa)->EvAct(e, &ed, rh->weacts); break;
+                (((ScreenEdge *) wo)->wa)->EvAct(e, ed, rh->weacts); break;
             case EEdgeType:
-                (((ScreenEdge *) wo)->wa)->EvAct(e, &ed, rh->eeacts); break;
+                (((ScreenEdge *) wo)->wa)->EvAct(e, ed, rh->eeacts); break;
             case NEdgeType:
-                (((ScreenEdge *) wo)->wa)->EvAct(e, &ed, rh->neacts); break;
+                (((ScreenEdge *) wo)->wa)->EvAct(e, ed, rh->neacts); break;
             case SEdgeType:
-                (((ScreenEdge *) wo)->wa)->EvAct(e, &ed, rh->seacts); break;
+                (((ScreenEdge *) wo)->wa)->EvAct(e, ed, rh->seacts); break;
             case RootType:
-                ((WaScreen *) wo)->EvAct(e, &ed, rh->rootacts); break;
+                ((WaScreen *) wo)->EvAct(e, ed, rh->rootacts); break;
         }    
     }
 }
@@ -610,13 +624,19 @@ Bool eventmatch(WaAction *act, EventDetail *ed) {
     if (ed->type != act->type) return False;
     if ((act->detail && ed->detail) ? (act->detail == ed->detail): True) {
         for (i = 0; i <= 12; i++)
-            if (act->mod & (1<<i))
-                if (! (ed->mod & (1<<i)))
+            if (act->mod & (1 << i))
+                if (! (ed->mod & (1 << i)))
                     return False;
+        if (act->mod & MoveResizeMask)
+            if (! (ed->mod & MoveResizeMask))
+                return False;
         for (i = 0; i <= 12; i++)
-            if (act->nmod & (1<<i))
-                if (ed->mod & (1<<i))
+            if (act->nmod & (1 << i))
+                if (ed->mod & (1 << i))
                     return False;
+        //if (act->nmod & MoveResizeMask)
+        //    if (ed->mod & MoveResizeMask)
+        //        return False;
         return True;
     }
     return False;

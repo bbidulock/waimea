@@ -572,16 +572,16 @@ a modifier mask.
 Here are two good examples:
 .nf
 
-window.label.1: Move : ButtonPress = Button1 & Mod1Mask | ControlMask
-window.label.2: Resize : ButtonPress = Button1 & Mod1Mask | !ControlMask
+window.label.1: StartMove   : ButtonPress = Button1 & Mod1Mask & ControlMask
+window.label.2: StartResize : ButtonPress = Button1 & Mod1Mask & !ControlMask
 
 .fi
-The first line will create a move 
+The first line will create a startmove 
 .I action 
 that will be performed when
 a ButtonPress event is received from Button1 and at least mod1 
 modifier and control modifier are active. The second line will
-create a resize 
+create a startresize 
 .I action 
 that will be performed when a ButtonPress
 event is received from Button1 and at least mod1 modifier is active
@@ -733,9 +733,11 @@ ending with nowarp scrolls viewport without mouse warping.
 
 .PP
 .TP
-.B viewportmove
+.B startviewportmove
 Moves viewport after mouse motion events, kind of
-the same way as you move windows.
+the same way as you move windows. Must be ended with 
+.B endmoveresize 
+action.
 
 .PP
 .TP
@@ -791,35 +793,41 @@ Raise window to top of display stack and focus it.
 Lower window to bottom of display stack.
 
 .PP
-.B move
+.B startmove
 .br
-.B moveopaque
+.B startopaquemove
 .RS
-Move window by dragging the mouse. move
+Move window by dragging the mouse. startmove
 .I action
 will display a window outline while dragging the mouse and first move the
-actual window when you're finished dragging. moveopaque
+actual window when you're finished dragging. startopaquemove
 .I action
-will move the actual window while you're dragging the mouse.
+will move the actual window while you're dragging the mouse. Both must be 
+ended with 
+.B endmoveresize 
+action.
 .RE
 
 .PP
-.B resizeright
+.B startresizeright
 .br
-.B resizeleft
+.B startresizeleft
 .br
-.B resizerightopaque
+.B startopaqueresizeright
 .br
-.B resizeleftopaque
+.B startopaqueresizeleft
 .RS
 Resize window by dragging the mouse.
 .I Actions 
-not ending with 'opaque' will display a window outline while dragging
+not containing 'opaque' will display a window outline while dragging
 the mouse and first move the actual window when you're finished
 dragging.
 .I Actions 
 ending with 'opaque' will resize the actual window while
-you're dragging the mouse.
+you're dragging the mouse. All four must be 
+ended with 
+.B endmoveresize 
+action.
 .RE
 
 .PP
@@ -977,6 +985,10 @@ Turn on, off or toggle if window should be always at bottom. Always at
 bottom windows are always at the bottom of the display stack.
 .RE
 
+.PP
+.TP
+.B endmoveresize
+Ends a move or resize process.
 
 .PP
 Here is the list of additional actions for menu.* windows:
@@ -992,16 +1004,19 @@ Raise menu to top of display stack.
 Lower menu to bottom of display stack.
 
 .PP
-.B move
+.B startmove
 .br
-.B moveopaque
+.B startopaquemove
 .RS
-Move menu by dragging the mouse. move
+Move menu by dragging the mouse. startmove
 .I action
 will display a menu outline while dragging the mouse and first move the
-actual menu when you're finished dragging. moveopaque
+actual menu when you're finished dragging. startopaquemove
 .I action
-will move the actual menu while you're dragging the mouse.
+will move the actual menu while you're dragging the mouse. Both must be 
+ended with 
+.B endmoveresize 
+action.
 .RE
 
 .PP
@@ -1059,6 +1074,12 @@ have a linked command line, nothing is done.
 unlinks menu containing the menu item from its menu tree.
 
 .PP
+.TP
+.B endmoveresize
+Ends a move or resize process.
+
+
+.PP
 Here is the list of additional actions for root, *edge windows:
 
 .PP
@@ -1096,6 +1117,12 @@ Shutdowns waimea and executes command line parameter. If no command line
 parameter was given this 
 .I action
 executes the same command line as waimea was started with.
+
+.PP
+.TP
+.B endmoveresize
+Ends a move or resize process.
+
 
 .PP
 Here is the list of event types that can be linked to an 

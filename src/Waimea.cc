@@ -151,15 +151,17 @@ Waimea::~Waimea(void) {
  */
 void Waimea::WaRaiseWindow(Window win) {
     int i;
+    bool in_list = False;
     
     if (always_on_top_list->size()) {
         Window *stack = new Window[always_on_top_list->size() + ((win)? 1: 0)];
 
         list<Window>::iterator it = always_on_top_list->begin();
         for (i = 0; it != always_on_top_list->end(); ++it) {
+            if (*it == win) in_list = True;
             stack[i++] = *it;
         }
-        if (win) stack[i++] = win;
+        if (win && ! in_list) stack[i++] = win;
         
         XRaiseWindow(display, stack[0]);
         XRestackWindows(display, stack, i);
@@ -187,6 +189,7 @@ void Waimea::WaRaiseWindow(Window win) {
  */
 void Waimea::WaLowerWindow(Window win) {
     int i;
+    bool in_list = False;
     
     if (always_at_bottom_list->size()) {
         Window *stack = new Window[always_at_bottom_list->size() +
@@ -198,8 +201,14 @@ void Waimea::WaLowerWindow(Window win) {
         for (; it != always_at_bottom_list->rend(); ++it) {
             stack[i++] = *it;
         }
-        XLowerWindow(display, stack[0]);
-        XRestackWindows(display, stack, i);
+        if (in_list) {
+            XLowerWindow(display, stack[1]);
+            XRestackWindows(display, stack + 1, i - 1);
+        }
+        else {
+            XLowerWindow(display, stack[0]);
+            XRestackWindows(display, stack, i);
+        }
         
         delete [] stack;
     } else

@@ -95,6 +95,14 @@ enum {
     DockAppType
 };
 
+enum {
+    MoveType,
+    MoveOpaqueType,
+    ResizeType,
+    ResizeOpaqueType,
+    EndMoveResizeType
+};
+
 class Waimea {
 public:
     Waimea(char **, struct waoptions *);

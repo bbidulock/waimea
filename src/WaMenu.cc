@@ -189,7 +189,8 @@ void WaMenu::Build(WaScreen *screen) {
         else
             font = wascreen->mstyle.f_font;
 
-        (*it)->width = XTextWidth(font, (*it)->label, strlen((*it)->label)) + 20;
+        (*it)->width = XTextWidth(font, (*it)->label,
+                                  strlen((*it)->label)) + 20;
         
         if ((*it)->type == MenuSubType)
             bullet_width = XTextWidth(wascreen->mstyle.b_font,
@@ -271,6 +272,10 @@ void WaMenu::Build(WaScreen *screen) {
                               CopyFromParent, wascreen->visual,
                               CWOverrideRedirect | CWBackPixel | CWEventMask |
                               CWColormap | CWBorderPixel, &attrib_set);
+        if (waimea->rh->menu_stacking == AlwaysOnTop)
+            waimea->always_on_top_list->push_back(frame);
+        else if (waimea->rh->menu_stacking == AlwaysAtBottom)
+            waimea->always_at_bottom_list->push_back(frame);
     } else XResizeWindow(display, frame, width, height);
     
     if (pbackframe)
@@ -1011,22 +1016,20 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
     int ny = menu->y;
     Window w;
     unsigned int ui;
+
+    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
+    menu->waimea->eh->move_resize = MoveType;
     
     XQueryPointer(menu->display, menu->wascreen->id, &w, &w, &px,
                   &py, &i, &i, &ui);
     
-    if (e->type != ButtonPress) {
-            nx = px;
-            ny = py;
-            menu->DrawOutline(nx - menu->x, ny - menu->y);
-            menu->ToggleOutline();
-            started = True;
-    }
     maprequest_list = new list<XEvent *>;
     XGrabPointer(menu->display, id, True, ButtonReleaseMask |
                  ButtonPressMask | PointerMotionMask | EnterWindowMask |
                  LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
                  menu->waimea->move_cursor, CurrentTime);
+    XGrabKeyboard(menu->display, id, True, GrabModeAsync, GrabModeAsync,
+                  CurrentTime);
     for (;;) {
         menu->waimea->eh->EventLoop(
             menu->waimea->eh->menu_viewport_move_return_mask, &event);
@@ -1048,25 +1051,35 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
                     menu->wascreen->east->id == event.xcrossing.window ||
                     menu->wascreen->north->id == event.xcrossing.window ||
                     menu->wascreen->south->id == event.xcrossing.window) {
-                    menu->waimea->eh->ed.type = event.type;
-                    menu->waimea->eh->ed.mod = event.xcrossing.state;
-                    menu->waimea->eh->ed.detail = 0;
-                    menu->waimea->eh->EvAct(&event, event.xcrossing.window);
+                    menu->waimea->eh->HandleEvent(&event);
+                } else {
+                    nx += event.xcrossing.x_root - px;
+                    ny += event.xcrossing.y_root - py;
+                    px  = event.xcrossing.x_root;
+                    py  = event.xcrossing.y_root;
+                    menu->DrawOutline(nx - menu->x, ny - menu->y);
                 }
                 break;
             case MapRequest:
                 maprequest_list->push_front(&event); break;
             case ButtonPress:
             case ButtonRelease:
-                if (e->type == event.type) break;
+                event.xbutton.window = id;
+            case KeyPress:
+            case KeyRelease:
+                if (event.type == KeyPress || event.type == KeyRelease)
+                    event.xkey.window = id;
+                menu->waimea->eh->HandleEvent(&event);
+                if (menu->waimea->eh->move_resize != EndMoveResizeType) break;
                 if (started) menu->ToggleOutline();
                 menu->Move(nx - menu->x, ny - menu->y);
-                XUngrabPointer(menu->display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(menu->display, maprequest_list->front());
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
+                XUngrabKeyboard(menu->display, CurrentTime);
+                XUngrabPointer(menu->display, CurrentTime);
                 return;
         }
     }
@@ -1088,20 +1101,20 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
     int ny = menu->y;
     Window w;
     unsigned int ui;
+
+    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
+    menu->waimea->eh->move_resize = MoveType;
     
     XQueryPointer(menu->display, menu->wascreen->id, &w, &w, &px,
                   &py, &i, &i, &ui);
     
-    if (e->type != ButtonPress) {
-            nx = px;
-            ny = py;
-            menu->Move(nx - menu->x, ny - menu->y);
-    }
     maprequest_list = new list<XEvent *>;
     XGrabPointer(menu->display, id, True, ButtonReleaseMask |
                  ButtonPressMask | PointerMotionMask | EnterWindowMask |
                  LeaveWindowMask, GrabModeAsync, GrabModeAsync, None,
                  menu->waimea->move_cursor, CurrentTime);
+    XGrabKeyboard(menu->display, id, True, GrabModeAsync, GrabModeAsync,
+                  CurrentTime);
     for (;;) {
         menu->waimea->eh->EventLoop(
             menu->waimea->eh->menu_viewport_move_return_mask, &event);
@@ -1119,10 +1132,13 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                     menu->wascreen->east->id == event.xcrossing.window ||
                     menu->wascreen->north->id == event.xcrossing.window ||
                     menu->wascreen->south->id == event.xcrossing.window) {
-                    menu->waimea->eh->ed.type = event.type;
-                    menu->waimea->eh->ed.mod = event.xcrossing.state;
-                    menu->waimea->eh->ed.detail = 0;
-                    menu->waimea->eh->EvAct(&event, event.xcrossing.window);
+                    menu->waimea->eh->HandleEvent(&event);
+                } else {
+                    nx += event.xcrossing.x_root - px;
+                    ny += event.xcrossing.y_root - py;
+                    px = event.xcrossing.x_root;
+                    py = event.xcrossing.y_root;
+                    menu->Move(nx - menu->x, ny - menu->y);
                 }
                 break;
             case MapRequest:
@@ -1131,7 +1147,13 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                 maprequest_list->push_front(map_ev); break;
             case ButtonPress:
             case ButtonRelease:
-                if (e->type == event.type) break;
+                event.xbutton.window = id;
+            case KeyPress:
+            case KeyRelease:
+                if (event.type == KeyPress || event.type == KeyRelease)
+                    event.xkey.window = id;
+                menu->waimea->eh->HandleEvent(&event);
+                if (menu->waimea->eh->move_resize != EndMoveResizeType) break;
                 XUngrabPointer(menu->display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(menu->display, maprequest_list->front());
@@ -1139,9 +1161,21 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
+                XUngrabKeyboard(menu->display, CurrentTime);
+                XUngrabPointer(menu->display, CurrentTime);
                 return;
         }
     }
+}
+
+/**
+ * @fn    EndMoveResize(XEvent *e, WaAction *)
+ * @brief Ends move
+ *
+ * Ends menu moving process.
+ */
+void WaMenuItem::EndMoveResize(XEvent *, WaAction *) {
+   menu->waimea->eh->move_resize = EndMoveResizeType;
 }
 
 /**
@@ -1275,7 +1309,10 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
         XQueryPointer(menu->display, id, &w, &w, &i, &i, &xp, &yp, &ui);
         if (xp < 0 || yp < 0 || xp > menu->width || yp > height)
             return;
-    }   
+    }
+
+    if (menu->waimea->eh->move_resize != EndMoveResizeType)
+        ed->mod |= MoveResizeMask;
     
     list<WaAction *>::iterator it = acts->begin();
     for (; it != acts->end(); ++it) {

@@ -21,13 +21,6 @@ class Dockapp;
 
 #include "Waimea.hh"
 
-enum {
-    VerticalDock,
-    HorizontalDock,
-    AlwaysOnTop,
-    AlwaysAtBottom
-};
-
 class DockappHandler {
 public:
     DockappHandler(WaScreen *, DockStyle *);

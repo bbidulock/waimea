@@ -129,6 +129,7 @@ public:
     void Func(XEvent *, WaAction *);
     void Move(XEvent *, WaAction *);
     void MoveOpaque(XEvent *, WaAction *);
+    void EndMoveResize(XEvent *, WaAction *);
     void Lower(XEvent *, WaAction *);
     inline void Focus(XEvent *, WaAction *) { Focus(); }
     inline void UnmapSubmenus(XEvent *, WaAction *) {
@@ -183,6 +184,7 @@ public:
 #else // !XFT
     GC *cbox_gc;
 #endif // XFT
+
 };
 
 

@@ -69,6 +69,14 @@ enum {
     CenterJustify
 };
 
+enum {
+    VerticalDock,
+    HorizontalDock,
+    AlwaysOnTop,
+    AlwaysAtBottom,
+    NormalStacking
+};
+
 class ResourceHandler {
 public:
     ResourceHandler(Waimea *, struct waoptions *);
@@ -85,7 +93,7 @@ public:
     char *action_file;
     unsigned int virtual_x;
     unsigned int virtual_y;
-    int colors_per_channel;
+    int colors_per_channel, menu_stacking;
     long unsigned int cache_max, double_click;
     Bool image_dither, rc_forced, style_forced, action_forced, menu_forced;
     

@@ -226,13 +226,13 @@ void NetHandler::GetState(WaWindow *ww) {
     if (validateclient(ww->id))
         if (XGetWindowProperty(display, ww->id, wm_state, 0L, 1L, False,
                                wm_state, &real_type, &real_format, &items_read,
-                               &items_left, (unsigned char **) &data) == Success &&
-            items_read) {
+                               &items_left, (unsigned char **) &data) ==
+            Success && items_read) {
             ww->state = *data;
             XFree(data);
-    }
+        }
     XUngrabServer(display);
-        
+    
 }
 
 /**

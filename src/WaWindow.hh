@@ -130,6 +130,7 @@ public:
     inline void ResizeLeftOpaque(XEvent *e, WaAction *) {
         ResizeOpaque(e, WestType);
     }
+    void EndMoveResize(XEvent *, WaAction *);
     inline void Maximize(XEvent *, WaAction *) { _Maximize(-1, -1); } 
     void UnMaximize(XEvent *, WaAction *);
     void ToggleMaximize(XEvent *, WaAction *);

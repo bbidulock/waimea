@@ -69,7 +69,7 @@ XFT = @XFT@
 regex_cmd = @regex_cmd@
 
 actionsdir = $(pkgdatadir)/actions
-actions_DATA = action.sloppy-focus                action.click-to-focus 	       action.non-opaque
+actions_DATA = action.sloppy-focus                action.click-to-focus                action.non-opaque                action.no-mouse
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
