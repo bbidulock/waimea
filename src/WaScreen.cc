@@ -484,24 +484,27 @@ void WaScreen::UpdateWorkarea(void) {
     int old_x = workarea->x, old_y = workarea->y,
         old_width = workarea->width, old_height = workarea->height;
     
+    workarea->x = workarea->y = 0;
+    workarea->width = width;
+    workarea->height = height;
     list<WMstrut *>::iterator it = strut_list->begin();
     for (; it != strut_list->end(); ++it) {
         if ((*it)->left > workarea->x) workarea->x = (*it)->left;
         if ((*it)->top > workarea->y) workarea->y = (*it)->top;
-        if (((workarea->width + old_x) - (*it)->right) < workarea->width)
-            workarea->width = width - (*it)->right - workarea->x;
-        if (((workarea->height + old_y) - (*it)->bottom) < workarea->height)
-            workarea->height = height - (*it)->bottom - workarea->y;
+        if ((width - (*it)->right) < workarea->width)
+            workarea->width = width - (*it)->right;
+        if ((height - (*it)->bottom) < workarea->height)
+            workarea->height = height - (*it)->bottom;
     }
-    workarea->width = workarea->width + old_x - workarea->x;
-    workarea->height = workarea->height + old_y - workarea->y;
+    workarea->width = workarea->width - workarea->x;
+    workarea->height = workarea->height - workarea->y;
     
     XEvent *e;
     WaAction *ac;
     if (old_x != workarea->x || old_y != workarea->y ||
         old_width != workarea->width || old_height != workarea->height) {
         net->SetWorkarea(this);
-
+        
         list<WaWindow *>::iterator wa_it = waimea->wawindow_list->begin();
         for (; wa_it != waimea->wawindow_list->end(); ++wa_it) {
             if ((*wa_it)->flags.max)

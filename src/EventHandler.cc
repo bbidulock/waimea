@@ -199,6 +199,7 @@ XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
  */
 void EventHandler::EvProperty(XPropertyEvent *e) {
     WaWindow *ww;
+    hash_map<Window, WindowObject *>::iterator it;
 
     if (e->state == PropertyDelete) {
         if (e->atom == waimea->wascreen->net->net_wm_strut) {
@@ -213,9 +214,13 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
             }
         }
     } else if (e->atom == waimea->wascreen->net->net_wm_strut) {
-        waimea->wascreen->net->GetWmStrut(e->window, waimea->wascreen);
+        if ((it = waimea->window_table->find(e->window)) !=
+            waimea->window_table->end()) {
+            if (((*it).second)->type == WindowType) {
+                waimea->wascreen->net->GetWmStrut((WaWindow *) (*it).second);
+            }
+        }
     } else if (e->atom == XA_WM_NAME) {
-        hash_map<Window, WindowObject *>::iterator it;
         if ((it = waimea->window_table->find(e->window)) !=
             waimea->window_table->end()) {
             if (((*it).second)->type == WindowType) {

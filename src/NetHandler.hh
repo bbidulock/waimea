@@ -53,6 +53,7 @@ public:
     void SetWmState(WaWindow *);
     void GetVirtualPos(WaWindow *);
     void SetVirtualPos(WaWindow *);
+    void GetWmStrut(WaWindow *);
 
     void SetSupported(WaScreen *);
     void SetSupportedWMCheck(WaScreen *, Window);
@@ -66,7 +67,6 @@ public:
 
     void wXDNDMakeAwareness(Window);
     void wXDNDClearAwareness(Window);
-    void GetWmStrut(Window, WaScreen *);
     void SetWorkarea(WaScreen *);
     
     Waimea *waimea;

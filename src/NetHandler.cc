@@ -591,6 +591,51 @@ void NetHandler::SetVirtualPos(WaWindow *ww) {
 }
 
 /**
+ * @fn    GetWmStrut(WaWindow *ww)
+ * @brief Reads WM_STRUT hint
+ *
+ * Reads windows WM_STRUT hint, adds it to the strut list and updates
+ * workarea.
+ *
+ * @param ww WaWindow object
+ */
+void NetHandler::GetWmStrut(WaWindow *ww) {
+    CARD32 *data;
+    WMstrut *wm_strut;
+    bool found = False;
+    
+    if (XGetWindowProperty(display, ww->id, net_wm_strut, 0L, 4L, 
+                           False, XA_CARDINAL, &real_type,
+                           &real_format, &items_read, &items_left, 
+                           (unsigned char **) &data) == Success && 
+        items_read >= 4) {
+        list<WMstrut *>::iterator it = ww->wascreen->strut_list->begin();
+        for (; it != ww->wascreen->strut_list->end(); ++it) {
+            if ((*it)->window == ww->id) {
+                (*it)->left = data[0];
+                (*it)->right = data[1];
+                (*it)->top = data[2];
+                (*it)->bottom = data[3];
+                found = True;
+                ww->wascreen->UpdateWorkarea();
+            }
+        }
+        if (! found) {
+            wm_strut = (WMstrut *) malloc(sizeof(WMstrut));
+            wm_strut->window = ww->id;
+            wm_strut->left = data[0];
+            wm_strut->right = data[1];
+            wm_strut->top = data[2];
+            wm_strut->bottom = data[3];
+            ww->wm_strut = wm_strut;
+            ww->wascreen->strut_list->push_back(wm_strut);
+            ww->wascreen->UpdateWorkarea();
+        }
+        XFree(data);
+    }
+}
+
+/**
  * @fn    GetDesktopViewPort(WaScreen *ws)
  * @brief Reads viewport hint
  *
@@ -645,51 +690,6 @@ void NetHandler::SetDesktopGeometry(WaScreen *ws) {
     
     XChangeProperty(display, ws->id, net_desktop_geometry, XA_CARDINAL, 32,
                     PropModeReplace, (unsigned char *) &data, 2);
-}
-
-/**
- * @fn    GetWmStrut(Window window, WaScreen *ws)
- * @brief Reads WM_STRUT hint
- *
- * Reads WM_STRUT hint for a window, adds it to the strut list and updates
- * workarea.
- *
- * @param window Window to read WM_STRUT hint from
- * @param ws WaScreen to add WM_STRUT hints to
- */
-void NetHandler::GetWmStrut(Window window, WaScreen *ws) {
-    CARD32 *data;
-    WMstrut *wm_strut;
-    bool found = False;
-    
-    if (XGetWindowProperty(display, window, net_wm_strut, 0L, 4L, 
-                           False, XA_CARDINAL, &real_type,
-                           &real_format, &items_read, &items_left, 
-                           (unsigned char **) &data) == Success && 
-        items_read >= 4) {
-        list<WMstrut *>::iterator it = ws->strut_list->begin();
-        for (; it != ws->strut_list->end(); ++it) {
-            if ((*it)->window == window) {
-                (*it)->left = data[0];
-                (*it)->right = data[1];
-                (*it)->top = data[2];
-                (*it)->bottom = data[3];
-                found = True;
-                ws->UpdateWorkarea();
-            }
-        }
-        if (! found) {
-            wm_strut = (WMstrut *) malloc(sizeof(WMstrut));
-            wm_strut->window = window;
-            wm_strut->left = data[0];
-            wm_strut->right = data[1];
-            wm_strut->top = data[2];
-            wm_strut->bottom = data[3];
-            ws->strut_list->push_back(wm_strut);
-            ws->UpdateWorkarea();
-        }
-        XFree(data);
-    }
 }
 
 /**

@@ -27,6 +27,9 @@
 #include <X11/extensions/shape.h>
 #endif //SHAPE
 
+class WaScreen;
+class ScreenEdge;
+
 typedef struct {
     Window window;
     int left;
@@ -41,9 +44,6 @@ typedef struct {
     int width;
     int height;
 } Workarea;
-
-class WaScreen;
-class ScreenEdge;
 
 typedef struct _WaAction WaAction;
 typedef void (WaScreen::*RootActionFn)(XEvent *, WaAction *);

@@ -41,6 +41,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     waimea = wascreen->waimea;
     ic = wascreen->ic;
     net = waimea->net;
+    wm_strut = NULL;
 
     if (! XFetchName(display, id, &name)) {
         name = strdup("");
@@ -100,6 +101,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
 #endif // SHAPE    
     
     net->GetWmState(this);
+    net->GetWmStrut(this);
     
     waimea->window_table->insert(make_pair(id, this));
     waimea->wawindow_list->push_back(this);
@@ -161,6 +163,11 @@ WaWindow::~WaWindow(void) {
         waimea->wawindow_list_stacking_aot->remove(this);
     if (flags.alwaysatbottom)
         waimea->wawindow_list_stacking_aab->remove(this);
+    if (wm_strut) {
+        wascreen->strut_list->remove(wm_strut);
+        free(wm_strut);
+        wascreen->UpdateWorkarea();
+    }
 }
 
 /**

@@ -24,7 +24,6 @@
 #include <X11/extensions/shape.h>
 #endif //SHAPE
 
-
 class WaWindow;
 class WaChildWindow;
 
@@ -217,6 +216,7 @@ public:
     WaWindowFlags flags;
     SizeStruct size;
     NetHandler *net;
+    WMstrut *wm_strut;
     
 private:
     void ReparentWin(void);
