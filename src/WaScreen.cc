@@ -162,7 +162,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
 WaScreen::~WaScreen(void) {
     LISTCLEAR(docks);
     
-    delete strut_list;
+    LISTDEL(strut_list);
     delete west;
     delete east;
     delete north;

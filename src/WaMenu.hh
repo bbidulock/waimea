@@ -53,7 +53,6 @@ public:
     virtual ~WaMenu(void);
 
     void AddItem(WaMenuItem *);
-    void RemoveItem(WaMenuItem *);
     void Build(WaScreen *);
     void Map(int, int);
     void ReMap(int, int);

@@ -58,9 +58,9 @@ EventHandler::EventHandler(Waimea *wa) {
  * Deletes return mask lists
  */
 EventHandler::~EventHandler(void) {
-    delete empty_return_mask;
-    delete moveresize_return_mask;
-    delete menu_viewport_move_return_mask;
+    HASHDEL(empty_return_mask);
+    HASHDEL(moveresize_return_mask);
+    HASHDEL(menu_viewport_move_return_mask);
 }
 
 /**
@@ -206,6 +206,7 @@ void EventHandler::EventLoop(hash_set<int> *return_mask, XEvent *event) {
 void EventHandler::EvProperty(XPropertyEvent *e) {
     WaWindow *ww;
     hash_map<Window, WindowObject *>::iterator it;
+    char *tmp_name;
 
     if (e->state == PropertyDelete) {
         if (e->atom == waimea->wascreen->net->net_wm_strut) {
@@ -232,8 +233,13 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
             if (((*it).second)->type == WindowType) {
                 ww = (WaWindow *) (*it).second;
                 XGrabServer(e->display);
-                if (validateclient(ww->id))
-                    XFetchName(ww->display, ww->id, &(ww->name));
+                if (validateclient(ww->id)) {
+                    if (XFetchName(ww->display, ww->id, &tmp_name)) {
+                        delete [] ww->name;
+                        ww->name = wastrdup(tmp_name);
+                        XFree(tmp_name);
+                    }
+                }
                 XUngrabServer(e->display);
                 if (ww->title_w) ww->DrawLabelFg();
             }
@@ -442,6 +448,8 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
  *
  * We receive this event then a window has been unmapped or destroyed.
  * If we can find a WaWindow for this window then the delete that WaWindow.
+ * If we couldn't find a WaWindow we check if the windows is a dockapp window
+ * and if it is, we update the dockapp handler holding the dockapp.
  *
  * @param e	The UnmapEvent
  */

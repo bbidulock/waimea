@@ -60,6 +60,17 @@ public:
     } \
     delete list;
 
+#define LISTDEL(list) \
+    while (! list->empty()) { \
+        list->pop_back(); \
+    } \
+    delete list;
+
+#define HASHDEL(hash) \
+    while (! hash->empty()) { \
+        hash->erase(hash->begin()); \
+    } \
+    delete hash;
 
 enum {
     FrameType,

@@ -112,16 +112,16 @@ Waimea::~Waimea(void) {
     net->SetClientListStacking(wascreen);
     LISTCLEAR(wamenu_list);
     LISTCLEAR2(wawindow_list);
-    delete wawindow_list_map_order;
-    delete wawindow_list_stacking;
-    delete wawindow_list_stacking_aot;
-    delete wawindow_list_stacking_aab;
+    LISTDEL(wawindow_list_map_order);
+    LISTDEL(wawindow_list_stacking);
+    LISTDEL(wawindow_list_stacking_aot);
+    LISTDEL(wawindow_list_stacking_aab);
     delete wascreen;
     delete net;
     delete rh;
-    delete always_on_top_list;
-    delete always_at_bottom_list;
-    delete window_table;
+    LISTDEL(always_on_top_list);
+    LISTDEL(always_at_bottom_list);
+    HASHDEL(window_table);
     delete eh;
 
     XSync(display, False);

@@ -54,7 +54,7 @@ WaMenu::WaMenu(char *n) {
  * Deletes all menu items in the menu and removes the frame.
  */
 WaMenu::~WaMenu(void) {
-    LISTCLEAR(item_list);
+    LISTCLEAR2(item_list);
     if (built) {
         XDestroyWindow(display, frame);
         waimea->always_on_top_list->remove(o_west);
@@ -81,20 +81,6 @@ void WaMenu::AddItem(WaMenuItem *item) {
     item->menu = this;
     item->hilited = False;
     item_list->push_back(item);
-}
-
-/**
- * @fn    RemoveItem(WaMenuItem *item)
- * @brief Removes item from menu
- *
- * Removes item from menu by removing a WaMenuItem object from the menus item 
- * list.
- * 
- * @param item Item to remove
- */
-void WaMenu::RemoveItem(WaMenuItem *item) {
-    item_list->remove(item);
-    delete item;
 }
 
 /**
@@ -140,7 +126,7 @@ void WaMenu::Build(WaScreen *screen) {
             }
             if (menu_it == waimea->wamenu_list->end()) {
                 WARNING << "no menu named \"" << (*it)->sub << "\"" << endl;
-                RemoveItem(*it);
+                delete *it;
                 it = item_list->begin();
             }
         }
@@ -154,7 +140,7 @@ void WaMenu::Build(WaScreen *screen) {
             }
             if (menu_it == waimea->wamenu_list->end()) {
                 WARNING << "no menu named \"" << (*it)->sub2 << "\"" << endl;
-                RemoveItem(*it);
+                delete *it;
                 it = item_list->begin();
             }
         }
@@ -657,6 +643,8 @@ WaMenuItem::~WaMenuItem(void) {
     if (sub2) delete [] sub2;
     if (exec1) delete [] exec1;
     if (exec2) delete [] exec2;
+
+    menu->item_list->remove(this);
     
     if (menu->built) {
         
