@@ -14,13 +14,14 @@ CPPFLAGS= @CPPFLAGS@ @SHAPE@ @XRENDER@ @XFT@ @INTERLACE@ @ORDEREDPSEUDO@ @PIXMAP
 bin_PROGRAMS = waimea
 waimea_SOURCES = main.cc \
 		 Waimea.cc \
-		 WaScreen.cc \
-		 WaWindow.cc \
-		 ResourceHandler.cc \
-		 EventHandler.cc \
-		 WaImage.cc \
-		 WaMenu.cc \
-		 NetHandler.cc \
-		 DockappHandler.cc \
+		 Screen.cc \
+		 Window.cc \
+		 Resources.cc \
+		 Event.cc \
+		 Image.cc \
+		 Menu.cc \
+		 Net.cc \
+		 Dockapp.cc \
 		 Timer.cc \
-		 Regex.cc
+		 Regex.cc \
+		 Font.cc

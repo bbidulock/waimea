@@ -4,7 +4,7 @@
 .\" This manual page may be freely distributed and modified.
 .\" Author: David Reveman <c99drn@cs.umu.se>
 .\" 
-.TH WAIMEA 1 "Oct 5 2002" "0.3.4" "User Manual"
+.TH WAIMEA 1 "Oct 10 2002" "0.3.4" "User Manual"
 
 
 .SH NAME
@@ -556,7 +556,10 @@ Opacity works for all types of textures even pixmaps.
 
 .TP
 .B Pixmap stretching borders
-Borders used for pixmap stretching. Format is { LEFT, RIGHT, TOP, BOTTOM }
+Borders used for pixmap stretching. Format is: 
+.nf
+{ LEFT, RIGHT, TOP, BOTTOM }
+.fi
 LEFT being the width of left border, RIGHT being the width of right border,
 TOP being the height of top border and BOTTOM being the height of bottom
 border. Only graphics not within any of the borders will be scaled when
@@ -565,7 +568,7 @@ stretching pixmap.
 .PP
 Here are the keys 
 .I waimea 
-understands together with the kind of value they can contain. 
+understands together with the value they should contain. 
 
 .PP
 .I Window Keys
@@ -612,16 +615,42 @@ Texture type, opacity level and colors used for unfocused window textures.
 .B window.label.focus.textColor:     Color
 .br
 .B window.label.focus.textColor.opacity:     Xft opacity level
+.br
+.B window.label.focus.textShadowColor:     Color
+.br
+.B window.label.focus.textShadowColor.opacity:     Xft opacity level
 .RS
 Color and opacity level used for focused window label font.
+.RE
+
+.PP
+.B window.label.focus.textShadowXOffset:     Integer
+.br
+.B window.label.focus.textShadowYOffset:     Integer
+.RS
+X and Y shadow offset for focused window label. If neither XOffset
+or YOffset are specified or both are zero no shadow will be rendered.
 .RE
 
 .PP
 .B window.label.unfocus.textColor:     Color
 .br
 .B window.label.unfocus.textColor.opacity:     Xft opacity level
+.br
+.B window.label.unfocus.textShadowColor:     Color
+.br
+.B window.label.unfocus.textShadowColor.opacity:     Xft opacity level
 .RS
 Color and opacity level used for unfocused window label font.
+.RE
+
+.PP
+.B window.label.unfocus.textShadowXOffset:     Integer
+.br
+.B window.label.unfocus.textShadowYOffset:     Integer
+.RS
+X and Y shadow offset for unfocused window label. If neither XOffset
+or YOffset are specified or both are zero no shadow will be rendered.
 .RE
 
 .PP
@@ -700,8 +729,21 @@ Texture type, opacity level and colors used for menu textures.
 .B menu.*.textColor:     Color
 .br
 .B menu.*.textColor.opacity:     Xft opacity level
+.br
+.B menu.*.textShadowColor:     Color
+.br
+.B menu.*.textShadowColor.opacity:     Xft opacity level
 .RS
 Color and opacity level used for menu fonts.
+.RE
+
+.PP
+.B menu.*.textShadowXOffset:     Integer
+.br
+.B menu.*.textShadowYOffset:     Integer
+.RS
+X and Y shadow offset for menu item. If neither XOffset
+or YOffset are specified or both are zero no shadow will be rendered.
 .RE
 
 .PP
@@ -1646,6 +1688,8 @@ Here is the list of event modifiers that can used in the modifier mask:
 .B button[1-5]mask
 .br
 .B moveresizemask
+.br
+.B Any KeySym that is assigned to a modifier
 
 .PP
 Default action file is @pkgdatadir@/actions/action.

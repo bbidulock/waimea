@@ -1,5 +1,5 @@
 /**
- * @file   WaWindow.cc
+ * @file   Window.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   02-May-2001 21:43:03
  *
@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef __WaWindow_hh
-#define __WaWindow_hh
+#ifndef __Window_hh
+#define __Window_hh
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -29,8 +29,8 @@ class WaChildWindow;
 typedef struct _WaAction WaAction;
 typedef void (WaWindow::*WwActionFn)(XEvent *, WaAction *);
 
-#include "EventHandler.hh"
-#include "NetHandler.hh"
+#include "Event.hh"
+#include "Net.hh"
 
 #define DELETED { deleted = true; XUngrabServer(display); return; }
 #define WW_DELETED { ww->deleted = true; XUngrabServer(display); return; }
@@ -246,6 +246,9 @@ public:
     WaChildWindow(WaWindow *, Window, int);
     virtual ~WaChildWindow(void);
 
+    void Render(void);
+    void Draw(void);
+    
     Display *display;
     WaWindow *wa;
     WaScreen *wascreen;
@@ -259,9 +262,7 @@ public:
 #ifdef XFT
     XftDraw *xftdraw;
 #endif // XFT
-
-    void Render(void);
-    void Draw(void);
+    
 };
 
-#endif // __WaWindow_hh
+#endif // __Window_hh

@@ -1,5 +1,5 @@
 /**
- * @file   WaMenu.hh
+ * @file   Menu.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   02-Aug-2001 22:40:01
  *
@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef __WaMenu_hh
-#define __WaMenu_hh
+#ifndef __Menu_hh
+#define __Menu_hh
 
 #include <X11/Xlib.h>
 
@@ -24,7 +24,7 @@ class WindowMenu;
 typedef struct _WaAction WaAction;
 typedef void (WaMenuItem::*MenuActionFn)(XEvent *, WaAction *);
 
-#include "WaScreen.hh"
+#include "Screen.hh"
 
 #define MenuExecMask  (1L << 0)
 #define MenuSubMask   (1L << 1)
@@ -191,14 +191,12 @@ public:
     WaMenu *submenu, *submenu1, *submenu2;
     Window wf;
     WaTexture *texture;
+    WaFont *wafont_cb;
     
 #ifdef XFT        
     XftDraw *xftdraw;
-    XftFont *cbox_xft_font;
 #endif // XFT
     
-    GC *cbox_gc;
-
 #ifdef XRENDER
     Pixmap pixmap;
 #endif // XRENDER
@@ -215,4 +213,4 @@ private:
     list<WaWindow *> *wawindow_list;
 };
 
-#endif // __WaMenu_hh
+#endif // __Menu_hh

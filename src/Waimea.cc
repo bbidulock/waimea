@@ -15,7 +15,6 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
-#include <X11/Xlib.h>
 
 #ifdef    SHAPE
 #  include <X11/Xutil.h>

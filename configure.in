@@ -165,6 +165,8 @@ if test x$enableval = "xyes"; then
             use_xft="yes"
             XFT="-DXFT"
             CPPFLAGS="$CPPFLAGS $Xft_flags"
+       else
+            AC_MSG_RESULT(no)
        fi
      fi
 

@@ -1,34 +1,34 @@
 DEF globalKeyBindings {
-   TaskSwitcher               : KeyPress = Tab & Mod1Mask,
-   MenuRemapFocused(rootmenu) : KeyPress = Escape & ControlMask
+   TaskSwitcher               : KeyPress = Tab & Alt_L,
+   MenuRemapFocused(rootmenu) : KeyPress = Escape & Control_L
 }
 
 DEF defaultAllWindows {
-   Raise                  : ButtonPress = Button1 & Mod1Mask,
-   Focus                  : ButtonPress = Button1 & Mod1Mask,
-   Focus                  : ButtonPress = Button3 & Mod1Mask,
-   StartOpaqueMove        : ButtonPress = Button1 & Mod1Mask,
-   StartOpaqueResizeRight : ButtonPress = Button3 & Mod1Mask,
-   Lower                  : ButtonPress = Button2 & Mod1Mask,
+   Raise                  : ButtonPress = Button1 & Alt_L,
+   Focus                  : ButtonPress = Button1 & Alt_L,
+   Focus                  : ButtonPress = Button3 & Alt_L,
+   StartOpaqueMove        : ButtonPress = Button1 & Alt_L,
+   StartOpaqueResizeRight : ButtonPress = Button3 & Alt_L,
+   Lower                  : ButtonPress = Button2 & Alt_L,
    EndMoveResize          : ButtonRelease = Button1 & MoveResizeMask,
    EndMoveResize          : ButtonRelease = Button3 & MoveResizeMask
 }
 
 DEF defaultAllDecor {
 	defaultAllWindows,
-   Raise             : ButtonPress = Button1 & !Mod1Mask,
-   Lower             : ButtonPress = Button2 & !Mod1Mask,
-   MenuRemap(window) : ButtonPress = Button3 & !Mod1Mask,
-   MenuUnmap(window) : ButtonPress = Button1 & !Mod1Mask,
-   MenuUnmap(window) : ButtonPress = Button2 & !Mod1Mask
+   Raise             : ButtonPress = Button1 & !Alt_L,
+   Lower             : ButtonPress = Button2 & !Alt_L,
+   MenuRemap(window) : ButtonPress = Button3 & !Alt_L,
+   MenuUnmap(window) : ButtonPress = Button1 & !Alt_L,
+   MenuUnmap(window) : ButtonPress = Button2 & !Alt_L
 }
 
 DEF defaultAllTitle {
    defaultAllDecor,
-   Focus           : ButtonPress = Button1 & !Mod1Mask,
-   Focus           : ButtonPress = Button3 & !Mod1Mask,
-   StartOpaqueMove : ButtonPress = Button1 & !Mod1Mask,
-   ToggleShade     : DoubleClick = Button1 & !Mod1Mask
+   Focus           : ButtonPress = Button1 & !Alt_L,
+   Focus           : ButtonPress = Button3 & !Alt_L,
+   StartOpaqueMove : ButtonPress = Button1 & !Alt_L,
+   ToggleShade     : DoubleClick = Button1 & !Alt_L
 }
 
 window.frame { defaultAllDecor }
@@ -37,27 +37,27 @@ window.label { defaultAllTitle }
 window.handle { defaultAllDecor }
 window.leftgrip { 
    defaultAllWindows,
-   Focus                 : ButtonPress = AnyButton & !Mod1Mask,
-   StartOpaqueResizeLeft : ButtonPress = Button1 & !Mod1Mask
+   Focus                 : ButtonPress = AnyButton & !Alt_L,
+   StartOpaqueResizeLeft : ButtonPress = Button1 & !Alt_L
 }
 window.rightgrip { 
    defaultAllWindows,
-   Focus                  : ButtonPress = AnyButton & !Mod1Mask,
-   StartOpaqueResizeRight : ButtonPress = Button1 & !Mod1Mask
+   Focus                  : ButtonPress = AnyButton & !Alt_L,
+   StartOpaqueResizeRight : ButtonPress = Button1 & !Alt_L
 }
 window.button0 {      
    defaultAllWindows,
-   Focus : ButtonPress = AnyButton & !Mod1Mask,
+   Focus : ButtonPress = AnyButton & !Alt_L,
    ToggleShade : ButtonRelease = Button1
 }
 window.button1 { 
    defaultAllWindows,
-   Focus : ButtonPress = AnyButton & !Mod1Mask,
+   Focus : ButtonPress = AnyButton & !Alt_L,
    Close : ButtonRelease = Button1
 }
 window.button2 {
    defaultAllWindows,
-   Focus          : ButtonPress = AnyButton & !Mod1Mask,
+   Focus          : ButtonPress = AnyButton & !Alt_L,
    ToggleMaximize : ButtonRelease = Button1,
    Raise          : ButtonRelease = Button1
 }
@@ -67,18 +67,18 @@ window.passiveclient {
    Focus     : ButtonPress = Button3,
    defaultAllWindows,
    Raise     : MapRequest,
-   StartMove : MapRequest & ControlMask,
-   Focus     : MapRequest & ControlMask  
+   StartMove : MapRequest & Control_L,
+   Focus     : MapRequest & Control_L  
 }
 window.activeclient {
    *Raise                   : ButtonPress = Button1,
    defaultAllWindows,
-   ToggleShade              : KeyPress = F1 & Mod1Mask,
-   ToggleMaximize           : KeyPress = F2 & Mod1Mask,
-   Raise                    : KeyPress = F2 & Mod1Mask,
-   MenuRemapFocused(window) : KeyPress = F3 & Mod1Mask,
-   Close                    : KeyPress = F4 & Mod1Mask,
-   Kill                     : KeyPress = F10 & Mod1Mask,
+   ToggleShade              : KeyPress = F1 & Alt_L,
+   ToggleMaximize           : KeyPress = F2 & Alt_L,
+   Raise                    : KeyPress = F2 & Alt_L,
+   MenuRemapFocused(window) : KeyPress = F3 & Alt_L,
+   Close                    : KeyPress = F4 & Alt_L,
+   Kill                     : KeyPress = F10 & Alt_L,
    globalKeyBindings   
 }
 
@@ -94,14 +94,14 @@ westedge { ViewportLeft : EnterNotify }
 
 eastedge { ViewportRight : EnterNotify }
 
-northedge { ViewportUp : EnterNotify }
-
-southedge { ViewportDown : EnterNotify }
+northedge { ViewportUp : EnterNotify [250 : LeaveNotify] }
+ 
+southedge { ViewportDown : EnterNotify [250 : LeaveNotify] }
 
 DEF allMenuWindows {
-   Raise           : ButtonPress = Button1 & Mod1Mask,
-   StartOpaqueMove : ButtonPress = Button1 & Mod1Mask,
-   UnLink          : ButtonPress = Button1 & Mod1Mask,
+   Raise           : ButtonPress = Button1 & Alt_L,
+   StartOpaqueMove : ButtonPress = Button1 & Alt_L,
+   UnLink          : ButtonPress = Button1 & Alt_L,
    EndMoveResize   : ButtonRelease = Button1 & MoveResizeMask
 }
 
@@ -122,8 +122,8 @@ DEF allMenuItems {
 menu.title {
    allMenuWindows,
    Raise           : ButtonPress = Button1,
-   UnLink          : ButtonPress = Button1 & !Mod1Mask,
-   StartOpaqueMove : ButtonPress = Button1 & !Mod1Mask,
+   UnLink          : ButtonPress = Button1 & !Alt_L,
+   StartOpaqueMove : ButtonPress = Button1 & !Alt_L,
    UnmapSubs       : ButtonPress = Button3,
    Unmap           : ButtonPress = Button3
 }
@@ -150,7 +150,7 @@ menu.sub {
 }
 
 n/^desktop_window$/.passiveclient {
-   MenuRemap(rootmenu)  : ButtonPress = Button3 & !ControlMask,
+   MenuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
    *MenuUnmap(rootmenu) : ButtonPress = Button1,
    Focus                : ButtonPress = Button1,
    StartViewportMove    : ButtonPress = Button2,
@@ -159,7 +159,7 @@ n/^desktop_window$/.passiveclient {
 
 n/^desktop_window$/.activeclient {
    globalKeyBindings,
-   MenuRemap(rootmenu)  : ButtonPress = Button3 & !ControlMask,
+   MenuRemap(rootmenu)  : ButtonPress = Button3 & !Control_L,
    *MenuUnmap(rootmenu) : ButtonPress = Button1
 }
 

@@ -1,5 +1,5 @@
 /**
- * @file   ResourceHandler.hh
+ * @file   Resources.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   18-Jul-2001 00:31:06
  *
@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef __ResourceHandler_hh
-#define __ResourceHandler_hh
+#ifndef __Resources_hh
+#define __Resources_hh
 
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
@@ -31,8 +31,8 @@ typedef struct _WaAction WaAction;
 typedef struct _DockStyle DockStyle;
 typedef struct _ButtonStyle ButtonStyle;
 
-#include "WaWindow.hh"
-#include "WaMenu.hh"
+#include "Window.hh"
+#include "Menu.hh"
 #include "Waimea.hh"
 #include "Regex.hh"
 
@@ -221,4 +221,4 @@ char *strwithin(char *, char, char, bool = false);
 char *environment_expansion(char *s);
 char *param_eval(char *, char *, WaScreen *);
 
-#endif // __ResourceHandler_hh
+#endif // __Resources_hh

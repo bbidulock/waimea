@@ -1,5 +1,5 @@
 /**
- * @file   DockappHandler.cc
+ * @file   Dockapp.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   29-Nov-2001 22:13:22
  *
@@ -15,7 +15,7 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
-#include "DockappHandler.hh"
+#include "Dockapp.hh"
 
 /**
  * @fn    DockappHandler(void)

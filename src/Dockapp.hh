@@ -1,5 +1,5 @@
 /**
- * @file   DockappHandler.hh
+ * @file   Dockapp.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   29-Nov-2001 22:13:22
  *
@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef __DockappHandler_hh
-#define __DockappHandler_hh
+#ifndef __Dockapp_hh
+#define __Dockapp_hh
 
 class DockappHandler;
 class Dockapp;
@@ -57,4 +57,4 @@ public:
     bool added;
 };
 
-#endif // __DockappHandler_hh
+#endif // __Dockapp_hh

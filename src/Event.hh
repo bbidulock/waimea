@@ -1,5 +1,5 @@
 /**
- * @file   EventHandler.hh
+ * @file   Event.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   11-May-2001 11:48:03
  *
@@ -11,8 +11,8 @@
  *
  */
 
-#ifndef __EventHandler_hh
-#define __EventHandler_hh
+#ifndef __Event_hh
+#define __Event_hh
 
 #include <X11/Xlib.h>
 

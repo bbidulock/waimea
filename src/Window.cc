@@ -1,5 +1,5 @@
 /**
- * @file   WaWindow.cc
+ * @file   Window.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   02-May-2001 21:43:03
  *
@@ -17,7 +17,7 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
-#include "WaWindow.hh"
+#include "Window.hh"
 
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
@@ -3036,35 +3036,19 @@ void WaChildWindow::Render(void) {
 
 /**
  * @fn    Draw(void)
- * @brief Draw WaChildWindow foreground
+ * @brief Draw text/decorations
  *
- * Sets background pixmap and redraws foreground.
+ * Draws text in window title window and button graphics for button windows.
  */
 void WaChildWindow::Draw(void) {
     XClearWindow(display, id);
     switch (type) {
-        case LabelType:
-            int x, length, text_w;
-            GC *gc;
-            x = 0;
+        case LabelType: {
+            int x = 0, length, text_w;
             length = strlen(wa->name);
-    
-#ifdef XFT
-            XftColor *xftcolor;
-            if (wascreen->wstyle.wa_font.xft) {
-                xftcolor = (wa->has_focus)? wascreen->wstyle.xftfcolor:
-                    wascreen->wstyle.xftucolor;
-                XGlyphInfo extents;
-                XftTextExtents8(display, wascreen->wstyle.xftfont,
-                                (unsigned char *) wa->name, length, &extents);
-                text_w = extents.width;
-            }
-#endif // XFT
-            if (! wascreen->wstyle.wa_font.xft) {
-                gc = (wa->has_focus)? &wascreen->wstyle.l_text_focus_gc:
-                    &wascreen->wstyle.l_text_unfocus_gc;
-                text_w = XTextWidth(wascreen->wstyle.font, wa->name, length);
-            }
+            WaFont *wafont = (wa->has_focus)? &wascreen->wstyle.wa_font:
+                &wascreen->wstyle.wa_font_u;
+            text_w = wafont->Width(display, wa->name, length);
     
             if (text_w > (attrib.width - 10)) x = 2;
             else {
@@ -3077,18 +3061,21 @@ void WaChildWindow::Draw(void) {
                         x = (attrib.width - text_w) - 2;
                         break;
                 }
-            }
-#ifdef XFT
-            if (wascreen->wstyle.wa_font.xft)
-                XftDrawString8(xftdraw, xftcolor, wascreen->wstyle.xftfont, x,
-                               wascreen->wstyle.y_pos,
-                               (unsigned char *) wa->name, length);
+            }            
+            
+            wafont->Draw(display, id,
+                         
+#ifdef    XFT
+                     xftdraw,
 #endif // XFT
-            if (! wascreen->wstyle.wa_font.xft)
-                XDrawString(display, (Drawable) id, *gc, x,
-                            wascreen->wstyle.y_pos, wa->name, length);
-            break;
-        case ButtonType:
+                 
+                     x, wascreen->wstyle.y_pos,
+                     wa->name, length);
+
+            } break;
+        case ButtonType: {
+            GC *gc;
+            
             if (bstyle->fg) {
                 bool flag = false;
                 switch (bstyle->cb) {
@@ -3152,7 +3139,7 @@ void WaChildWindow::Draw(void) {
                                        wa->title_w - 11, wa->title_w - 11);
                 }
             }
-            break;
+        } break;
     }
 }
 

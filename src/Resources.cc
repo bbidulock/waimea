@@ -1,5 +1,5 @@
 /**
- * @file   ResourceHandler.cc
+ * @file   Resources.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   18-Jul-2001 00:31:22
  *
@@ -19,7 +19,7 @@
 
 #include <X11/Xlib.h>
 
-#include "ResourceHandler.hh"
+#include "Resources.hh"
 
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
@@ -308,6 +308,30 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     mods.push_back(new StrComp("button4mask", Button4Mask));
     mods.push_back(new StrComp("button5mask", Button5Mask));
     mods.push_back(new StrComp("moveresizemask", MoveResizeMask));
+
+    const XModifierKeymap* const modmap = XGetModifierMapping(display);
+
+    if (modmap && modmap->max_keypermod > 0) {
+        const int mask_table[] = { 
+            ShiftMask, LockMask, ControlMask, Mod1Mask,
+            Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask
+        };    
+        const size_t size = (sizeof(mask_table) / sizeof(mask_table[0])) *
+            modmap->max_keypermod;
+        
+        for (size_t i = 0; i < size; ++i) {
+            if (! modmap->modifiermap[i]) continue;
+            KeySym ksym = XKeycodeToKeysym(display, modmap->modifiermap[i], 0);
+            if (ksym) {
+                char *kstring = XKeysymToString(ksym);
+                if (kstring) {
+                    int modmask = mask_table[i / modmap->max_keypermod];
+                    mods.push_back(new StrComp(kstring, modmask));
+                }
+            }
+        }
+        if (modmap) XFreeModifiermap(const_cast<XModifierKeymap*>(modmap));
+    }
 }
 
 /**
@@ -347,12 +371,12 @@ void ResourceHandler::LoadConfig(Waimea *waimea) {
     
     database = (XrmDatabase) 0;
     if (! (database = XrmGetFileDatabase(rc_file))) {
-        if (rc_forced) WARNING << "can't open rcfile \"" << rc_file <<
-                           "\" for reading" << endl;
+        if (rc_forced) WARNING << "can't open rcfile `" << rc_file <<
+                           "' for reading" << endl;
         else
             if (! (database = XrmGetFileDatabase(DEFAULTRCFILE)))
-                WARNING << "can't open system default rcfile \"" << 
-                    DEFAULTRCFILE << "\" for reading" << endl;
+                WARNING << "can't open system default rcfile `" << 
+                    DEFAULTRCFILE << "' for reading" << endl;
     }
     
     waimea->screenmask = 0;
@@ -654,17 +678,21 @@ void ResourceHandler::LoadStyle(WaScreen *wascreen) {
     database = (XrmDatabase) 0;
     
     if (! (database = XrmGetFileDatabase(wascreen->config.style_file)))
-        WARNING << "can't open stylefile \"" << wascreen->config.style_file
-                << "\" for reading" << endl;
+        WARNING << "can't open stylefile `" << wascreen->config.style_file
+                << "' for reading" << endl;
     
     int slen = strlen(wascreen->config.style_file) - 1;
     for (; slen >= 1 && wascreen->config.style_file[slen] != '/'; slen--);
     wascreen->config.style_file[slen] = '\0';
 
+    WaFont default_font;
+    
 #ifdef XFT
-    WaFont default_font = { true, "arial:pixelsize=12" };
+    default_font.xft = true;
+    default_font.font = "arial:pixelsize=12";
 #else // !XFT
-    WaFont default_font = { false, "fixed" };
+    default_font.xft = false;
+    default_font.font = "fixed";
 #endif // XFT
 
     ReadDatabaseFont("window.font", "Window.Font", &wstyle->wa_font,
@@ -701,10 +729,71 @@ void ResourceHandler::LoadStyle(WaScreen *wascreen) {
     ReadDatabaseColor("window.label.focus.textColor",
                       "Window.Label.Focus.TextColor",
                       &wstyle->l_text_focus, BlackPixel(display, screen), ic);
+    ReadDatabaseColor("window.label.focus.textShadowColor",
+                      "Window.Label.Focus.TextShadowColor",
+                      &wstyle->l_text_focus_s,
+                      BlackPixel(display, screen), ic);
     ReadDatabaseColor("window.label.unfocus.textColor",
                       "Window.Label.Unfocus.TextColor",
                       &wstyle->l_text_unfocus, WhitePixel(display, screen),
                       ic);
+    ReadDatabaseColor("window.label.unfocus.textShadowColor",
+                      "Window.Label.Unfocus.TextShadowColor",
+                      &wstyle->l_text_unfocus_s, BlackPixel(display, screen),
+                      ic);
+
+    if (XrmGetResource(database,
+                       "window.label.focus.textShadowXOffset",
+                       "Window.Label.focus.TextShadowXOffset", &value_type,
+                       &value)) {
+        if (sscanf(value.addr, "%d", &wstyle->wa_font.shodow_off_x) != 1)
+            wstyle->wa_font.shodow_off_x = 0;
+    } else
+        wstyle->wa_font.shodow_off_x = 0;
+
+    if (wstyle->wa_font.shodow_off_x > 10) wstyle->wa_font.shodow_off_x = 10;
+    if (wstyle->wa_font.shodow_off_x < -10) wstyle->wa_font.shodow_off_x = -10;
+
+    if (XrmGetResource(database,
+                       "window.label.focus.textShadowYOffset",
+                       "Window.Label.focus.TextShadowYOffset", &value_type,
+                       &value)) {
+        if (sscanf(value.addr, "%d", &wstyle->wa_font.shodow_off_y) != 1)
+            wstyle->wa_font.shodow_off_y = 0;
+    } else
+        wstyle->wa_font.shodow_off_y = 0;
+
+    if (wstyle->wa_font.shodow_off_y > 10) wstyle->wa_font.shodow_off_y = 10;
+    if (wstyle->wa_font.shodow_off_y < -10) wstyle->wa_font.shodow_off_y = -10;
+    
+    if (XrmGetResource(database,
+                       "window.label.unfocus.textShadowXOffset",
+                       "Window.Label.Unfocus.TextShadowXOffset", &value_type,
+                       &value)) {
+        if (sscanf(value.addr, "%d", &wstyle->wa_font_u.shodow_off_x) != 1)
+            wstyle->wa_font_u.shodow_off_x = 0;
+    } else
+        wstyle->wa_font_u.shodow_off_x = 0;
+    
+    if (wstyle->wa_font_u.shodow_off_x > 10)
+        wstyle->wa_font_u.shodow_off_x = 10;
+    if (wstyle->wa_font_u.shodow_off_x < -10)
+        wstyle->wa_font_u.shodow_off_x = -10;
+
+    if (XrmGetResource(database,
+                       "window.label.unfocus.textShadowYOffset",
+                       "Window.Label.Unfocus.TextShadowYOffset", &value_type,
+                       &value)) {
+        if (sscanf(value.addr, "%d", &wstyle->wa_font_u.shodow_off_y) != 1)
+            wstyle->wa_font_u.shodow_off_y = 0;
+    } else
+        wstyle->wa_font_u.shodow_off_y = 0;
+    
+    if (wstyle->wa_font_u.shodow_off_y > 10)
+        wstyle->wa_font_u.shodow_off_y = 10;
+    if (wstyle->wa_font_u.shodow_off_y < -10)
+        wstyle->wa_font_u.shodow_off_y = -10;
+    
     
     if (XrmGetResource(database, "window.justify", "Window.Justify",
                        &value_type, &value)) {
@@ -726,11 +815,107 @@ void ResourceHandler::LoadStyle(WaScreen *wascreen) {
 
     ReadDatabaseColor("menu.frame.textColor", "Menu.Frame.TextColor",
                       &mstyle->f_text, BlackPixel(display, screen), ic);
+    ReadDatabaseColor("menu.frame.textShadowColor",
+                      "Menu.Frame.TextShadowColor",
+                      &mstyle->f_text_s, BlackPixel(display, screen), ic);
+    
     ReadDatabaseColor("menu.hilite.textColor", "Menu.Hilite.TextColor",
                       &mstyle->f_hilite_text, BlackPixel(display, screen),
                       ic);
+    ReadDatabaseColor("menu.hilite.textShadowColor",
+                      "Menu.Hilite.TextShadowColor",
+                      &mstyle->f_hilite_text_s, BlackPixel(display, screen),
+                      ic);
+    
     ReadDatabaseColor("menu.title.textColor", "Menu.Title.TextColor",
                       &mstyle->t_text, BlackPixel(display, screen), ic);
+    ReadDatabaseColor("menu.title.textShadowColor",
+                      "Menu.Title.TextShadowColor",
+                      &mstyle->t_text_s, BlackPixel(display, screen), ic);
+
+    if (XrmGetResource(database,
+                       "menu.frame.textShadowXOffset",
+                       "Menu.Frame.TextShadowXOffset", &value_type,
+                       &value)) {
+        if (sscanf(value.addr, "%d", &mstyle->wa_f_font.shodow_off_x) != 1)
+            mstyle->wa_f_font.shodow_off_x = 0;
+    } else
+        mstyle->wa_f_font.shodow_off_x = 0;
+
+    if (mstyle->wa_f_font.shodow_off_x > 10)
+        mstyle->wa_f_font.shodow_off_x = 10;
+    if (mstyle->wa_f_font.shodow_off_x < -10)
+        mstyle->wa_f_font.shodow_off_x = -10;
+
+    if (XrmGetResource(database,
+                       "menu.frame.textShadowYOffset",
+                       "Menu.Frame.TextShadowYOffset", &value_type,
+                       &value)) {
+        if (sscanf(value.addr, "%d", &mstyle->wa_f_font.shodow_off_y) != 1)
+            mstyle->wa_f_font.shodow_off_y = 0;
+    } else
+        mstyle->wa_f_font.shodow_off_y = 0;
+
+    if (mstyle->wa_f_font.shodow_off_y > 10)
+        mstyle->wa_f_font.shodow_off_y = 10;
+    if (mstyle->wa_f_font.shodow_off_y < -10)
+        mstyle->wa_f_font.shodow_off_y = -10;
+
+        if (XrmGetResource(database,
+                       "menu.hilite.textShadowXOffset",
+                       "Menu.Hilite.TextShadowXOffset", &value_type,
+                       &value)) {
+        if (sscanf(value.addr, "%d", &mstyle->wa_fh_font.shodow_off_x) != 1)
+            mstyle->wa_fh_font.shodow_off_x = 0;
+    } else
+        mstyle->wa_fh_font.shodow_off_x = 0;
+
+    if (mstyle->wa_fh_font.shodow_off_x > 10)
+        mstyle->wa_fh_font.shodow_off_x = 10;
+    if (mstyle->wa_fh_font.shodow_off_x < -10)
+        mstyle->wa_fh_font.shodow_off_x = -10;
+
+    if (XrmGetResource(database,
+                       "menu.hilite.textShadowYOffset",
+                       "Menu.Hilite.TextShadowYOffset", &value_type,
+                       &value)) {
+        if (sscanf(value.addr, "%d", &mstyle->wa_fh_font.shodow_off_y) != 1)
+            mstyle->wa_fh_font.shodow_off_y = 0;
+    } else
+        mstyle->wa_fh_font.shodow_off_y = 0;
+
+    if (mstyle->wa_fh_font.shodow_off_y > 10)
+        mstyle->wa_fh_font.shodow_off_y = 10;
+    if (mstyle->wa_fh_font.shodow_off_y < -10)
+        mstyle->wa_fh_font.shodow_off_y = -10;
+
+    if (XrmGetResource(database,
+                       "menu.title.textShadowXOffset",
+                       "Menu.Title.TextShadowXOffset", &value_type,
+                       &value)) {
+        if (sscanf(value.addr, "%d", &mstyle->wa_t_font.shodow_off_x) != 1)
+            mstyle->wa_t_font.shodow_off_x = 0;
+    } else
+        mstyle->wa_t_font.shodow_off_x = 0;
+
+    if (mstyle->wa_t_font.shodow_off_x > 10)
+        mstyle->wa_t_font.shodow_off_x = 10;
+    if (mstyle->wa_t_font.shodow_off_x < -10)
+        mstyle->wa_t_font.shodow_off_x = -10;
+
+    if (XrmGetResource(database,
+                       "menu.title.textShadowYOffset",
+                       "Menu.Title.TextShadowYOffset", &value_type,
+                       &value)) {
+        if (sscanf(value.addr, "%d", &mstyle->wa_t_font.shodow_off_y) != 1)
+            mstyle->wa_t_font.shodow_off_y = 0;
+    } else
+        mstyle->wa_t_font.shodow_off_y = 0;
+
+    if (mstyle->wa_t_font.shodow_off_y > 10)
+        mstyle->wa_t_font.shodow_off_y = 10;
+    if (mstyle->wa_t_font.shodow_off_y < -10)
+        mstyle->wa_t_font.shodow_off_y = -10;
 
     if (XrmGetResource(database, "menu.justify", "Menu.Justify",
                        &value_type, &value)) {
@@ -1159,8 +1344,8 @@ void ResourceHandler::LoadMenus(WaScreen *wascreen) {
     FILE *file;
 
     if (! (file = fopen(wascreen->config.menu_file, "r"))) {
-        WARNING << "can't open menufile \"" << wascreen->config.menu_file << 
-            "\" for reading" << endl;
+        WARNING << "can't open menufile `" << wascreen->config.menu_file << 
+            "' for reading" << endl;
         return;
     }
     while (! feof(file)) ParseMenu(NULL, file, wascreen);
@@ -1194,8 +1379,8 @@ void ResourceHandler::LoadActions(WaScreen *wascreen) {
     }
     
     if (! (file = fopen(sc->action_file, "r"))) {
-        WARNING << "can't open action file \"" << sc->action_file << 
-            "\" for reading" << endl;
+        WARNING << "can't open action file `" << sc->action_file << 
+            "' for reading" << endl;
         return;
     }
     for (;;) {
@@ -1570,15 +1755,15 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
                            &value)) {
             if (strstr(value.addr, "/")) {
                 if (! (image = imlib_load_image(value.addr)))
-                    WARNING << "failed loading image \"" << value.addr <<
-                        "\"\n";
+                    WARNING << "failed loading image `" << value.addr <<
+                        "'\n";
             }
             else {
                 sprintf(pixmap_path, "%s/%s",
                         ic->getWaScreen()->config.style_file, value.addr);
                 if (! (image = imlib_load_image(pixmap_path))) {
-                    WARNING << "failed loading image \"" << value.addr <<
-                        "\"\n";
+                    WARNING << "failed loading image `" << value.addr <<
+                        "'\n";
                 }
             }
         }
@@ -1796,7 +1981,7 @@ void ResourceHandler::ReadDatabaseFont(char *rname, char *rclass,
     char *f;
     char *__m_wastrdup_tmp;
     
-    if (XrmGetResource(database, rname, rclass, &value_type, &value)) {
+    if (XrmGetResource(database, rname, rclass, &value_type, &value)) {        
         f = value.addr;
         font->xft = false;
         
@@ -1842,6 +2027,9 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
     list<StrComp *>::iterator it;
     char *__m_wastrdup_tmp;
     char *s = NULL;
+
+    int min_key, max_key;
+    XDisplayKeycodes(wascreen->display, &min_key, &max_key);
     
     act_tmp = new WaAction;
     act_tmp->replay = false;
@@ -1868,7 +2056,7 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
     if (*(par++) == '(') {
         for (i = 0; par[i] != ')'; i++)
             if (par[i] == '\0') {
-                WARNING << "missing \")\" in resource line \"" << s << "\"" 
+                WARNING << "missing `)' in resource line `" << s << "'" 
                         << endl;
                 delete act_tmp;
                 delete [] line;
@@ -1880,7 +2068,7 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
                 (! strncasecmp(token, "pointer", 7)) ||
                 (! strncasecmp(token, "viewportrelative", 16)) ||
                 (! strncasecmp(token, "viewportfixed", 13)) ) {
-                WARNING "\"" << token << "\" action must have a parameter" <<
+                WARNING "`" << token << "' action must have a parameter" <<
                     endl;
                 delete act_tmp;
                 delete [] line;
@@ -1899,7 +2087,7 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
              (! strncasecmp(token, "pointer", 7)) ||
              (! strncasecmp(token, "viewportrelative", 16)) ||
              (! strncasecmp(token, "viewportfixed", 13)) ) {
-        WARNING "\"" << token << "\" action must have a parameter" <<
+        WARNING "`" << token << "' action must have a parameter" <<
             endl;
         delete act_tmp;
         delete [] line;
@@ -1925,7 +2113,7 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
         if ((s = strwithin(token, '{', '}'))) {
             act_tmp->exec = __m_wastrdup(s);
         } else {
-            WARNING << "\"" << token << "\" unknown action" << endl;
+            WARNING << "`" << token << "' unknown action" << endl;
             delete act_tmp;
             delete [] line;
             if (s) delete [] s; s = NULL;
@@ -1948,7 +2136,7 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
         }
     }
     if (! *it) {
-        WARNING << "\"" << token << "\" unknown type" << endl;
+        WARNING << "`" << token << "' unknown type" << endl;
         delete act_tmp;
         delete [] line;
         if (s) delete [] s; s = NULL;
@@ -1966,13 +2154,23 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
                 act_tmp->detail = 0;
             else {
                 if ((keysym = XStringToKeysym(token)) == NoSymbol) {
-                    WARNING << "\"" << token << "\" unknown key" << endl;
+                    WARNING << "`" << token << "' unknown key" << endl;
                     delete act_tmp;
                     delete [] line;
                     if (s) delete [] s; s = NULL;
                     return;
-                } else
+                } else {
                     act_tmp->detail = XKeysymToKeycode(display, keysym);
+                    if (act_tmp->detail < (unsigned int) min_key ||
+                        act_tmp->detail > (unsigned int) max_key) {
+                        WARNING << "bad keycode for `" << token << "'" <<
+                            endl;
+                        delete act_tmp;
+                        delete [] line;
+                        if (s) delete [] s; s = NULL;
+                        return;
+                    }   
+                }
             }
         } else if (act_tmp->type == ButtonPress ||
                    act_tmp->type == ButtonRelease ||
@@ -1985,7 +2183,7 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
                 }
             }
             if (! *it) {
-                WARNING << "\"" << token << "\" unknown detail" << endl;
+                WARNING << "`" << token << "' unknown detail" << endl;
                 delete act_tmp;
                 delete [] line;
                 if (s) delete [] s; s = NULL;
@@ -2015,7 +2213,8 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
                 }
             }
             if (! *it) {
-                WARNING << "\"" << token << "\" unknown modifier" << endl;
+                WARNING << "`" << token << "' unknown modifier " <<
+                    "or bad modifier key" << endl;
                 delete act_tmp;
                 delete [] line;
                 if (s) delete [] s; s = NULL;
@@ -2042,8 +2241,8 @@ void ResourceHandler::ParseAction(const char *_s, list<StrComp *> *comp,
                     }
                 }
                 if (! *it) {
-                    WARNING << "\"" << token <<
-                        "\" unknown break event type" << endl;
+                    WARNING << "`" << token <<
+                        "' unknown break event type" << endl;
                 }
             }
         }
@@ -2101,8 +2300,8 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file,
             if (s) delete [] s; s = NULL;
             if ((s = strwithin(line, '(', ')', true))) {
                 if (! (include_file = fopen(s, "r"))) { 
-                    WARNING << "can't open menufile \"" << s <<
-                        "\" for reading" << endl;
+                    WARNING << "can't open menufile `" << s <<
+                        "' for reading" << endl;
                     continue;
                 }
                 tmp_mf = menu_file;
@@ -2238,8 +2437,8 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file,
         }
         else if (! strcasecmp(s, "end")) {
             if (menu->item_list.empty()) {
-                WARNING << "no elements in menu \"" << menu->name <<
-                    "\"" << endl;
+                WARNING << "no elements in menu `" << menu->name <<
+                    "'" << endl;
                 delete menu;
                 if (s) delete [] s; s = NULL;
                 return NULL;
@@ -2404,7 +2603,7 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file,
             }
             if (! (m->wfunc || m->rfunc || m->mfunc)) {
                 WARNING << "(" << basename(menu_file) << ":" << linenr << 
-                    "): function \"" << s << "\" not available" << endl;
+                    "): function `" << s << "' not available" << endl;
                 continue;
             }
         }
@@ -2475,7 +2674,7 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file,
                 }
                 if (! (m->wfunc2 || m->rfunc2 || m->mfunc2)) {
                     WARNING << "(" << basename(menu_file) << ":" << linenr <<
-                        "): function \"" << s << "\" not available" << endl;
+                        "): function `" << s << "' not available" << endl;
                     continue;
                 }
             }
@@ -2484,8 +2683,8 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file,
     }
     if (menu) {
         if (menu->item_list.empty()) {
-            WARNING << "no elements in menu \"" << menu->name <<
-                "\"" << endl;
+            WARNING << "no elements in menu `" << menu->name <<
+                "'" << endl;
             delete menu;
             if (s) delete [] s; s = NULL;
             return NULL;

@@ -147,9 +147,9 @@ enum {
 
 #define CloseCBoxType  10
 
-#include "WaScreen.hh"
+#include "Screen.hh"
 #include "Timer.hh"
-#include "NetHandler.hh"
+#include "Net.hh"
 
 class Waimea {
 public:

@@ -1,5 +1,5 @@
 /**
- * @file   EventHandler.cc
+ * @file   Event.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   11-May-2001 11:48:03
  *
@@ -17,7 +17,7 @@
 
 #include <X11/Xatom.h>
 
-#include "EventHandler.hh"
+#include "Event.hh"
 
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
@@ -302,7 +302,8 @@ void EventHandler::EvExpose(XExposeEvent *e) {
                                            MenuSubType | MenuCBItemType))
         switch (wo->type) {
             case LabelType:
-                ((WaChildWindow *) wo)->Draw(); break;
+                ((WaChildWindow *) wo)->Draw();
+                break;
             case ButtonType:
                 ((WaChildWindow *) wo)->Draw(); break;
             case MenuTitleType:

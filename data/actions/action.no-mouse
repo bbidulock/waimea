@@ -1,29 +1,29 @@
 DEF globalKeyBindings {
-   TaskSwitcher                : KeyPress = Tab & Mod1Mask,
-   MenuRemapFocused(rootmenu)  : KeyPress = Escape & ControlMask,
-   PointerRelativeWarp(-100+0) : KeyPress = Left & Mod1Mask,
-   PointerRelativeWarp(+100+0) : KeyPress = Right & Mod1Mask,
-   PointerRelativeWarp(+0-100) : KeyPress = Up & Mod1Mask,
-   PointerRelativeWarp(+0+100) : KeyPress = Down & Mod1Mask
+   TaskSwitcher                : KeyPress = Tab & Alt_L,
+   MenuRemapFocused(rootmenu)  : KeyPress = Escape & Control_L,
+   PointerRelativeWarp(-100+0) : KeyPress = Left & Alt_L,
+   PointerRelativeWarp(+100+0) : KeyPress = Right & Alt_L,
+   PointerRelativeWarp(+0-100) : KeyPress = Up & Alt_L,
+   PointerRelativeWarp(+0+100) : KeyPress = Down & Alt_L
 }
 
 window.frame { Focus : EnterNotify }
 window.passiveclient {
    Raise         : MapRequest,
-   StartMove     : MapRequest & ControlMask,
-   Focus         : MapRequest & ControlMask,
+   StartMove     : MapRequest & Control_L,
+   Focus         : MapRequest & Control_L,
    EndMoveResize : KeyRelease = Alt_L & MoveResizeMask
 }
 window.activeclient {
-   ToggleShade              : KeyPress = F1 & Mod1Mask,
-   ToggleMaximize           : KeyPress = F2 & Mod1Mask,
-   Raise                    : KeyPress = F2 & Mod1Mask,
-   MenuRemapFocused(window) : KeyPress = F3 & Mod1Mask,
-   Close                    : KeyPress = F4 & Mod1Mask,
-   Kill                     : KeyPress = F10 & Mod1Mask,
-   TaskSwitcher             : KeyPress = Tab & Mod1Mask,
-   StartOpaqueMove          : KeyPress = F5 & Mod1Mask,
-   StartOpaqueResizeRight   : KeyPress = F6 & Mod1Mask,
+   ToggleShade              : KeyPress = F1 & Alt_L,
+   ToggleMaximize           : KeyPress = F2 & Alt_L,
+   Raise                    : KeyPress = F2 & Alt_L,
+   MenuRemapFocused(window) : KeyPress = F3 & Alt_L,
+   Close                    : KeyPress = F4 & Alt_L,
+   Kill                     : KeyPress = F10 & Alt_L,
+   TaskSwitcher             : KeyPress = Tab & Alt_L,
+   StartOpaqueMove          : KeyPress = F5 & Alt_L,
+   StartOpaqueResizeRight   : KeyPress = F6 & Alt_L,
    EndMoveResize            : KeyRelease = Alt_L & MoveResizeMask,
    globalKeyBindings
 }

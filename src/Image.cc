@@ -1,5 +1,5 @@
 /**
- * @file   WaImage.cc
+ * @file   Image.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   18-Jul-2001 01:45:32
  *
@@ -22,7 +22,7 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
-#include "WaImage.hh"
+#include "Image.hh"
 
 #ifdef    HAVE_SYS_TYPES_H
 #  include <sys/types.h>

@@ -1,5 +1,5 @@
 /**
- * @file   WaScreen.hh
+ * @file   Screen.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   25-Jul-2001 23:25:51
  *
@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef __WaScreen_hh
-#define __WaScreen_hh
+#ifndef __Screen_hh
+#define __Screen_hh
 
 #include <X11/Xlib.h>
 
@@ -39,16 +39,12 @@ typedef struct {
     int bottom;
 } WMstrut;
 
-typedef struct {
-    bool xft;
-    char *font;
-} WaFont;
-
-#include "WaImage.hh"
-#include "ResourceHandler.hh"
-#include "DockappHandler.hh"
-#include "NetHandler.hh"
-#include "WaMenu.hh"
+#include "Image.hh"
+#include "Font.hh"
+#include "Resources.hh"
+#include "Dockapp.hh"
+#include "Net.hh"
+#include "Menu.hh"
 
 typedef struct {
     int x;
@@ -63,20 +59,11 @@ typedef struct {
 #define SouthDirection 4
 
 typedef struct {
-    WaColor l_text_focus, l_text_unfocus, border_color, outline_color;
+    WaColor l_text_focus, l_text_focus_s, l_text_unfocus, l_text_unfocus_s,
+        border_color, outline_color;
     WaTexture t_focus, t_unfocus, l_focus, l_unfocus, h_focus, h_unfocus,
         g_focus, g_unfocus;
-    WaFont wa_font;
-    
-#ifdef XFT
-    XftFont *xftfont;
-    XftColor *xftfcolor, *xftucolor;
-    double xftsize;
-#endif // XFT
-    
-    GC l_text_focus_gc, l_text_unfocus_gc;
-    XFontStruct *font;
-    bool font_ok;
+    WaFont wa_font, wa_font_u;    
     
     int justify, y_pos;
     unsigned int handle_width, border_width, title_height;
@@ -87,20 +74,12 @@ typedef struct {
 } WindowStyle;
 
 typedef struct {
-    WaColor f_text, f_hilite_text, t_text, border_color;
+    WaColor f_text, f_hilite_text, t_text, f_text_s, f_hilite_text_s, t_text_s,
+        border_color;
     WaTexture back_frame, title, hilite;
-    WaFont wa_f_font, wa_t_font, wa_b_font, wa_ct_font, wa_cf_font;
-    char *bullet, *checkbox_true, *checkbox_false;
-    
-#ifdef XFT
-    XftFont *f_xftfont, *t_xftfont, *b_xftfont, *ct_xftfont, *cf_xftfont;
-    XftColor *f_xftcolor, *fh_xftcolor, *t_xftcolor;
-#endif // XFT
-    
-    GC f_text_gc, fh_text_gc, t_text_gc, b_text_gc, bh_text_gc,
-        ct_text_gc, cth_text_gc, cf_text_gc, cfh_text_gc;
-    XFontStruct *f_font, *t_font, *b_font, *ct_font, *cf_font;
-    bool f_font_ok, t_font_ok, b_font_ok, ct_font_ok, cf_font_ok;
+    WaFont wa_f_font, wa_fh_font, wa_t_font, wa_b_font, wa_bh_font,
+        wa_ct_font, wa_cth_font, wa_cf_font, wa_cfh_font;
+    char *bullet, *checkbox_true, *checkbox_false;    
     
     int f_justify, t_justify, f_y_pos, t_y_pos, b_y_pos, ct_y_pos, cf_y_pos;
     unsigned int border_width, title_height, item_height;
@@ -263,4 +242,4 @@ public:
     WaScreen *wa;
 };
 
-#endif // __WaScreen_hh
+#endif // __Screen_hh

@@ -1,5 +1,5 @@
 /**
- * @file   WaImage.hh
+ * @file   Image.hh
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   18-Jul-2001 01:45:32
  *
@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef   __WaImage_hh
-#define   __WaImage_hh
+#ifndef   __Image_hh
+#define   __Image_hh
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -233,7 +233,7 @@ public:
     
 };
 
-#include "WaScreen.hh"
+#include "Screen.hh"
 
 class WaImageControl {
 private:
@@ -314,4 +314,4 @@ public:
     
 };
 
-#endif // __WaImage_hh
+#endif // __Image_hh

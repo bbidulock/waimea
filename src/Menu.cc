@@ -1,5 +1,5 @@
 /**
- * @file   WaMenu.cc
+ * @file   Menu.cc
  * @author David Reveman <c99drn@cs.umu.se>
  * @date   02-Aug-2001 22:40:20
  *
@@ -19,7 +19,7 @@
 #  include "../config.h"
 #endif // HAVE_CONFIG_H
 
-#include "WaMenu.hh"
+#include "Menu.hh"
 
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
@@ -179,105 +179,49 @@ void WaMenu::Build(WaScreen *screen) {
         }
     }
 
-#ifdef XFT
-    XGlyphInfo extents;
-    XftFont *xft_font;
     for (it = item_list.begin(); it != item_list.end(); ++it) {
-        if ((*it)->type == MenuSubType && wascreen->mstyle.wa_b_font.xft) {
-            XftTextExtents8(display, wascreen->mstyle.b_xftfont,
-                            (unsigned char *) wascreen->mstyle.bullet,
-                            strlen(wascreen->mstyle.bullet), &extents);
-            bullet_width = extents.width;
+        if ((*it)->type == MenuSubType) {
+            bullet_width =
+                wascreen->mstyle.wa_b_font.Width(display,
+                                                 wascreen->mstyle.bullet,
+                                                 strlen(wascreen->
+                                                        mstyle.bullet));
         }
         else if ((*it)->type == MenuCBItemType) {
-            if (wascreen->mstyle.wa_ct_font.xft) {
-                XftTextExtents8(display, wascreen->mstyle.ct_xftfont,
-                                (unsigned char *)
-                                wascreen->mstyle.checkbox_true,
-                                strlen(wascreen->mstyle.checkbox_true),
-                                &extents);
-                (*it)->cb_width2 = cb_width = extents.width;
-            }
-
-            if (wascreen->mstyle.wa_cf_font.xft) {
-                XftTextExtents8(display, wascreen->mstyle.cf_xftfont,
-                                (unsigned char *)
-                                wascreen->mstyle.checkbox_false,
-                                strlen(wascreen->mstyle.checkbox_false),
-                                &extents);
-                if (extents.width > cb_width) cb_width = extents.width;
-                (*it)->cb_width1 = extents.width;
-            }
+            (*it)->cb_width2 = cb_width =
+                wascreen->
+                mstyle.wa_ct_font.Width(display,
+                                        wascreen->mstyle.checkbox_true,
+                                        strlen(
+                                            wascreen->mstyle.checkbox_true));
+            
+            (*it)->cb_width1 =
+                wascreen->
+                mstyle.wa_cf_font.Width(display,
+                                        wascreen->mstyle.checkbox_false,
+                                        strlen(
+                                            wascreen->mstyle.checkbox_false));
+            
+            if ((*it)->cb_width1 > cb_width) cb_width = (*it)->cb_width1;
         }
     }
-#endif // XFT
-    
-    XFontStruct *font;
-    int tmp_w;
-    for (it = item_list.begin(); it != item_list.end(); ++it) {    
-        if ((*it)->type == MenuSubType && !wascreen->mstyle.wa_b_font.xft)
-            bullet_width = XTextWidth(wascreen->mstyle.b_font,
-                                      wascreen->mstyle.bullet,
-                                      strlen(wascreen->mstyle.bullet));
-        else if ((*it)->type == MenuCBItemType) {
-            if (! wascreen->mstyle.wa_ct_font.xft) {
-                (*it)->cb_width2 = cb_width = XTextWidth(
-                    wascreen->mstyle.ct_font,
-                    wascreen->mstyle.checkbox_true,
-                    strlen(wascreen->mstyle.checkbox_true));
-                if (! wascreen->mstyle.wa_cf_font.xft) {
-                    tmp_w = XTextWidth(wascreen->mstyle.cf_font,
-                                       wascreen->mstyle.checkbox_false,
-                                       strlen(
-                                           wascreen->mstyle.checkbox_false));
-                    if (tmp_w > cb_width) cb_width = tmp_w;
-                    (*it)->cb_width1 = tmp_w;
-                }
-            }
-        }
-    }
-    
     extra_width = (bullet_width >= cb_width) ? bullet_width: cb_width;
     
     int lasttype = 0;
     it = item_list.begin();
     for (i = 1; it != item_list.end(); ++it, ++i) {
-#ifdef XFT
-        xft_font = NULL;
-        if ((*it)->type == MenuTitleType && wascreen->mstyle.wa_t_font.xft)
-            xft_font = wascreen->mstyle.t_xftfont;
-        else if (wascreen->mstyle.wa_f_font.xft)
-            xft_font = wascreen->mstyle.f_xftfont;
+        WaFont *wafont;
+        if ((*it)->type == MenuTitleType) wafont = &wascreen->mstyle.wa_t_font;
+        else wafont = &wascreen->mstyle.wa_f_font;
 
-        if (xft_font) {
-            char *l = (*it)->e_label? (*it)->e_label: (*it)->label;
-            XftTextExtents8(display, xft_font, (unsigned char *) l, strlen(l),
-                            &extents);
-            (*it)->width = extents.width + 20;
-            if ((*it)->type == MenuCBItemType) {
-                l = (*it)->e_label2? (*it)->e_label2: (*it)->label2;
-                XftTextExtents8(display, xft_font, (unsigned char *) l,
-                                strlen(l), &extents);
-                if ((extents.width + 20) > (*it)->width)
-                    (*it)->width = extents.width + 20;
-            }
-        }
-#endif // XFT
-        
-        font = NULL;
-        if ((*it)->type == MenuTitleType && !wascreen->mstyle.wa_t_font.xft)
-            font = wascreen->mstyle.t_font;
-        else if (!wascreen->mstyle.wa_f_font.xft)
-            font = wascreen->mstyle.f_font;
-
-        if (font) {
-            char *l = (*it)->e_label? (*it)->e_label: (*it)->label;
-            (*it)->width = XTextWidth(font, l, strlen(l)) + 20;
-            if ((*it)->type == MenuCBItemType) {
-                l = (*it)->e_label2? (*it)->e_label2: (*it)->label2;
-                tmp_w = XTextWidth(font, l, strlen(l)) + 20;
-                if (tmp_w > (*it)->width) (*it)->width = tmp_w;
-            }
+        char *l = (*it)->e_label? (*it)->e_label: (*it)->label;
+        (*it)->width = wafont->Width(display, l, strlen(l)) + 20;
+            
+        if ((*it)->type == MenuCBItemType) {
+            l = (*it)->e_label2? (*it)->e_label2: (*it)->label2;
+            int cb_width = wafont->Width(display, l, strlen(l)) + 20;
+            if ((cb_width + 20) > (*it)->width)
+                (*it)->width = cb_width + 20;
         }
         
         if (((*it)->width + extra_width) > width)
@@ -905,12 +849,16 @@ WaMenuItem::~WaMenuItem(void) {
 void WaMenuItem::DrawFg(void) {
     int x, y, justify;
     char *l;
+
+    WaFont *wafont = (hilited)? &menu->wascreen->mstyle.wa_fh_font:
+        &menu->wascreen->mstyle.wa_f_font;
+    if (type == MenuTitleType)
+        wafont = &menu->wascreen->mstyle.wa_t_font;
+    
+    WaFont *wafont_b = (hilited)? &menu->wascreen->mstyle.wa_bh_font:
+        &menu->wascreen->mstyle.wa_b_font;
     
     XClearWindow(menu->display, id);
-    
-#ifdef XFT
-    cbox_xft_font = menu->wascreen->mstyle.cf_xftfont;
-#endif // XFT
     
     cb_y = menu->wascreen->mstyle.cf_y_pos;
     cbox = menu->wascreen->mstyle.checkbox_false;
@@ -919,18 +867,7 @@ void WaMenuItem::DrawFg(void) {
     if (e_label) l = e_label;
     else l = label;
     
-#ifdef XFT    
-    XGlyphInfo extents;
-    if (type == MenuCBItemType && menu->wascreen->mstyle.wa_f_font.xft) {
-        XftTextExtents8(menu->display, menu->wascreen->mstyle.f_xftfont,
-                        (unsigned char *) l, strlen(l), &extents);
-        width = extents.width + 20;
-    }
-#endif // XFT
-    
-    if (type == MenuCBItemType && !menu->wascreen->mstyle.wa_f_font.xft) {
-        width = XTextWidth(menu->wascreen->mstyle.f_font, l, strlen(l)) + 20;
-    }
+    width = wafont_b->Width(menu->display, l, strlen(l)) + 20;    
     
     if (type == MenuTitleType)
         justify = menu->wascreen->mstyle.t_justify;
@@ -956,81 +893,37 @@ void WaMenuItem::DrawFg(void) {
             else x = (menu->width - menu->extra_width) - (width - 10);
     }
 
-    bool draw_i = false, draw_b = false, draw_cb = false;
-#ifdef XFT
-    XftFont *font;
-    XftColor *xftcolor;
-    
-    if (type == MenuTitleType && menu->wascreen->mstyle.wa_t_font.xft) {
-        font = menu->wascreen->mstyle.t_xftfont;
-        xftcolor = menu->wascreen->mstyle.t_xftcolor;
-        y = menu->wascreen->mstyle.t_y_pos;
-        draw_i = true;
-    } else if (menu->wascreen->mstyle.wa_f_font.xft) {
-        font = menu->wascreen->mstyle.f_xftfont;
-        y = menu->wascreen->mstyle.f_y_pos;
-        draw_i = true;
-        if (hilited) {
-            xftcolor = menu->wascreen->mstyle.fh_xftcolor;
-        } else
-            xftcolor = menu->wascreen->mstyle.f_xftcolor;
-    }
-    if (draw_i)
-        XftDrawString8(xftdraw, xftcolor, font, x, y, (unsigned char *) l,
-                       strlen(l));
-    
-    if (type == MenuSubType && menu->wascreen->mstyle.wa_b_font.xft) {
-        draw_b = true;
-        y = menu->wascreen->mstyle.b_y_pos;
-        XftDrawString8(xftdraw, xftcolor, menu->wascreen->mstyle.b_xftfont,
-                       menu->width - (menu->bullet_width + 5), y,
-                       (unsigned char *) menu->wascreen->mstyle.bullet,
-                       strlen(menu->wascreen->mstyle.bullet));
-    }
-    else if (type == MenuCBItemType && cbox_xft_font) {
-        draw_cb = true;
-        XftDrawString8(xftdraw, xftcolor, cbox_xft_font,
-                       menu->width - (cb_width + 5), cb_y,
-                       (unsigned char *) cbox, strlen(cbox));
-    }
-#endif // XFT
-    
-    GC *gc, *bgc = NULL;
+    if (type == MenuTitleType) y = menu->wascreen->mstyle.t_y_pos;
+    else y = menu->wascreen->mstyle.f_y_pos;
 
-    if (! draw_i) {
-        if (type == MenuTitleType) {
-            gc = &menu->wascreen->mstyle.t_text_gc;
-            y = menu->wascreen->mstyle.t_y_pos;
-        } else {
-            if (hilited) {
-                gc = &menu->wascreen->mstyle.fh_text_gc;
-                bgc = &menu->wascreen->mstyle.bh_text_gc;
-            } else {
-                gc = &menu->wascreen->mstyle.f_text_gc;
-                bgc = &menu->wascreen->mstyle.b_text_gc;
-            }
-            y = menu->wascreen->mstyle.f_y_pos;
-        }
-        XDrawString(menu->display, (Drawable) id, *gc, x, y, l, strlen(l));
-    }
+    wafont->Draw(menu->display, id,
+                 
+#ifdef    XFT
+                 xftdraw,
+#endif // XFT
+                 
+                 x, y, l, strlen(l));
+
     if (type == MenuSubType) {
-        if (! draw_b) {
-            GC *bullet_gc;
-            if (hilited) bullet_gc = &menu->wascreen->mstyle.bh_text_gc;
-            else bullet_gc = &menu->wascreen->mstyle.b_text_gc;
-            y = menu->wascreen->mstyle.b_y_pos;
-            XDrawString(menu->display, (Drawable) id, *bullet_gc,
-                        menu->width - (menu->bullet_width + 5), y,
-                        menu->wascreen->mstyle.bullet,
-                        strlen(menu->wascreen->mstyle.bullet));
-        }
+        y = menu->wascreen->mstyle.b_y_pos;
+        wafont_b->Draw(menu->display, id,
+
+#ifdef    XFT
+                     xftdraw,
+#endif // XFT
+
+                     menu->width - (menu->bullet_width + 5), y,
+                     menu->wascreen->mstyle.bullet,
+                     strlen(menu->wascreen->mstyle.bullet));
     }
     else if (type == MenuCBItemType) {
-        if (! draw_cb) {
-            XDrawString(menu->display, (Drawable) id, *cbox_gc,
-                        menu->width - (cb_width + 5), cb_y, cbox,
-                        strlen(cbox));
-        }
+        wafont_cb->Draw(menu->display, id,
+
+#ifdef    XFT
+                     xftdraw,
+#endif // XFT
+
+                     menu->width - (cb_width + 5), cb_y, cbox, strlen(cbox));
     }
 }
 
@@ -1762,21 +1655,12 @@ void WaMenuItem::UpdateCBox(void) {
                         case AABCBoxType:
                             true_false = ww->flags.alwaysatbottom;
                     }
-                    if (true_false) {
-                        
-#ifdef XFT
-                        if (menu->wascreen->mstyle.wa_ct_font.xft)
-                            cbox_xft_font = menu->wascreen->mstyle.ct_xftfont;
+                    if (true_false) {                        
+                        if (hilited)
+                            wafont_cb = &menu->wascreen->mstyle.wa_cth_font;
                         else
-                            cbox_xft_font = NULL;
-#endif // XFT
+                            wafont_cb = &menu->wascreen->mstyle.wa_ct_font;
                         
-                        if (! menu->wascreen->mstyle.wa_ct_font.xft) {
-                            if (hilited)
-                                cbox_gc = &menu->wascreen->mstyle.cth_text_gc;
-                            else
-                                cbox_gc = &menu->wascreen->mstyle.ct_text_gc;
-                        }
                         cb_y = menu->wascreen->mstyle.ct_y_pos;
                         cbox = menu->wascreen->mstyle.checkbox_true;
                         label = label2;
@@ -1792,20 +1676,11 @@ void WaMenuItem::UpdateCBox(void) {
                         e_sub = e_sub2;
                     }
                     else {
-                        
-#ifdef XFT
-                        if (menu->wascreen->mstyle.wa_cf_font.xft)
-                            cbox_xft_font = menu->wascreen->mstyle.cf_xftfont;
+                        if (hilited)
+                            wafont_cb = &menu->wascreen->mstyle.wa_cfh_font;
                         else
-                            cbox_xft_font = NULL;
-#endif // XFT
+                            wafont_cb = &menu->wascreen->mstyle.wa_cf_font;
                         
-                        if (! menu->wascreen->mstyle.wa_cf_font.xft) {
-                            if (hilited)
-                                cbox_gc = &menu->wascreen->mstyle.cfh_text_gc;
-                            else
-                                cbox_gc = &menu->wascreen->mstyle.cf_text_gc;
-                        }
                         cb_y = menu->wascreen->mstyle.cf_y_pos;
                         cbox = menu->wascreen->mstyle.checkbox_false;
                         label = label1;

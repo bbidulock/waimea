@@ -1,7 +1,11 @@
-menu.title:             flat gradient crossdiagonal
-  menu.title.color:     #8090c0
-  menu.title.colorTo:   #405070
-  menu.title.textColor: #ffffff
+menu.title:                     flat gradient crossdiagonal
+  menu.title.color:             #8090c0
+  menu.title.colorTo:           #405070
+  menu.title.textColor:         #ffffff
+  menu.title.textShadowColor:   #000000
+  menu.title.textShadowXOffset: 1
+  menu.title.textShadowYOffset: 1
+
 
 menu.frame:             flat gradient crossdiagonal
   menu.frame.color:     #ffffff
@@ -29,8 +33,8 @@ window.title.unfocus:           flat gradient crossdiagonal
   
 window.justify: right
 
-window.label.focus:             parentrelative
-  window.label.focus.textColor: #000000
+window.label.focus:                     parentrelative
+  window.label.focus.textColor:         #000000
   
 window.label.unfocus:                     parentrelative
   window.label.unfocus.textColor:         #222222
