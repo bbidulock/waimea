@@ -256,8 +256,12 @@ void DockappHandler::Render(void) {
 #ifdef XRENDER        
         if (texture->getOpacity()) {
             background = wascreen->ic->xrender(None, width, height, texture,
-                                               wascreen->xrootpmap_id, map_x,
-                                               map_y, background);
+                                               wascreen->xrootpmap_id,
+                                               map_x +
+                                               style->style.border_width,
+                                               map_y +
+                                               style->style.border_width,
+                                               background);
             XSetWindowBackgroundPixmap(display, id, background);
         } else
             XSetWindowBackground(display, id, background_pixel);
@@ -270,7 +274,11 @@ void DockappHandler::Render(void) {
 
 #ifdef XRENDER
                                                , wascreen->xrootpmap_id,
-                                               map_x, map_y, background
+                                               map_x +
+                                               style->style.border_width,
+                                               map_y +
+                                               style->style.border_width,
+                                               background
 #endif // XRENDER
                                                
                                                );

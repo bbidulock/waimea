@@ -2688,8 +2688,8 @@ void WaChildWindow::Render(void) {
 
 #ifdef XRENDER
     Pixmap xpixmap;
-    int pos_x = wa->attrib.x + attrib.x;
-    int pos_y = wa->attrib.y - wa->title_w - wa->border_w + attrib.y;
+    int pos_x = wa->attrib.x + attrib.x + wa->border_w;
+    int pos_y = wa->attrib.y - wa->title_w + attrib.y;
     if (texture->getOpacity()) {
         xpixmap = XCreatePixmap(display, wascreen->id, attrib.width,
                                attrib.height, wascreen->screen_depth);

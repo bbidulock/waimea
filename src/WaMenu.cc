@@ -370,8 +370,10 @@ void WaMenu::Render(void) {
         WaTexture *texture = &wascreen->mstyle.back_frame;
         if (texture->getOpacity()) {
             pixmap = wascreen->ic->xrender(pbackframe, width, height, texture,
-                                           wascreen->xrootpmap_id, x,
-                                           y, pixmap);
+                                           wascreen->xrootpmap_id,
+                                           x + wascreen->mstyle.border_width,
+                                           y +wascreen->mstyle.border_width,
+                                           pixmap);
             XSetWindowBackgroundPixmap(display, frame, pixmap);
             XClearWindow(display, frame);
         }
@@ -874,6 +876,7 @@ void WaMenuItem::Render(void) {
         XClearWindow(menu->display, id);
         return;
     }
+    int bw = menu->wascreen->mstyle.border_width;
     if (! texture->getOpacity()) return;
     if (((menu->x + menu->width) > 0 && menu->x < menu->wascreen->width) && 
         ((menu->y + dy + height) > 0 && (menu->y + dy) <
@@ -882,7 +885,8 @@ void WaMenuItem::Render(void) {
             pixmap = menu->wascreen->ic->xrender(menu->ptitle, menu->width,
                                                  height, texture,
                                                  menu->wascreen->xrootpmap_id,
-                                                 menu->x, menu->y + dy,
+                                                 menu->x + bw,
+                                                 menu->y + dy + bw,
                                                  pixmap);
             XSetWindowBackgroundPixmap(menu->display, id, pixmap);
         }
@@ -890,7 +894,8 @@ void WaMenuItem::Render(void) {
             pixmap = menu->wascreen->ic->xrender(menu->philite, menu->width,
                                                  height, texture,
                                                  menu->wascreen->xrootpmap_id,
-                                                 menu->x, menu->y + dy,
+                                                 menu->x +bw,
+                                                 menu->y + dy + bw,
                                                  pixmap);
             XSetWindowBackgroundPixmap(menu->display, id, pixmap);
         }

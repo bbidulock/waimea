@@ -66,7 +66,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
         PropertyChangeMask | ColormapChangeMask | KeyPressMask |
         KeyReleaseMask | ButtonPressMask | ButtonReleaseMask |
         EnterWindowMask | LeaveWindowMask | FocusChangeMask;
-    
+
     XSetErrorHandler((XErrorHandler) wmrunningerror);
     XSelectInput(display, id, eventmask);
     XSync(display, false);
@@ -234,6 +234,8 @@ WaScreen::~WaScreen(void) {
 
     net->DeleteSupported(this);
     XDestroyWindow(display, wm_check);
+    XSelectInput(display, id, NoEventMask);
+    XSync(display, false);
     waimea->window_table->erase(id);
 }
 
