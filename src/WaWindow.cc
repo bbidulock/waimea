@@ -647,10 +647,14 @@ void WaWindow::SendConfig(void) {
     ce.x                 = attrib.x;
     ce.y                 = attrib.y;
     ce.width             = attrib.width;
-    ce.height            = attrib.height;
     ce.border_width      = 0;
     ce.above             = frame->id;
     ce.override_redirect = False;
+
+    if (flags.shaded)
+        ce.height = restore_shade;
+    else
+        ce.height = attrib.height;
 
     XGrabServer(display);
     if (validateclient(id)) 
@@ -1454,9 +1458,11 @@ void WaWindow::Move(XEvent *e, WaAction *) {
                 if (e->type == event.type) break;
                 XUngrabPointer(display, CurrentTime);
                 if (started) ToggleOutline();
-                attrib.x = nx;
-                attrib.y = ny;
-                RedrawWindow();
+                if (attrib.x != nx || attrib.y != ny) {
+                    attrib.x = nx;
+                    attrib.y = ny;
+                    RedrawWindow();
+                }
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
                     delete maprequest_list->front();
@@ -1479,10 +1485,12 @@ void WaWindow::Move(XEvent *e, WaAction *) {
  */
 void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
     XEvent event, *map_ev;
-    int px, py, nx = attrib.x, ny = attrib.y, i;
+    int sx, sy, px, py, nx, ny, i;
     list<XEvent *> *maprequest_list;
     Window w;
     unsigned int ui;
+    sx = nx = attrib.x;
+    sy = ny = attrib.y;
 
     XQueryPointer(display, wascreen->id, &w, &w, &px, &py, &i, &i, &ui);
     
@@ -1550,14 +1558,16 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
             case ButtonRelease:
                 if (e->type == event.type) break;
                 XUngrabPointer(display, CurrentTime);
+                if (attrib.x != sx || attrib.y != sy) {
+                    SendConfig();
+                    net->SetVirtualPos(this);
+                }
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
                     delete maprequest_list->front();
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
-                SendConfig();
-                net->SetVirtualPos(this);
                 dontsend = False;
                 return;
         }
@@ -1662,10 +1672,12 @@ void WaWindow::Resize(XEvent *e, int how) {
             case ButtonPress:
                 if (e->type == event.type) break;
                 if (started) ToggleOutline();
-                attrib.x      = n_x;
-                attrib.width  = n_w;
-                attrib.height = n_h;
-                RedrawWindow();
+                if (attrib.width != n_w || attrib.height != n_h) {
+                    attrib.x      = n_x;
+                    attrib.width  = n_w;
+                    attrib.height = n_h;
+                    RedrawWindow();
+                }
                 XUngrabPointer(display, CurrentTime);
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
@@ -1692,7 +1704,7 @@ void WaWindow::Resize(XEvent *e, int how) {
  */
 void WaWindow::ResizeOpaque(XEvent *e, int how) {
     XEvent event, *map_ev;
-    int px, py, width, height, n_w, n_h, i;
+    int px, py, width, height, n_w, n_h, i, sw, sh;
     list<XEvent *> *maprequest_list;
     Window w;
     unsigned int ui;
@@ -1700,8 +1712,8 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
     XQueryPointer(display, wascreen->id, &w, &w, &px, &py, &i, &i, &ui);
     
     dontsend = True;
-    width  = n_w = attrib.width;
-    height = n_h = attrib.height;
+    sw = width  = n_w = attrib.width;
+    sh = height = n_h = attrib.height;
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validateclient(id))
@@ -1767,14 +1779,16 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
             case ButtonRelease:
                 if (e->type == event.type) break;
                 XUngrabPointer(display, CurrentTime);
+                if (attrib.width != sw || attrib.height != sh) {
+                    SendConfig();
+                    net->SetVirtualPos(this);
+                }
                 while (! maprequest_list->empty()) {
                     XPutBackEvent(display, maprequest_list->front());
                     delete maprequest_list->front();
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
-                SendConfig();
-                net->SetVirtualPos(this);
                 dontsend = False;
                 return;
         }
@@ -2049,7 +2063,6 @@ void WaWindow::UnShade(XEvent *, WaAction *) {
         attrib.height = restore_shade;
         RedrawWindow();
         flags.shaded = False;
-        SendConfig();
         net->SetWmState(this);
         waimea->UpdateCheckboxes(ShadeCBoxType);
     }
