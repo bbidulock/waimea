@@ -18,6 +18,12 @@
 #include "Font.hh"
 #include "Waimea.hh"
 
+#include <iostream>
+
+using std::cerr;
+using std::cout;
+using std::endl;
+
 /**
  * @fn    WaFont(void)
  * @brief Constructor for WaFont class
