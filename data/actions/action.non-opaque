@@ -128,56 +128,57 @@ southedge.2: ScrollViewportDown(20) : EnterNotify & ControlMask
 !
 ! == Menu ==
 !
-menu.*.1: Raise     : ButtonPress = Button1 & Mod1Mask
-menu.*.2: StartMove : ButtonPress = Button1 & Mod1Mask
-menu.*.3: UnLink    : ButtonPress = Button1 & Mod1Mask
-menu.*.4: Lower     : ButtonPress = Button2 & Mod1Mask
+menu.*.1: Raise         : ButtonPress = Button1 & Mod1Mask
+menu.*.2: StartMove     : ButtonPress = Button1 & Mod1Mask
+menu.*.3: UnLink        : ButtonPress = Button1 & Mod1Mask
+menu.*.4: Lower         : ButtonPress = Button2 & Mod1Mask
+menu.*.5: EndMoveResize : ButtonRelease = Button1 & MoveResizeMask
 !
-menu.title.5:  UnLink    : ButtonPress = Button1 & !Mod1Mask
-menu.title.6:  Raise     : ButtonPress = Button1 & !Mod1Mask
-menu.title.7:  StartMove : ButtonPress = Button1 & !Mod1Mask
-menu.title.8:  Lower     : ButtonPress = Button2 & !Mod1Mask
-menu.title.9:  UnmapSubs : ButtonPress = Button3
-menu.title.10: Unmap     : ButtonPress = Button3
+menu.title.6:  UnLink          : ButtonPress = Button1 & !Mod1Mask
+menu.title.7:  Raise           : ButtonPress = Button1 & !Mod1Mask
+menu.title.8:  StartOpaqueMove : ButtonPress = Button1 & !Mod1Mask
+menu.title.9:  Lower           : ButtonPress = Button2 & !Mod1Mask
+menu.title.10: UnmapSubs       : ButtonPress = Button3
+menu.title.11: Unmap           : ButtonPress = Button3
 !
-menu.item.5:  UnmapSubs    : EnterNotify
-menu.item.6:  UnmapTree    : ButtonRelease = AnyButton
-menu.item.7:  Exec         : ButtonRelease = AnyButton
-menu.item.8:  Func         : ButtonRelease = AnyButton
-menu.item.9:  UnmapFocused : KeyRelease = Alt_L
-menu.item.10: Func         : KeyRelease = Alt_L
-menu.item.11: NextItem     : KeyPress = Tab
-menu.item.12: NextItem     : KeyPress = Down
-menu.item.13: PreviousItem : KeyPress = Up
-menu.item.14: UnmapSubs    : KeyPress = Left
-menu.item.15: UnmapFocused : KeyPress = Left
-menu.item.16: UnmapTree    : KeyPress = Return
-menu.item.17: Exec         : KeyPress = Return
-menu.item.18: Func         : KeyPress = Return
-menu.item.19: UnmapTree    : KeyPress = Escape
+menu.item.6:  UnmapSubs    : EnterNotify
+menu.item.7:  UnmapTree    : ButtonRelease = AnyButton
+menu.item.8:  Exec         : ButtonRelease = AnyButton
+menu.item.9:  Func         : ButtonRelease = AnyButton
+menu.item.10: UnmapFocused : KeyRelease = Alt_L
+menu.item.11: Func         : KeyRelease = Alt_L
+menu.item.12: NextItem     : KeyPress = Tab
+menu.item.13: NextItem     : KeyPress = Down
+menu.item.14: PreviousItem : KeyPress = Up
+menu.item.15: UnmapSubs    : KeyPress = Left
+menu.item.16: UnmapFocused : KeyPress = Left
+menu.item.17: UnmapTree    : KeyPress = Return
+menu.item.18: Exec         : KeyPress = Return
+menu.item.19: Func         : KeyPress = Return
+menu.item.20: UnmapTree    : KeyPress = Escape
 !
-menu.checkbox.5:  UnmapSubs    : EnterNotify
-menu.checkbox.6:  Exec         : ButtonRelease = AnyButton
-menu.checkbox.7:  Func         : ButtonRelease = AnyButton
-menu.checkbox.8:  NextItem     : KeyPress = Tab
-menu.checkbox.9:  NextItem     : KeyPress = Down
-menu.checkbox.10: PreviousItem : KeyPress = Up
-menu.checkbox.11: UnmapSubs    : KeyPress = Left
-menu.checkbox.12: UnmapFocused : KeyPress = Left
-menu.checkbox.13: Exec         : KeyPress = Return
-menu.checkbox.14: Func         : KeyPress = Return
-menu.checkbox.15: Exec         : KeyPress = space
-menu.checkbox.16: Func         : KeyPress = space
-menu.checkbox.17: UnmapTree    : KeyPress = Escape
+menu.checkbox.6:  UnmapSubs    : EnterNotify
+menu.checkbox.7:  Exec         : ButtonRelease = AnyButton
+menu.checkbox.8:  Func         : ButtonRelease = AnyButton
+menu.checkbox.9:  NextItem     : KeyPress = Tab
+menu.checkbox.10: NextItem     : KeyPress = Down
+menu.checkbox.11: PreviousItem : KeyPress = Up
+menu.checkbox.12: UnmapSubs    : KeyPress = Left
+menu.checkbox.13: UnmapFocused : KeyPress = Left
+menu.checkbox.14: Exec         : KeyPress = Return
+menu.checkbox.15: Func         : KeyPress = Return
+menu.checkbox.16: Exec         : KeyPress = space
+menu.checkbox.17: Func         : KeyPress = space
+menu.checkbox.18: UnmapTree    : KeyPress = Escape
 !
-menu.sub.5:  UnmapSubs       : EnterNotify
-menu.sub.6:  MapSub          : EnterNotify
-menu.sub.7:  RemapSub        : ButtonPress = AnyButton
-menu.sub.8:  NextItem        : KeyPress = Tab
-menu.sub.9:  NextItem        : KeyPress = Down
-menu.sub.10: PreviousItem    : KeyPress = Up
-menu.sub.11: RemapSubFocused : KeyPress = Right
-menu.sub.12: RemapSubFocused : KeyPress = Return
-menu.sub.13: UnmapSubs       : KeyPress = Left
-menu.sub.14: UnmapFocused    : KeyPress = Left
-menu.sub.15: UnmapTree       : KeyPress = Escape
+menu.sub.6:  UnmapSubs       : EnterNotify
+menu.sub.7:  MapSub          : EnterNotify
+menu.sub.8:  RemapSub        : ButtonPress = AnyButton
+menu.sub.9:  NextItem        : KeyPress = Tab
+menu.sub.10:  NextItem        : KeyPress = Down
+menu.sub.11: PreviousItem    : KeyPress = Up
+menu.sub.12: RemapSubFocused : KeyPress = Right
+menu.sub.13: RemapSubFocused : KeyPress = Return
+menu.sub.14: UnmapSubs       : KeyPress = Left
+menu.sub.15: UnmapFocused    : KeyPress = Left
+menu.sub.16: UnmapTree       : KeyPress = Escape
