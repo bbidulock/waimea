@@ -50,6 +50,8 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     net = waimea->net;
     wm_strut = NULL;
     move_resize = false;
+    classhint = NULL;
+    name = NULL;
 
     XGrabServer(display);
     if (validateclient(id))
@@ -138,6 +140,8 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     label->g_x = left_end + 2;
     label->g_x2 = right_end - 2;
 
+    if (deleted) { delete this; return; }
+    
     ReparentWin();
     SetActionLists();
     UpdateGrabs();
@@ -150,6 +154,8 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     net->GetWmType(this);
     net->GetWmStrut(this);
 
+    if (deleted) { delete this; return; }
+    
     UpdateAllAttributes();
 
     if (flags.shaded) Shade(NULL, NULL);
@@ -220,11 +226,11 @@ WaWindow::~WaWindow(void) {
     delete label;
     delete title;
     
-    delete [] name;
+    if (name) delete [] name;
     if (host) delete [] host;
     if (pid) delete [] pid;
-    if (classhint->res_name) XFree(classhint->res_name);
-    if (classhint->res_class) XFree(classhint->res_class);
+    if (classhint && classhint->res_name) XFree(classhint->res_name);
+    if (classhint && classhint->res_class) XFree(classhint->res_class);
 
     delete [] bacts;
 
@@ -259,13 +265,15 @@ WaWindow::~WaWindow(void) {
 list <WaAction *> *WaWindow::GetActionList(list<WaActionExtList *> *e) {
     list<WaActionExtList *>::iterator it;
     for (it = e->begin(); it != e->end(); ++it) {
-        if ((*it)->name && classhint->res_name &&
-            ! strcmp(classhint->res_name, (*it)->name))
-            return &((*it)->list);
-        else if ((*it)->cl && classhint->res_class &&
-                 ! strcmp(classhint->res_class, (*it)->cl))
-            return &((*it)->list);
-        else if ((*it)->title && ! strcmp(name, (*it)->title))
+        if (classhint) {
+            if ((*it)->name && classhint->res_name &&
+                ! strcmp(classhint->res_name, (*it)->name))
+                return &((*it)->list);
+            else if ((*it)->cl && classhint->res_class &&
+                     ! strcmp(classhint->res_class, (*it)->cl))
+                return &((*it)->list);
+        }
+        if ((*it)->title && ! strcmp(name, (*it)->title))
             return &((*it)->list);
     }
     return NULL;
