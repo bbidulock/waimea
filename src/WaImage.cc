@@ -2373,6 +2373,8 @@ void WaImageControl::XRenderRedraw(Window win, Pixmap p, int width, int height,
         XRenderComposite(display, PictOpOver, src_pict,
                          texture->getAlphaPicture(), dest_pict, src_x, src_y,
                          0, 0, 0, 0, width, height);
+        if (p != None) XRenderFreePicture(display, src_pict);
+        XRenderFreePicture(display, dest_pict);
     }
     else {
         XSetWindowBackgroundPixmap(display, win, ParentRelative);
