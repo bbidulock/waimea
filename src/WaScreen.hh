@@ -23,6 +23,7 @@
 #endif // XFT
 
 #ifdef SHAPE
+#include <X11/Xutil.h>
 #include <X11/extensions/shape.h>
 #endif //SHAPE
 
