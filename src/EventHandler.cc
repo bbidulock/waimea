@@ -297,7 +297,7 @@ void EventHandler::EvFocus(XFocusChangeEvent *e) {
     WaWindow *ww = NULL;
 
     hash_map<Window, WindowObject *>::iterator it;
-    if (e->type == FocusIn) {
+    if (e->type == FocusIn && e->window != focused) {
         if ((it = waimea->window_table->find(e->window)) !=
             waimea->window_table->end()) {
             if (((*it).second)->type == WindowType)
