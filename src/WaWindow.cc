@@ -301,13 +301,11 @@ void WaWindow::RedrawWindow(void) {
         }
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
     }
-    if (resize) {
-        if (flags.max) {
-            if (old_attrib.width != attrib.width && !restore_shade_2) {
-                flags.max = False;
-                net->SetWmState(this);
-                DrawMaxButtonFg();
-            }
+    if (resize & flags.max) {
+        if (old_attrib.width != attrib.width && !restore_shade_2) {
+            flags.max = False;
+            net->SetWmState(this);
+            DrawMaxButtonFg();
         }
         XGrabServer(display);
         if (validateclient(id)) {    

@@ -465,7 +465,18 @@ void WaScreen::MoveViewportTo(int x, int y) {
         if (! (*it)->flags.sticky) {
             (*it)->attrib.x = (*it)->attrib.x + x_move;
             (*it)->attrib.y = (*it)->attrib.y + y_move;
-            (*it)->RedrawWindow();
+            
+            if ((((*it)->attrib.x + (*it)->attrib.width) > 0 &&
+                 (*it)->attrib.x < width) && 
+                (((*it)->attrib.y + (*it)->attrib.height) > 0 &&
+                 (*it)->attrib.y < height))
+                (*it)->RedrawWindow();
+            else {
+                (*it)->dontsend = True;
+                (*it)->RedrawWindow();
+                (*it)->dontsend = False;
+                net->SetVirtualPos(*it);
+            }   
         }
     }
     list<WaMenu *>::iterator it2 = waimea->wamenu_list->begin();
@@ -599,6 +610,7 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
     list<XEvent *> *maprequest_list;
     Window w;
     unsigned int ui;
+    list<WaWindow *>::iterator it;
     
     XQueryPointer(display, id, &w, &w, &px, &py, &i, &i, &ui);
     
@@ -612,6 +624,10 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
             waimea->eh->EventLoop(waimea->eh->menu_viewport_move_return_mask);
         switch (event->type) {
             case MotionNotify:
+                it = waimea->wawindow_list->begin();
+                for (; it != waimea->wawindow_list->end(); ++it) {
+                    (*it)->dontsend = True;
+                }    
                 MoveViewportTo(v_x - (event->xmotion.x_root - px),
                                v_y - (event->xmotion.y_root - py));
                 px = event->xmotion.x_root;
@@ -622,16 +638,6 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                 break;
             case DestroyNotify:
             case UnmapNotify:
-                if ((((event->type == UnmapNotify)? event->xunmap.window:
-                      event->xdestroywindow.window) == id)) {
-                    while (! maprequest_list->empty()) {
-                        XPutBackEvent(display, maprequest_list->front());
-                        maprequest_list->pop_front();
-                    }
-                    delete maprequest_list;
-                    XPutBackEvent(display, event);
-                    return;
-                }
                 waimea->eh->EvUnmapDestroy(event);
                 break;
             case MapRequest:
@@ -645,6 +651,16 @@ void WaScreen::ViewportMove(XEvent *e, WaAction *) {
                     maprequest_list->pop_front();
                 }
                 delete maprequest_list;
+                it = waimea->wawindow_list->begin();
+                for (; it != waimea->wawindow_list->end(); ++it) {
+                    (*it)->dontsend = False;
+                    if ((((*it)->attrib.x + (*it)->attrib.width) > 0 &&
+                         (*it)->attrib.x < width) && 
+                        (((*it)->attrib.y + (*it)->attrib.height) > 0 &&
+                         (*it)->attrib.y < height))
+                        (*it)->SendConfig();
+                    net->SetVirtualPos(*it);
+                }
                 return;
         }
     }
