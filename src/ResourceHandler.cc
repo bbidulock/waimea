@@ -71,6 +71,8 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
     homedir = getenv("HOME");
 
     style_file = wastrdup((char *) DEFAULTSTYLE);
+    WARNING << DEFAULTSTYLE << endl;
+     WARNING << style_file << endl;
     action_file = wastrdup((char *) DEFAULTACTION);
     menu_file = wastrdup((char *) DEFAULTMENU);
     rc_forced = style_forced = action_forced = menu_forced = false;
