@@ -55,7 +55,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
     eventmask = SubstructureRedirectMask | StructureNotifyMask |
         PropertyChangeMask | ColormapChangeMask | KeyPressMask |
         KeyReleaseMask | ButtonPressMask | ButtonReleaseMask |
-        EnterWindowMask | LeaveWindowMask;
+        EnterWindowMask | LeaveWindowMask | FocusChangeMask;
     
     XSetErrorHandler((XErrorHandler) wmrunningerror);
     XSelectInput(display, id, eventmask);

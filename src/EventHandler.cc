@@ -239,7 +239,7 @@ void EventHandler::EvFocus(XFocusChangeEvent *e) {
     if ((it = waimea->window_table->find(e->window)) !=
         waimea->window_table->end()) {
         if (((*it).second)->type == WindowType) {
-            ww = (WaWindow *) (*it).second;
+            ww = (WaWindow *) ((*it).second);
             if (e->type == FocusIn) {
                 if ((it = waimea->window_table->find(focused)) !=
                     waimea->window_table->end()) {
@@ -249,8 +249,16 @@ void EventHandler::EvFocus(XFocusChangeEvent *e) {
                 ww->FocusWin();
                 focused = ww->id;
             }  
+        } else if (((*it).second)->type == RootType) {
+            if (e->type == FocusIn) {
+                if ((it = waimea->window_table->find(focused)) !=
+                    waimea->window_table->end()) {
+                    if (((*it).second)->type == WindowType)
+                        ((WaWindow *) (*it).second)->UnFocusWin();
+                }
+            }
         }
-    }
+	}
 }
 
 /**
