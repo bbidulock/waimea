@@ -667,6 +667,7 @@ void WaScreen::CreateFonts(void) {
     int w_diff, mf_diff, mt_diff, mb_diff, mct_diff, mcf_diff;
     bool set_mih;
     char *__m_wastrdup_tmp;
+    __m_wastrdup_tmp = NULL;
     
     if (! mstyle.item_height) set_mih = true;
     else set_mih = false;

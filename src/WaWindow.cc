@@ -2996,7 +2996,12 @@ void WaChildWindow::Render(void) {
         XSetWindowBackgroundPixmap(display, id, pixmap);
         
 #ifdef PIXMAP
-        if ((! texture->getOpacity()) &&
+        if (
+            
+#ifdef XRENDER        
+            (! texture->getOpacity()) &&
+#endif // XRENDER
+            
             (texture->getTexture() & WaImage_Pixmap)) {
             XSync(display, false);
             imlib_context_push(*texture->getContext());
