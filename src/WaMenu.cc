@@ -550,10 +550,12 @@ WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
  * window.
  */
 WaMenuItem::~WaMenuItem(void) {
+    if (menu->built) {
+        
 #ifdef XFT
-    if (xftdraw) XftDrawDestroy(xftdraw);
+        XftDrawDestroy(xftdraw);
 #endif // XFT
-    if (id) {
+        
         XDestroyWindow(menu->display, id);
         menu->waimea->window_table->erase(id);
     }

@@ -1082,6 +1082,8 @@ void WaWindow::Focus(XEvent *, WaAction *) {
         if (validateclient(id)) {
             XSetInputFocus(display, id, RevertToPointerRoot, CurrentTime);
             XInstallColormap(display, attrib.colormap);
+            waimea->wawindow_list->remove(this);
+            waimea->wawindow_list->push_front(this);
         }
         XUngrabServer(display);
     } else

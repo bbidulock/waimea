@@ -16,4 +16,5 @@ waimea_SOURCES = main.cc \
 		 EventHandler.cc \
 		 WaImage.cc \
 		 WaMenu.cc \
-		 NetHandler.cc
+		 NetHandler.cc \
+		 TaskSwitcher.cc
