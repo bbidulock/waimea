@@ -550,6 +550,17 @@ void ResourceHandler::LoadConfig(void) {
         } else
             dockstyle->centered = false;
 
+        sprintf(rc_name, "dock%d.inworkspace", dock_num);
+        sprintf(rc_class, "Dock%d.Inworkspace", dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+            d_exists = true;
+            if (! strncasecmp("true", value.addr, value.size))
+                dockstyle->inworkspace = true;
+            else
+                dockstyle->inworkspace = false;
+        } else
+            dockstyle->inworkspace = false;
+
         sprintf(rc_name, "dock%d.direction", dock_num);
         sprintf(rc_class, "Dock%d.Direction", dock_num);
         if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
@@ -739,12 +750,6 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
                         &wstyle->b_unfocus, BlackPixel(display, screen), ic);
     ReadDatabaseTexture("window.button.pressed", "Window.Button.Pressed",
                         &wstyle->b_pressed, BlackPixel(display, screen), ic);
-    scrn->dock_texture = wstyle->t_focus;
-    if (XrmGetResource(database, "dockapphandler", "Dockapphandler",
-                       &value_type, &value))
-        ReadDatabaseTexture("dockapphandler", "Dockapphandler",
-                            &scrn->dock_texture, WhitePixel(display, screen),
-                            ic);
     ReadDatabaseColor("window.label.focus.textColor",
                       "Window.Label.Focus.TextColor",
                       &wstyle->l_text_focus, BlackPixel(display, screen), ic);
@@ -930,7 +935,31 @@ void ResourceHandler::LoadStyle(WaScreen *scrn) {
     if (XrmGetResource(database, "rootCommand", "RootCommand",
                        &value_type, &value))
         waexec(value.addr, scrn->displaystring);
-    
+
+    int dock_num = 0;
+    char rc_name[35], rc_class[35];
+    list<DockStyle *>::iterator dit = dockstyles->begin();
+    for (; dit != dockstyles->end(); ++dit, ++dock_num) {
+        (*dit)->style.border_color = wstyle->border_color;
+        (*dit)->style.texture = wstyle->t_focus;
+        (*dit)->style.border_width = wstyle->border_width;
+        sprintf(rc_name, "dockappholder.dock%d.frame", dock_num);
+        sprintf(rc_class, "Dockappholder.Dock%d.frame", dock_num);        
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value))
+            ReadDatabaseTexture(rc_name, rc_class, &(*dit)->style.texture,
+                                WhitePixel(display, screen), ic);
+        sprintf(rc_name, "dockappholder.dock%d.borderWidth", dock_num);
+        sprintf(rc_class, "Dockappholder.Dock%d.BorderWidth", dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value)) {
+            if (sscanf(value.addr, "%u", &(*dit)->style.border_width) != 1)
+                (*dit)->style.border_width = wstyle->border_width;
+        }
+        sprintf(rc_name, "dockappholder.dock%d.borderColor", dock_num);
+        sprintf(rc_class, "Dockappholder.Dock%d.BorderColor", dock_num);
+        if (XrmGetResource(database, rc_name, rc_class, &value_type, &value));
+            ReadDatabaseColor(rc_name, rc_class, &(*dit)->style.border_color,
+                              BlackPixel(display, screen), ic);
+    }
     XrmDestroyDatabase(database);
 }
 

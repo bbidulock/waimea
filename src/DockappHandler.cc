@@ -49,14 +49,14 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
     dockapp_list = new list<Dockapp *>;
     
     attrib_set.background_pixel = None;
-    attrib_set.border_pixel = wascreen->wstyle.border_color.getPixel();
+    attrib_set.border_pixel = style->style.border_color.getPixel();
     attrib_set.colormap = wascreen->colormap;
     attrib_set.override_redirect = true;
     attrib_set.event_mask = SubstructureRedirectMask | ButtonPressMask |
         EnterWindowMask | LeaveWindowMask;
     
     id = XCreateWindow(display, wascreen->id, 0, 0,
-                       1, 1, wascreen->wstyle.border_width,
+                       1, 1, style->style.border_width,
                        wascreen->screen_number, CopyFromParent,
                        wascreen->visual, CWOverrideRedirect | CWBackPixel |
                        CWEventMask | CWColormap | CWBorderPixel, &attrib_set);
@@ -66,13 +66,15 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
     else
         waimea->always_at_bottom_list->push_back(id);
 
-    wm_strut = new WMstrut;
-    wm_strut->window = id;
-    wm_strut->left = 0;
-    wm_strut->right = 0;
-    wm_strut->top = 0;
-    wm_strut->bottom = 0;
-    wascreen->strut_list->push_back(wm_strut);
+    if (! style->inworkspace) {
+        wm_strut = new WMstrut;
+        wm_strut->window = id;
+        wm_strut->left = 0;
+        wm_strut->right = 0;
+        wm_strut->top = 0;
+        wm_strut->bottom = 0;
+        wascreen->strut_list->push_back(wm_strut);
+    }
     waimea->window_table->insert(make_pair(id, this));
 }
 
@@ -89,9 +91,11 @@ DockappHandler::~DockappHandler(void) {
         waimea->always_at_bottom_list->remove(id);
     LISTCLEAR2(dockapp_list);
     XDestroyWindow(display, id);
-    wascreen->strut_list->remove(wm_strut);
+    if (! style->inworkspace) {
+        wascreen->strut_list->remove(wm_strut);
+        delete wm_strut;
+    }
     waimea->window_table->erase(id);
-    delete wm_strut;
 }
 
 
@@ -111,11 +115,13 @@ void DockappHandler::Update(void) {
     height = style->gridspace;
     
     if (dockapp_list->empty()) {
-        wm_strut->left = 0;
-        wm_strut->right = 0;
-        wm_strut->top = 0;
-        wm_strut->bottom = 0;
-        wascreen->UpdateWorkarea();
+        if (! style->inworkspace) {
+            wm_strut->left = 0;
+            wm_strut->right = 0;
+            wm_strut->top = 0;
+            wm_strut->bottom = 0;
+            wascreen->UpdateWorkarea();
+        }
         XUnmapWindow(display, id);
         return;
     }
@@ -191,24 +197,29 @@ void DockappHandler::Update(void) {
         case HorizontalDock: width += style->gridspace; break;
     }
 
-    wm_strut->left = wm_strut->right = wm_strut->top = wm_strut->bottom = 0;
+    if (! style->inworkspace)
+        wm_strut->left = wm_strut->right = wm_strut->top =
+            wm_strut->bottom = 0;
     if (style->geometry & XNegative) {
-        map_x = wascreen->width - wascreen->wstyle.border_width * 2 -
+        map_x = wascreen->width - style->style.border_width * 2 -
             width + x;
-        wm_strut->right = wascreen->width - map_x;
-    } else
-        wm_strut->left = map_x + wascreen->wstyle.border_width * 2 + width;
+        if (! style->inworkspace)
+            wm_strut->right = wascreen->width - map_x;
+    } else {
+        if (! style->inworkspace)
+            wm_strut->left = map_x + style->style.border_width * 2 + width;
+    }
     
     if (style->geometry & YNegative) {
-        map_y = wascreen->height - wascreen->wstyle.border_width * 2 -
+        map_y = wascreen->height - style->style.border_width * 2 -
             height + y;
-        if (style->direction == HorizontalDock) {
+        if (style->direction == HorizontalDock && (! style->inworkspace)) {
             wm_strut->bottom = wascreen->height - map_y;
             wm_strut->right = wm_strut->left = 0;
         }
     } else
-        if (style->direction == HorizontalDock) {
-            wm_strut->top = map_y + wascreen->wstyle.border_width * 2 + height;
+        if (style->direction == HorizontalDock && (! style->inworkspace)) {
+            wm_strut->top = map_y + style->style.border_width * 2 + height;
             wm_strut->right = wm_strut->left = 0;
         }
 
@@ -223,7 +234,7 @@ void DockappHandler::Update(void) {
     XResizeWindow(display, id, width, height);
     XMoveWindow(display, id, map_x, map_y);
     XMapWindow(display, id);
-    WaTexture *texture = &wascreen->dock_texture;
+    WaTexture *texture = &style->style.texture;
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         background = None;
         background_pixel = texture->getColor()->getPixel();
@@ -245,7 +256,7 @@ void DockappHandler::Update(void) {
  */
 void DockappHandler::DrawFg(void) {
     wascreen->ic->XRenderRedraw(id, background, width, height,
-                                &wascreen->dock_texture); 
+                                &style->style.texture); 
 }
     
 /**
@@ -290,7 +301,8 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
         XSetWindowBorderWidth(display, id, 0);
         XReparentWindow(display, id, dh->id, dh->width, dh->height);
         XMapRaised(display, id);
-        XSelectInput(display, id, StructureNotifyMask | SubstructureNotifyMask);
+        XSelectInput(display, id, StructureNotifyMask |
+                     SubstructureNotifyMask);
     } else {
         XUngrabServer(display);
         delete this;

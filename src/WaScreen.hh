@@ -205,6 +205,7 @@ public:
     WaImageControl *ic;
     WindowStyle wstyle;
     MenuStyle mstyle;
+
     Pixmap fbutton, ubutton, pbutton, fgrip, ugrip;
     unsigned long fbutton_pixel, ubutton_pixel, pbutton_pixel, fgrip_pixel,
         ugrip_pixel;
@@ -213,7 +214,6 @@ public:
     Workarea *workarea;
     Window wm_check;
     bool focus;
-    WaTexture dock_texture;
     
     list<WMstrut *> *strut_list;
     list<DockappHandler *> *docks;

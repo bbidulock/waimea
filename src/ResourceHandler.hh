@@ -55,7 +55,6 @@ typedef struct _DockStyle DockStyle;
     }
 
 struct _WaAction {
-    list<int> *defs;
     WwActionFn winfunc;
     RootActionFn rootfunc;
     MenuActionFn menufunc;
@@ -64,6 +63,12 @@ struct _WaAction {
     unsigned int type, detail, mod, nmod;
     bool replay;
 };
+
+typedef struct {
+    WaColor border_color;
+    WaTexture texture;
+    int border_width;
+} DockholderStyle;
 
 struct _DockStyle {
     int x;
@@ -74,6 +79,8 @@ struct _DockStyle {
     unsigned int gridspace;
     list<char *> *order;
     bool centered;
+    bool inworkspace;
+    DockholderStyle style;
 };
 
 enum {

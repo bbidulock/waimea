@@ -65,9 +65,12 @@ window.grip.unfocus:           flat gradient crossdiagonal
   window.grip.unfocus.colorTo: #c0a040
   window.grip.unfocus.opacity: 50
 
-dockapphandler:           flat gradient crossdiagonal
-  dockapphandler.color:   #7080b0
-  dockapphandler.colorTo: #506090
+dockappholder.*.frame:           raised gradient crossdiagonal
+  dockappholder.*.frame.color:   #7080b0
+  dockappholder.*.frame.colorTo: #405080
+
+dockappholder.*.borderWidth: 2
+dockappholder.*.borderColor: #000000
 
 borderColor: #000000
 borderWidth: 2
