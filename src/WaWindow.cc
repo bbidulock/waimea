@@ -531,11 +531,17 @@ void WaWindow::RedrawWindow(void) {
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
         
 #ifdef XRENDER
-        if (((attrib.x + attrib.width) > 0 && attrib.x < wascreen->width) && 
-            ((attrib.y + attrib.height) > 0 &&
-             attrib.y < wascreen->height)) {
-            if (title_w) DrawTitlebar();
-            if (handle_w) DrawHandlebar();
+        if ((attrib.x + attrib.width) > 0 && attrib.x < wascreen->width) {
+            
+            if (handle_w &&
+                (attrib.y + attrib.height + border_w + handle_w) > 0 &&
+                (attrib.y + attrib.height + border_w) < wascreen->height)
+                DrawHandlebar();
+            
+            if (title_w &&
+                (attrib.y - border_w) > 0 &&
+                (attrib.y - border_w - title_w) < wascreen->height)
+                DrawTitlebar();
         }
 #endif // XRENDER
 
