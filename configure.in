@@ -120,23 +120,41 @@ AC_ARG_ENABLE(
 if test x$enableval = "xyes"; then
    AC_MSG_RESULT([yes])
    if test x$have_xrender = "xtrue" ; then
-   dnl Checks for Xft
-    AC_CHECK_LIB(Xft, XftFontOpen,
-      AC_MSG_CHECKING([for X11/Xft/Xft.h])
-      AC_TRY_COMPILE(
-#include <X11/Xlib.h>
-#include <X11/Xft/Xft.h>
+     dnl Checks for freetype/freetype.h
+     have_freetype="false"
+     AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, no)
+     if test "x$FREETYPE_CONFIG" != "xno" ; then
+       FREETYPE_CFLAGS=`$FREETYPE_CONFIG --cflags`
+       save_cppflags="$CPPFLAGS"
+       CPPFLAGS="$CPPFLAGS $FREETYPE_CFLAGS"
+     fi
+     AC_MSG_CHECKING([for freetype/freetype.h])
+     AC_TRY_COMPILE(
+#include <freetype/freetype.h>
       ,,
       AC_MSG_RESULT([yes])
-      XFT="-DXFT"; Xft_lib="-lXft",
+      dnl Checks for Xft
+      AC_CHECK_LIB(Xft, XftFontOpen,
+        AC_MSG_CHECKING([for X11/Xft/Xft.h])
+        AC_TRY_COMPILE(
+#include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
+        ,,
+        AC_MSG_RESULT([yes])
+        XFT="-DXFT"; Xft_lib="-lXft",
+        AC_MSG_RESULT([no])
+        AC_MSG_RESULT([** WARNING: X11/Xft/Xft.h is missing])
+       AC_MSG_RESULT([** WARNING: Disabled Xft library support])
+      ),
       AC_MSG_RESULT([no])
-      AC_MSG_RESULT([** WARNING: X11/Xft/Xft.h is missing])
+      AC_MSG_RESULT([** WARNING: Could not find XftFontOpen in -lXft])
+      AC_MSG_RESULT([** WARNING: Disabled Xft library support]))
+      ,
+      AC_MSG_RESULT([no])
+      AC_MSG_RESULT([** WARNING: freetype/freetype.h is missing])
       AC_MSG_RESULT([** WARNING: Disabled Xft library support])
-    ),
-    AC_MSG_RESULT([no])
-    AC_MSG_RESULT([** WARNING: Could not find XftFontOpen in -lXft])
-    AC_MSG_RESULT([** WARNING: Disabled Xft library support]))
-  fi
+      CPPFLAGS="$save_cppflags")
+   fi
 else
   AC_MSG_RESULT([no])
 fi

@@ -4,7 +4,7 @@
 .\" This manual page may be freely distributed and modified.
 .\" Author: David Reveman <c99drn@cs.umu.se>
 .\" 
-.TH WAIMEA 1 "May 18 2002" "0.3.2" "User Manual"
+.TH WAIMEA 1 "Jun 5 2002" "0.3.3" "User Manual"
 
 
 .SH NAME
@@ -301,14 +301,133 @@ for how to write valid color names.
 e.g.: 'green'.
 .TP
 .B Font
-Is a font name. See
+XLFD (X core font) or Xft font name. Xft font names must be followed by [xft] 
+suffix. See
 .BR X(1)
-for how to write valid font names. 
-e.g.: '-adobe-courier-medium-r-normal--10-100-75-75-m-60-iso8859-1'.
+for how to write valid XLFD font names.
+.br
+e.g.:
+.nf
+
+-adobe-courier-medium-r-normal--10-100-75-75-m-60-iso8859-1
+
+.fi
+The format for Xft font names is:
+.nf
+
+<family>-<size>:<name>=<value> [xft]
+.fi
+
+An arbitrary set of additional elements can be appended to the Xft font name,
+the complete list of possible properties is:
+
+.nf
+Name            Type
+---------------------------------
+family          String
+style           String
+slant           Int
+weight          Int
+size            Double
+aspect          Double (only in Xft2)
+pixelsize       Double
+encoding        String (only in Xft1)
+spacing         Int
+foundry         String
+core            Bool (only in Xft1)
+antialias       Bool
+xlfd            String (only in Xft1)
+file            String
+index           Int
+rasterizer      String
+outline         Bool
+scalable        Bool
+rgba            Int
+
+(Defaults from resources)
+
+scale           Double
+render          Bool (only in Xft1)
+minspace        Bool
+
+(Specific to FreeType rasterizer)
+
+charwidth       Int
+charheight      Int
+matrix          XftMatrix
+charset         CharSet (only in Xft2)
+lang            String (only in Xft2)
+.fi
+
+As family and size are both nearly always needed to access a Xft font, they're
+given a privileged place, but really they're no different than the
+remaining values.  For elements that use an enumerated list of possible
+values, the values are given names which can be used in place of an integer,
+or can actually replace the whole name=value part.  They're all unique,
+so this actually works.  Here's a list of all of the enumerated values and
+the associated name:
+
+.nf
+Value           Element
+---------------------------------
+light           weight
+medium          weight
+demibold        weight
+bold            weight
+black           weight
+
+roman           slant
+italic          slant
+oblique         slant
+
+proportional    spacing
+mono            spacing
+charcell        spacing
+
+rgb             rgba
+bgr             rgba
+vrgb            rgba
+vbgr            rgba
+.fi
+
+Some example Xft font names:
+.nf
+
+times-12 [xft]
+
+.fi
+12 point times
+.nf
+
+times,charter-12:bold [xft]
+
+.fi
+12 point, preferring 'times', but accepting 'charter', bold.
+.nf
+
+times-12:bold:slant=italic,oblique [xft]
+
+.fi
+12 point times bold, either italic or oblique
+.nf
+
+times-12:rgba=vbgr [xft]
+
+.fi
+12 point times, optimized for display on an LCD screen with sub-pixel
+elements arranged vertically with blue on the top and red on the bottom.
+.nf
+
+times:pixelsize=100 [xft]
+
+.fi
+100 pixel times -- pixel size overrides any point size
+
 .TP
-.B XftFont
-Is a xftfont name. Should not be a full font specification only a name.
-e.g.: 'arial'.
+.B Xft opacity level
+Xft font opacity level. Integer value from 0 to 100, where 0 is the default 
+non translucent opacity level and and 100 makes it a fully transparent font.
+
 .TP
 .B Font justification
 Is one of left, right or center. 
@@ -403,7 +522,7 @@ file path, a Waimea start directory relative file path or an image file
 in the same directory as the style file.
 
 .TP
-.B Opacity level
+.B Texture opacity level
 Texture opacity level. Integer value from 0 to 100, where 0 is the default 
 non translucent opacity level and and 100 makes it a fully transparent texture.
 This requires that the program setting the background image has support for
@@ -427,7 +546,7 @@ or
 .PP
 .B window.*.focus:     Texture description
 .br
-.B window.*.focus.opacity:     Opacity level
+.B window.*.focus.opacity:     Texture opacity level
 .br
 .B window.*.focus.color:     Color
 .br
@@ -441,7 +560,7 @@ Texure type, opacity level, colors and pixmap used for focused window textures.
 .PP
 .B window.*.unfocus:     Texture description
 .br
-.B window.*.unfocus.opacity:     Opacity level
+.B window.*.unfocus.opacity:     Texture opacity level
 .br
 .B window.*.unfocus.color:     Color
 .br
@@ -453,14 +572,20 @@ Texure type, opacity level and colors used for unfocused window textures.
 .RE
 
 .PP
-.TP
 .B window.label.focus.textColor:     Color
-Color used for focused window label font.
+.br
+.B window.label.focus.textColor.opacity:     Xft opacity level
+.RS
+Color and opacity level used for focused window label font.
+.RE
 
 .PP
-.TP 
 .B window.label.unfocus.textColor:     Color
-Color used for unfocused window label font.
+.br
+.B window.label.unfocus.textColor.opacity:     Xft opacity level
+.RS
+Color and opacity level used for unfocused window label font.
+.RE
 
 .PP
 .TP 
@@ -483,18 +608,9 @@ Color used for pressed button symbols.
 Font justification for window labels.
 
 .PP
+.TP
 .B window.font:     Font
-.br
-.B window.xftFont:     XftFont
-.RS
 Font for window titles.
-.RE
-
-.PP
-.TP 
-.B window.xftFontSize:     Float
-Floating point number between 2.0 and 100.0. This option sets the 
-xft font size to used for window titles (font height in pixels, default=11).
 
 .PP
 .TP 
@@ -530,7 +646,7 @@ or
 .PP
 .B menu.*:     Texture description
 .br
-.B menu.*.opacity:     Opacity level
+.B menu.*.opacity:     Texture opacity level
 .br
 .B menu.*.color:     Color 
 .br
@@ -542,9 +658,12 @@ Texure type, opacity level and colors used for menu textures.
 .RE
 
 .PP
-.TP
 .B menu.*.textColor:     Color
-Color used for menu fonts.
+.br
+.B menu.*.textColor.opacity:     Xft opacity level
+.RS
+Color and opacity level used for menu fonts.
+.RE
 
 .PP
 .TP 
@@ -552,18 +671,9 @@ Color used for menu fonts.
 Font justification for menu items.
 
 .PP
+.TP
 .B menu.*.font:     Font 
-.br
-.B menu.*.xftFont:     XftFont
-.RS
 Font for menu items.
-.RE
-
-.PP
-.TP 
-.B menu.*.xftFontSize:     Float
-Floating point number between 2.0 and 100.0. This option sets the 
-xft font size to used for menu items (font height in pixels, default=12).
 
 .PP
 .TP 
@@ -1625,6 +1735,3 @@ The Waimea website:
 .SH "SEE ALSO"
 .BR blackbox (1), 
 .BR X (1)
-
-
-
