@@ -111,6 +111,7 @@ public:
     void MenuRemap(XEvent *, WaAction *, bool);
     void MenuUnmap(XEvent *, WaAction *, bool);
     void UpdateWorkarea(void);
+    void AddDockapp(Window window);
     
     inline void MenuMap(XEvent *e, WaAction *ac) {
         MenuMap(e, ac, False);

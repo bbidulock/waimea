@@ -55,10 +55,11 @@ public:
 
     Window id, icon_id, client_id;
     Display *display;
-    bool deleted;
     DockappHandler *dh;
     int x, y;
     unsigned int width, height;
+    XClassHint *c_hint;
+    bool deleted;
 };
 
 #endif // __DockappHandler_hh

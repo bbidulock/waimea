@@ -113,8 +113,7 @@ WaScreen::WaScreen(Display *d, int scrn_number, Waimea *wa) :
             if ((wm_hints = XGetWMHints(display, children[i])) &&
                 (wm_hints->flags & StateHint) &&
                 (wm_hints->initial_state == WithdrawnState)) {
-                new Dockapp(children[i], dock);
-                dock->Update();
+                AddDockapp(children[i]);
             }
             else if ((waimea->window_table->find(children[i]))
                      == waimea->window_table->end()) {
@@ -804,6 +803,64 @@ void WaScreen::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
                 waexec((*it)->exec, displaystring);
             else
                 ((*this).*((*it)->rootfunc))(e, *it);
+        }
+    }
+}
+
+/**
+ * @fn    AddDockapp(Window window)
+ * @brief Add dockapp to dockapp system
+ *
+ * Inserts the dockapp into the right dockapp holder.
+ *
+ * @param window Window ID of dockapp window
+ */
+void WaScreen::AddDockapp(Window window) {
+    XClassHint *c_hint;
+    Dockapp *da;
+    bool found = False;
+    int have_hints;
+
+    c_hint = XAllocClassHint();
+    have_hints = XGetClassHint(display, window, c_hint);
+
+    list<char *>::iterator it = waimea->rh->dockstyle.order->begin();
+    if (have_hints) {
+        for (; it != waimea->rh->dockstyle.order->end(); ++it) {
+            if ((**it == 'N') &&
+                (! strcmp(*it + 2, c_hint->res_name))) {
+                da = new Dockapp(window, dock);
+                da->c_hint = c_hint;
+                dock->Update();
+                found = True;
+            }
+        }
+        if (! found) {
+            it = waimea->rh->dockstyle.order->begin();
+            for (; it != waimea->rh->dockstyle.order->end(); ++it) {
+                if ((**it == 'C') &&
+                    (! strcmp(*it + 2, c_hint->res_class))) {
+                    da = new Dockapp(window, dock);
+                    da->c_hint = c_hint;
+                    dock->Update();
+                    found = True;
+                }
+            }
+        }
+    }
+    if (! found) {
+        it = waimea->rh->dockstyle.order->begin();
+        for (; it != waimea->rh->dockstyle.order->end(); ++it) {
+            if (**it == 'U') {
+                da = new Dockapp(window, dock);
+                da->c_hint = NULL;
+                dock->Update();
+                if (have_hints) {
+                    XFree(c_hint->res_name);
+                    XFree(c_hint->res_class);
+                }
+                XFree(c_hint);
+            }
         }
     }
 }

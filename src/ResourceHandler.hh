@@ -46,6 +46,8 @@ typedef struct {
     int direction;
     int stacking;
     unsigned int gridspace;
+    list<char *> *order;
+    bool centered;
 } DockStyle;
 
 #define LeftJustify   1

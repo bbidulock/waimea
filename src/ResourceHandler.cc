@@ -377,10 +377,35 @@ void ResourceHandler::LoadConfig(void) {
         image_dither = True;    
 
     unsigned int dummy;
+    char *token;
+    dockstyle.order = new list<char *>;
+    
     if (XrmGetResource(database, "dock0.geometry", "Dock0.Geometry",
                        &value_type, &value))
         dockstyle.geometry = XParseGeometry(value.addr, &dockstyle.x,
                                             &dockstyle.y, &dummy, &dummy);
+
+    if (XrmGetResource(database, "dock0.order", "Dock0.Order",
+                       &value_type, &value)) {
+      token = strtok(value.addr, " ");
+      if (strlen(token) >= 3 && (token[0] == 'C' || token[0] == 'N') &&
+          token[1] == '_')
+        dockstyle.order->push_back(strdup(token));
+      while (token = strtok(NULL, " "))
+        if (strlen(token) >= 3 && (token[0] == 'C' || token[0] == 'N') &&
+            token[1] == '_')
+          dockstyle.order->push_back(strdup(token));
+    }
+    dockstyle.order->push_back(strdup("U"));
+
+    if (XrmGetResource(database, "dock0.centered", "Dock0.Centered",
+                       &value_type, &value)) {
+        if (! strncasecmp("true", value.addr, value.size))
+            dockstyle.centered = True;
+        else
+            dockstyle.centered = False;
+    } else
+        dockstyle.centered = True;
 
     if (XrmGetResource(database, "dock0.direction", "Dock0.Direction",
                        &value_type, &value)) {

@@ -107,6 +107,9 @@ DockappHandler::~DockappHandler(void) {
 void DockappHandler::Update(void) {
     int dock_x = gridspace;
     int dock_y = gridspace;
+    list<Dockapp *>::iterator it;
+    bool found_pos;
+    Dockapp *tmp_dock;
     
     map_x = x;
     map_y = y;
@@ -117,7 +120,53 @@ void DockappHandler::Update(void) {
         XUnmapWindow(display, id);
         return;
     }
-    list<Dockapp *>::iterator it = dockapp_list->begin();
+    
+    list<char *>::reverse_iterator r_it = waimea->rh->dockstyle.order->rbegin();
+    for (; r_it != waimea->rh->dockstyle.order->rend(); ++r_it) {
+        it = dockapp_list->begin();
+        if (**r_it == 'U') {
+            for (; it != dockapp_list->end(); ++it) {
+                if (! (*it)->c_hint) {
+                    tmp_dock = *it;
+                    dockapp_list->erase(it);
+                    dockapp_list->push_front(tmp_dock);
+                }
+            }
+        } else if (**r_it == 'N') {
+            for (; it != dockapp_list->end(); ++it) {
+                if ((*it)->c_hint &&
+                    (! strcmp(*r_it + 2, (*it)->c_hint->res_name))) {
+                    tmp_dock = *it;
+                    dockapp_list->erase(it);
+                    dockapp_list->push_front(tmp_dock);
+                }
+            }
+        } else if (**r_it == 'C') {
+            for (; it != dockapp_list->end(); ++it) {
+                if ((*it)->c_hint &&
+                    (! strcmp(*r_it + 2, (*it)->c_hint->res_class))) {
+                    tmp_dock = *it;
+                    dockapp_list->erase(it);
+                    dockapp_list->push_front(tmp_dock);
+                }
+            }
+        }
+    }    
+    
+    it = dockapp_list->begin();
+    for (; it != dockapp_list->end(); ++it) {
+        switch (direction) {
+            case VerticalDock:
+                if (((*it)->width + gridspace * 2) > width)
+                        width = (*it)->width + gridspace * 2;
+                break;
+            case HorizontalDock:
+                if (((*it)->height + gridspace * 2) > height)
+                    height = (*it)->height + gridspace * 2;
+                break;
+        }
+    }
+    it = dockapp_list->begin();
     XGrabServer(display);
     for (; it != dockapp_list->end(); ++it) {
         if (validateclient((*it)->id)) {
@@ -125,16 +174,12 @@ void DockappHandler::Update(void) {
                 case VerticalDock:
                     dock_y = height;
                     height += (*it)->height + gridspace;
-                    if (((*it)->width + gridspace * 2) > width)
-                        width = (*it)->width + gridspace * 2;
                     dock_x = (((width - gridspace * 2) - (*it)->width) / 2) +
                         gridspace;
                     break;
                 case HorizontalDock:
                     dock_x = width;
                     width += (*it)->width + gridspace;
-                    if (((*it)->height + gridspace * 2) > height)
-                        height = (*it)->height + gridspace * 2;
                     dock_y = (((height - gridspace * 2) - (*it)->height) / 2) +
                         gridspace;
                     break;
@@ -202,7 +247,7 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
     client_id = win;
     display = dh->display;
     deleted = False;
-    
+
     XWMHints *wmhints = XGetWMHints(display, win);
     if (wmhints) {
       if ((wmhints->flags & IconWindowHint) &&
@@ -251,12 +296,14 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
 Dockapp::~Dockapp(void) {
     dh->dockapp_list->remove(this);
     dh->waimea->window_table->erase(id);
-    XGrabServer(display);
-    if (validateclient(id)) {
-        if (icon_id) XUnmapWindow(display, id);
-        XReparentWindow(display, id, dh->wascreen->id,
-                        dh->map_x + x, dh->map_y + y);
-        XMapWindow(display, client_id);
+    if (! deleted) {
+        XGrabServer(display);
+        if (validateclient(id)) {
+            if (icon_id) XUnmapWindow(display, id);
+            XReparentWindow(display, id, dh->wascreen->id,
+                            dh->map_x + x, dh->map_y + y);
+            XMapWindow(display, client_id);
+        }
+        XUngrabServer(display);
     }
-    XUngrabServer(display);
 }

@@ -371,8 +371,7 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
                 if ((wm_hints = XGetWMHints(e->display, e->window)) &&
                     (wm_hints->flags & StateHint) &&
                     (wm_hints->initial_state == WithdrawnState)) {
-                    new Dockapp(e->window, waimea->wascreen->dock);
-                    waimea->wascreen->dock->Update();
+                    waimea->wascreen->AddDockapp(e->window);
                 }
                 else new WaWindow(e->window, waimea->wascreen);
             }
