@@ -11,7 +11,7 @@ CXXFLAGS="$CXXFLAGS $X_CFLAGS"
 LIBS="$LIBS $X_LIBS"
 LDFLAGS="$LDFLAGS $LIBS $X_PRE_LIBS"
 
-AC_LANG([C++])
+AC_LANG(C++)
 
 AC_CHECK_HEADER(hash_map.h,,
 AC_MSG_ERROR([Your libstdc++ installation does not have the extra hash classes]))
