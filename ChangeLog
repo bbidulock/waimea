@@ -1,5 +1,6 @@
 Wed Jun  5 2002 David Reveman (c99drn@cs.umu.se)
 
+   *** Waimea v0.3.3 release ***
    Added translucent font support
    Added XftPattern matching support
 
