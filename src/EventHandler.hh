@@ -43,12 +43,13 @@ public:
     EventDetail ed;
     hash_set<int> *moveresize_return_mask;
     hash_set<int> *menu_viewport_move_return_mask;
-    
+
 private:
     void EvProperty(XPropertyEvent *);
     void EvFocus(XFocusChangeEvent *);
     void EvColormap(XColormapEvent *);
     void EvMapRequest(XMapRequestEvent *);
+    void EvClientMessage(XEvent *);
     
     Waimea *waimea;
     ResourceHandler *rh;

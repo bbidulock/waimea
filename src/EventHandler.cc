@@ -132,12 +132,7 @@ XEvent *EventHandler::EventLoop(hash_set<int> *return_mask) {
                 EvAct(event, event->xmaprequest.window);
                 break;
             case ClientMessage:
-                if (event->xclient.format != 32) break;
-                if (event->xclient.message_type ==
-                    waimea->net->net_change_desktop_viewport) {
-                    waimea->wascreen->MoveViewportTo(event->xclient.data.l[0],
-                                                     event->xclient.data.l[1]);
-                }
+                EvClientMessage(event);
                 break;
             default:
                 if (event->type == waimea->wascreen->shape_event) {
@@ -375,6 +370,43 @@ void EventHandler::EvUnmapDestroy(XEvent *e) {
             delete ((Dockapp *) (*it).second);
             waimea->wascreen->dock->Update();
         }
+    }
+}
+
+/**
+ * @fn    EvClientMessage(XEvent *e)
+ * @brief ClientMessageEvent handler
+ *
+ * This function handles all client message events received.
+ *
+ * @param e	The XEvent
+ */
+void EventHandler::EvClientMessage(XEvent *e) {
+    Window w;
+    int i, rx, ry;
+    
+    if (e->xclient.message_type == waimea->net->xa_xdndenter ||
+        e->xclient.message_type == waimea->net->xa_xdndleave) {
+        if (e->xclient.message_type == waimea->net->xa_xdndenter) {
+            e->type = EnterNotify;
+            ed.type = EnterNotify;
+        } else {
+            e->type = LeaveNotify;
+            ed.type = LeaveNotify;
+        }
+        XQueryPointer(waimea->wascreen->display,
+                      waimea->wascreen->id, &w, &w, &rx, &ry, &i, &i,
+                      &(ed.mod));
+        ed.detail = 0;
+        e->xcrossing.x_root = rx;
+        e->xcrossing.y_root = ry;
+        
+        EvAct(e, e->xclient.window);
+    }
+    else if (e->xclient.message_type ==
+             waimea->net->net_change_desktop_viewport) {
+        waimea->wascreen->MoveViewportTo(e->xclient.data.l[0],
+                                         e->xclient.data.l[1]);
     }
 }
 

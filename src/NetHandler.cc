@@ -48,6 +48,18 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_DESKTOP_VIEWPORT", False);
     net_change_desktop_viewport =
         XInternAtom(display, "_NET_CHANGE_DESKTOP_VIEWPORT", False);
+    
+    xa_xdndaware = XInternAtom(display, "XdndAware", False);
+    xa_xdndenter = XInternAtom(display, "XdndEnter", False);
+    xa_xdndleave = XInternAtom(display, "XdndLeave", False);
+
+
+    event.type = ClientMessage;
+    event.xclient.display = display;
+    event.xclient.format = 32;
+    event.xclient.data.l[0] = event.xclient.data.l[1] =
+        event.xclient.data.l[2] = event.xclient.data.l[3] =
+        event.xclient.data.l[4] = 0l;
 }
 
 /**
@@ -646,4 +658,32 @@ void NetHandler::SetDesktopViewPort(WaScreen *ws) {
     
     XChangeProperty(display, ws->id, net_desktop_viewport, XA_CARDINAL, 32,
                     PropModeReplace, (unsigned char *) &data, 2);
+}
+
+/**
+ * @fn    wXDNDMakeAwareness(Window window)
+ * @brief Make window DND aware
+ *
+ * Makes drag'n'drop awareness for window.
+ *
+ * @param window Window to make DND aware
+ */
+void NetHandler::wXDNDMakeAwareness(Window window) {
+    long int xdnd_version = 3;
+
+    XChangeProperty(waimea->display, window, xa_xdndaware, XA_ATOM,
+            32, PropModeAppend, (unsigned char *) &xdnd_version, 1);
+}
+
+/**
+ * @fn    wXDNDClearAwareness(Window window)
+ * @brief Removes DND awareness from window
+ *
+ * Removes drag'n'drop awareness for window.
+ *
+ * @param window Window to remove DND awareness from
+ */
+void NetHandler::wXDNDClearAwareness(Window window) {
+    long int xdnd_version = 3;
+    XDeleteProperty (waimea->display, window, xa_xdndaware);
 }

@@ -62,6 +62,9 @@ public:
 
     void SetDesktopViewPort(WaScreen *);
     void GetDesktopViewPort(WaScreen *);
+
+    void wXDNDMakeAwareness(Window);
+    void wXDNDClearAwareness(Window);
     
     Waimea *waimea;
     Display *display;
@@ -71,11 +74,15 @@ public:
 
     Atom mwm_hints_atom, wm_state, net_state_sticky, net_state_shaded,
         net_state_max_v, net_state_max_h, net_virtual_pos,
-        net_desktop_viewport, net_change_desktop_viewport;
+        net_desktop_viewport, net_change_desktop_viewport, xa_xdndaware,
+        xa_xdndenter, xa_xdndleave;
 
+private:
+    XEvent event;
+    
     int real_format;
     Atom real_type;
-    unsigned long items_read, items_left;	    
+    unsigned long items_read, items_left;
 };
 
 #endif // __NetHandler_hh

@@ -774,6 +774,8 @@ ScreenEdge::ScreenEdge(WaScreen *wascrn, int x, int y, int width, int height,
     id = XCreateWindow(wa->display, wa->id, x, y, width, height, 0,
                        CopyFromParent, InputOnly, CopyFromParent,
                        CWOverrideRedirect | CWEventMask, &attrib_set);
+
+    wa->waimea->net->wXDNDMakeAwareness(id);
     
     XMapWindow(wa->display, id);
     wa->waimea->WaRaiseWindow(0);

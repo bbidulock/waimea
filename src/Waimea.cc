@@ -67,13 +67,12 @@ Waimea::Waimea(char **av, struct waoptions *options) {
         exit(1);
     }
     waimea = this;
-    act.sa_handler = signalhandler;
-    act.sa_flags = 0;
-    sigaction(SIGTERM, &act, NULL);
-    sigaction(SIGINT, &act, NULL);
-    sigaction(SIGHUP, &act, NULL);
-    sigaction(SIGCHLD, &act, NULL);
-
+    
+    signal(SIGTERM, signalhandler);
+    signal(SIGINT, signalhandler);
+    signal(SIGHUP, signalhandler);
+    signal(SIGCHLD, signalhandler);
+    
     windows = window_table = new hash_map<Window, WindowObject *>;
     always_on_top_list = new list<Window>;
     wawindow_list = new list<WaWindow *>;
@@ -266,30 +265,26 @@ int wmrunningerror(Display *d, XErrorEvent *) {
  * @brief Signal handler function
  *
  * When one of the signals we handle arrives this function is called. Depending
- * on what type of signal we received we execute a function.
+ * on what type of signal we received we do something, ex. restart, exit.
  *
- * @param signal The signal we received
+ * @param sig The signal we received
  */
-void signalhandler(int signal) {
-    struct sigaction act;
+void signalhandler(int sig) {
+    int status;
     
-    act.sa_handler = signalhandler;
-    act.sa_flags = 0;
-    sigaction(SIGTERM, &act, NULL);
-    sigaction(SIGINT, &act, NULL);
-    sigaction(SIGHUP, &act, NULL);
-    sigaction(SIGCHLD, &act, NULL);
-    
-    switch(signal) {
+    switch(sig) {
         case SIGINT:
         case SIGTERM:
-            cout << "signal: " << signal << " caught. ";
-            quit(EXIT_SUCCESS); break;
         case SIGHUP:
-            cout << "signal: " << signal << " caught. ";
-            restart(); break;
-        case SIGCHLD: 
-            wait(NULL); break;
+            cout << "signal: " << sig << " caught. ";
+            quit(EXIT_SUCCESS);
+            break;
+        case SIGCHLD:
+            waitpid(-1, &status, WNOHANG | WUNTRACED);
+            signal(SIGCHLD, signalhandler);
+            break;
+        default:
+            quit(EXIT_FAILURE);
     }
 }
 
