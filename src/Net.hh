@@ -34,9 +34,9 @@ class NetHandler;
 #define PropMotifWmHintsElements 3
 
 typedef struct {
-    CARD32 flags;
-    CARD32 functions;
-    CARD32 decorations;
+    long flags;
+    long functions;
+    long decorations;
 } MwmHints;
 
 #define _NET_WM_STATE_REMOVE 0

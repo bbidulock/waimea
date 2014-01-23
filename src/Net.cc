@@ -359,7 +359,7 @@ void NetHandler::GetWMNormalHints(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::GetState(WaWindow *ww) {
-    CARD32 *data;
+    long *data;
 
     ww->state = WithdrawnState;
     XGrabServer(display);
@@ -385,7 +385,7 @@ void NetHandler::GetState(WaWindow *ww) {
  * @param newstate State to change to
  */
 void NetHandler::SetState(WaWindow *ww, int newstate) {
-    CARD32 data[2];
+    long data[2];
     
     ww->state = newstate;
     switch (ww->state) {
@@ -432,7 +432,7 @@ void NetHandler::SetState(WaWindow *ww, int newstate) {
  * @param ww WaWindow object
  */
 void NetHandler::GetWmState(WaWindow *ww) {
-    CARD32 *data;
+    long *data;
     bool vert = false, horz = false, shaded = false, title = false,
         handle = false, border = false, decor = false;
     unsigned int i;
@@ -513,8 +513,8 @@ void NetHandler::GetWmState(WaWindow *ww) {
  */
 void NetHandler::SetWmState(WaWindow *ww) {
     int i = 0;
-    CARD32 data[13];
-    CARD32 data2[6];
+    long data[13];
+    long data2[6];
 
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
@@ -566,7 +566,7 @@ void NetHandler::SetWmState(WaWindow *ww) {
  * @param ws WaScreen object
  */
 void NetHandler::SetSupported(WaScreen *ws) {
-    CARD32 data[52];
+    long data[52];
     int i = 0;
     
     data[i++] = net_supported;
@@ -663,10 +663,10 @@ void NetHandler::SetSupportedWMCheck(WaScreen *ws, Window child) {
  * @param ws WaScreen object
  */
 void NetHandler::SetClientList(WaScreen *ws) {
-    CARD32 *data;
+    long *data;
     int i = 0;
 
-    data = new CARD32[ws->wawindow_list_map_order.size() + 1];
+    data = new long[ws->wawindow_list_map_order.size() + 1];
 
     list<WaWindow *>::iterator it =
         ws->wawindow_list_map_order.begin();
@@ -689,11 +689,11 @@ void NetHandler::SetClientList(WaScreen *ws) {
  * @param ws WaScreen object
  */
 void NetHandler::SetClientListStacking(WaScreen *ws) {
-    CARD32 *data;
+    long *data;
     int i = 0;
     WaChildWindow *wc;
 
-    data = new CARD32[ws->wawindow_list.size() + 1];
+    data = new long[ws->wawindow_list.size() + 1];
 
     list<Window>::reverse_iterator it = ws->aab_stacking_list.rbegin();
     for (; it != ws->aab_stacking_list.rend(); ++it) {
@@ -726,7 +726,7 @@ void NetHandler::SetClientListStacking(WaScreen *ws) {
  * @param ws WaScreen object
  */
 void NetHandler::GetClientListStacking(WaScreen *ws) {
-    CARD32 *data;
+    long *data;
     unsigned int i;
     
     if (XGetWindowProperty(display, ws->id, net_client_list_stacking,
@@ -754,11 +754,11 @@ void NetHandler::GetClientListStacking(WaScreen *ws) {
  * @param ww WaWindow that was set active or NULL if root window.
  */
 void NetHandler::SetActiveWindow(WaScreen *ws, WaWindow *ww) {
-    CARD32 *data;
+    long *data;
     list<WaWindow *>::iterator it;
     int i = 0;
 
-    data = new CARD32[ws->wawindow_list.size() + 1];
+    data = new long[ws->wawindow_list.size() + 1];
     
     if (ww) {
         ws->focus = false;
@@ -788,7 +788,7 @@ void NetHandler::SetActiveWindow(WaScreen *ws, WaWindow *ww) {
  */
 void NetHandler::GetActiveWindow(WaScreen *ws) {
     WaWindow *ww;
-    CARD32 *data;
+    long *data;
     int i;
     
     if (XGetWindowProperty(display, ws->id, net_active_window, 0L,
@@ -993,7 +993,7 @@ void NetHandler::SetVirtualPos(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::GetWmStrut(WaWindow *ww) {
-    CARD32 *data;
+    long *data;
     WMstrut *wm_strut;
     bool found = false;
     int status;
@@ -1044,7 +1044,7 @@ void NetHandler::GetWmStrut(WaWindow *ww) {
  */
 void NetHandler::GetWmPid(WaWindow *ww) {
     char tmp[32];
-    CARD32 *data;
+    long *data;
 
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
@@ -1071,7 +1071,7 @@ void NetHandler::GetWmPid(WaWindow *ww) {
  * @param ws WaScreen object
  */
 void NetHandler::GetDesktopViewPort(WaScreen *ws) {
-    CARD32 *data;
+    long *data;
     
     if (XGetWindowProperty(display, ws->id, net_desktop_viewport, 0L, 2L, 
                            false, XA_CARDINAL, &real_type,
@@ -1092,7 +1092,7 @@ void NetHandler::GetDesktopViewPort(WaScreen *ws) {
  * @param ws WaScreen object
  */
 void NetHandler::SetDesktopViewPort(WaScreen *ws) {
-    CARD32 data[2];
+    long data[2];
 
     data[0] = ws->v_x;
     data[1] = ws->v_y;
@@ -1110,7 +1110,7 @@ void NetHandler::SetDesktopViewPort(WaScreen *ws) {
  * @param ws WaScreen object
  */
 void NetHandler::SetDesktopGeometry(WaScreen *ws) {
-    CARD32 data[2];
+    long data[2];
 
     data[0] = ws->v_xmax + ws->width;
     data[1] = ws->v_ymax + ws->height;    
@@ -1127,7 +1127,7 @@ void NetHandler::SetDesktopGeometry(WaScreen *ws) {
  * @param ws WaScreen object
  */
 void NetHandler::SetNumberOfDesktops(WaScreen *ws) {
-    CARD32 data[1];
+    long data[1];
 
     data[0] = ws->desktop_list.size();
     XChangeProperty(display, ws->id, net_number_of_desktops, XA_CARDINAL, 32,
@@ -1143,7 +1143,7 @@ void NetHandler::SetNumberOfDesktops(WaScreen *ws) {
  * @param ws WaScreen object
  */
 void NetHandler::SetCurrentDesktop(WaScreen *ws) {
-    CARD32 data[1];
+    long data[1];
     
     data[0] = ws->current_desktop->number;
     XChangeProperty(display, ws->id, net_current_desktop, XA_CARDINAL, 32,
@@ -1159,7 +1159,7 @@ void NetHandler::SetCurrentDesktop(WaScreen *ws) {
  * @param ws WaScreen object
  */
 void NetHandler::GetCurrentDesktop(WaScreen *ws) {
-    CARD32 *data;
+    long *data;
 
     if (XGetWindowProperty(display, ws->id, net_current_desktop, 0L, 1L, 
                            false, XA_CARDINAL, &real_type, &real_format, 
@@ -1205,7 +1205,7 @@ void NetHandler::SetDesktopNames(WaScreen *ws, char *names) {
  * @param ws WaScreen object
  */
 void NetHandler::SetWorkarea(WaScreen *ws) {
-    CARD32 data[4 * 16];
+    long data[4 * 16];
     int i = 0;
     
     list<Desktop *>::iterator it = ws->desktop_list.begin();
@@ -1274,7 +1274,7 @@ void NetHandler::DeleteSupported(WaScreen *ws) {
  * @param ws WaScreen object
  */
 void NetHandler::GetXRootPMapId(WaScreen *ws) {
-    CARD32 *data;
+    long *data;
 
     XSync(ws->display, false);
     if (XGetWindowProperty(ws->pdisplay, ws->id, xrootpmap_id, 0L, 1L, 
@@ -1302,7 +1302,7 @@ void NetHandler::GetXRootPMapId(WaScreen *ws) {
  * @param ww WaWindow object
  */
 void NetHandler::GetWmType(WaWindow *ww) {
-    CARD32 *data;
+    long *data;
     int status;
     
     XGrabServer(display);
@@ -1386,7 +1386,7 @@ void NetHandler::GetWmType(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::SetDesktop(WaWindow *ww) {
-    CARD32 data[1];
+    long data[1];
 
     data[0] = 0;
     if (ww->desktop_mask & (1L << ww->wascreen->current_desktop->number))
@@ -1420,7 +1420,7 @@ void NetHandler::SetDesktop(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::SetDesktopMask(WaWindow *ww) {
-    CARD32 data[1];
+    long data[1];
 
     data[0] = ww->desktop_mask;
 
@@ -1443,7 +1443,7 @@ void NetHandler::SetDesktopMask(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::GetDesktop(WaWindow *ww) {
-    CARD32 *data;
+    long *data;
 
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
@@ -1483,7 +1483,7 @@ void NetHandler::GetDesktop(WaWindow *ww) {
  * @return True if window is systray window, otherwise false
  */
 bool NetHandler::IsSystrayWindow(Window w) {
-    CARD32 *data;
+    long *data;
     
     items_read = 0;
     XGrabServer(display);
@@ -1510,10 +1510,10 @@ bool NetHandler::IsSystrayWindow(Window w) {
  * @param ws WaScreen object
  */
 void NetHandler::SetSystrayWindows(WaScreen *ws) {
-    CARD32 *data;
+    long *data;
     int i = 0;
 
-    data = new CARD32[ws->systray_window_list.size() + 1];
+    data = new long[ws->systray_window_list.size() + 1];
 
     list<Window>::iterator it = ws->systray_window_list.begin();
     for (; it != ws->systray_window_list.end(); it++)
@@ -1535,7 +1535,7 @@ void NetHandler::SetSystrayWindows(WaScreen *ws) {
  * @param ww WaWindow object
  */
 void NetHandler::GetMergedState(WaWindow *ww) {
-    CARD32 *data;
+    long *data;
     Window mwin = (Window) 0;
     int mtype = NullMergeType;
 
@@ -1591,7 +1591,7 @@ void NetHandler::GetMergedState(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::SetMergedState(WaWindow *ww) {
-    CARD32 data[1];
+    long data[1];
 
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
@@ -1621,10 +1621,10 @@ void NetHandler::SetMergedState(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::SetMergeOrder(WaWindow *ww) {
-    CARD32 *data;
+    long *data;
     int i = 0;
 
-    data = new CARD32[ww->merged.size()];
+    data = new long[ww->merged.size()];
 
     list<WaWindow *>::iterator it = ww->merged.begin();
     for (; it != ww->merged.end(); it++)
@@ -1653,7 +1653,7 @@ void NetHandler::SetMergeOrder(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::GetMergeOrder(WaWindow *ww) {
-    CARD32 *data;
+    long *data;
 
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
@@ -1697,7 +1697,7 @@ void NetHandler::GetMergeOrder(WaWindow *ww) {
  * @param win Window id of window that is at front
  */
 void NetHandler::SetMergeAtfront(WaWindow *ww, Window win) {
-    CARD32 data[1];
+    long data[1];
 
     if (ww->wascreen->shutdown) return;
     
@@ -1723,7 +1723,7 @@ void NetHandler::SetMergeAtfront(WaWindow *ww, Window win) {
  * @param ww WaWindow object
  */
 void NetHandler::GetMergeAtfront(WaWindow *ww) {
-    CARD32 *data;
+    long *data;
 
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
@@ -1758,7 +1758,7 @@ void NetHandler::GetMergeAtfront(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::SetAllowedActions(WaWindow *ww) {
-    CARD32 data[10];
+    long data[10];
     int i = 0;
 
     if (ww->flags.tasklist) {
