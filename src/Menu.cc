@@ -44,7 +44,7 @@ using std::endl;
  *
  * @param n Name of menu
  */
-WaMenu::WaMenu(char *n) : WindowObject((Window) 0, MenuType) {
+WaMenu::WaMenu(const char *n) : WindowObject((Window) 0, MenuType) {
     char *__m_wastrdup_tmp;
     
     name = __m_wastrdup(n);
@@ -807,7 +807,7 @@ void WaMenu::FocusFirst(void) {
  *
  * @param s Menu item label
  */
-WaMenuItem::WaMenuItem(char *s) : WindowObject(0, 0) {
+WaMenuItem::WaMenuItem(const char *s) : WindowObject(0, 0) {
     char *__m_wastrdup_tmp;
     
     label = label1 = __m_wastrdup(s);
@@ -2003,7 +2003,7 @@ void WindowMenu::Build(WaScreen *wascreen) {
  * @param l Label for menu
  * @param n Menu name
  */
-MergeMenu::MergeMenu(int mtype, char *l, char *n) : WaMenu(n) {
+MergeMenu::MergeMenu(int mtype, const char *l, const char *n) : WaMenu(n) {
     WaMenuItem *m;
     char *__m_wastrdup_tmp;
 

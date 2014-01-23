@@ -146,11 +146,11 @@ public:
 private:
     void ReadActions(char *, list<Define *> *, list<StrComp *> *,
                      list<WaAction *> *, WaScreen *);
-    void ReadDatabaseColor(char *, char *, WaColor *, unsigned long,
+    void ReadDatabaseColor(const char *, const char *, WaColor *, unsigned long,
                            WaImageControl *);
-    void ReadDatabaseTexture(char *, char *, WaTexture *, unsigned long,
+    void ReadDatabaseTexture(const char *, const char *, WaTexture *, unsigned long,
                              WaImageControl *);
-    void ReadDatabaseFont(char *, char *, WaFont *, WaFont *);
+    void ReadDatabaseFont(const char *, const char *, WaFont *, WaFont *);
     void ParseAction(const char *, list<StrComp *> *, list<WaAction *> *,
                      WaScreen *);
 
@@ -204,14 +204,14 @@ public:
 
 class StrComp {
 public:
-    StrComp(char *, unsigned long); 
-    StrComp(char *, WwActionFn);
-    StrComp(char *, RootActionFn);
-    StrComp(char *, MenuActionFn);
+    StrComp(const char *, unsigned long); 
+    StrComp(const char *, WwActionFn);
+    StrComp(const char *, RootActionFn);
+    StrComp(const char *, MenuActionFn);
     
     bool Comp(char *);
 
-    char *str;
+    const char *str;
     unsigned long value;
     int type;
     WwActionFn winfunc;

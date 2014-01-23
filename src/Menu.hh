@@ -40,7 +40,7 @@ typedef void (WaMenuItem::*MenuActionFn)(XEvent *, WaAction *);
 
 class WaMenu : public WindowObject {
 public:
-    WaMenu(char *);
+    WaMenu(const char *);
     virtual ~WaMenu(void);
 
     void AddItem(WaMenuItem *);
@@ -94,7 +94,7 @@ private:
 
 class WaMenuItem : public WindowObject {
 public:
-    WaMenuItem(char *);
+    WaMenuItem(const char *);
     virtual ~WaMenuItem(void);
 
     void Draw(Drawable = 0, bool = false, int = 0);
@@ -227,7 +227,7 @@ private:
 
 class MergeMenu : public WaMenu {
 public:
-    MergeMenu(int, char *, char *);
+    MergeMenu(int, const char *, const char *);
 
     void Build(WaScreen *, Window);
     

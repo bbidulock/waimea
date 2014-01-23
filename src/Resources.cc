@@ -1778,7 +1778,7 @@ void ResourceHandler::ReadActions(char s[8192],
 }
 
 /**
- * @fn    ReadDatabaseColor(char *rname, char *rclass,
+ * @fn    ReadDatabaseColor(const char *rname, const char *rclass,
  *                          WaColor *color,
  *                          unsigned long default_pixel,
  *                          WaImageControl *ic)
@@ -1791,7 +1791,7 @@ void ResourceHandler::ReadActions(char s[8192],
  * @param default_pixel Pixel value to use if resource doesn't exist
  * @param ic WaImageControl to use for parsing color
  */
-void ResourceHandler::ReadDatabaseColor(char *rname, char *rclass,
+void ResourceHandler::ReadDatabaseColor(const char *rname, const char *rclass,
                                         WaColor *color,
                                         unsigned long default_pixel,
                                         WaImageControl *ic) {
@@ -1830,7 +1830,7 @@ void ResourceHandler::ReadDatabaseColor(char *rname, char *rclass,
 }
 
 /**
- * @fn    ReadDatabaseTexture(char *rname, char *rclass,
+ * @fn    ReadDatabaseTexture(const char *rname, const char *rclass,
  *                            WaColor *color,
  *                            unsigned long default_pixel,
  *                            WaImageControl *ic)
@@ -1843,7 +1843,7 @@ void ResourceHandler::ReadDatabaseColor(char *rname, char *rclass,
  * @param default_pixel Pixel value to use if resource doesn't exist
  * @param ic WaImageControl to use for parsing color
  */
-void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
+void ResourceHandler::ReadDatabaseTexture(const char *rname, const char *rclass,
                                           WaTexture *texture,
                                           unsigned long default_pixel,
                                           WaImageControl *ic) {
@@ -2110,7 +2110,7 @@ void ResourceHandler::ReadDatabaseTexture(char *rname, char *rclass,
  * @param font Pointer to WaFont structure
  * @param defaultfont Font to use if resource doesn't exist  
  */
-void ResourceHandler::ReadDatabaseFont(char *rname, char *rclass,
+void ResourceHandler::ReadDatabaseFont(const char *rname, const char *rclass,
                                        WaFont *font, WaFont *defaultfont) {
     XrmValue value;
     char *value_type;
@@ -2134,7 +2134,9 @@ void ResourceHandler::ReadDatabaseFont(char *rname, char *rclass,
             
         }
         font->font = __m_wastrdup(f);
+#if 0
         strtrim(font->font);
+#endif
         if (xft_match) xft_match[0] = '[';
     } else {
         font->xft = defaultfont->xft;
@@ -2912,12 +2914,12 @@ WaMenu *ResourceHandler::ParseMenu(WaMenu *menu, FILE *file,
  * @param s String that match object
  * @param ??? Object that match string
  */
-StrComp::StrComp(char *s, unsigned long v) { str = s; value = v; type = 0; }
-StrComp::StrComp(char *s, WwActionFn a) {
+StrComp::StrComp(const char *s, unsigned long v) { str = s; value = v; type = 0; }
+StrComp::StrComp(const char *s, WwActionFn a) {
     str = s; winfunc = a; type = WindowFuncMask; }
-StrComp::StrComp(char *s, RootActionFn ra) {
+StrComp::StrComp(const char *s, RootActionFn ra) {
     str = s; rootfunc = ra; type = RootFuncMask; }
-StrComp::StrComp(char *s, MenuActionFn ma) {
+StrComp::StrComp(const char *s, MenuActionFn ma) {
     str = s; menufunc = ma; type = MenuFuncMask; }
 
 /**
@@ -3029,7 +3031,8 @@ char *strwithin(char *s, char c1, char c2, bool eval_env) {
  * @return Pointer to expanded string
  */
 char *environment_expansion(char *s) {
-    char *tmp, *env, *env_name;
+    const char *env;
+    char *tmp, *env_name;
     int i, tmp_char;
     
     for (i = 0; s[i] != '\0'; i++) {

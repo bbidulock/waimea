@@ -459,7 +459,8 @@ char **commandline_to_argv(char *s, char **tmp_argv) {
  */
 char *expand(char *org, WaWindow *w) {
     int i;
-    char *insert, *expanded, *tmp;
+    const char *insert;
+    char *expanded, *tmp;
     bool cont, found = false;
 
     if (! org) return NULL;

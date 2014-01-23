@@ -42,7 +42,7 @@ public:
     int Width(Display *, char *, int);
 
     bool xft;
-    char *font;
+    const char *font;
     GC gc, s_gc;
     XFontStruct *xfont;
     bool font_ok;
