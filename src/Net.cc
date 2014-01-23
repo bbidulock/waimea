@@ -964,7 +964,7 @@ void NetHandler::RemoveVisibleName(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::SetVirtualPos(WaWindow *ww) {
-    int data[2];
+    long data[2];
     
     ww->Gravitate(RemoveGravity);
     data[0] = ww->wascreen->v_x + ww->attrib.x;
