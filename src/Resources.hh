@@ -193,13 +193,13 @@ public:
         delete name;
         delete cl;
         delete title;
-        ACTLISTCLEAR(list);
+        ACTLISTCLEAR(alist);
     }
     
     Regex *name;
     Regex *cl;
     Regex *title;
-    list<WaAction *> list;
+    list<WaAction *> alist;
 };
 
 class StrComp {

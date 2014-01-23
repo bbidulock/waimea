@@ -1602,7 +1602,7 @@ void ResourceHandler::LoadActions(WaScreen *wascreen) {
                                                            NULL);
                             str = str + i3 + 1;
                             ReadActions((char *) buffer2, defs, &wacts,
-                                        &ext_list->list, wascreen);
+                                        &ext_list->alist, wascreen);
                         }
                         else if (str[0] == 'n' && str[1] == '/') {
                             for (i3 = 2; str[i3] != '\0' &&
@@ -1617,7 +1617,7 @@ void ResourceHandler::LoadActions(WaScreen *wascreen) {
                                                            NULL);
                             str = str + i3 + 1;
                             ReadActions((char *) buffer2, defs, &wacts,
-                                        &ext_list->list, wascreen);
+                                        &ext_list->alist, wascreen);
                         }
                         else if (str[0] == 't' && str[1] == '/') {
                             for (i3 = 2; str[i3] != '\0' &&
@@ -1632,7 +1632,7 @@ void ResourceHandler::LoadActions(WaScreen *wascreen) {
                                                            str + 2);
                             str = str + i3 + 1;
                             ReadActions((char *) buffer2, defs, &wacts,
-                                        &ext_list->list, wascreen);
+                                        &ext_list->alist, wascreen);
                         }
                         else if (! strncasecmp(str, "window", 6)) {
                             str = str + 6;

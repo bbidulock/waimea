@@ -291,13 +291,13 @@ list <WaAction *> *WaWindow::GetActionList(list<WaActionExtList *> *e) {
         if (classhint) {
             if (classhint->res_name &&
                 (*it)->name->Match(classhint->res_name))
-                return &((*it)->list);
+                return &((*it)->alist);
             else if (classhint->res_class &&
                      (*it)->cl->Match(classhint->res_class))
-                return &((*it)->list);
+                return &((*it)->alist);
         }
         if ((*it)->title->Match(name))
-            return &((*it)->list);
+            return &((*it)->alist);
     }
     return NULL;
 }
