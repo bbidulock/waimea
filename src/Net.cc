@@ -823,7 +823,7 @@ void NetHandler::GetActiveWindow(WaScreen *ws) {
  * @param ww WaWindow object
  */
 void NetHandler::GetVirtualPos(WaWindow *ww) {
-    int *data;
+    long *data;
     
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
