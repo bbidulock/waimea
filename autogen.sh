@@ -16,9 +16,9 @@ if [ -z "$VERSION" ]; then
 fi
 
 # if you don't have -i get a real version of sed!!!
-sed -r -e -i \
+sed -r -e \
     "s:AC_INIT\(.*:AC_INIT([waimea],[$VERSION],[https://github.com/bbidulock/waimea/issues]):
      s:AC_REVISION\(.*:AC_REVISION([$REVISION]):" \
-    configure.ac
+    -i configure.ac
 
 autoreconf -fiv
