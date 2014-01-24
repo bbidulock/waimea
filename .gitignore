@@ -8,11 +8,13 @@ config.log
 config.status
 configure
 configure.scan
+COPYING
 cscope.*
 data/config
 data/scripts/stylesdir.pl
 data/styles/Default.style
 doc/waimea.1
+INSTALL
 *.log
 Makefile
 Makefile.in

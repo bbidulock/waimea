@@ -1,7 +1,7 @@
 dnl configure.in for Waimea
 
 AC_PREREQ([2.69])
-AC_INIT([waimea],[0.5.0],[https://github.com/bbidulock/waimea/issues])
+AC_INIT([waimea],[0.5.0],[http://github.com/bbidulock/waimea/issues])
 AC_REVISION([0.5.0])
 AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_HEADERS([config.h])
@@ -9,7 +9,7 @@ AC_CONFIG_AUX_DIR([scripts])
 AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2 no-dist-gzip])
+AM_INIT_AUTOMAKE([dist-bzip2 no-dist-gzip])
 AM_MAINTAINER_MODE
 
 # Checks for programs

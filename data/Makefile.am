@@ -1,5 +1,5 @@
 
-nobase_pkgdata_DATA = \
+nobase_dist_pkgdata_DATA = \
 	backgrounds/waimea.png \
 	scripts/filelist.pl \
 	scripts/procinfo.pl \
@@ -8,12 +8,12 @@ nobase_pkgdata_DATA = \
 	actions/action.non-opaque \
 	menu
 
-nodist_nobase_pkgdata_DATA = \
+nobase_nodist_pkgdata_DATA = \
 	styles/Default.style \
 	scripts/stylesdir.pl \
 	config
 
-nobase_data_DATA = \
+nobase_dist_data_DATA = \
 	xsessions/waimea.desktop
 
 install-data-hook:

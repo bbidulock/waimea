@@ -17,8 +17,8 @@ fi
 
 # if you don't have -i get a real version of sed!!!
 sed -r -e \
-    "s:AC_INIT\(.*:AC_INIT([waimea],[$VERSION],[https://github.com/bbidulock/waimea/issues]):
-     s:AC_REVISION\(.*:AC_REVISION([$REVISION]):" \
+    "s|AC_INIT\(.*|AC_INIT([waimea],[$VERSION],[http://github.com/bbidulock/waimea/issues])|
+     s|AC_REVISION\(.*|AC_REVISION([$REVISION])|" \
     -i configure.ac
 
 autoreconf -fiv

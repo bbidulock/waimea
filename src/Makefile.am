@@ -17,6 +17,18 @@ waimea_CXXFLAGS = \
 		$(XINERAMA_CFLAGS) \
 		$(IMLIB2_CFLAGS)
 waimea_SOURCES = \
+		Dockapp.hh \
+		Event.hh \
+		Font.hh \
+		Image.hh \
+		Menu.hh \
+		Net.hh \
+		Regex.hh \
+		Resources.hh \
+		Screen.hh \
+		Timer.hh \
+		Waimea.hh \
+		Window.hh \
 		main.cc \
 		Waimea.cc \
 		Screen.cc \
