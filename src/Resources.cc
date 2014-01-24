@@ -19,6 +19,8 @@
 
 extern "C" {
 #include <X11/Xlib.h>
+#include <X11/keysym.h>
+#include <X11/XKBlib.h>
 
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
@@ -374,7 +376,7 @@ ResourceHandler::ResourceHandler(Waimea *wa, struct waoptions *options) {
         
         for (size_t i = 0; i < size; ++i) {
             if (! modmap->modifiermap[i]) continue;
-            KeySym ksym = XKeycodeToKeysym(display, modmap->modifiermap[i], 0);
+            KeySym ksym = XkbKeycodeToKeysym(display, modmap->modifiermap[i], 0, 0);
             if (ksym) {
                 char *kstring = XKeysymToString(ksym);
                 if (kstring) {
