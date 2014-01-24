@@ -8,7 +8,6 @@ config.log
 config.status
 configure
 configure.scan
-COPYING
 cscope.*
 data/config
 data/scripts/stylesdir.pl
