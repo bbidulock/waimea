@@ -18,6 +18,7 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_MKDIR_P
 AC_PROG_INSTALL
+AC_PROG_SED
 AC_ARG_VAR([LD], [Linker loader command])
 
 PKG_PROG_PKG_CONFIG
@@ -27,6 +28,8 @@ PKG_PROG_PKG_CONFIG
 # Checks for header files.
 AC_PATH_X
 AC_CHECK_HEADERS([stdlib.h string.h sys/time.h unistd.h])
+AC_CHECK_HEADERS(ctype.h libgen.h signal.h stdio.h time.h unistd.h sys/select.h sys/signal.h sys/stat.h sys/time.h sys/types.h sys/wait.h regex.h)
+AC_HEADER_STDC
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
@@ -39,396 +42,142 @@ AC_FUNC_FORK
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([dup2 gettimeofday memset putenv regcomp strcasecmp strchr strncasecmp strstr])
 
-CFLAGS="$CFLAGS $X_CFLAGS"
-CXXFLAGS="$CXXFLAGS $X_CFLAGS"
-LIBS="$LIBS $X_LIBS"
-LDFLAGS="$LDFLAGS $LIBS $X_PRE_LIBS"
-
-AC_CHECK_PROGS(regex_cmd, sed)
-if test x$regex_cmd = "x"; then
-  AC_MSG_ERROR([error. sed is required to build the default style file.])
-fi
-
-AC_CHECK_LIB(X11, XOpenDisplay,
-  LIBS="$LIBS -lX11",
-  AC_MSG_ERROR([Could not find XOpenDisplay in -lX11.])
-)
-
-use_interlacing="no"
-use_orderedpseudo="no"
-use_shape="no"
-use_xinerama="no"
-use_randr="no"
-use_render="no"
-use_xft="no"
-use_pixmap="no"
-
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-
-AC_HEADER_STDC
-AC_CHECK_HEADERS(ctype.h libgen.h signal.h stdio.h time.h unistd.h sys/select.h sys/signal.h sys/stat.h sys/time.h sys/types.h sys/wait.h regex.h)
+PKG_CHECK_MODULES([X11],[x11])
 
 dnl Check for Interlacing
-INTERLACE=""
-enableval="yes"
-AC_MSG_CHECKING([whether to include interlacing image code])
-AC_ARG_ENABLE(
-  interlace, [  --enable-interlace      include code for image interlacing [default=yes]])
-
-: ${enableval="yes"}
-if test x$enableval = "xyes"; then
-  AC_MSG_RESULT([yes])
-  use_interlacing="yes"
-  INTERLACE="-DINTERLACE"
-else
-  AC_MSG_RESULT([no])
+AC_ARG_ENABLE([interlace],
+	AC_HELP_STRING([--disable-interlace],
+		[Include code for image interlacing
+		@<:@default=excluded@:>@]))
+AC_MSG_CHECKING([for interlacing images])
+if test "x$enable_interlace" = xyes ; then
+	AC_DEFINE_UNQUOTED([INTERLACE],[],[Define to include image interlacing code.])
 fi
-AC_SUBST(INTERLACE)
+AC_MSG_RESULT([${enable_interlace:-no}])
 
 dnl Check for ordered 8bpp dithering
-ORDEREDPSEUDO=""
-enableval="yes"
-AC_MSG_CHECKING([whether to include Pseudocolor ordered dithering code])
-AC_ARG_ENABLE(ordered-pseudo,
-[  --enable-ordered-pseudo include code for ordered pseudocolor (8bpp)
-                          dithering [default=no]],
-  if test x$enableval = "xyes"; then
-    AC_MSG_RESULT([yes])
-    use_orderedpseudo="yes"
-    ORDEREDPSEUDO="-DORDEREDPSEUDO"
-  else
-    AC_MSG_RESULT([no])
-  fi,
-  AC_MSG_RESULT([no])
-)
-AC_SUBST(ORDEREDPSEUDO)
-
-dnl Check for XShape extension support and proper library files
-SHAPE=""
-enableval="yes"
-AC_MSG_CHECKING([whether to build support for the Xshape extension])
-AC_ARG_ENABLE(
-  shape, [  --enable-shape          enable support for the Xshape extension [default=yes]])
-
-: ${enableval="yes"}
-if test x$enableval = "xyes"; then
-  AC_MSG_RESULT([yes])
-  AC_CHECK_LIB(Xext, XShapeCombineShape,
-    AC_MSG_CHECKING([for X11/extensions/shape.h])
-    AC_TRY_COMPILE(
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/extensions/shape.h>
-      , long foo = ShapeSet,
-      AC_MSG_RESULT([yes])
-      use_shape="yes"
-      SHAPE="-DSHAPE"; Xext_lib="-lXext",
-      AC_MSG_RESULT([no])
-      AC_MSG_RESULT([** WARNING: X11/extensions/shape.h is missing])
-      AC_MSG_RESULT([** WARNING: Disabled Xshape extension support])
-    ),
-    AC_MSG_RESULT([** WARNING: Could not find XShapeCombineShape in -lXshape])
-    AC_MSG_RESULT([** WARNING: Disabled Xshape extension support])
-  )
-else
-  AC_MSG_RESULT([no])
+AC_ARG_ENABLE([ordered-pseudo],
+	AC_HELP_STRING([--disable-ordered-pseudo],
+		[Include code for ordered pseudocolor (8bpp) dithering
+		@<:@default=excluded@:>@]))
+AC_MSG_CHECKING([for ordered pseudocolor (8bpp)])
+if test "x$enable_ordered_pseudo" = xyes ; then
+	AC_DEFINE_UNQUOTED([ORDEREDPSEUDO],[],[Define to include ordered pseudocolor
+			(8bpp) dithering.])
 fi
-AC_SUBST(SHAPE)
+AC_MSG_RESULT([${enabled_ordered_pseudo:-no}])
 
-LIBS="$LIBS $Xext_lib"
-
-dnl Check for Xinerama extension support and proper library files.
-XINERAMA=""
-enableval="yes"
-AC_MSG_CHECKING([whether to build support for the Xinerama extension])
-AC_ARG_ENABLE(
-  xinerama, [  --enable-xinerama       enable support for the Xinerama extension [default=yes]])
-
-: ${enableval="yes"}
-if test x$enableval = "xyes"; then
-   AC_MSG_RESULT([yes])
-   AC_CHECK_LIB(Xinerama, XineramaQueryScreens,
-     AC_MSG_CHECKING([for X11/extensions/Xinerama.h])
-     AC_TRY_LINK(
-#include <X11/Xlib.h>
-#include <X11/extensions/Xinerama.h>
-, XineramaScreenInfo foo,
-      AC_MSG_RESULT([yes])
-      use_xinerama="yes"
-      XINERAMA="-DXINERAMA"; Xinerama_lib="-lXinerama",
-      AC_MSG_RESULT([no])
-      AC_MSG_RESULT([** WARNING: X11/extensions/Xinerama.h is missing])
-      AC_MSG_RESULT([** WARNING: Disabled Xinerama extension support])
-    ),
-    AC_MSG_RESULT([** WARNING: Could not find XineramaQueryScreens in -lXinerama])
-    AC_MSG_RESULT([** WARNING: Disabled Xinerama extension support])
-  )
-else
-  AC_MSG_RESULT([no])
+dnl Check for XShape extension support
+AC_ARG_ENABLE([shape],
+	AC_HELP_STRING([--disable-shape],
+		[Disable SHAPE support @<:@default=auto@:>@]))
+if test "x$enable_shape" != xno ; then
+	PKG_CHECK_MODULES([SHAPE],[xext],
+		[AC_DEFINE_UNQUOTED([SHAPE], [], [Define to support SHAPE extension.])],
+		[enable_shape=no])
 fi
-AC_SUBST(XINERAMA)
+AC_MSG_CHECKING([for SHAPE support])
+AC_MSG_RESULT([${enable_shape:-yes}])
 
-LIBS="$LIBS $Xinerama_lib"
+dnl Check for Xinerama extension support
+AC_ARG_ENABLE([xinerama],
+	AC_HELP_STRING([--disable-xinerama],
+		[Disable XINERAMA support @<:@default=auto@:>@]))
+if test "x$enable_xinerama" != xno ; then
+	PKG_CHECK_MODULES([XINERAMA],[xinerama],
+		[AC_DEFINE_UNQUOTED([XINERAMA],[], [Define to support XINERAMA extension.])],
+		[enable_xinerama=no])
+fi
+AC_MSG_CHECKING([for XINERAMA support])
+AC_MSG_RESULT([${enable_xinerama:-yes}])
 
 dnl Checks for Xrender extension support
-RENDER=""
-enableval="yes"
-have_xrender="false"
-AC_MSG_CHECKING([whether to build support for the Xrender extension])
-AC_ARG_ENABLE(
-  render, [  --enable-render         enable support for the Xrender extension [default=yes]])
-: ${enableval="yes"}
-
-if test x$enableval = "xyes"; then
-  AC_MSG_RESULT([yes])
-  AC_CHECK_LIB(Xrender, XRenderFindFormat,
-    AC_MSG_CHECKING([for X11/extensions/Xrender.h])
-    AC_TRY_COMPILE(
-#include <X11/Xlib.h>
-#include <X11/extensions/Xrender.h>
-      ,,
-      AC_MSG_RESULT([yes])
-      use_render="yes"
-      RENDER="-DRENDER"; XRender_lib="-lXrender"; have_xrender="true",
-      AC_MSG_RESULT([no])
-      AC_MSG_RESULT([** WARNING: X11/extensions/Xrender.h is missing])
-      AC_MSG_RESULT([** WARNING: Disabled Xrender extension support])
-    ),
-  AC_MSG_RESULT([** WARNING: Could not find XRenderFindFormat in -lXrender])
-  AC_MSG_RESULT([** WARNING: Disabled Xrender extension support]))
-else
-  AC_MSG_RESULT([no])
+AC_ARG_ENABLE([render],
+	AC_HELP_STRING([--disable-render],
+		[Disable RENDER support @<:@default=auto@:>@]))
+if test "x$enable_render" != xno ; then
+	PKG_CHECK_MODULES([RENDER],[xrender],
+		[AC_DEFINE_UNQUOTED([RENDER],[],[Define to support RENDER extension.])],
+		[enable_render=no])
 fi
-AC_SUBST(RENDER)
+AC_MSG_CHECKING([for RENDER support])
+AC_MSG_RESULT([${enable_render:-yes}])
 
-LIBS="$LIBS $XRender_lib"
-
-dnl Check for Xrandr extension support and proper library files.
-RANDR=""
-enableval="yes"
-AC_MSG_CHECKING([whether to build support for the Xrandr extension])
-AC_ARG_ENABLE(
-  randr, [  --enable-randr          enable support for the Xrandr extension [default=yes]])
-
-: ${enableval="yes"}
-if test x$enableval = "xyes"; then
-  if test x$have_xrender = "xtrue" ; then
-     AC_MSG_RESULT([yes])
-     AC_CHECK_LIB(Xrandr, XRRSelectInput,
-       AC_MSG_CHECKING([for X11/extensions/Xrandr.h])
-       AC_TRY_LINK(
-#include <X11/Xlib.h>
-#include <X11/extensions/Xrandr.h>
-, XRRScreenChangeNotifyEvent foo,
-         AC_MSG_RESULT([yes])
-         use_randr="yes"
-         RANDR="-DRANDR"; Xrandr_lib="-lXrandr",
-         AC_MSG_RESULT([no])
-         AC_MSG_RESULT([** WARNING: X11/extensions/Xrandr.h is missing])
-         AC_MSG_RESULT([** WARNING: Disabled Xrandr extension support]))
-       ,
-       AC_MSG_RESULT([** WARNING: Could not find XRRSelectInput in -lXrandr])
-       AC_MSG_RESULT([** WARNING: Disabled Xrandr extension support]))
-  else
-      AC_MSG_RESULT([no])
-      AC_MSG_RESULT([** WARNING: Requires Xrender extension support])
-      AC_MSG_RESULT([** WARNING: Disabled Xrandr extension support])
-  fi
-else
-  AC_MSG_RESULT([no])
+dnl Check for Xrandr extension support
+AC_ARG_ENABLE([randr],
+	AC_HELP_STRING([--disable-randr],
+		[Disable XRANDR support @<:@default=auto@:>@]))
+if test "x$enable_randr" != xno ; then
+	PKG_CHECK_MODULES([RANDR],[xrandr],
+		[AC_DEFINE_UNQUOTED([RANDR],[], [Define to support RANDR extension.])],
+		[enable_randr=no])
 fi
-AC_SUBST(RANDR)
-
-LIBS="$LIBS $Xrandr_lib"
+AC_MSG_CHECKING([for RANDR support])
+AC_MSG_RESULT([${enable_randr:-yes}])
 
 dnl Checks for Xft library support
-enableval="yes"
-XFT=""
-AC_MSG_CHECKING([whether to build support for the Xft library])
-AC_ARG_ENABLE(
-  xft, [  --enable-xft            enable support for Xft library [default=yes]])
-: ${enableval="yes"}
-if test x$enableval = "xyes"; then
-   if test x$have_xrender = "xtrue" ; then
-     AC_MSG_RESULT([yes])
-     xftsucceeded=no
-	  AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
-     if test "x$PKG_CONFIG" != "xno" ; then
-       AC_MSG_CHECKING(for Xft)
-       if $PKG_CONFIG --exists "xft" ; then
-            AC_MSG_RESULT(yes)
-            AC_MSG_CHECKING(XFT_CFLAGS)
-            Xft_flags=`$PKG_CONFIG --cflags "xft"`
-            AC_MSG_RESULT($Xft_flags)
-            AC_MSG_CHECKING(XFT_LIBS)
-            Xft_lib=`$PKG_CONFIG --libs "xft"`
-            AC_MSG_RESULT($Xft_lib)
-            xftsucceeded=yes
-            use_xft="yes"
-            XFT="-DXFT"
-            CPPFLAGS="$CPPFLAGS $Xft_flags"
-       else
-            AC_MSG_RESULT(no)
-       fi
-     fi
-
-     if test $xftsucceeded = no; then
-       dnl Checks for freetype/freetype.h
-       have_freetype="false"
-       AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, no)
-       if test "x$FREETYPE_CONFIG" != "xno" ; then
-         FREETYPE_CFLAGS=`$FREETYPE_CONFIG --cflags`
-         save_cppflags="$CPPFLAGS"
-         CPPFLAGS="$CPPFLAGS $FREETYPE_CFLAGS"
-       fi
-       AC_MSG_CHECKING([for freetype/freetype.h])
-       AC_TRY_COMPILE(
-#include <freetype/freetype.h>
-        ,,
-        AC_MSG_RESULT([yes])
-        dnl Checks for Xft
-
-        AC_CHECK_LIB(Xft, XftFontOpen,
-          AC_MSG_CHECKING([for X11/Xft/Xft.h])
-          AC_TRY_COMPILE(
-#include <X11/Xlib.h>
-#include <X11/Xft/Xft.h>
-          ,,
-          AC_MSG_RESULT([yes])
-          use_xft="yes"
-          XFT="-DXFT"; Xft_lib="-lXft",
-          AC_MSG_RESULT([no])
-          AC_MSG_RESULT([** WARNING: X11/Xft/Xft.h is missing])
-         AC_MSG_RESULT([** WARNING: Disabled Xft library support])
-        ),
-        AC_MSG_RESULT([** WARNING: Could not find XftFontOpen in -lXft])
-        AC_MSG_RESULT([** WARNING: Disabled Xft library support]))
-        ,
-        AC_MSG_RESULT([no])
-        AC_MSG_RESULT([** WARNING: freetype/freetype.h is missing])
-        AC_MSG_RESULT([** WARNING: Disabled Xft library support])
-        CPPFLAGS="$save_cppflags")
-     fi
-   else
-      AC_MSG_RESULT([no])
-      AC_MSG_RESULT([** WARNING: Requires Xrender extension support])
-      AC_MSG_RESULT([** WARNING: Disabled Xft library support])
-   fi
-else
-  AC_MSG_RESULT([no])
+AC_ARG_ENABLE([xft],
+	AC_HELP_STRING([--disable-xft],
+		[Disable XFT support @<:@default=auto@:>@]))
+if test "x$enable_xft" != xno ; then
+	PKG_CHECK_MODULES([XFT],[xft],
+		[AC_DEFINE_UNQUOTED([XFT],[], [Define to support XFT library.])],
+		[enable_xft=no])
 fi
-AC_SUBST(XFT)
+AC_MSG_CHECKING([for XFT support])
+AC_MSG_RESULT([${enable_xft:-yes}])
 
-LIBS="$LIBS $Xft_lib"
-
-save_cppflags="$CPPFLAGS"
-save_ldflags="$LDFLAGS"
 dnl Check for pixmap support
-enableval="yes"
-PIXMAP=""
-AC_MSG_CHECKING([whether to include pixmap support])
-AC_ARG_ENABLE(
-  pixmap, [  --enable-pixmap         include code for pixmap textures [default=yes]])
-
-: ${enableval="yes"}
-if test x$enableval = "xyes"; then
-  AC_MSG_RESULT([yes])
-  AC_ARG_WITH(imlib2dir,
-   [  --with-imlib2dir[=DIR]    Imlib2 in DIR],,withval=no)
-
-  if test "x$withval" != "xno" && test "x$withval" != "xyes"; then 
-     CPPFLAGS="$CPPFLAGS -I${withval}/include"
-     LDFLAGS="$LDFLAGS -L${withval}/lib"
-  fi
-else
-   AC_MSG_RESULT([no])
+AC_ARG_ENABLE([pixmap],
+	AC_HELP_STRING([--disable-pixmap],
+		[Disable pixmap support @<:@default=auto@:>@]))
+if test "x$enable_pixmap" != xno ; then
+	PKG_CHECK_MODULES([IMLIB2],[imlib2],
+		[AC_DEFINE_UNQUOTED([PIXMAP],[], [Define to support pixmap textures.])],
+		[enable_pixmap=no])
 fi
+AC_MSG_CHECKING([for PIXMAP support])
+AC_MSG_RESULT([${enable_pixmap:-yes}])
 
-if test x$enableval = "xyes"; then
-  AC_CHECK_LIB(Imlib2, imlib_create_image,
-    AC_MSG_CHECKING([for Imlib2.h])
-    AC_TRY_COMPILE(
-#include <X11/Xlib.h>
-#include <Imlib2.h>
-      ,,
-      AC_MSG_RESULT([yes])
-      use_pixmap="yes"
-      PIXMAP="-DPIXMAP"; Imlib2_lib="-lImlib2",
-      AC_MSG_RESULT([no])
-      AC_MSG_RESULT([** WARNING: Imlib2.h is missing])
-      AC_MSG_RESULT([** WARNING: Disabled pixmap support])
-      CPPFLAGS="$save_cppflags"
-      LDFLAGS="$save_ldflags"),
-    AC_MSG_RESULT([** WARNING: Could not find imlib_create_imaget in -lImlib2])
-    AC_MSG_RESULT([** WARNING: Disabled pixmap support])
-    CPPFLAGS="$save_cppflags"
-    LDFLAGS="$save_ldflags")
-fi
+DEFAULT_MENU='$(pkgdatadir)/menu'
+DEFAULT_STYLE='$(pkgdatadir)/styles/Default.style'
+DEFAULT_ACTION='$(pkgdatadir)/actions/action'
+DEFAULT_RCFILE='$(pkgdatadir)/config'
+DEFAULT_SCRIPT='$(pkgdatadir)/scripts'
 
-LIBS="$LIBS $Imlib2_lib"
+AC_SUBST([DEFAULT_MENU])
+AC_SUBST([DEFAULT_STYLE])
+AC_SUBST([DEFAULT_ACTION])
+AC_SUBST([DEFAULT_RCFILE])
+AC_SUBST([DEFAULT_SCRIPT])
 
-AC_SUBST(PIXMAP)
+test "x$prefix" = xNONE && prefix="$ac_default_prefix"
+pkgdatadir="$datadir/waimea"
+eval "pkgdatadir=\"$pkgdatadir\""
+eval "pkgdatadir=\"$pkgdatadir\""
+eval "pkgdatadir=\"$pkgdatadir\""
 
-AC_OUTPUT([Makefile 
-src/Makefile
-data/Makefile
-data/actions/Makefile
-data/styles/Makefile
-data/scripts/Makefile
-data/backgrounds/Makefile
-doc/Makefile])
+AC_SUBST([pkgdatadir])
 
-echo ""
-echo "Finished configure:"
+AC_OUTPUT([Makefile
+	   doc/waimea.1
+	   data/Makefile
+	   data/config
+	   data/styles/Default.style
+	   data/scripts/stylesdir.pl
+	   src/Makefile])
 
-if [[ $use_interlacing = "yes" ]] ; then
-   echo "  with    interlace";
-else
-   echo "  without interlace";
-fi
+AC_MSG_NOTICE([
 
-if [[ $use_orderedpseudo = "yes" ]] ; then
-   echo "  with    ordered-pseudo";
-else
-   echo "  without ordered-pseudo";
-fi
+  interlace       ${enable_interlace:-no}
+  ordered-pseudo  ${enable_ordered_pseudo:-no}
+  shape           ${enable_shape:-yes}
+  xinerama        ${enable_xinerama:-yes}
+  randr           ${enable_randr:-yes}
+  render          ${enable_render:-yes}
+  xft             ${enable_xft:-yes}
+  pixmap          ${enable_pixmap:-yes}
 
-if [[ $use_shape = "yes" ]] ; then
-   echo "  with    shape";
-else
-   echo "  without shape";
-fi
+  type 'make' to build Waimea.
+])
 
-if [[ $use_xinerama = "yes" ]] ; then
-   echo "  with    xinerama";
-else
-   echo "  without xinerama";
-fi
-
-if [[ $use_randr = "yes" ]] ; then
-   echo "  with    randr";
-else
-   echo "  without randr";
-fi
-
-if [[ $use_render = "yes" ]] ; then
-   echo "  with    render";
-else
-   echo "  without render";
-fi
-
-if [[ $use_xft = "yes" ]] ; then
-   echo "  with    xft";
-else
-   echo "  without xft";
-fi
-
-if [[ $use_pixmap = "yes" ]] ; then
-   echo "  with    pixmap";
-else
-   echo "  without pixmap";
-fi
-
-echo ""
-echo "type 'make' to build Waimea."

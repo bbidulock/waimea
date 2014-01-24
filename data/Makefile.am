@@ -1,8 +1,25 @@
-SUBDIRS = actions styles scripts backgrounds
-CLEANFILES = config
-pkgdata_DATA = menu config
 
-all-local: config
+nobase_pkgdata_DATA = \
+	backgrounds/waimea.png \
+	scripts/filelist.pl \
+	scripts/procinfo.pl \
+	actions/action.sloppy-focus \
+	actions/action.click-to-focus \
+	actions/action.non-opaque \
+	menu
 
-config: config.in
-	@regex_cmd@ -e "s,@pkgdatadir@,$(pkgdatadir)," config.in > config
+nodist_nobase_pkgdata_DATA = \
+	styles/Default.style \
+	scripts/stylesdir.pl \
+	config
+
+nobase_data_DATA = \
+	xsessions/waimea.desktop
+
+install-data-hook:
+	rm -f "$(DESTDIR)$(pkgdatadir)/actions/action"
+	$(LN_S) action.sloppy-focus "$(DESTDIR)$(pkgdatadir)/actions/action"
+
+uninstall-local:
+	rm -f "$(DESTDIR)$(pkgdatadir)/actions/action"
+
