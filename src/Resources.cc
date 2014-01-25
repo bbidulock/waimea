@@ -1881,19 +1881,15 @@ void ResourceHandler::ReadDatabaseTexture(const char *rname, const char *rclass,
         sprintf(pixmapname,  "%s.pixmap", rname);
         if (XrmGetResource(database, pixmapname, pixmapclass, &value_type,
                            &value)) {
-            if (strstr(value.addr, "/")) {
-                if (! (image = imlib_load_image(value.addr)))
-                    WARNING << "failed loading image `" << value.addr <<
-                        "'\n";
-            }
-            else {
-                sprintf(pixmap_path, "%s/%s",
-                        ic->getWaScreen()->config.style_file, value.addr);
-                if (! (image = imlib_load_image(pixmap_path))) {
-                    WARNING << "failed loading image `" << value.addr <<
-                        "'\n";
+	    if (! (image = imlib_load_image(value.addr)))
+                if (value.addr[0] != '/') {
+                    sprintf(pixmap_path, "%s/%s",
+                            ic->getWaScreen()->config.style_file, value.addr);
+                    image = imlib_load_image(pixmap_path);
                 }
-            }
+            if (! image)
+                WARNING << "failed loading image `" << value.addr <<
+                    "'\n";
         }
         if (image) {
             texture->setPixmap(image);
