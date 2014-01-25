@@ -2135,10 +2135,9 @@ void ResourceHandler::ReadDatabaseFont(const char *rname, const char *rclass,
 #endif // XFT
             
         }
-        font->font = __m_wastrdup(f);
-#if 0
-        strtrim(font->font);
-#endif
+        __m_wastrdup(f);
+        strtrim(__m_wastrdup_tmp);
+        font->font = __m_wastrdup_tmp;
         if (xft_match) xft_match[0] = '[';
     } else {
         font->xft = defaultfont->xft;
