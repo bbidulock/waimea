@@ -16,7 +16,7 @@ else {
 
 if (@Styles) {
     print "[title] ($title)\n";
-    foreach $Style (@Styles) {
+    foreach $Style (sort {$a cmp $b} @Styles) {
        print $Style;
     }
 }                                                                     
@@ -37,9 +37,16 @@ sub print_directory {
 				print_directory("$_[0]\/$temp");
 			} else {
 				if (S_ISREG($mode)) {
-					$_ = $temp;
-					if (/(.+)\.style$/) {
-						$Item = "[item] ($1) \"restart(waimea --stylefile=" .
+					my $name;
+					if ($temp eq 'stylerc') {
+						$name = $_[0];
+						$name =~ s/\/+$//;
+						$name =~ s/^.*\///;
+					} elsif ($temp =~ /(.+)\.style$/) {
+						$name = $1;
+					}
+					if ($name) {
+						$Item = "[item] ($name) \"restart(waimea --stylefile=" .
 							"$_[0]\/$temp)\"\n";
 						push(@Styles, $Item);
 					}
