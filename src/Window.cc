@@ -961,9 +961,11 @@ void WaWindow::ReparentWin(void) {
             EnterWindowMask | LeaveWindowMask;
         attrib_set.do_not_propagate_mask =
             ButtonPressMask | ButtonReleaseMask | ButtonMotionMask; 
+        attrib_set.backing_store = NotUseful;
+        attrib_set.win_gravity = NorthWestGravity;
         
-        XChangeWindowAttributes(display, id, CWEventMask | CWDontPropagate,
-                                &attrib_set);
+        XChangeWindowAttributes(display, id, CWEventMask | CWDontPropagate |
+                                CWBackingStore | CWWinGravity, &attrib_set);
         
         
 #ifdef SHAPE
