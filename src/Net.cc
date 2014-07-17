@@ -1092,13 +1092,17 @@ void NetHandler::GetDesktopViewPort(WaScreen *ws) {
  * @param ws WaScreen object
  */
 void NetHandler::SetDesktopViewPort(WaScreen *ws) {
-    long data[2];
-
-    data[0] = ws->v_x;
-    data[1] = ws->v_y;
+    long data[2 * 16];
+    int i = 0;
+    
+    list<Desktop *>::iterator it = ws->desktop_list.begin();
+    for (; it != ws->desktop_list.end(); ++it) {
+        data[i++] = ws->v_x;
+        data[i++] = ws->v_y;
+    }
     
     XChangeProperty(display, ws->id, net_desktop_viewport, XA_CARDINAL, 32,
-                    PropModeReplace, (unsigned char *) data, 2);
+                    PropModeReplace, (unsigned char *) data, i);
 }
 
 /**
