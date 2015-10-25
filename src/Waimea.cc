@@ -18,7 +18,7 @@
 extern "C" {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-    
+
 #ifdef    SHAPE
 #  include <X11/extensions/shape.h>
 #endif // SHAPE
@@ -30,7 +30,7 @@ extern "C" {
 #ifdef    RANDR
 #  include <X11/extensions/Xrandr.h>
 #endif // RANDR
-    
+
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
 #endif // HAVE_STDIO_H
@@ -44,7 +44,7 @@ extern "C" {
 #  include <sys/wait.h>
 #  include <unistd.h>
 #endif // HAVE_UNISTD_H
-    
+
 #ifdef    HAVE_SIGNAL_H
 #  include <signal.h>
 #endif // HAVE_SIGNAL_H
@@ -92,16 +92,16 @@ Waimea::Waimea(char **av, struct waoptions *_options) {
     errors = 0;
     eh = NULL;
     timer = NULL;
-    
+
     action.sa_handler = signalhandler;
     action.sa_mask = sigset_t();
-    action.sa_flags = SA_NOCLDSTOP | SA_NODEFER; 
+    action.sa_flags = SA_NOCLDSTOP | SA_NODEFER;
 
     sigaction(SIGTERM, &action, NULL);
     sigaction(SIGINT, &action, NULL);
     sigaction(SIGCHLD, &action, NULL);
     sigaction(SIGHUP, &action, NULL);
-    
+
     session_cursor = XCreateFontCursor(display, XC_left_ptr);
     move_cursor = XCreateFontCursor(display, XC_fleur);
     resizeleft_cursor = XCreateFontCursor(display, XC_ll_angle);
@@ -126,12 +126,12 @@ Waimea::Waimea(char **av, struct waoptions *_options) {
 #ifdef RANDR
     randr = XRRQueryExtension(display, &randr_event, &dummy);
 #endif // RANDR
-    
+
     rh = new ResourceHandler(this, options);
     net = new NetHandler(this);
 
     rh->LoadConfig(this);
-    
+
     int i, screens = 0;
     WaScreen *ws;
 
@@ -150,7 +150,7 @@ Waimea::Waimea(char **av, struct waoptions *_options) {
             DisplayString(display) << endl;
         exit(1);
     }
-    
+
     eh = new EventHandler(this);
     timer = new Timer(this);
 }
@@ -214,7 +214,7 @@ bool validatedrawable(Drawable d, unsigned int *w, unsigned int *h) {
     int ret, _d;
     unsigned int _ud;
     Window _wd;
-    
+
     XSync(waimea->display, false);
     errors = 0;
     hush = 1;
@@ -245,7 +245,7 @@ bool validatedrawable(Drawable d, unsigned int *w, unsigned int *h) {
  */
 const bool validateclient_mapped(Window id) {
     XFlush(waimea->display);
-    
+
     XEvent e;
     if (validatedrawable((Drawable) id)) {
         if (XCheckTypedWindowEvent(waimea->display, id, UnmapNotify, &e)) {
@@ -282,7 +282,7 @@ void waexec(const char *command, char *displaystring) {
  *
  * Prints error message then a X error occurs.
  *
- * @param d X display 
+ * @param d X display
  * @param e X error event
  *
  * @return always 0
@@ -347,7 +347,7 @@ int wmrunningerror(Display *d, XErrorEvent *) {
  */
 void signalhandler(int sig) {
     int status;
-    
+
     switch(sig) {
         case SIGINT:
         case SIGTERM:
@@ -365,7 +365,7 @@ void signalhandler(int sig) {
 }
 
 /**
- * @fn    restart(char *command)   
+ * @fn    restart(char *command)
  * @brief Restarts program
  *
  * Deletes the waimea object and restarts window manager.
@@ -375,7 +375,7 @@ void signalhandler(int sig) {
 void restart(char *command) {
     char *tmp_argv[128];
     char *__m_wastrdup_tmp;
-    
+
     if (command) {
         commandline_to_argv(__m_wastrdup(command), tmp_argv);
         delete waimea;
@@ -390,7 +390,7 @@ void restart(char *command) {
 }
 
 /**
- * @fn    quit(void)   
+ * @fn    quit(void)
  * @brief Ends program execution
  *
  * Deletes the waimea object and then ends program execution.
@@ -403,7 +403,7 @@ void quit(int status) {
 }
 
 /**
- * @fn    commandline_to_argv(char *s)   
+ * @fn    commandline_to_argv(char *s)
  * @brief Parse command line to arguments
  *
  * Parses a command line string into an vector of arguments. Characters
@@ -417,7 +417,7 @@ void quit(int status) {
  */
 char **commandline_to_argv(char *s, char **tmp_argv) {
     int i;
-    
+
     for (i = 0;;) {
         for (; *s == ' ' || *s == '\t'; s++);
         if (*s == '"') {

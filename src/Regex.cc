@@ -3,7 +3,7 @@
  * @author David Reveman <david@waimea.org>
  * @date   4-Oct-2001 22:24:11
  *
- * @brief Implementation of Regex class  
+ * @brief Implementation of Regex class
  *
  * C++ wrapper for libc's regular expressions.
  *
@@ -40,11 +40,11 @@ Regex::Regex(char *_pattern) {
         comp_ok = false;
         return;
     }
-    
+
     comp_ok = true;
 
     char *pattern = __m_wastrdup(_pattern);
-    
+
     for (int i = 0; pattern[i] != '\0'; i++) {
         int n;
         if (pattern[i] == '\\' && pattern[i + 1] == '/') {
@@ -76,7 +76,7 @@ Regex::Regex(char *_pattern) {
  * @fn    Match(char *str)
  * @brief String matcher
  *
- * Matches string with compiled regular expression pattern. 
+ * Matches string with compiled regular expression pattern.
  *
  * @param str String to match with
  *
@@ -87,7 +87,7 @@ bool Regex::Match(char *str) {
     char *err_msg = NULL;
 
     if (! comp_ok) return false;
-    
+
     status = regexec(&regexp, str, (size_t) 0, NULL, 0);
 
     if (status == REG_NOMATCH)

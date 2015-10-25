@@ -142,7 +142,7 @@ public:
     char *rc_file, *style_file, *menu_file, *action_file;
     bool rc_forced, style_forced, action_forced, menu_forced;
     int linenr;
-    
+
 private:
     void ReadActions(char *, list<Define *> *, list<StrComp *> *,
                      list<WaAction *> *, WaScreen *);
@@ -177,7 +177,7 @@ public:
         name = __m_wastrdup(n); value = __m_wastrdup(v);
     }
     inline ~Define(void) { delete [] name; delete [] value; }
-    
+
     char *name;
     char *value;
 };
@@ -195,7 +195,7 @@ public:
         delete title;
         ACTLISTCLEAR(alist);
     }
-    
+
     Regex *name;
     Regex *cl;
     Regex *title;
@@ -204,11 +204,11 @@ public:
 
 class StrComp {
 public:
-    StrComp(const char *, unsigned long); 
+    StrComp(const char *, unsigned long);
     StrComp(const char *, WwActionFn);
     StrComp(const char *, RootActionFn);
     StrComp(const char *, MenuActionFn);
-    
+
     bool Comp(char *);
 
     const char *str;

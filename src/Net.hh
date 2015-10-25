@@ -3,7 +3,7 @@
  * @author David Reveman <david@waimea.org>
  * @date   11-Oct-2001 22:36:12
  *
- * @brief Definition of NetHandler class  
+ * @brief Definition of NetHandler class
  *
  * Function declarations and variable definitions for NetHandler class.
  *
@@ -61,7 +61,7 @@ class NetHandler {
 public:
     NetHandler(Waimea *);
     virtual ~NetHandler(void);
-    
+
     void GetWMHints(WaWindow *);
     void GetMWMHints(WaWindow *);
     void GetWMNormalHints(WaWindow *);
@@ -98,7 +98,7 @@ public:
 
     void wXDNDMakeAwareness(Window);
     void wXDNDClearAwareness(Window);
-    
+
     void SetWorkarea(WaScreen *);
     void DeleteSupported(WaScreen *);
 
@@ -107,7 +107,7 @@ public:
 #endif // RENDER
 
     void GetWmType(WaWindow *);
-    
+
     void SetAllowedActions(WaWindow *);
     void RemoveAllowedActions(WaWindow *);
 
@@ -120,7 +120,7 @@ public:
 
     bool IsSystrayWindow(Window);
     void SetSystrayWindows(WaScreen *);
-    
+
     Waimea *waimea;
     Display *display;
     XWMHints *wm_hints;
@@ -167,14 +167,14 @@ public:
     Atom xdndaware, xdndenter, xdndleave;
 
     Atom kde_net_wm_system_tray_window_for, kde_net_system_tray_windows;
-    
+
 #ifdef RENDER
     Atom xrootpmap_id;
 #endif // RENDER
 
 private:
     XEvent event;
-    
+
     int real_format;
     Atom real_type;
     unsigned long items_read, items_left;

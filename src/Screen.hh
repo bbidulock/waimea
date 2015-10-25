@@ -77,7 +77,7 @@ public:
         WindowObject(id, SystrayType) {
         ws = _ws;
     }
-    
+
     WaScreen *ws;
 };
 
@@ -100,8 +100,8 @@ typedef struct {
         border_color, outline_color;
     WaTexture t_focus, t_unfocus, l_focus, l_unfocus, h_focus, h_unfocus,
         g_focus, g_unfocus;
-    WaFont wa_font, wa_font_u;    
-    
+    WaFont wa_font, wa_font_u;
+
     int justify, y_pos;
     unsigned int handle_width, border_width, title_height;
 
@@ -116,8 +116,8 @@ typedef struct {
     WaTexture back_frame, title, hilite;
     WaFont wa_f_font, wa_fh_font, wa_t_font, wa_b_font, wa_bh_font,
         wa_ct_font, wa_cth_font, wa_cf_font, wa_cfh_font;
-    char *bullet, *checkbox_true, *checkbox_false;    
-    
+    char *bullet, *checkbox_true, *checkbox_false;
+
     int f_justify, t_justify, f_y_pos, t_y_pos, b_y_pos, ct_y_pos, cf_y_pos;
     unsigned int border_width, title_height, item_height;
 } MenuStyle;
@@ -134,7 +134,7 @@ typedef struct {
 #ifdef RENDER
     bool lazy_trans;
 #endif // RENDER
-    
+
     list<WaAction *> frameacts, awinacts, pwinacts, titleacts, labelacts,
         handleacts, rgacts, lgacts, rootacts, weacts, eeacts, neacts,
         seacts, mtacts, miacts, msacts, mcbacts;
@@ -173,7 +173,7 @@ public:
 #ifdef RANDR
     void RRUpdate(void);
 #endif // RANDR
-    
+
     inline void MenuMap(XEvent *e, WaAction *ac) {
         MenuMap(e, ac, false);
     }
@@ -221,7 +221,7 @@ public:
         MoveViewport(SouthDirection);
     }
     inline void Nop(XEvent *, WaAction *) {}
-    
+
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);
 
     Display *display;
@@ -241,7 +241,7 @@ public:
 
     Pixmap fgrip, ugrip;
     Display *pdisplay;
-    
+
 #ifdef RENDER
     bool render_extension;
     Pixmap xrootpmap_id;
@@ -268,7 +268,7 @@ public:
     list<WMstrut *> strut_list;
     list<DockappHandler *> docks;
     list<Window> systray_window_list;
-    
+
     list<MReq *> mreqs;
 
 private:
@@ -291,7 +291,7 @@ public:
     virtual ~ScreenEdge(void);
 
     void SetActionlist(list<WaAction *> *);
-    
+
     WaScreen *wa;
 };
 

@@ -45,14 +45,14 @@ private:
     int allocated;
     unsigned char red, green, blue, opacity;
     unsigned long pixel;
-    
+
 #ifdef RENDER
     XRenderColor xrenderc;
 #endif // RENDER
-    
+
 #ifdef XFT
     XftColor xftc;
-#endif // XFT    
+#endif // XFT
 
 public:
     WaColor(char r = 0, char g = 0, char b = 0)
@@ -72,7 +72,7 @@ public:
 #ifdef RENDER
     inline XRenderColor *getXRenderColor(void) { return &xrenderc; }
 #endif // RENDER
-    
+
 #ifdef XFT
     void setXftOpacity(unsigned char);
     inline XftColor *getXftColor(void) { return &xftc; }
@@ -85,7 +85,7 @@ class WaTexture {
 private:
     WaColor color, colorTo, hiColor, loColor;
     unsigned long texture;
-    
+
 #ifdef RENDER
     Picture alphaPicture;
     Picture solidPicture;
@@ -100,13 +100,13 @@ private:
 public:
     WaTexture(void) {
         texture = 0;
-        
+
 #ifdef RENDER
         opacity = 0;
         alphaPicture = (Picture) 0;
         solidPicture = (Picture) 0;
 #endif // RENDER
-        
+
     }
     inline WaColor *getColor(void) { return &color; }
     inline WaColor *getColorTo(void) { return &colorTo; }
@@ -117,7 +117,7 @@ public:
 
     inline void setTexture(unsigned long t) { texture = t; }
     inline void addTexture(unsigned long t) { texture |= t; }
-    
+
 #ifdef RENDER
     int getOpacity(void);
     inline void setOpacity(int o) { opacity = o; }
@@ -233,7 +233,7 @@ public:
 #ifdef PIXMAP
     Pixmap render_pixmap(WaTexture *);
 #endif // PIXMAP
-    
+
 };
 
 #include "Screen.hh"
@@ -245,8 +245,8 @@ private:
     WaScreen *wascreen;
     Visual *visual;
     Colormap colormap;
-    
-    
+
+
     XColor *colors;
     Window window;
     int colors_per_channel, ncolors, screen_number, screen_depth,
@@ -257,25 +257,25 @@ private:
     unsigned int *grad_xbuffer, *grad_ybuffer, grad_buffer_width,
         grad_buffer_height;
     unsigned long *sqrt_table, cache_max;
-    
+
     typedef struct Cache {
         Pixmap pixmap;
 
         unsigned int count, width, height;
         unsigned long pixel1, pixel2, texture;
     } Cache;
-    
+
     list<Cache *> *cache;
-    
+
 protected:
     Pixmap searchCache(unsigned int, unsigned int, unsigned long, WaColor *,
                        WaColor *);
-    
+
 public:
     WaImageControl(Display *, WaScreen *, bool = false, int = 4,
                    unsigned long = 200l);
     virtual ~WaImageControl(void);
-    
+
     inline Display *getDisplay(void) { return display; }
     inline const bool &doDither(void) { return dither; }
     inline int getScreen(void) { return screen_number; }
@@ -305,16 +305,16 @@ public:
     void setColorsPerChannel(int);
     void parseTexture(WaTexture *, char *);
     void parseColor(WaColor *, char * = 0);
-    
+
     virtual void timeout(void);
-    
+
 #ifdef RENDER
     Pixmap xrender(Pixmap, unsigned int, unsigned int, WaTexture *,
                    Pixmap = None, unsigned int = 0, unsigned int = 0,
                    Pixmap = None);
     void setXRootPMapId(bool);
 #endif // RENDER
-    
+
 };
 
 #endif // __Image_hh

@@ -3,7 +3,7 @@
  * @author David Reveman <david@waimea.org>
  * @date   11-May-2001 11:48:03
  *
- * @brief Definition of EventHandler class  
+ * @brief Definition of EventHandler class
  *
  * Function declarations and variable definitions for EventHandler class.
  *
@@ -56,7 +56,7 @@ public:
     void EvUnmapDestroy(XEvent *);
     void EvConfigureRequest(XConfigureRequestEvent *);
     void EvAct(XEvent *, Window, EventDetail *);
-    
+
     XEvent *event;
     set<int> *empty_return_mask;
     set<int> *moveresize_return_mask;
@@ -70,7 +70,7 @@ private:
     void EvColormap(XColormapEvent *);
     void EvMapRequest(XMapRequestEvent *);
     void EvClientMessage(XEvent *, EventDetail *);
-    
+
     Waimea *waimea;
     ResourceHandler *rh;
     Window last_click_win;

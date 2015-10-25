@@ -27,16 +27,16 @@ class WaColor;
 class WaFont {
 public:
     WaFont(void);
-    
+
     int Open(Display *, int, WaFont *);
     void AllocColor(Display *, Drawable id, WaColor *, WaColor * = NULL);
-    
+
     void Draw(Display *, Window,
-              
+
 #ifdef XFT
               XftDraw *,
 #endif // XFT
-              
+
               int, int, char *, int);
 
     int Width(Display *, char *, int);

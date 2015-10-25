@@ -46,7 +46,7 @@ public:
     Waimea *waimea;
     list<Interrupt *> interrupts;
     bool paused;
-    
+
 private:
     struct itimerval timerval;
 };
@@ -54,7 +54,7 @@ private:
 class Interrupt {
 public:
     Interrupt(WaAction *, XEvent *, Window);
-    
+
     Window id;
     WaMenuItem *wm;
     WaScreen *ws;

@@ -3,7 +3,7 @@
  * @author David Reveman <david@waimea.org>
  * @date   08-Oct-2002 11:05:01
  *
- * @brief Implementation of WaFont class  
+ * @brief Implementation of WaFont class
  *
  * Waimea's font implementation. Includes both Xft and X core fonts.
  *
@@ -37,11 +37,11 @@ WaFont::WaFont(void) {
     diff = 0;
     gc = s_gc = NULL;
 
-#ifdef XFT        
+#ifdef XFT
     xftfont = NULL;
     color = s_color = NULL;
 #endif // XFT
-        
+
 }
 
 /**
@@ -56,9 +56,9 @@ WaFont::WaFont(void) {
  *
  * @return Returns height of the opened font
  */
-int WaFont::Open(Display *dpy, int screen_number, WaFont *default_font) {    
-    
-#ifdef XFT    
+int WaFont::Open(Display *dpy, int screen_number, WaFont *default_font) {
+
+#ifdef XFT
     if (xft) {
         if (! (xftfont = XftFontOpenName(dpy, screen_number, font))) {
             WARNING << "failed loading font pattern `" << font << "'" <<
@@ -77,15 +77,15 @@ int WaFont::Open(Display *dpy, int screen_number, WaFont *default_font) {
         else return xfont->ascent + xfont->descent;
     }
 #endif // XFT
-        
+
     if (! (xfont = XLoadQueryFont(dpy, font))) {
         WARNING << "failed loading font `" << font << "'" << endl;
         if (! default_font) return -1;
-        
-#ifdef XFT        
+
+#ifdef XFT
         xftfont = default_font->xftfont;
 #endif // XFT
-        
+
         xft = default_font->xft;
         xfont = default_font->xfont;
         diff = default_font->diff;
@@ -94,12 +94,12 @@ int WaFont::Open(Display *dpy, int screen_number, WaFont *default_font) {
         diff = xfont->ascent - xfont->descent;
     }
     delete [] font;
-    
+
 #ifdef XFT
     if (xft) return xftfont->height;
-    else 
+    else
 #endif // XFT
-        
+
     return xfont->ascent + xfont->descent;
 }
 
@@ -116,7 +116,7 @@ int WaFont::Open(Display *dpy, int screen_number, WaFont *default_font) {
  */
 void WaFont::AllocColor(Display *dpy, Window id, WaColor *wac, WaColor *swac) {
     XGCValues gcv;
-        
+
 #ifdef XFT
     if (xft) {
         color = wac->getXftColor();
@@ -124,7 +124,7 @@ void WaFont::AllocColor(Display *dpy, Window id, WaColor *wac, WaColor *swac) {
         return;
     }
 #endif // XFT
-        
+
     gcv.foreground = wac->getPixel();
     gcv.font = xfont->fid;
     gc = XCreateGC(dpy, id, GCForeground | GCFont, &gcv);
@@ -153,7 +153,7 @@ void WaFont::AllocColor(Display *dpy, Window id, WaColor *wac, WaColor *swac) {
 
 #ifdef XFT
 void WaFont::Draw(Display *dpy, Drawable id, XftDraw *xftdraw, int x, int y,
-                  char *s, int len) {    
+                  char *s, int len) {
     if (xft) {
         if (shodow_off_x || shodow_off_y)
             XftDrawString8(xftdraw, s_color, xftfont,
@@ -167,7 +167,7 @@ void WaFont::Draw(Display *dpy, Drawable id, XftDraw *xftdraw, int x, int y,
 void WaFont::Draw(Display *dpy, Window id, int x, int y,
                   char *s, int len) {
 #endif // XFT
-    
+
     if (shodow_off_x || shodow_off_y)
         XDrawString(dpy, (Drawable) id, s_gc,
                     x + shodow_off_x, y + shodow_off_y, s, len);
@@ -185,9 +185,9 @@ void WaFont::Draw(Display *dpy, Window id, int x, int y,
  * @param len Length of text string s
  *
  * @return Calculated width
- */ 
+ */
 int WaFont::Width(Display *dpy, char *s, int len) {
-        
+
 #ifdef XFT
     if (xft) {
         XGlyphInfo extents;
@@ -195,6 +195,6 @@ int WaFont::Width(Display *dpy, char *s, int len) {
         return extents.width;
     }
 #endif // XFT
-    
+
     return XTextWidth(xfont, s, len);
 }

@@ -171,7 +171,7 @@ public:
     unsigned long double_click, screenmask;
     char *pathenv;
     bool wmerr;
-    
+
     map<Window, WindowObject *> window_table;
     list<WaScreen *> wascreen_list;
 
@@ -188,7 +188,7 @@ public:
 #ifdef RANDR
     int randr, randr_event;
 #endif // RANDR
-    
+
 };
 
 bool validatedrawable(Drawable, unsigned int * = NULL, unsigned int * = NULL);

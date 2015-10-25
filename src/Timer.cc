@@ -26,7 +26,7 @@ extern "C" {
 #  include <unistd.h>
 #endif // HAVE_UNISTD_H
 }
-    
+
 Timer *timer;
 
 /**
@@ -85,7 +85,7 @@ Timer::~Timer(void) {
  */
 void Timer::AddInterrupt(Interrupt *i) {
     Pause();
-    
+
     if (interrupts.empty())
         interrupts.push_back(i);
     else {
@@ -120,7 +120,7 @@ void Timer::Start(void) {
             timerval.it_value.tv_usec = 1;
         paused = false;
         setitimer(ITIMER_REAL, &timerval, NULL);
-    }    
+    }
 }
 
 /**
@@ -137,17 +137,17 @@ void Timer::Pause(void) {
     if (interrupts.empty() || paused) return;
 
     paused = true;
-    
+
     timerval.it_value.tv_sec = 0;
     timerval.it_value.tv_usec = 0;
     getitimer(ITIMER_REAL, &remainval);
     setitimer(ITIMER_REAL, &timerval, NULL);
-   
-    elipsedval.tv_sec = interrupts.front()->delay.tv_sec - 
+
+    elipsedval.tv_sec = interrupts.front()->delay.tv_sec -
         remainval.it_value.tv_sec;
     elipsedval.tv_usec = interrupts.front()->delay.tv_usec -
         remainval.it_value.tv_usec;
-    
+
     if (elipsedval.tv_usec < 0) {
         elipsedval.tv_sec--;
         elipsedval.tv_usec += 1000000;
@@ -177,7 +177,7 @@ void Timer::Pause(void) {
  */
 void Timer::ValidateInterrupts(XEvent *e) {
     if (interrupts.empty()) return;
-    
+
     Pause();
     list<Interrupt *>::iterator it = interrupts.begin();
     for (; it != interrupts.end(); ++it) {
@@ -190,8 +190,8 @@ void Timer::ValidateInterrupts(XEvent *e) {
                 break;
             }
         }
-    }    
-    Start();        
+    }
+    Start();
 }
 
 
@@ -244,7 +244,7 @@ void timeout(int signal) {
 
         switch (wo->type) {
             case WindowType: {
-                WaWindow *wa = (WaWindow *) wo;    
+                WaWindow *wa = (WaWindow *) wo;
                 if (i->action->exec)
                     waexec(i->action->exec, wa->wascreen->displaystring);
                 else {
@@ -259,14 +259,14 @@ void timeout(int signal) {
                 WaMenuItem *wm = (WaMenuItem *) wo;
                 if (i->action->exec)
                     waexec(i->action->exec, wm->menu->wascreen->displaystring);
-                else { 
+                else {
                     ((*wm).*(i->action->menufunc))(&i->event, i->action);
                     XSync(wm->menu->display, false);
                 }
             } break;
             case RootType: {
                 WaScreen *ws = (WaScreen *) wo;
-                if (i->action->exec) 
+                if (i->action->exec)
                     waexec(i->action->exec, ws->displaystring);
                 else {
                     ((*ws).*(i->action->rootfunc))(&i->event, i->action);

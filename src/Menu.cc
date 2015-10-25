@@ -3,7 +3,7 @@
  * @author David Reveman <david@waimea.org>
  * @date   02-Aug-2001 22:40:20
  *
- * @brief Implementation of WaMenu, WaMenuItem and TaskSwitcher classes  
+ * @brief Implementation of WaMenu, WaMenuItem and TaskSwitcher classes
  *
  * Implementation of menu system. A menu consists of a list of menu items
  * each menu item can be one of these three kinds Title, Item or Sub. The only
@@ -46,9 +46,9 @@ using std::endl;
  */
 WaMenu::WaMenu(const char *n) : WindowObject((Window) 0, MenuType) {
     char *__m_wastrdup_tmp;
-    
+
     name = __m_wastrdup(n);
-    
+
     height = 0;
     width = 0;
     mapped = has_focus = built = dynamic = dynamic_root =
@@ -64,7 +64,7 @@ WaMenu::WaMenu(const char *n) : WindowObject((Window) 0, MenuType) {
     pixmap = None;
     render_if_opacity = false;
 #endif // RENDER
-    
+
 }
 
 /**
@@ -94,7 +94,7 @@ WaMenu::~WaMenu(void) {
  * @brief Adds item to menu
  *
  * Adds item to menu by inserting a WaMenuItem object to the menus item list.
- * 
+ *
  * @param item Item to add
  */
 void WaMenu::AddItem(WaMenuItem *item) {
@@ -107,9 +107,9 @@ void WaMenu::AddItem(WaMenuItem *item) {
  * @fn    Build(Wascreen *screen)
  * @brief Builds Menu
  *
- * Calculates size of menu, finds submenus sets pointers to them, renders 
- * graphics and creates windows. If menu has already been built, when we just 
- * resize the windows instead of creating new ones. 
+ * Calculates size of menu, finds submenus sets pointers to them, renders
+ * graphics and creates windows. If menu has already been built, when we just
+ * resize the windows instead of creating new ones.
  *
  * @param screen Screen to create graphics and windows in
  */
@@ -119,7 +119,7 @@ void WaMenu::Build(WaScreen *screen) {
 
     height = 0;
     width = 0;
-    
+
     if (! built) {
         wascreen = screen;
         waimea = wascreen->waimea;
@@ -130,7 +130,7 @@ void WaMenu::Build(WaScreen *screen) {
 
     f_height = wascreen->mstyle.item_height;
     t_height = wascreen->mstyle.title_height;
-    
+
     list<WaMenu *>::iterator menu_it;
     list<WaMenuItem *>::iterator it = item_list.begin();
     for (; it != item_list.end(); ++it) {
@@ -191,19 +191,19 @@ void WaMenu::Build(WaScreen *screen) {
                                         wascreen->mstyle.checkbox_true,
                                         strlen(
                                             wascreen->mstyle.checkbox_true));
-            
+
             (*it)->cb_width1 =
                 wascreen->
                 mstyle.wa_cf_font.Width(display,
                                         wascreen->mstyle.checkbox_false,
                                         strlen(
                                             wascreen->mstyle.checkbox_false));
-            
+
             if ((*it)->cb_width1 > cb_width) cb_width = (*it)->cb_width1;
         }
     }
     extra_width = (bullet_width >= cb_width) ? bullet_width: cb_width;
-    
+
     int lasttype = 0;
     it = item_list.begin();
     for (i = 1; it != item_list.end(); ++it, ++i) {
@@ -213,20 +213,20 @@ void WaMenu::Build(WaScreen *screen) {
 
         char *l = (*it)->e_label? (*it)->e_label: (*it)->label;
         (*it)->width = wafont->Width(display, l, strlen(l)) + 20;
-            
+
         if ((*it)->type == MenuCBItemType) {
             l = (*it)->e_label2? (*it)->e_label2: (*it)->label2;
             int cb_width = wafont->Width(display, l, strlen(l)) + 20;
             if ((cb_width + 20) > (*it)->width)
                 (*it)->width = cb_width + 20;
         }
-        
+
         if (((*it)->width + extra_width) > width)
             width = (*it)->width + extra_width;
 
         height += f_height;
         (*it)->height = (*it)->realheight = f_height;
-        
+
         if ((*it)->type == MenuTitleType) {
             height -= f_height;
             height += t_height;
@@ -245,43 +245,43 @@ void WaMenu::Build(WaScreen *screen) {
         lasttype = (*it)->type;
     }
     if (width > (wascreen->width / 2)) width = wascreen->width / 2;
-    
+
     WaTexture *texture = &wascreen->mstyle.back_frame;
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         pbackframe = None;
         backframe_pixel = texture->getColor()->getPixel();
         if (wascreen->config.db) db = true;
-    } else { 
+    } else {
         pbackframe = ic->renderImage(width, height, texture);
         if (wascreen->config.db && pbackframe != ParentRelative)
             db = true;
     }
-    
+
 #ifdef RENDER
     pixmap = XCreatePixmap(wascreen->pdisplay, wascreen->id, width,
                            height, wascreen->screen_depth);
 #endif // RENDER
-    
+
     texture = &wascreen->mstyle.title;
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         ptitle = None;
         title_pixel = texture->getColor()->getPixel();
     } else
         ptitle = ic->renderImage(width, t_height, texture);
-    
+
     texture = &wascreen->mstyle.hilite;
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         philite = None;
         hilite_pixel = texture->getColor()->getPixel();
     } else
         philite = ic->renderImage(width, f_height, texture);
-    
+
     attrib_set.background_pixmap = ParentRelative;
     attrib_set.border_pixel = wascreen->mstyle.border_color.getPixel();
     attrib_set.colormap = wascreen->colormap;
     attrib_set.override_redirect = true;
     attrib_set.event_mask = NoEventMask;
-    
+
     if (! built) {
         frame = XCreateWindow(display, wascreen->id, 0, 0, width, height,
                               wascreen->mstyle.border_width,
@@ -309,7 +309,7 @@ void WaMenu::Build(WaScreen *screen) {
         (*it)->id = XCreateWindow(display, frame, x, y, width,
                                   (*it)->height, bw,
                                   wascreen->screen_depth, CopyFromParent,
-                                  wascreen->visual, CWOverrideRedirect | 
+                                  wascreen->visual, CWOverrideRedirect |
                                   CWBackPixel | CWEventMask | CWColormap,
                                   &attrib_set);
         waimea->window_table.insert(make_pair((*it)->id, (*it)));
@@ -325,7 +325,7 @@ void WaMenu::Build(WaScreen *screen) {
         (*it)->pixmap = XCreatePixmap(wascreen->pdisplay, wascreen->id, width,
                                       (*it)->height, wascreen->screen_depth);
 #endif // RENDER
-        
+
         if ((*it)->type == MenuTitleType) {
             (*it)->actionlist = &wascreen->config.mtacts;
             (*it)->texture = &wascreen->mstyle.title;
@@ -352,10 +352,10 @@ void WaMenu::Build(WaScreen *screen) {
  * Renders frame background and all item backgrounds.
  */
 void WaMenu::Render(void) {
-    if (((x + width) > 0 && x < wascreen->width) && 
+    if (((x + width) > 0 && x < wascreen->width) &&
         ((y + height) > 0 && y < wascreen->height)) {
         WaTexture *texture = &wascreen->mstyle.back_frame;
-        
+
 #ifdef RENDER
         if (render_if_opacity && ! texture->getOpacity()) return;
         if (texture->getOpacity()) {
@@ -410,16 +410,16 @@ void WaMenu::Render(void) {
             }
             if (!db) {
                 if (pbackframe)
-                    XSetWindowBackgroundPixmap(display, frame, pbackframe);   
+                    XSetWindowBackgroundPixmap(display, frame, pbackframe);
                 else
                     XSetWindowBackground(display, frame, backframe_pixel);
             }
             XClearWindow(display, frame);
-            
+
 #ifdef RENDER
         }
 #endif // RENDER
-        
+
         list<WaMenuItem *>::iterator it = item_list.begin();
         for (; it != item_list.end(); ++it) {
             (*it)->Render();
@@ -431,8 +431,8 @@ void WaMenu::Render(void) {
  * @fn    Map(int mx, int my)
  * @brief Maps menu
  *
- * Maps menu at specified position if not already mapped. If menu is already 
- * mapped we do nothing. 
+ * Maps menu at specified position if not already mapped. If menu is already
+ * mapped we do nothing.
  *
  * @param mx X coordinate to map menu at
  * @param my Y coordinate to map menu at
@@ -463,7 +463,7 @@ void WaMenu::Map(int mx, int my) {
  * @fn    ReMap(int mx, int my)
  * @brief Remaps menu
  *
- * Maps menu at specified position if not already mapped. If menu is already 
+ * Maps menu at specified position if not already mapped. If menu is already
  * mapped then we move it to the position we want to remap it to
  *
  * @param mx X coordinate to remap menu at
@@ -471,7 +471,7 @@ void WaMenu::Map(int mx, int my) {
  */
 void WaMenu::ReMap(int mx, int my) {
     if (ext_type && item_list.size() < 2) return;
-    
+
     if (mapped) Move(mx - x, my - y);
     else {
         if (wascreen->config.menu_stacking == AlwaysAtBottom)
@@ -524,7 +524,7 @@ void WaMenu::Move(int dx, int dy, bool render) {
         render_if_opacity = false;
     }
 #endif // RENDER
-    
+
 }
 
 /**
@@ -546,9 +546,9 @@ void WaMenu::Unmap(bool focus) {
         wascreen->stacking_list.remove(frame);
 
     XUnmapWindow(display, frame);
-    
+
     root_menu = NULL;
-    
+
     if (dynamic) UnmapSubmenus(false);
 
     list<WaMenuItem *>::iterator it = item_list.begin();
@@ -558,7 +558,7 @@ void WaMenu::Unmap(bool focus) {
                 if ((!(*it)->submenu) || (!((*it)->submenu->root_menu &&
                                             (*it)->submenu->mapped)))
                     (*it)->DeHilite();
-            } else 
+            } else
                 (*it)->DeHilite();
         }
     }
@@ -611,7 +611,7 @@ void WaMenu::Unmap(bool focus) {
  * @fn    UnmapSubmenus(bool focus)
  * @brief Unmaps submenus
  *
- * Recursive function for unmapping submenu trees. Unmaps all submenus in the 
+ * Recursive function for unmapping submenu trees. Unmaps all submenus in the
  * current subtree that are still linked.
  *
  * @param focus True if we should set focus to root item
@@ -637,7 +637,7 @@ void WaMenu::UnmapSubmenus(bool focus) {
  * @fn    UnmapTree(void)
  * @brief Unmaps menu tree
  *
- * Recursive function for unmapping complete menu trees. Unmaps all menus that 
+ * Recursive function for unmapping complete menu trees. Unmaps all menus that
  * are still linked in the current menu tree.
  */
 void WaMenu::UnmapTree(void) {
@@ -660,14 +660,14 @@ void WaMenu::UnmapTree(void) {
  */
 void WaMenu::CreateOutline(void) {
     XSetWindowAttributes attrib_set;
-    
+
     int create_mask = CWOverrideRedirect | CWBackPixel | CWEventMask |
         CWColormap;
     attrib_set.background_pixel = wascreen->wstyle.outline_color.getPixel();
     attrib_set.colormap = wascreen->colormap;
     attrib_set.override_redirect = true;
     attrib_set.event_mask = NoEventMask;
-    
+
     o_west = XCreateWindow(display, wascreen->id, 0, 0, 1, 1, 0,
                            wascreen->screen_number, CopyFromParent,
                            wascreen->visual, create_mask, &attrib_set);
@@ -690,9 +690,9 @@ void WaMenu::CreateOutline(void) {
     XMapWindow(display, o_south);
 
     wascreen->RestackWindows(o_west);
-    
+
     list<WaMenuItem *>::iterator it = item_list.begin();
-    for (; it != item_list.end(); ++it) {        
+    for (; it != item_list.end(); ++it) {
         if (((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
             (*it)->submenu->root_menu && (*it)->submenu->mapped) {
             (*it)->submenu->CreateOutline();
@@ -708,7 +708,7 @@ void WaMenu::CreateOutline(void) {
  */
 void WaMenu::DestroyOutline(void) {
     list<WaMenuItem *>::iterator it = item_list.begin();
-    for (; it != item_list.end(); ++it) {        
+    for (; it != item_list.end(); ++it) {
         if (((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
             (*it)->submenu->root_menu && (*it)->submenu->mapped) {
             (*it)->submenu->DestroyOutline();
@@ -737,7 +737,7 @@ void WaMenu::DestroyOutline(void) {
  */
 void WaMenu::DrawOutline(int dx, int dy) {
     list<WaMenuItem *>::iterator it = item_list.begin();
-    for (; it != item_list.end(); ++it) {        
+    for (; it != item_list.end(); ++it) {
         if (((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
             (*it)->submenu->root_menu && (*it)->submenu->mapped) {
             (*it)->submenu->DrawOutline(dx, dy);
@@ -788,7 +788,7 @@ void WaMenu::Lower(void) {
  */
 void WaMenu::FocusFirst(void) {
     XEvent e;
-    
+
     XSync(display, false);
     list<WaMenuItem *>::iterator it = item_list.begin();
     for (; it != item_list.end(); ++it)
@@ -809,7 +809,7 @@ void WaMenu::FocusFirst(void) {
  */
 WaMenuItem::WaMenuItem(const char *s) : WindowObject(0, 0) {
     char *__m_wastrdup_tmp;
-    
+
     label = label1 = __m_wastrdup(s);
     id = (Window) 0;
     func_mask = func_mask1 = func_mask2 = height = width = dy =
@@ -824,7 +824,7 @@ WaMenuItem::WaMenuItem(const char *s) : WindowObject(0, 0) {
     move_resize = sdyn = sdyn1 = sdyn2 = db = false;
     e_label = e_label1 = e_label2 = NULL;
     e_sub = e_sub1 = e_sub2 = NULL;
-    
+
 #ifdef XFT
     xftdraw = (Drawable) 0;
 #endif // XFT
@@ -832,7 +832,7 @@ WaMenuItem::WaMenuItem(const char *s) : WindowObject(0, 0) {
 #ifdef RENDER
     pixmap = None;
 #endif // RENDER
-    
+
 }
 
 /**
@@ -857,15 +857,15 @@ WaMenuItem::~WaMenuItem(void) {
     if (e_sub2) delete [] e_sub2;
 
     menu->item_list.remove(this);
-        
+
 #ifdef XFT
     if (xftdraw) XftDrawDestroy(xftdraw);
 #endif // XFT
 
-#ifdef RENDER    
+#ifdef RENDER
     if (pixmap != None) XFreePixmap(menu->wascreen->pdisplay, pixmap);
 #endif // RENDER
-    
+
     if (id) {
         menu->waimea->window_table.erase(id);
         XDestroyWindow(menu->display, id);
@@ -890,8 +890,8 @@ void WaMenuItem::Render(void) {
         return;
     }
     int bw = menu->wascreen->mstyle.border_width;
-    
-    if (((menu->x + menu->width) > 0 && menu->x < menu->wascreen->width) && 
+
+    if (((menu->x + menu->width) > 0 && menu->x < menu->wascreen->width) &&
         ((menu->y + dy + height) > 0 && (menu->y + dy) <
          menu->wascreen->height)) {
         if (type == MenuTitleType) {
@@ -961,7 +961,7 @@ void WaMenuItem::Render(void) {
                 }
             }
 #endif // RENDER
-            
+
             if (menu->wascreen->config.db) {
                 db = true;
                 if (menu->philite) Draw(menu->philite);
@@ -1001,12 +1001,12 @@ void WaMenuItem::Draw(Drawable drawable, bool frame, int y) {
 #ifdef RENDER
     if (menu->render_if_opacity && !texture->getOpacity() && !frame) return;
 #endif // RENDER
-        
+
     WaFont *wafont = (hilited && !frame)? &menu->wascreen->mstyle.wa_fh_font:
         &menu->wascreen->mstyle.wa_f_font;
     if (type == MenuTitleType)
         wafont = &menu->wascreen->mstyle.wa_t_font;
-    
+
     WaFont *wafont_b = (hilited && !frame)? &menu->wascreen->mstyle.wa_bh_font:
         &menu->wascreen->mstyle.wa_b_font;
 
@@ -1037,20 +1037,20 @@ void WaMenuItem::Draw(Drawable drawable, bool frame, int y) {
         }
     }
     if (frame) p_tmp = drawable;
-    
+
     if (cb) UpdateCBox();
 
     if (e_label) l = e_label;
     else l = label;
-    
-    width = wafont_b->Width(menu->display, l, strlen(l)) + 20;    
-    
+
+    width = wafont_b->Width(menu->display, l, strlen(l)) + 20;
+
     if (type == MenuTitleType)
         justify = menu->wascreen->mstyle.t_justify;
     else
         justify = menu->wascreen->mstyle.f_justify;
     if (menu->width <= width) justify = LeftJustify;
-    
+
     switch (justify) {
         case LeftJustify: x += 10; break;
         case CenterJustify:
@@ -1078,11 +1078,11 @@ void WaMenuItem::Draw(Drawable drawable, bool frame, int y) {
 #endif // XFT
 
     wafont->Draw(menu->display, (drawable)? p_tmp: id,
-                 
+
 #ifdef    XFT
                  xftdraw,
 #endif // XFT
-                 
+
                  x, y, l, strlen(l));
 
     if (type == MenuSubType) {
@@ -1113,7 +1113,7 @@ void WaMenuItem::Draw(Drawable drawable, bool frame, int y) {
                         menu->width - (cb_width + 5), org_y + cb_y, cbox,
                         strlen(cbox));
     }
-    
+
     if (drawable && !frame) {
         XSetWindowBackgroundPixmap(menu->display, id, p_tmp);
         XClearWindow(menu->display, id);
@@ -1129,11 +1129,11 @@ void WaMenuItem::Draw(Drawable drawable, bool frame, int y) {
  */
 void WaMenuItem::Hilite(void) {
     if (type == MenuTitleType || hilited) return;
-    
+
     list<WaMenuItem *>::iterator it = menu->item_list.begin();
-    for (; it != menu->item_list.end(); ++it) {        
+    for (; it != menu->item_list.end(); ++it) {
         if ((*it)->hilited && menu->has_focus)
-            if (!(((*it)->func_mask & MenuSubMask) && (*it)->submenu && 
+            if (!(((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
                   (*it)->submenu->mapped))
                 (*it)->DeHilite();
     }
@@ -1152,7 +1152,7 @@ void WaMenuItem::DeHilite(void) {
     if (type == MenuTitleType || !hilited) return;
     hilited = false;
     texture = &menu->wascreen->mstyle.back_frame;
-    
+
     Render();
 }
 
@@ -1186,11 +1186,11 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus, bool only) {
     if (! in_window) return;
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     if (! (func_mask & MenuSubMask)) return;
-    
+
     Hilite();
     if (only) {
         list<WaMenuItem *>::iterator it = menu->item_list.begin();
-        for (; it != menu->item_list.end(); ++it) {        
+        for (; it != menu->item_list.end(); ++it) {
             if ((*it)->hilited && *it != this) {
                 if (((*it)->func_mask & MenuSubMask) && (*it)->submenu &&
                     (*it)->submenu->mapped && (*it)->submenu->root_menu) {
@@ -1206,12 +1206,12 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus, bool only) {
             return;
     }
     if (submenu->mapped) return;
-    
+
     if (submenu->ext_type == TaskExtMenuType)
         ((WindowMenu *) submenu)->Build(menu->wascreen);
     else if (submenu->ext_type == MergeExtMenuType)
         ((MergeMenu *) submenu)->Build(menu->wascreen, menu->wf);
-    
+
     submenu->root_menu = menu;
     submenu->root_item = this;
     submenu->wf = menu->wf;
@@ -1219,7 +1219,7 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus, bool only) {
     submenu->mf = menu->mf;
     submenu->ftype = menu->ftype;
     list<WaMenuItem *>::iterator it = submenu->item_list.begin();
-    for (skip = 0; it != submenu->item_list.end(); ++it) {        
+    for (skip = 0; it != submenu->item_list.end(); ++it) {
         if ((*it)->type == MenuTitleType)
             skip += (*it)->realheight;
         else break;
@@ -1227,7 +1227,7 @@ void WaMenuItem::MapSubmenu(XEvent *, WaAction *, bool focus, bool only) {
 
     int workx, worky, workw, workh;
     menu->wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
-    
+
     x = menu->x + menu->width + menu->wascreen->mstyle.border_width;
     y = menu->y + dy - skip;
     diff = (y + submenu->height + menu->wascreen->mstyle.border_width * 2) -
@@ -1258,8 +1258,8 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
     if (! in_window) return;
     if (! (func_mask & MenuSubMask)) return;
     if (submenu && (submenu == menu)) return;
-    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;     
-    
+    if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
+
     Hilite();
     if (sdyn) {
         XSync(menu->display, false);
@@ -1271,12 +1271,12 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
         if (! (submenu = menu->wascreen->GetMenuNamed(e_sub? e_sub : sub)))
             return;
     }
-    
+
     if (submenu->ext_type == TaskExtMenuType)
         ((WindowMenu *) submenu)->Build(menu->wascreen);
     else if (submenu->ext_type == MergeExtMenuType)
         ((MergeMenu *) submenu)->Build(menu->wascreen, menu->wf);
-    
+
     submenu->root_menu = menu;
     submenu->root_item = this;
     submenu->wf = menu->wf;
@@ -1292,7 +1292,7 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
 
     int workx, worky, workw, workh;
     menu->wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
-    
+
     x = menu->x + menu->width + menu->wascreen->mstyle.border_width;
     y = menu->y + dy - skip;
     diff = (y + submenu->height + menu->wascreen->mstyle.border_width * 2) -
@@ -1306,7 +1306,7 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
     submenu->ReMap(x, y);
     menu->ignore = false;
     if (focus) submenu->FocusFirst();
-} 
+}
 
 /**
  * @fn    UnLinkMenu(XEvent *, WaAction *)
@@ -1314,7 +1314,7 @@ void WaMenuItem::RemapSubmenu(XEvent *, WaAction *, bool focus) {
  *
  * Removes link to menu tree from menu. Menu will not be apart of the menu tree
  * mapping the menu any longer after this. Unmapsubmenu and Unmapmenutree
- * functions applied somewhere in the old menu tree will not unmap this menu. 
+ * functions applied somewhere in the old menu tree will not unmap this menu.
  */
 void WaMenuItem::UnLinkMenu(XEvent *, WaAction *) {
     if (! in_window) return;
@@ -1360,7 +1360,7 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
 
     if (menu->ext_type == MergeExtMenuType)
         e->xany.window = menu->wf;
-    
+
     if (wf) func_win = wf;
     else func_win = menu->wf;
     if ((func_mask & MenuWFuncMask) &&
@@ -1376,7 +1376,7 @@ void WaMenuItem::Func(XEvent *e, WaAction *ac) {
         ((*(menu->rf)).*(rfunc))(e, ac);
     else if ((func_mask & MenuMFuncMask) && (menu->ftype == MenuMFuncMask))
         ((*(menu->mf)).*(mfunc))(e, ac);
-    
+
     if (param) ac->param = tmp_param;
 }
 
@@ -1413,10 +1413,10 @@ void WaMenuItem::Move(XEvent *e, WaAction *) {
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     menu->waimea->eh->move_resize = MoveType;
     move_resize = true;
-    
+
     XQueryPointer(menu->display, menu->wascreen->id, &w, &w, &px,
                   &py, &i, &i, &ui);
-    
+
     maprequest_list = new list<XEvent *>;
     if (XGrabPointer(menu->display, id, true, ButtonReleaseMask |
                      ButtonPressMask | PointerMotionMask | EnterWindowMask |
@@ -1517,10 +1517,10 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
     if (menu->waimea->eh->move_resize != EndMoveResizeType) return;
     menu->waimea->eh->move_resize = MoveType;
     move_resize = true;
-    
+
     XQueryPointer(menu->display, menu->wascreen->id, &w, &w, &px,
                   &py, &i, &i, &ui);
-    
+
     maprequest_list = new list<XEvent *>;
     if (XGrabPointer(menu->display, id, true, ButtonReleaseMask |
                      ButtonPressMask | PointerMotionMask | EnterWindowMask |
@@ -1550,11 +1550,11 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                 px = event.xmotion.x_root;
                 py = event.xmotion.y_root;
                 menu->Move(nx - menu->x, ny - menu->y
-                         
+
 #ifdef RENDER
                            , !menu->wascreen->config.lazy_trans
 #endif // RENDER
-                           
+
                            );
                 break;
             case LeaveNotify:
@@ -1575,11 +1575,11 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
                     px = cx;
                     py = cy;
                     menu->Move(nx - menu->x, ny - menu->y
-                         
+
 #ifdef RENDER
                                , !menu->wascreen->config.lazy_trans
 #endif // RENDER
-                                   
+
                                );
                 }
                 break;
@@ -1618,7 +1618,7 @@ void WaMenuItem::MoveOpaque(XEvent *e, WaAction *) {
  * Ends menu moving process.
  */
 void WaMenuItem::EndMoveResize(XEvent *, WaAction *) {
-    menu->waimea->eh->move_resize = EndMoveResizeType;   
+    menu->waimea->eh->move_resize = EndMoveResizeType;
 }
 
 /**
@@ -1762,7 +1762,7 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
     }
 
     if (ed->type == EnterNotify) {
-        if (XCheckTypedWindowEvent(menu->display, e->xany.window, 
+        if (XCheckTypedWindowEvent(menu->display, e->xany.window,
                                    LeaveNotify, e)) {
             XPutBackEvent(menu->display, e);
             return;
@@ -1771,7 +1771,7 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
         if (menu->has_focus && type != MenuTitleType) Focus();
         XSync(menu->display, false);
     }
-   
+
     if (menu->waimea->eh->move_resize != EndMoveResizeType)
         ed->mod |= MoveResizeMask;
 
@@ -1784,16 +1784,16 @@ void WaMenuItem::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts) {
             } else {
                 if ((*it)->exec)
                     waexec((*it)->exec, menu->wascreen->displaystring);
-                else 
+                else
                     ((*this).*((*it)->menufunc))(e, *it);
             }
         }
     }
     if (ed->type == LeaveNotify) {
         if (func_mask & MenuSubMask) {
-            if ((! submenu) || (! submenu->mapped)) 
+            if ((! submenu) || (! submenu->mapped))
                 DeHilite();
-        } else 
+        } else
             DeHilite();
     }
 }
@@ -1844,12 +1844,12 @@ void WaMenuItem::UpdateCBox(void) {
                         case FsCBoxType:
                             true_false = ww->flags.fullscreen;
                     }
-                    if (true_false) {                        
+                    if (true_false) {
                         if (hilited)
                             wafont_cb = &menu->wascreen->mstyle.wa_cth_font;
                         else
                             wafont_cb = &menu->wascreen->mstyle.wa_ct_font;
-                        
+
                         cb_y = menu->wascreen->mstyle.ct_y_pos;
                         if (cbox != menu->wascreen->mstyle.checkbox_true)
                             menu->cb_db_upd = true;
@@ -1871,7 +1871,7 @@ void WaMenuItem::UpdateCBox(void) {
                             wafont_cb = &menu->wascreen->mstyle.wa_cfh_font;
                         else
                             wafont_cb = &menu->wascreen->mstyle.wa_cf_font;
-                        
+
                         cb_y = menu->wascreen->mstyle.cf_y_pos;
                         if (cbox != menu->wascreen->mstyle.checkbox_false)
                             menu->cb_db_upd = true;
@@ -1913,7 +1913,7 @@ int WaMenuItem::ExpandAll(WaWindow *w) {
     e_sub1 = expand(sub1, w);
     if (e_sub2) delete [] e_sub2;
     e_sub2 = expand(sub2, w);
-    
+
     e_label = e_label1;
     e_sub = e_sub1;
 
@@ -1921,25 +1921,25 @@ int WaMenuItem::ExpandAll(WaWindow *w) {
     else return 0;
 }
 
-/** 
+/**
  * @fn    WindowMenu(void) : WaMenu("__windowlist__")
  * @brief Constructor for WindowMenu class
  *
  * Creates a WindowMenu object, used for fast switching between windows.
  * This is a WaMenu with some extra functionality.
- * 
+ *
  */
 WindowMenu::WindowMenu(void) : WaMenu("__windowlist__") {
     WaMenuItem *m;
-    
+
     ext_type = TaskExtMenuType;
     m = new WaMenuItem("Window List");
     m->type = MenuTitleType;
     AddItem(m);
 }
 
-/** 
- * @fn    Build(WaScreen *wascreen) 
+/**
+ * @fn    Build(WaScreen *wascreen)
  * @brief Builds WindowMenu
  *
  * Overloaded Build function to make WindowMenu build a menu from
@@ -1951,19 +1951,19 @@ void WindowMenu::Build(WaScreen *wascreen) {
     WaWindow *ww;
     WaMenuItem *m;
     wawindow_list = &wascreen->wawindow_list;
-    
+
     LISTCLEAR(item_list);
 
     list<WaWindow *>::iterator it = wawindow_list->begin();
     for (; it != wawindow_list->end() &&
              ((WaWindow *) *it)->flags.tasklist != true; ++it);
-    
+
     if (it == wawindow_list->end()) return;
 
     m = new WaMenuItem("Window List");
     m->type = MenuTitleType;
     AddItem(m);
-    
+
     for (++it; it != wawindow_list->end(); ++it) {
         ww = (WaWindow *) *it;
         if (ww->flags.tasklist) {
@@ -1979,7 +1979,7 @@ void WindowMenu::Build(WaScreen *wascreen) {
     it = wawindow_list->begin();
     for (; it != wawindow_list->end() &&
              ((WaWindow *) *it)->flags.tasklist != true; ++it);
-    
+
     ww = (WaWindow *) *it;
     m = new WaMenuItem(ww->name);
     m->type = MenuItemType;
@@ -1988,11 +1988,11 @@ void WindowMenu::Build(WaScreen *wascreen) {
     m->func_mask1 |= MenuWFuncMask;
     m->wf = ww->id;
     AddItem(m);
-    
+
     WaMenu::Build(wascreen);
 }
 
-/** 
+/**
  * @fn    MergeMenu(int mtype, char *l, char *n) : WaMenu(n)
  * @brief Constructor for MergeMenu class
  *
@@ -2015,8 +2015,8 @@ MergeMenu::MergeMenu(int mtype, const char *l, const char *n) : WaMenu(n) {
     AddItem(m);
 }
 
-/** 
- * @fn    Build(WaScreen *wascreen, Window ign) 
+/**
+ * @fn    Build(WaScreen *wascreen, Window ign)
  * @brief Builds MergeMenu
  *
  * Overloaded Build function to make MergeMenu build a menu from
@@ -2028,7 +2028,7 @@ MergeMenu::MergeMenu(int mtype, const char *l, const char *n) : WaMenu(n) {
 void MergeMenu::Build(WaScreen *wascreen, Window ign) {
     WaMenuItem *m;
     wawindow_list = &wascreen->wawindow_list;
-    
+
     LISTCLEAR(item_list);
 
     list<WaWindow *>::iterator it = wawindow_list->begin();
@@ -2036,13 +2036,13 @@ void MergeMenu::Build(WaScreen *wascreen, Window ign) {
              ((WaWindow *) *it)->flags.tasklist != true &&
              ((WaWindow *) *it)->id != ign &&
             !((WaWindow *) *it)->master; ++it);
-    
+
     if (it == wawindow_list->end()) return;
 
     m = new WaMenuItem(mergelabel);
     m->type = MenuTitleType;
     AddItem(m);
-    
+
     for (; it != wawindow_list->end(); ++it) {
         WaWindow *ww = (WaWindow *) *it;
         if (ww->flags.tasklist && ww->id != ign && !ww->master) {
@@ -2064,7 +2064,7 @@ void MergeMenu::Build(WaScreen *wascreen, Window ign) {
             AddItem(m);
         }
     }
-    
+
     WaMenu::Build(wascreen);
 }
 

@@ -3,7 +3,7 @@
  * @author David Reveman <david@waimea.org>
  * @date   29-Nov-2001 22:13:22
  *
- * @brief Definition of DockappHandler class  
+ * @brief Definition of DockappHandler class
  *
  * Function declarations and variable definitions for DockappHandler and
  * Dockapp classes.
@@ -27,7 +27,7 @@ public:
 
     void Update(void);
     void Render(void);
-    
+
     Display *display;
     Waimea *waimea;
     WaScreen *wascreen;

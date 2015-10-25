@@ -3,7 +3,7 @@
  * @author David Reveman <david@waimea.org>
  * @date   11-Oct-2001 22:36:12
  *
- * @brief Implementation of NetHandler class  
+ * @brief Implementation of NetHandler class
  *
  * Functions for reading and writing window hints.
  *
@@ -36,10 +36,10 @@ NetHandler::NetHandler(Waimea *wa) {
     wm_hints = XAllocWMHints();
     size_hints = XAllocSizeHints();
     utf8_string = XInternAtom(display, "UTF8_STRING", false);
-    
+
     mwm_hints_atom =
         XInternAtom(display, "_MOTIF_WM_HINTS", false);
-    
+
     wm_state = XInternAtom(display, "WM_STATE", false);
     wm_change_state = XInternAtom(display, "WM_CHANGE_STATE", false);
 
@@ -61,13 +61,13 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_NET_NUMBER_OF_DESKTOPS", false);
     net_desktop_names = XInternAtom(display, "_NET_DESKTOP_NAMES", false);
     net_workarea = XInternAtom(display, "_NET_WORKAREA", false);
-    
+
     net_wm_desktop = XInternAtom(display, "_NET_WM_DESKTOP", false);
     net_wm_name = XInternAtom(display, "_NET_WM_NAME", false);
     net_wm_visible_name = XInternAtom(display, "_NET_WM_VISIBLE_NAME", false);
     net_wm_strut = XInternAtom(display, "_NET_WM_STRUT", false);
     net_wm_pid = XInternAtom(display, "_NET_WM_PID", false);
-    
+
     net_wm_state = XInternAtom(display, "_NET_WM_STATE", false);
     net_wm_state_sticky = XInternAtom(display, "_NET_WM_STATE_STICKY", false);
     net_wm_state_shaded = XInternAtom(display, "_NET_WM_STATE_SHADED", false);
@@ -138,14 +138,14 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_WAIMEA_NET_WM_STATE_DECOR_HANDLE", false);
     waimea_net_wm_state_decorborder =
         XInternAtom(display, "_WAIMEA_NET_WM_STATE_DECOR_BORDER", false);
-    
+
     waimea_net_maximized_restore =
         XInternAtom(display, "_WAIMEA_NET_MAXIMIZED_RESTORE", false);
     waimea_net_virtual_pos =
         XInternAtom(display, "_WAIMEA_NET_VIRTUAL_POS", false);
     waimea_net_wm_desktop_mask =
         XInternAtom(display, "_WAIMEA_NET_WM_DESKTOP_MASK", false);
-    
+
     waimea_net_wm_merged_to =
         XInternAtom(display, "_WAIMEA_NET_WM_MERGED_TO", false);
     waimea_net_wm_merged_type =
@@ -157,7 +157,7 @@ NetHandler::NetHandler(Waimea *wa) {
 
     waimea_net_restart = XInternAtom(display, "_WAIMEA_NET_RESTART", false);
     waimea_net_shutdown = XInternAtom(display, "_WAIMEA_NET_SHUTDOWN", false);
-    
+
     xdndaware = XInternAtom(display, "XdndAware", false);
     xdndenter = XInternAtom(display, "XdndEnter", false);
     xdndleave = XInternAtom(display, "XdndLeave", false);
@@ -166,7 +166,7 @@ NetHandler::NetHandler(Waimea *wa) {
         XInternAtom(display, "_KDE_NET_SYSTEM_TRAY_WINDOWS", false);
     kde_net_wm_system_tray_window_for =
         XInternAtom(display, "_KDE_NET_WM_SYSTEM_TRAY_WINDOW_FOR", false);
-    
+
 #ifdef RENDER
     xrootpmap_id =
         XInternAtom(display, "_XROOTPMAP_ID", false);
@@ -204,7 +204,7 @@ void NetHandler::GetWMHints(WaWindow *ww) {
     char **list;
     int num;
     char *__m_wastrdup_tmp;
-    
+
     ww->state = NormalState;
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
@@ -237,7 +237,7 @@ void NetHandler::GetMWMHints(WaWindow *ww) {
     Window trans;
     int status;
     ww->flags.title = ww->flags.border = ww->flags.handle = true;
-    
+
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
         status = XGetWindowProperty(display, ww->id, mwm_hints_atom, 0L, 20L,
@@ -246,7 +246,7 @@ void NetHandler::GetMWMHints(WaWindow *ww) {
                                     (unsigned char **) &mwm_hints);
     } else WW_DELETED;
     XUngrabServer(display);
-    
+
     if (status == Success && items_read >= PropMotifWmHintsElements) {
         if (mwm_hints->flags & MwmHintsDecorations
             && !(mwm_hints->decorations & MwmDecorAll)) {
@@ -343,7 +343,7 @@ void NetHandler::GetWMNormalHints(WaWindow *ww) {
             ww->size.height_inc = 1;
         }
     }
-    
+
     if (ww->size.min_width < ((ww->title_w - 4) * 3 + 8))
         ww->size.min_width = (ww->title_w - 4) * 3 + 8;
     if (ww->size.min_width < (50 + ww->border_w))
@@ -386,7 +386,7 @@ void NetHandler::GetState(WaWindow *ww) {
  */
 void NetHandler::SetState(WaWindow *ww, int newstate) {
     long data[2];
-    
+
     ww->state = newstate;
     switch (ww->state) {
         case IconicState:
@@ -410,7 +410,7 @@ void NetHandler::SetState(WaWindow *ww, int newstate) {
     }
 
     ww->want_focus = false;
-    
+
     data[0] = ww->state;
     data[1] = None;
 
@@ -442,11 +442,11 @@ void NetHandler::GetWmState(WaWindow *ww) {
     if (validatedrawable(ww->id)) {
         status = XGetWindowProperty(display, ww->id, net_wm_state, 0L, 10L,
                                     false, XA_ATOM, &real_type,
-                                    &real_format, &items_read, &items_left, 
+                                    &real_format, &items_read, &items_left,
                                     (unsigned char **) &data);
     } else WW_DELETED;
     XUngrabServer(display);
-        
+
     if (status == Success && items_read) {
         for (i = 0; i < items_read; i++) {
             if (data[i] == net_wm_state_sticky) ww->flags.sticky = true;
@@ -479,7 +479,7 @@ void NetHandler::GetWmState(WaWindow *ww) {
             ww->flags.border;
     }
     XFree(data);
-    
+
     if (vert && horz) {
         XGrabServer(display);
         if (validatedrawable(ww->id)) {
@@ -533,7 +533,7 @@ void NetHandler::SetWmState(WaWindow *ww) {
         if (ww->flags.max) {
             data[i++] = net_wm_maximized_vert;
             data[i++] = net_wm_maximized_horz;
-            
+
             data2[0] = ww->restore_max.x;
             data2[1] = ww->restore_max.y;
             data2[2] = ww->restore_max.width;
@@ -545,12 +545,12 @@ void NetHandler::SetWmState(WaWindow *ww) {
                             (unsigned char *) data2, 6);
         } else
             XDeleteProperty(display, ww->id, waimea_net_maximized_restore);
-        
+
         data[i++] = waimea_net_wm_state_decor;
         if (ww->flags.title) data[i++] = waimea_net_wm_state_decortitle;
         if (ww->flags.handle) data[i++] = waimea_net_wm_state_decorhandle;
         if (ww->flags.border) data[i++] = waimea_net_wm_state_decorborder;
-        
+
         XChangeProperty(display, ww->id, net_wm_state, XA_ATOM, 32,
                         PropModeReplace, (unsigned char *) data, i);
     } else ww->deleted = true;
@@ -568,27 +568,27 @@ void NetHandler::SetWmState(WaWindow *ww) {
 void NetHandler::SetSupported(WaScreen *ws) {
     long data[52];
     int i = 0;
-    
+
     data[i++] = net_supported;
     data[i++] = net_supported_wm_check;
-    
+
     data[i++] = net_client_list;
     data[i++] = net_client_list_stacking;
     data[i++] = net_active_window;
-    
+
     data[i++] = net_desktop_viewport;
     data[i++] = net_desktop_geometry;
     data[i++] = net_current_desktop;
     data[i++] = net_number_of_desktops;
     data[i++] = net_desktop_names;
     data[i++] = net_workarea;
-    
+
     data[i++] = net_wm_desktop;
     data[i++] = net_wm_name;
     data[i++] = net_wm_visible_name;
     data[i++] = net_wm_strut;
     data[i++] = net_wm_pid;
-    
+
     data[i++] = net_wm_state;
     data[i++] = net_wm_state_sticky;
     data[i++] = net_wm_state_shaded;
@@ -613,7 +613,7 @@ void NetHandler::SetSupported(WaScreen *ws) {
     data[i++] = net_wm_action_fullscreen;
     data[i++] = net_wm_action_change_desktop;
     data[i++] = net_wm_action_close;
-    
+
     data[i++] = net_wm_window_type;
     data[i++] = net_wm_window_type_desktop;
     data[i++] = net_wm_window_type_dock;
@@ -623,11 +623,11 @@ void NetHandler::SetSupported(WaScreen *ws) {
     data[i++] = net_wm_window_type_dialog;
     data[i++] = net_wm_window_type_utility;
     data[i++] = net_wm_window_type_normal;
-    
+
     data[i++] = net_close_window;
     data[i++] = net_moveresize_window;
     data[i++] = net_wm_moveresize;
-    
+
     XChangeProperty(display, ws->id, net_supported, XA_ATOM, 32,
                     PropModeReplace, (unsigned char *) data, i);
 }
@@ -710,10 +710,10 @@ void NetHandler::SetClientListStacking(WaScreen *ws) {
         wc = (WaChildWindow *) waimea->FindWin(*it, FrameType);
         if (wc) data[i++] = wc->wa->id;
     }
-    
+
     XChangeProperty(display, ws->id, net_client_list_stacking, XA_WINDOW,
                     32, PropModeReplace, (unsigned char *) data, i);
-    
+
     delete [] data;
 }
 
@@ -728,12 +728,12 @@ void NetHandler::SetClientListStacking(WaScreen *ws) {
 void NetHandler::GetClientListStacking(WaScreen *ws) {
     long *data;
     unsigned int i;
-    
+
     if (XGetWindowProperty(display, ws->id, net_client_list_stacking,
                            0L, 8192L,
                            false, XA_WINDOW, &real_type,
-                           &real_format, &items_read, &items_left, 
-                           (unsigned char **) &data) == Success && 
+                           &real_format, &items_read, &items_left,
+                           (unsigned char **) &data) == Success &&
         items_read) {
         for (i = 0; i < items_read; i++) {
             WaWindow *ww = (WaWindow *) waimea->FindWin(data[i], WindowType);
@@ -759,7 +759,7 @@ void NetHandler::SetActiveWindow(WaScreen *ws, WaWindow *ww) {
     int i = 0;
 
     data = new long[ws->wawindow_list.size() + 1];
-    
+
     if (ww) {
         ws->focus = false;
         ws->wawindow_list.remove(ww);
@@ -770,7 +770,7 @@ void NetHandler::SetActiveWindow(WaScreen *ws, WaWindow *ww) {
     it = ws->wawindow_list.begin();
     for (; it != ws->wawindow_list.end(); ++it)
         data[i++] = (*it)->id;
-    
+
     XChangeProperty(display, ws->id, net_active_window, XA_WINDOW, 32,
                     PropModeReplace, (unsigned char *) data, i);
 
@@ -790,12 +790,12 @@ void NetHandler::GetActiveWindow(WaScreen *ws) {
     WaWindow *ww;
     long *data;
     int i;
-    
+
     if (XGetWindowProperty(display, ws->id, net_active_window, 0L,
-                           ws->wawindow_list.size(), 
-                           false, XA_WINDOW, &real_type, &real_format, 
-                           &items_read, &items_left, 
-                           (unsigned char **) &data) == Success && 
+                           ws->wawindow_list.size(),
+                           false, XA_WINDOW, &real_type, &real_format,
+                           &items_read, &items_left,
+                           (unsigned char **) &data) == Success &&
         items_read) {
         for (i = items_read - 1; i >= 0; i--) {
             if (i == 0 && data[0] == None) {
@@ -824,13 +824,13 @@ void NetHandler::GetActiveWindow(WaScreen *ws) {
  */
 void NetHandler::GetVirtualPos(WaWindow *ww) {
     long *data;
-    
+
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
         if (XGetWindowProperty(display, ww->id, waimea_net_virtual_pos,
                                0L, 2L, false, XA_INTEGER, &real_type,
-                               &real_format, &items_read, &items_left, 
-                               (unsigned char **) &data) == Success && 
+                               &real_format, &items_read, &items_left,
+                               (unsigned char **) &data) == Success &&
             items_read >= 2) {
             ww->attrib.x = data[0] - ww->wascreen->v_x;
             ww->attrib.y = data[1] - ww->wascreen->v_y;
@@ -857,7 +857,7 @@ void NetHandler::GetXaName(WaWindow *ww) {
     char *data = NULL;
     int status = 0;
     char *__m_wastrdup_tmp;
-    
+
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
         status = XFetchName(display, ww->id, &data);
@@ -874,7 +874,7 @@ void NetHandler::GetXaName(WaWindow *ww) {
 
         ww->wascreen->SmartName(ww);
     }
-        
+
     SetVisibleName(ww);
 }
 
@@ -893,16 +893,16 @@ bool NetHandler::GetNetName(WaWindow *ww) {
     char *data;
     int status = 0;
     char *__m_wastrdup_tmp;
-    
+
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
-        status = XGetWindowProperty(display, ww->id, net_wm_name, 0L, 8192L, 
+        status = XGetWindowProperty(display, ww->id, net_wm_name, 0L, 8192L,
                                     false, utf8_string, &real_type,
-                                    &real_format, &items_read, &items_left, 
+                                    &real_format, &items_read, &items_left,
                                     (unsigned char **) &data);
     } else ww->deleted = true;
     XUngrabServer(display);
-    
+
     if (status == Success && items_read) {
         ww->wascreen->SmartNameRemove(ww);
         delete [] ww->name;
@@ -914,7 +914,7 @@ bool NetHandler::GetNetName(WaWindow *ww) {
         ww->wascreen->SmartName(ww);
 
         SetVisibleName(ww);
-        
+
         return true;
     }
     return false;
@@ -965,7 +965,7 @@ void NetHandler::RemoveVisibleName(WaWindow *ww) {
  */
 void NetHandler::SetVirtualPos(WaWindow *ww) {
     long data[2];
-    
+
     ww->Gravitate(RemoveGravity);
     data[0] = ww->wascreen->v_x + ww->attrib.x;
     data[1] = ww->wascreen->v_y + ww->attrib.y;
@@ -1000,13 +1000,13 @@ void NetHandler::GetWmStrut(WaWindow *ww) {
 
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
-        status = XGetWindowProperty(display, ww->id, net_wm_strut, 0L, 4L, 
+        status = XGetWindowProperty(display, ww->id, net_wm_strut, 0L, 4L,
                                     false, XA_CARDINAL, &real_type,
-                                    &real_format, &items_read, &items_left, 
+                                    &real_format, &items_read, &items_left,
                                     (unsigned char **) &data);
     } else WW_DELETED;
     XUngrabServer(display);
-    
+
     if (status == Success && items_read >= 4) {
         list<WMstrut *>::iterator it = ww->wascreen->strut_list.begin();
         for (; it != ww->wascreen->strut_list.end(); ++it) {
@@ -1048,10 +1048,10 @@ void NetHandler::GetWmPid(WaWindow *ww) {
 
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
-        if (XGetWindowProperty(ww->display, ww->id, net_wm_pid, 0L, 1L, 
+        if (XGetWindowProperty(ww->display, ww->id, net_wm_pid, 0L, 1L,
                                false, XA_CARDINAL, &real_type,
-                               &real_format, &items_read, &items_left, 
-                               (unsigned char **) &data) == Success && 
+                               &real_format, &items_read, &items_left,
+                               (unsigned char **) &data) == Success &&
             items_read) {
             sprintf(tmp, "%d" , (unsigned int) *data);
             ww->pid = new char[strlen(tmp) + 1];
@@ -1072,11 +1072,11 @@ void NetHandler::GetWmPid(WaWindow *ww) {
  */
 void NetHandler::GetDesktopViewPort(WaScreen *ws) {
     long *data;
-    
-    if (XGetWindowProperty(display, ws->id, net_desktop_viewport, 0L, 2L, 
+
+    if (XGetWindowProperty(display, ws->id, net_desktop_viewport, 0L, 2L,
                            false, XA_CARDINAL, &real_type,
-                           &real_format, &items_read, &items_left, 
-                           (unsigned char **) &data) == Success && 
+                           &real_format, &items_read, &items_left,
+                           (unsigned char **) &data) == Success &&
         items_read >= 2) {
         ws->MoveViewportTo(data[0], data[1]);
         XFree(data);
@@ -1094,13 +1094,13 @@ void NetHandler::GetDesktopViewPort(WaScreen *ws) {
 void NetHandler::SetDesktopViewPort(WaScreen *ws) {
     long data[2 * 16];
     int i = 0;
-    
+
     list<Desktop *>::iterator it = ws->desktop_list.begin();
     for (; it != ws->desktop_list.end(); ++it) {
         data[i++] = ws->v_x;
         data[i++] = ws->v_y;
     }
-    
+
     XChangeProperty(display, ws->id, net_desktop_viewport, XA_CARDINAL, 32,
                     PropModeReplace, (unsigned char *) data, i);
 }
@@ -1117,7 +1117,7 @@ void NetHandler::SetDesktopGeometry(WaScreen *ws) {
     long data[2];
 
     data[0] = ws->v_xmax + ws->width;
-    data[1] = ws->v_ymax + ws->height;    
+    data[1] = ws->v_ymax + ws->height;
     XChangeProperty(display, ws->id, net_desktop_geometry, XA_CARDINAL, 32,
                     PropModeReplace, (unsigned char *) data, 2);
 }
@@ -1137,7 +1137,7 @@ void NetHandler::SetNumberOfDesktops(WaScreen *ws) {
     XChangeProperty(display, ws->id, net_number_of_desktops, XA_CARDINAL, 32,
                     PropModeReplace, (unsigned char *) data, 1);
 }
-    
+
 /**
  * @fn    SetCurrentDesktop(WaScreen *ws)
  * @brief Writes current desktop hint
@@ -1148,7 +1148,7 @@ void NetHandler::SetNumberOfDesktops(WaScreen *ws) {
  */
 void NetHandler::SetCurrentDesktop(WaScreen *ws) {
     long data[1];
-    
+
     data[0] = ws->current_desktop->number;
     XChangeProperty(display, ws->id, net_current_desktop, XA_CARDINAL, 32,
                     PropModeReplace, (unsigned char *) data, 1);
@@ -1165,10 +1165,10 @@ void NetHandler::SetCurrentDesktop(WaScreen *ws) {
 void NetHandler::GetCurrentDesktop(WaScreen *ws) {
     long *data;
 
-    if (XGetWindowProperty(display, ws->id, net_current_desktop, 0L, 1L, 
-                           false, XA_CARDINAL, &real_type, &real_format, 
-                           &items_read, &items_left, 
-                           (unsigned char **) &data) == Success && 
+    if (XGetWindowProperty(display, ws->id, net_current_desktop, 0L, 1L,
+                           false, XA_CARDINAL, &real_type, &real_format,
+                           &items_read, &items_left,
+                           (unsigned char **) &data) == Success &&
         items_read) {
         ws->GoToDesktop(data[0]);
         XFree(data);
@@ -1187,7 +1187,7 @@ void NetHandler::GetCurrentDesktop(WaScreen *ws) {
  */
 void NetHandler::SetDesktopNames(WaScreen *ws, char *names) {
     int i;
-    
+
     for (i = 0; i < 8192; i++) {
         if (names[i] == ',') names[i] = '\0';
         else if (names[i] == '\0') break;
@@ -1211,7 +1211,7 @@ void NetHandler::SetDesktopNames(WaScreen *ws, char *names) {
 void NetHandler::SetWorkarea(WaScreen *ws) {
     long data[4 * 16];
     int i = 0;
-    
+
     list<Desktop *>::iterator it = ws->desktop_list.begin();
     for (; it != ws->desktop_list.end(); ++it) {
         data[i++] = (*it)->workarea.x;
@@ -1219,7 +1219,7 @@ void NetHandler::SetWorkarea(WaScreen *ws) {
         data[i++] = (*it)->workarea.width;
         data[i++] = (*it)->workarea.height;
     }
-    
+
     XChangeProperty(waimea->display, ws->id, net_workarea, XA_CARDINAL,
                     32, PropModeReplace, (unsigned char *) data, i);
 }
@@ -1281,11 +1281,11 @@ void NetHandler::GetXRootPMapId(WaScreen *ws) {
     long *data;
 
     XSync(ws->display, false);
-    if (XGetWindowProperty(ws->pdisplay, ws->id, xrootpmap_id, 0L, 1L, 
+    if (XGetWindowProperty(ws->pdisplay, ws->id, xrootpmap_id, 0L, 1L,
                            false, XA_PIXMAP, &real_type,
-                           &real_format, &items_read, &items_left, 
-                           (unsigned char **) &data) == Success && 
-        items_read) { 
+                           &real_format, &items_read, &items_left,
+                           (unsigned char **) &data) == Success &&
+        items_read) {
         ws->xrootpmap_id = (Pixmap) (*data);
         XFree(data);
     }
@@ -1308,7 +1308,7 @@ void NetHandler::GetXRootPMapId(WaScreen *ws) {
 void NetHandler::GetWmType(WaWindow *ww) {
     unsigned long *data;
     int status;
-    
+
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
         status = XGetWindowProperty(display, ww->id, net_wm_window_type,
@@ -1317,7 +1317,7 @@ void NetHandler::GetWmType(WaWindow *ww) {
                                     &items_left, (unsigned char **) &data);
     } else WW_DELETED;
     XUngrabServer(display);
-    
+
     if (status == Success && items_read) {
         for (unsigned int i = 0; i < items_read; ++i) {
             if (data[i] == net_wm_window_type_desktop) {
@@ -1405,9 +1405,9 @@ void NetHandler::SetDesktop(WaWindow *ww) {
     }
     if (ww->desktop_mask == ((1L << 16) - 1))
         data[0] = 0xffffffff;
-    
+
     XGrabServer(display);
-    if (validatedrawable(ww->id)) {    
+    if (validatedrawable(ww->id)) {
         XChangeProperty(display, ww->id, net_wm_desktop, XA_CARDINAL, 32,
                         PropModeReplace, (unsigned char *) data, 1);
     } else ww->deleted = true;
@@ -1451,10 +1451,10 @@ void NetHandler::GetDesktop(WaWindow *ww) {
 
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
-        if (XGetWindowProperty(display, ww->id, net_wm_desktop, 0L, 1L, 
-                               false, XA_CARDINAL, &real_type, &real_format, 
+        if (XGetWindowProperty(display, ww->id, net_wm_desktop, 0L, 1L,
+                               false, XA_CARDINAL, &real_type, &real_format,
                                &items_read, &items_left,
-                               (unsigned char **) &data) == Success && 
+                               (unsigned char **) &data) == Success &&
             items_read) {
             if (data[0] == 0xffffffff || data[0] == 0xfffffffe)
                 ww->desktop_mask = ((1L << 16) - 1);
@@ -1465,8 +1465,8 @@ void NetHandler::GetDesktop(WaWindow *ww) {
         }
         if (XGetWindowProperty(display, ww->id, waimea_net_wm_desktop_mask,
                                0L, 1L, false, XA_CARDINAL, &real_type,
-                               &real_format, &items_read, &items_left, 
-                               (unsigned char **) &data) == Success && 
+                               &real_format, &items_read, &items_left,
+                               (unsigned char **) &data) == Success &&
             items_read) {
             ww->desktop_mask = data[0];
             XFree(data);
@@ -1488,7 +1488,7 @@ void NetHandler::GetDesktop(WaWindow *ww) {
  */
 bool NetHandler::IsSystrayWindow(Window w) {
     long *data;
-    
+
     items_read = 0;
     XGrabServer(display);
     if (validatedrawable(w)) {
@@ -1546,16 +1546,16 @@ void NetHandler::GetMergedState(WaWindow *ww) {
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
         if (XGetWindowProperty(display, ww->id, waimea_net_wm_merged_to, 0L,
-                               1L, false, XA_WINDOW, &real_type, &real_format, 
-                               &items_read, &items_left, 
-                               (unsigned char **) &data) == Success && 
+                               1L, false, XA_WINDOW, &real_type, &real_format,
+                               &items_read, &items_left,
+                               (unsigned char **) &data) == Success &&
             items_read) {
             mwin = *data;
             XFree(data);
             if (XGetWindowProperty(display, ww->id, waimea_net_wm_merged_type,
                                    0L, 1L, false, XA_CARDINAL, &real_type,
-                                   &real_format, &items_read, &items_left, 
-                                   (unsigned char **) &data) == Success && 
+                                   &real_format, &items_read, &items_left,
+                                   (unsigned char **) &data) == Success &&
                 items_read) {
                 mtype = *data;
                 XFree(data);
@@ -1633,7 +1633,7 @@ void NetHandler::SetMergeOrder(WaWindow *ww) {
     list<WaWindow *>::iterator it = ww->merged.begin();
     for (; it != ww->merged.end(); it++)
         data[i++] = (*it)->id;
-    
+
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
         if (i) {
@@ -1704,9 +1704,9 @@ void NetHandler::SetMergeAtfront(WaWindow *ww, Window win) {
     long data[1];
 
     if (ww->wascreen->shutdown) return;
-    
+
     data[0] = win;
-    
+
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
         XChangeProperty(display, ww->id, waimea_net_wm_merge_atfront,
@@ -1781,7 +1781,7 @@ void NetHandler::SetAllowedActions(WaWindow *ww) {
         data[i++] = net_wm_action_change_desktop;
         data[i++] = net_wm_action_close;
     }
-    
+
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
         XChangeProperty(display, ww->id, net_wm_allowed_actions,

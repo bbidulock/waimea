@@ -3,7 +3,7 @@
  * @author David Reveman <david@waimea.org>
  * @date   11-May-2001 11:48:03
  *
- * @brief Implementation of EventHandler class  
+ * @brief Implementation of EventHandler class
  *
  * Eventloop function and functions for handling XEvents.
  *
@@ -23,14 +23,14 @@ extern "C" {
 #ifdef    SHAPE
 #  include <X11/extensions/shape.h>
 #endif // SHAPE
-    
+
 #ifdef    RANDR
 #  include <X11/extensions/Xrandr.h>
 #endif // RANDR
 
 #ifdef    HAVE_STDIO_H
 #  include <stdio.h>
-#endif // HAVE_STDIO_H    
+#endif // HAVE_STDIO_H
 }
 
 #include "Event.hh"
@@ -52,7 +52,7 @@ EventHandler::EventHandler(Waimea *wa) {
     last_button = 0;
 
     empty_return_mask = new set<int>;
-    
+
     moveresize_return_mask = new set<int>;
     moveresize_return_mask->insert(MotionNotify);
     moveresize_return_mask->insert(ButtonPress);
@@ -101,12 +101,12 @@ EventHandler::~EventHandler(void) {
  * @param return_mask set to use as return_mask
  * @param event Pointer to allocated event structure
  */
-void EventHandler::EventLoop(set<int> *return_mask, XEvent *event) {    
+void EventHandler::EventLoop(set<int> *return_mask, XEvent *event) {
     for (;;) {
         XNextEvent(waimea->display, event);
-        
+
         if (return_mask->find(event->type) != return_mask->end()) return;
-        
+
         HandleEvent(event);
     }
 }
@@ -125,7 +125,7 @@ void EventHandler::HandleEvent(XEvent *event) {
     Window w;
     int i, rx, ry;
     struct timeval click_time;
-    
+
     EventDetail *ed = new EventDetail;
 
     switch (event->type) {
@@ -170,7 +170,7 @@ void EventHandler::HandleEvent(XEvent *event) {
                 gettimeofday(&click_time, NULL);
                 if (click_time.tv_sec <= last_click.tv_sec + 1) {
                     if (click_time.tv_sec == last_click.tv_sec &&
-                        (unsigned long) 
+                        (unsigned long)
                         (click_time.tv_usec - last_click.tv_usec) <
                         waimea->double_click * 1000) {
                         ed->type = DoubleClick;
@@ -229,7 +229,7 @@ void EventHandler::HandleEvent(XEvent *event) {
                     waimea->FindWin(e->window, WindowType);
                 if (ww && waimea->shape)
                     ww->ShapeEvent(e->window);
-            }            
+            }
 #endif // SHAPE
 
 #ifdef RANDR
@@ -245,7 +245,7 @@ void EventHandler::HandleEvent(XEvent *event) {
                 }
             }
 #endif // RANDR
-            
+
     }
     delete ed;
 }
@@ -255,9 +255,9 @@ void EventHandler::HandleEvent(XEvent *event) {
  * @brief PropertyEvent handler
  *
  * We receive a property event when a window want us to update some window
- * info. Unless the state of the property event is PropertyDelete, we try 
+ * info. Unless the state of the property event is PropertyDelete, we try
  * to find the WaWindow managing the the window who sent the event. If a
- * WaWindow was found, we update the stuff indicated by the event. If the 
+ * WaWindow was found, we update the stuff indicated by the event. If the
  * name should be updated we also redraw the label foreground for the
  * WaWindow. If atom is _NET_WM_STRUT we update the strut list and workarea.
  *
@@ -298,7 +298,7 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
         if (WaScreen *ws = (WaScreen *) waimea->FindWin(e->window, RootType)) {
             waimea->net->GetXRootPMapId(ws);
             ws->ic->setXRootPMapId((ws->xrootpmap_id)? true: false);
-            
+
             list<DockappHandler *>::iterator dock_it = ws->docks.begin();
             for (; dock_it != ws->docks.end(); ++dock_it)
                 if ((*dock_it)->dockapp_list->size()) (*dock_it)->Render();
@@ -314,7 +314,7 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
         }
     }
 #endif // RENDER
-    
+
 }
 
 /**
@@ -323,8 +323,8 @@ void EventHandler::EvProperty(XPropertyEvent *e) {
  *
  * We receive an expose event when a windows foreground has been exposed
  * for some change. If the event is from one of our windows with
- * foreground, we redraw the foreground for this window.  
- * 
+ * foreground, we redraw the foreground for this window.
+ *
  * @param e	The ExposeEvent
  */
 void EventHandler::EvExpose(XExposeEvent *e) {
@@ -374,7 +374,7 @@ void EventHandler::EvFocus(XFocusChangeEvent *e) {
             ww->net->SetActiveWindow(ww->wascreen, ww);
         } else if ((ws = (WaScreen *) waimea->FindWin(e->window, RootType)))
             ws->focus = true;
-        
+
         if ((ww2 = (WaWindow *) waimea->FindWin(focused, WindowType))) {
             ww2->actionlist =
                 ww2->GetActionList(&ww2->wascreen->config.ext_pwinacts);
@@ -451,7 +451,7 @@ void EventHandler::EvConfigureRequest(XConfigureRequestEvent *e) {
         }
         else if (wo->type == DockAppType) {
             da = (Dockapp *) wo;
-            if (e->value_mask & CWWidth) da->width = e->width; 
+            if (e->value_mask & CWWidth) da->width = e->width;
             if (e->value_mask & CWHeight) da->height = e->height;
             XGrabServer(e->display);
             if (validatedrawable(da->id))
@@ -482,8 +482,8 @@ void EventHandler::EvColormap(XColormapEvent *e) {
  * @fn    EvMapRequest(XMapRequestEvent *e)
  * @brief MapRequestEvent handler
  *
- * We receive this event then a window wants to be mapped. If the window 
- * isn't in our window hash_map already it's a new window and we create 
+ * We receive this event then a window wants to be mapped. If the window
+ * isn't in our window hash_map already it's a new window and we create
  * a WaWindow for it. If the window already is managed we just set its
  * state to NormalState.
  *
@@ -533,10 +533,10 @@ void EventHandler::EvMapRequest(XMapRequestEvent *e) {
  * @fn    EvUnmapDestroy(XEvent *e)
  * @brief UnmapEvent, DestroyEvent and ReparentEvent handler
  *
- * We receive this event then a window has been unmapped, destroyed or 
+ * We receive this event then a window has been unmapped, destroyed or
  * reparented. If we can find a WaWindow for this window then the delete that
- * WaWindow. If we couldn't find a WaWindow we check if the windows is a 
- * dockapp window and if it is, we update the dockapp handler holding the 
+ * WaWindow. If we couldn't find a WaWindow we check if the windows is a
+ * dockapp window and if it is, we update the dockapp handler holding the
  * dockapp.
  *
  * @param e	The XEvent
@@ -784,7 +784,7 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                             if (ww->flags.all) ww->DecorAllOff(NULL, NULL);
                             else ww->DecorAllOn(NULL, NULL);
                             break;
-                    } 
+                    }
                 } else if ((unsigned long) e->xclient.data.l[i] ==
                            waimea->net->waimea_net_wm_state_decortitle) {
                     switch (e->xclient.data.l[0]) {
@@ -840,7 +840,7 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
         ed->detail = 0;
         e->xcrossing.x_root = rx;
         e->xcrossing.y_root = ry;
-        
+
         EvAct(e, e->xclient.window, ed);
     }
     else if (e->xclient.message_type == waimea->net->net_desktop_viewport) {
@@ -875,7 +875,7 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
                 width = e->xclient.data.l[3];
             if (e->xclient.data.l[0] & (1L << 11))
                 height = e->xclient.data.l[4];
-            
+
             ww->IncSizeCheck(width, height, &ww->attrib.width,
                              &ww->attrib.height);
 
@@ -901,11 +901,11 @@ void EventHandler::EvClientMessage(XEvent *e, EventDetail *ed) {
             if (gravity == EastGravity ||
                 gravity == WestGravity ||
                 gravity == CenterGravity)
-                ww->attrib.y -= ww->attrib.height / 2;            
-            
+                ww->attrib.y -= ww->attrib.height / 2;
+
             if (gravity != StaticGravity)
                 ww->Gravitate(ApplyGravity);
-            
+
             ww->RedrawWindow();
             ww->CheckMoveMerge(ww->attrib.x, ww->attrib.y);
         }
@@ -956,7 +956,7 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
         wo = (*it).second;
 
         waimea->timer->ValidateInterrupts(e);
-        
+
         switch (wo->type) {
             case WindowType:
                 wa = (WaWindow *) wo;
@@ -992,7 +992,7 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
             case RootType:
                 ((WaScreen *) wo)->EvAct(e, ed, wo->actionlist);
                 break;
-        }    
+        }
     }
 }
 
@@ -1009,7 +1009,7 @@ void EventHandler::EvAct(XEvent *e, Window win, EventDetail *ed) {
  */
 Bool eventmatch(WaAction *act, EventDetail *ed) {
     int i;
-    
+
     if (ed->type != act->type) return false;
     if ((act->detail && ed->detail) ? (act->detail == ed->detail): true) {
         for (i = 0; i <= 12; i++)

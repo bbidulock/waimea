@@ -115,7 +115,7 @@ public:
     void Merge(WaWindow *, int);
     void Unmerge(WaWindow *);
     bool CheckMoveMerge(int, int, int = 0, int = 0);
-    
+
     void MenuMap(XEvent *, WaAction *, bool);
     void MenuRemap(XEvent *, WaAction *, bool);
     void MenuUnmap(XEvent *, WaAction *, bool);
@@ -124,7 +124,7 @@ public:
     void Shape(void);
     void ShapeEvent(Window);
 #endif // SHAPE
-    
+
     void Raise(XEvent *, WaAction *);
     void Lower(XEvent *, WaAction *);
     inline void Focus(XEvent *e, WaAction *ac) {
@@ -148,7 +148,7 @@ public:
         ResizeOpaque(e, WestType);
     }
     void EndMoveResize(XEvent *, WaAction *);
-    inline void Maximize(XEvent *, WaAction *) { _Maximize(-1, -1); } 
+    inline void Maximize(XEvent *, WaAction *) { _Maximize(-1, -1); }
     void UnMaximize(XEvent *, WaAction *);
     void ToggleMaximize(XEvent *, WaAction *);
     void Close(XEvent *, WaAction *);
@@ -271,7 +271,7 @@ public:
     inline void Nop(XEvent *, WaAction *) {}
 
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *, int);
-    
+
     char *name, *host, *pid;
     int realnamelen;
     bool has_focus, want_focus, mapped, dontsend, deleted, ign_config_req,
@@ -300,7 +300,7 @@ public:
 #ifdef RENDER
     bool render_if_opacity;
 #endif // RENDER
-    
+
 private:
     void ReparentWin(void);
     void InitPosition(void);
@@ -310,15 +310,15 @@ private:
     void Resize(XEvent *, int);
     void ResizeOpaque(XEvent *, int);
     bool _MoveOpaque(XEvent *, int, int, int, int, list<XEvent *> *);
-    
+
     WaImageControl *ic;
     Window o_west, o_north, o_south, o_east;
     bool move_resize, sendcf, pos_init;
-    
+
 #ifdef SHAPE
     bool shaped, been_shaped;
 #endif // SHAPE
-    
+
 };
 
 class WaChildWindow : public WindowObject {
@@ -329,7 +329,7 @@ public:
     void Render(void);
     void Draw(Drawable = 0);
     bool IsDrawable(void);
-    
+
     Display *display;
     WaWindow *wa;
     WaScreen *wascreen;
@@ -343,7 +343,7 @@ public:
 #ifdef XFT
     XftDraw *xftdraw;
 #endif // XFT
-    
+
 };
 
 #endif // __Window_hh

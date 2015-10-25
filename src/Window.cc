@@ -63,7 +63,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
         XGetWindowAttributes(display, id, &init_attrib);
     else deleted = true;
     XUngrabServer(display);
-    
+
     attrib.colormap = init_attrib.colormap;
     size.win_gravity = init_attrib.win_gravity;
     attrib.x = init_attrib.x;
@@ -71,7 +71,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     attrib.width  = init_attrib.width;
     attrib.height = init_attrib.height;
     pos_init = attrib.x && attrib.y;
-    
+
     want_focus = mapped = dontsend = deleted = ign_config_req = hidden = false;
 
     desktop_mask = (1L << wascreen->current_desktop->number);
@@ -83,7 +83,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
 #ifdef RENDER
     render_if_opacity = false;
 #endif // RENDER
-    
+
     border_w = title_w = handle_w = 0;
     has_focus = mergedback = false;
     flags.sticky = flags.shaded = flags.max = flags.title = flags.handle =
@@ -93,15 +93,15 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     transient_for = (Window) 0;
     host = pid = NULL;
     mergemode = NullMergeType;
-    
+
     net->GetWMHints(this);
     net->GetMWMHints(this);
     net->GetWMNormalHints(this);
     net->GetWmPid(this);
-    
+
     Gravitate(ApplyGravity);
     InitPosition();
-    
+
     frame = new WaChildWindow(this, wascreen->id, FrameType);
     handle = new WaChildWindow(this, frame->id, HandleType);
     grip_l = new WaChildWindow(this, frame->id, LGripType);
@@ -125,13 +125,13 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
         else if ((*bit)->autoplace == EastType)
             button->g_x = right_end;
         else button->g_x = (*bit)->x;
-        
+
         if (button->g_x > 0 &&
             (button->g_x + (tw - 2)) > left_end)
             left_end = button->g_x + (tw - 2);
         else if ((button->g_x - (tw - 2)) < right_end)
             right_end = button->g_x - (tw - 2);
-        
+
         buttons.push_back(button);
     }
     label = new WaChildWindow(this, title->id, LabelType);
@@ -147,14 +147,14 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
     net->GetDesktop(this);
     net->SetDesktop(this);
     net->SetDesktopMask(this);
-    
+
     ReparentWin();
     if (! net->GetNetName(this)) net->GetXaName(this);
     if (*name == '\0') SetActionLists();
     UpdateGrabs();
 
     if (deleted) { delete this; return; }
-    
+
     UpdateAllAttributes();
 
 #ifdef SHAPE
@@ -162,13 +162,13 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
 #endif // SHAPE
 
     if (flags.shaded) Shade(NULL, NULL);
-    
+
     waimea->window_table.insert(make_pair(id, this));
     wascreen->wawindow_list.push_back(this);
     wascreen->wawindow_list_map_order.push_back(this);
     if (! flags.alwaysontop && ! flags.alwaysatbottom)
         wascreen->stacking_list.push_back(frame->id);
-    
+
     if (deleted) delete this;
     wascreen->RaiseWindow(frame->id);
     net->SetAllowedActions(this);
@@ -176,7 +176,7 @@ WaWindow::WaWindow(Window win_id, WaScreen *scrn) :
 }
 
 /**
- * @fn    ~WaWindow(void) 
+ * @fn    ~WaWindow(void)
  * @brief Destructor of WaWindow class
  *
  * Reparents the window back to the root window if it still exists. Destroys
@@ -204,7 +204,7 @@ WaWindow::~WaWindow(void) {
 
     Explode(NULL, NULL);
     if (master) master->Unmerge(this);
-    
+
     XGrabServer(display);
     if (validatedrawable(id) && validateclient_mapped(id)) {
         XRemoveFromSaveSet(display, id);
@@ -221,16 +221,16 @@ WaWindow::~WaWindow(void) {
             attrib.y = wascreen->height + (attrib.y % wascreen->height);
 
         XReparentWindow(display, id, wascreen->id, attrib.x, attrib.y);
-    } 
+    }
     XUngrabServer(display);
-    
+
     net->RemoveAllowedActions(this);
     net->RemoveVisibleName(this);
 
     list<WaChildWindow *>::iterator bit = buttons.begin();
     for (; bit != buttons.end(); ++bit)
         delete *bit;
-    
+
     delete grip_l;
     delete grip_r;
     delete handle;
@@ -257,7 +257,7 @@ WaWindow::~WaWindow(void) {
         delete wm_strut;
         if (! wascreen->shutdown) wascreen->UpdateWorkarea();
     }
-    
+
     delete frame;
 
     if (has_focus && wascreen->config.revert_to_window) {
@@ -487,7 +487,7 @@ void WaWindow::UpdateTitlebar(void) {
     int xpos = - border_w;
     list<WaChildWindow *>::iterator it = titles.begin();
     for (; it != titles.end(); it++) {
-        
+
         (*it)->attrib.width = (frame->attrib.width -
                                (clients - 1) * border_w) / clients;
         if (i + 1 == clients)
@@ -501,7 +501,7 @@ void WaWindow::UpdateTitlebar(void) {
                           (*it)->attrib.y, (*it)->attrib.width,
                           (*it)->attrib.height);
         xpos += (*it)->attrib.width + border_w;
-        
+
         WaChildWindow *l = (*it)->wa->label;
         l->attrib.x = l->g_x;
         l->attrib.y = 2;
@@ -511,7 +511,7 @@ void WaWindow::UpdateTitlebar(void) {
         XMoveResizeWindow(display, l->id, l->attrib.x,
                           l->attrib.y, l->attrib.width,
                           l->attrib.height);
-        
+
         list<WaChildWindow *>::iterator bit = (*it)->wa->buttons.begin();
         for (; bit != (*it)->wa->buttons.end(); ++bit) {
             (*bit)->attrib.x = ((*bit)->g_x > 0)? (*bit)->g_x:
@@ -562,9 +562,9 @@ void WaWindow::UpdateAllAttributes(void) {
     if (flags.title) frame->attrib.y -= title_w + border_w;
     frame->attrib.width = attrib.width;
     frame->attrib.height = attrib.height;
-    
+
     list<WaWindow *>::iterator it = merged.begin();
-    for (; it != merged.end(); it++) {     
+    for (; it != merged.end(); it++) {
         if ((*it)->mergetype == VertMergeType)
             frame->attrib.width += border_w + (*it)->attrib.width;
         else if ((*it)->mergetype == HorizMergeType) {
@@ -572,17 +572,17 @@ void WaWindow::UpdateAllAttributes(void) {
                 frame->attrib.height += border_w + (*it)->attrib.height;
         }
     }
-    
+
     if (flags.title) frame->attrib.height += title_w + border_w;
     if (flags.handle) frame->attrib.height += handle_w + border_w;
 
     XSetWindowBorderWidth(display, frame->id, border_w);
-    if (! flags.shaded) 
+    if (! flags.shaded)
         XResizeWindow(display, frame->id, frame->attrib.width,
                       frame->attrib.height);
-    
+
     XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
-    
+
     if (flags.title) {
         UpdateTitlebar();
     }
@@ -597,7 +597,7 @@ void WaWindow::UpdateAllAttributes(void) {
         XMoveResizeWindow(display, handle->id, handle->attrib.x,
                           handle->attrib.y, handle->attrib.width,
                           handle->attrib.height);
-                
+
         grip_l->attrib.x = - border_w;
         grip_l->attrib.y = frame->attrib.height - handle_w - border_w;
         grip_l->attrib.width = 25;
@@ -606,7 +606,7 @@ void WaWindow::UpdateAllAttributes(void) {
         XMoveResizeWindow(display, grip_l->id, grip_l->attrib.x,
                           grip_l->attrib.y, grip_l->attrib.width,
                           grip_l->attrib.height);
-        
+
         grip_r->attrib.x = frame->attrib.width - 25 - border_w;
         grip_r->attrib.y = frame->attrib.height - handle_w - border_w;
         grip_r->attrib.width = 25;
@@ -625,7 +625,7 @@ void WaWindow::UpdateAllAttributes(void) {
         XMoveWindow(display, id, -border_w, t_height - border_w);
     } else DELETED;
     XUngrabServer(display);
-    
+
     int cx = attrib.width;
     int cy = attrib.height + t_height;
     list<WaWindow *>::iterator mit = merged.begin();
@@ -645,7 +645,7 @@ void WaWindow::UpdateAllAttributes(void) {
                     XTranslateCoordinates(display, (*mit)->id, wascreen->id,
                                           0, 0, &(*mit)->attrib.x,
                                           &(*mit)->attrib.y, &wd);
-                        
+
                     break;
                 case HorizMergeType:
                     if (! flags.shaded) {
@@ -723,7 +723,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
 
     if (old_attrib.x != attrib.x) {
         frame->attrib.x = attrib.x - border_w;
-        
+
         old_attrib.x = attrib.x;
 
         move = true;
@@ -732,7 +732,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
         frame->attrib.y = attrib.y - border_w;
         if (flags.title) frame->attrib.y -= title_w + border_w;
         old_attrib.y = attrib.y;
-            
+
         move = true;
     }
     if (old_attrib.width != attrib.width) {
@@ -759,7 +759,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
                         grip_r->attrib.y);
             XResizeWindow(display, handle->id, handle->attrib.width,
                           handle->attrib.height);
-            
+
             if (! force_if_viewable) DrawHandlebar();
         }
     }
@@ -776,7 +776,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
         if (flags.title) frame->attrib.height += title_w + border_w;
         if (flags.handle) frame->attrib.height += handle_w + border_w;
         old_attrib.height = attrib.height;
-        
+
         if (flags.handle) {
             handle->attrib.y = frame->attrib.height - handle_w - border_w;
             grip_l->attrib.y = frame->attrib.height - handle_w - border_w;
@@ -794,7 +794,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
             if (! force_if_viewable && ! resize) DrawHandlebar();
             render_if_opacity = false;
 #endif // RENDER
-            
+
             resize = true;
 
         }
@@ -806,7 +806,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
             net->SetWmState(this);
         }
         XMoveWindow(display, frame->id, frame->attrib.x, frame->attrib.y);
-        
+
 #ifdef RENDER
         if (! resize && ! force_if_viewable) {
             if (! wascreen->config.lazy_trans) {
@@ -876,7 +876,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
                                               wascreen->id, 0, 0,
                                               &(*mit)->attrib.x,
                                               &(*mit)->attrib.y, &wd);
-                        
+
                         break;
                     case HorizMergeType:
                         if (! flags.shaded) {
@@ -912,7 +912,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
         }
     }
     if ((move || resize) && (! flags.shaded) && (! dontsend)) {
-        
+
 #ifdef RENDER
         if (wascreen->config.lazy_trans) {
             list<WaChildWindow *>::iterator it = titles.begin();
@@ -930,7 +930,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
         net->SetVirtualPos(this);
         SendConfig();
     }
-    
+
 #ifdef SHAPE
     if (resize) Shape();
 #endif // SHAPE
@@ -947,7 +947,7 @@ void WaWindow::RedrawWindow(bool force_if_viewable) {
  */
 void WaWindow::ReparentWin(void) {
     XSetWindowAttributes attrib_set;
-    
+
     XGrabServer(display);
     if (validatedrawable(id)) {
         XSelectInput(display, id, NoEventMask);
@@ -956,18 +956,18 @@ void WaWindow::ReparentWin(void) {
         XChangeSaveSet(display, id, SetModeInsert);
         XFlush(display);
 
-        attrib_set.event_mask =  
+        attrib_set.event_mask =
             PropertyChangeMask | StructureNotifyMask | FocusChangeMask |
             EnterWindowMask | LeaveWindowMask;
         attrib_set.do_not_propagate_mask =
-            ButtonPressMask | ButtonReleaseMask | ButtonMotionMask; 
+            ButtonPressMask | ButtonReleaseMask | ButtonMotionMask;
         attrib_set.backing_store = NotUseful;
         attrib_set.win_gravity = NorthWestGravity;
-        
+
         XChangeWindowAttributes(display, id, CWEventMask | CWDontPropagate |
                                 CWBackingStore | CWWinGravity, &attrib_set);
-        
-        
+
+
 #ifdef SHAPE
         XRectangle *dummy = NULL;
         int n, order;
@@ -979,7 +979,7 @@ void WaWindow::ReparentWin(void) {
         }
         XFree(dummy);
 #endif // SHAPE
-        
+
     } else DELETED;
     XUngrabServer(display);
 }
@@ -1002,7 +1002,7 @@ void WaWindow::UpdateGrabs(void) {
                 XGrabButton(display, (*it)->detail ? (*it)->detail: AnyButton,
                             AnyModifier, id, true, ButtonPressMask |
                             ButtonReleaseMask | ButtonMotionMask,
-                            GrabModeSync, GrabModeSync, None, None);     
+                            GrabModeSync, GrabModeSync, None, None);
             } else if ((*it)->type == KeyPress || (*it)->type == KeyRelease) {
                 XGrabKey(display, (*it)->detail ? (*it)->detail: AnyKey,
                          AnyModifier, id, true, GrabModeSync, GrabModeSync);
@@ -1053,7 +1053,7 @@ void WaWindow::Shape(void) {
             if (_mw->shaped) continue;
             Window wd;
             int _x, _y;
-            
+
             XTranslateCoordinates(display, _mw->id, frame->id,
                                   -border_w, -border_w, &_x, &_y, &wd);
 
@@ -1063,7 +1063,7 @@ void WaWindow::Shape(void) {
             xrect[n].height = _mw->attrib.height + border_w * 2;
             n++;
         }
-        
+
         XShapeCombineRectangles(display, frame->id, ShapeBounding, 0,
                                 0, xrect, n, ShapeSet, Unsorted);
 
@@ -1074,7 +1074,7 @@ void WaWindow::Shape(void) {
                 if (_mw->shaped) ShapeEvent(_mw->id);
             }
         }
-        
+
     } else if (been_shaped) {
         been_shaped = false;
         XShapeCombineMask(display, frame->id, ShapeBounding, 0, 0,
@@ -1093,12 +1093,12 @@ void WaWindow::Shape(void) {
  */
 void WaWindow::ShapeEvent(Window id) {
     if (master) { master->ShapeEvent(id); return; }
-    
+
     MERGED_LOOP {
         if (id && id != _mw->id) continue;
         if (_mw->mergedback) continue;
         if (! _mw->shaped) continue;
-        
+
         Window wd;
         int _x, _y;
         XTranslateCoordinates(display, _mw->id, frame->id,
@@ -1113,7 +1113,7 @@ void WaWindow::ShapeEvent(Window id) {
             XShapeCombineRectangles(display, frame->id, ShapeBounding, 0,
                                     0, xrect, 1, ShapeSubtract, Unsorted);
         }
-        
+
         XGrabServer(display);
         if (validatedrawable(_mw->id)) {
             XShapeCombineShape(display, frame->id, ShapeBounding,
@@ -1130,7 +1130,7 @@ void WaWindow::ShapeEvent(Window id) {
  * @fn    SendConfig(void)
  * @brief Sends ConfigureNotify to window
  *
- * Sends a ConfigureNotify event to the window with all the current 
+ * Sends a ConfigureNotify event to the window with all the current
  * window attributes.
  */
 void WaWindow::SendConfig(void) {
@@ -1180,14 +1180,14 @@ void WaWindow::SendConfig(void) {
  */
 void WaWindow::CreateOutline(void) {
     XSetWindowAttributes attrib_set;
-    
+
     int create_mask = CWOverrideRedirect | CWBackPixel | CWEventMask |
         CWColormap;
     attrib_set.background_pixel = wascreen->wstyle.outline_color.getPixel();
     attrib_set.colormap = wascreen->colormap;
     attrib_set.override_redirect = true;
     attrib_set.event_mask = NoEventMask;
-    
+
     o_west = XCreateWindow(display, wascreen->id, 0, 0, 1, 1, 0,
                            screen_number, CopyFromParent, wascreen->visual,
                            create_mask, &attrib_set);
@@ -1233,7 +1233,7 @@ void WaWindow::DestroyOutline(void) {
  * @brief Draw window outline
  *
  * Draws an outer line for a window with the parameters given.
- * 
+ *
  * @param x The x position
  * @param y The y position
  * @param width The width
@@ -1241,7 +1241,7 @@ void WaWindow::DestroyOutline(void) {
  */
 void WaWindow::DrawOutline(int x, int y, int width, int height) {
     int bw = (border_w) ? border_w: 2;
-    
+
     XResizeWindow(display, o_west, bw, bw * 2 + title_w + handle_w + height +
                   border_w * 2);
     XResizeWindow(display, o_east, bw, bw * 2 + title_w + handle_w + height +
@@ -1337,18 +1337,18 @@ void WaWindow::UnFocusWin(void) {
     if (master) master->DrawHandlebar(true);
 }
 
-/**     
+/**
  * @fn    ButtonPressed(int type)
  * @brief Titlebar buttonpress
- *      
+ *
  * Performes button press animation on one of the titlebar buttons.
- *      
+ *
  * @param button WaChildWindow pointer to button that should be pressed
  */
 void WaWindow::ButtonPressed(WaChildWindow *button) {
     XEvent e;
     bool in_window = true;
-    
+
     if (waimea->eh->move_resize != EndMoveResizeType) return;
 
     XUngrabButton(display, AnyButton, AnyModifier, id);
@@ -1386,7 +1386,7 @@ void WaWindow::ButtonPressed(WaChildWindow *button) {
  * @brief Calculate increasement sizes
  *
  * Given a new width and height this functions calculates if the windows
- * increasement sizes allows a resize of the window. The n_w parameter 
+ * increasement sizes allows a resize of the window. The n_w parameter
  * is used for returning allowed width and the n_h parameter is used for
  * returning allowed height.
  *
@@ -1462,7 +1462,7 @@ bool WaWindow::IncSizeCheck(int width, int height, int *n_w, int *n_h) {
                     for (; bit != buttons.end(); ++bit)
                         if ((*bit)->bstyle->cb == ShadeCBoxType)
                             (*bit)->Render();
-                    
+
                 }
                 wascreen->UpdateCheckboxes(ShadeCBoxType);
             }
@@ -1528,7 +1528,7 @@ void WaWindow::Focus(bool vis) {
     XEvent e;
     if (master) hidden = master->hidden;
     if (! flags.focusable || ((! vis) && hidden)) return;
-    
+
     if (mapped) {
         if (vis) {
             if (flags.hidden) UnMinimize(NULL, NULL);
@@ -1543,11 +1543,11 @@ void WaWindow::Focus(bool vis) {
                     }
             }
             bool x_toolarge = false, y_toolarge = false;
-            
+
             if ((wascreen->v_x + attrib.x) >=
                 (wascreen->v_xmax + wascreen->width))
                 x_toolarge = true;
-            
+
             if ((wascreen->v_y + attrib.y) >=
                 (wascreen->v_ymax + wascreen->height))
                 y_toolarge = true;
@@ -1555,10 +1555,10 @@ void WaWindow::Focus(bool vis) {
             if (x_toolarge || y_toolarge) {
                 int bw = flags.border * border_w;
                 int handleh = handle_w + flags.handle * bw;
-                
+
                 int th = attrib.height + bw + handleh;
                 int tw = attrib.width + bw;
-                
+
                 if (x_toolarge)
                     attrib.x = (wascreen->v_xmax + wascreen->width -
                                 wascreen->v_x) - tw;
@@ -1567,7 +1567,7 @@ void WaWindow::Focus(bool vis) {
                                 wascreen->v_y) - th;
                 RedrawWindow();
             }
-            
+
             if (attrib.x >= wascreen->width ||
                 attrib.y >= wascreen->height ||
                 (attrib.x + attrib.width) <= 0 ||
@@ -1612,7 +1612,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
 
     if (master) w = master;
     else w = this;
-    
+
     XQueryPointer(display, wascreen->id, &wd, &wd, &px, &py, &i, &i, &ui);
 
     if (waimea->eh->move_resize != EndMoveResizeType) return;
@@ -1755,7 +1755,7 @@ void WaWindow::Move(XEvent *e, WaAction *) {
  * window is moved after the mouse pointers every motion event.
  *
  * @param e XEvent causing start of move
- 
+
  */
 void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
     int px = 0, py = 0, prelx, prely, i = 0;
@@ -1765,13 +1765,13 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
     Window wd = 0;
     XEvent ed;
     list<XEvent *> maprequest_list;
-  
+
     XQueryPointer(display, wascreen->id, &wd, &wd, &px, &py, &i, &i, &ui);
     prelx = px - attrib.x;
     prely = py - attrib.y;
     int pposx = px;
     int pposy = py;
-  
+
     for (;;) {
         bool status = _MoveOpaque(e, sw, sh, pposx, pposy, &maprequest_list);
         if (! status) return;
@@ -1779,8 +1779,8 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
         XQueryPointer(display, wascreen->id, &wd, &wd, &px, &py, &i, &i, &ui);
 
         pposx = attrib.x + prelx;
-        pposy = attrib.y + prely;   
-    
+        pposy = attrib.y + prely;
+
         XWarpPointer(display, None, None, 0, 0, 0, 0, pposx - px, pposy - py);
         XSync(display, false);
         while (XCheckTypedEvent(display, MotionNotify, &ed));
@@ -1797,7 +1797,7 @@ bool WaWindow::_MoveOpaque(XEvent *e, int saved_w, int saved_h, int px,
 
     if (master && mergemode == NullMergeType) w = master;
     else w = this;
-    
+
     if (waimea->eh->move_resize != EndMoveResizeType) return false;
     sx = nx = attrib.x;
     sy = ny = attrib.y;
@@ -1815,7 +1815,7 @@ bool WaWindow::_MoveOpaque(XEvent *e, int saved_w, int saved_h, int px,
         net->SetState(this, NormalState);
         net->SetVirtualPos(this);
     }
-    dontsend = true;    
+    dontsend = true;
     XGrabServer(display);
     if (validatedrawable(id)) {
         if (XGrabPointer(display,
@@ -2005,7 +2005,7 @@ bool WaWindow::_MoveOpaque(XEvent *e, int saved_w, int saved_h, int px,
  * @brief Resizes the window
  *
  * Resizes the window through displaying a outline of the window while dragging
- * the mouse. If how parameter is RightType when the window is resized in 
+ * the mouse. If how parameter is RightType when the window is resized in
  * south-east direction and if how parameter is LeftType the resize is
  * being performed in south-west direction.
  *
@@ -2019,10 +2019,10 @@ void WaWindow::Resize(XEvent *e, int how) {
     Window wd;
     unsigned int ui;
     WaWindow *w;
-    
+
     if (master && mergetype == CloneMergeType) w = master;
     else w = this;
-    
+
     XQueryPointer(display, wascreen->id, &wd, &wd, &px, &py, &i, &i, &ui);
 
     if (waimea->eh->move_resize != EndMoveResizeType) return;
@@ -2039,7 +2039,7 @@ void WaWindow::Resize(XEvent *e, int how) {
         CreateOutline();
         DrawOutline(n_x, attrib.y, n_w, n_h);
         started = true;
-    }    
+    }
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validatedrawable(id)) {
@@ -2186,9 +2186,9 @@ void WaWindow::Resize(XEvent *e, int how) {
  * @fn    ResizeOpaque(XEvent *e, int how)
  * @brief Resizes the window
  *
- * Resizes the window using the opaque resizing process, which means that 
- * the window is resized after the mouse pointers every motion event. 
- * If how parameter is RightType when the window is resized in 
+ * Resizes the window using the opaque resizing process, which means that
+ * the window is resized after the mouse pointers every motion event.
+ * If how parameter is RightType when the window is resized in
  * south-east direction and if how parameter is LeftType the resize is
  * being performed in south-west direction.
  *
@@ -2201,10 +2201,10 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
     Window wd;
     unsigned int ui;
     WaWindow *w;
-    
+
     if (master && mergetype == CloneMergeType) w = master;
     else w = this;
-    
+
     XQueryPointer(display, wascreen->id, &wd, &wd, &px, &py, &i, &i, &ui);
 
     if (waimea->eh->move_resize != EndMoveResizeType) return;
@@ -2213,7 +2213,7 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
     sh = height = n_h = attrib.height;
     waimea->eh->move_resize = ResizeOpaqueType;
     move_resize = true;
-    
+
     if (e && e->type == MapRequest) {
         if (how > 0) attrib.x = px - attrib.width - border_w * 2;
         else attrib.x = px;
@@ -2222,7 +2222,7 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
         net->SetState(this, NormalState);
         net->SetVirtualPos(this);
     }
-    
+
     maprequest_list = new list<XEvent *>;
     XGrabServer(display);
     if (validatedrawable(id)) {
@@ -2365,7 +2365,7 @@ void WaWindow::ResizeOpaque(XEvent *e, int how) {
  *
  * Ends moving and resizing process.
  */
-void WaWindow::EndMoveResize(XEvent *, WaAction *) {    
+void WaWindow::EndMoveResize(XEvent *, WaAction *) {
     waimea->eh->move_resize = EndMoveResizeType;
 }
 
@@ -2384,7 +2384,7 @@ void WaWindow::_Maximize(int x, int y) {
     int n_w, n_h, new_width, new_height;
 
     if (flags.max) return;
-    
+
     int workx, worky, workw, workh;
     wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
 
@@ -2416,7 +2416,7 @@ void WaWindow::_Maximize(int x, int y) {
                 break;
         }
     }
-    
+
     if (flags.shaded) {
         restore_max.height = restore_shade;
         restore_shade = new_height;
@@ -2446,13 +2446,13 @@ void WaWindow::_Maximize(int x, int y) {
         attrib.height = n_h;
         RedrawWindow();
         flags.max = true;
-        
+
         if (title_w) {
             list<WaChildWindow *>::iterator bit = buttons.begin();
             for (; bit != buttons.end(); ++bit)
                 if ((*bit)->bstyle->cb == MaxCBoxType) (*bit)->Render();
         }
-        
+
         net->SetWmState(this);
         wascreen->UpdateCheckboxes(MaxCBoxType);
     }
@@ -2467,7 +2467,7 @@ void WaWindow::_Maximize(int x, int y) {
 void WaWindow::UnMaximize(XEvent *, WaAction *) {
     if (master) { master->UnMaximize(NULL, NULL); return; }
     int n_w, n_h, rest_height, tmp_shade_height = 0;
-    
+
     if (flags.max) {
         if (flags.shaded) {
             rest_height = attrib.height;
@@ -2510,7 +2510,7 @@ void WaWindow::ToggleMaximize(XEvent *, WaAction *) {
  * @brief Close the window
  *
  * Sends a delete message to the client window. A normal running X window
- * should accept this event and destroy itself. 
+ * should accept this event and destroy itself.
  */
 void WaWindow::Close(XEvent *, WaAction *) {
     XEvent ev;
@@ -2594,7 +2594,7 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
 
     int workx, worky, workw, workh;
     wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
-    
+
     if (XQueryPointer(display, wascreen->id, &w, &w, &x, &y, &i, &i, &ui)) {
         if (menu->ext_type) menu->Build(wascreen);
         menu->wf = id;
@@ -2603,10 +2603,10 @@ void WaWindow::MenuMap(XEvent *, WaAction *ac, bool focus) {
         for (exp = 0; it != menu->item_list.end(); ++it)
             exp += (*it)->ExpandAll(this);
         if (exp) menu->Build(wascreen);
-        if ((y + menu->height + wascreen->mstyle.border_width * 2) > 
+        if ((y + menu->height + wascreen->mstyle.border_width * 2) >
             (unsigned int) (workh + worky))
             y -= (menu->height + wascreen->mstyle.border_width * 2);
-        if ((x + menu->width + wascreen->mstyle.border_width * 2) > 
+        if ((x + menu->width + wascreen->mstyle.border_width * 2) >
             (unsigned int) (workw + workx))
             x -= (menu->width + wascreen->mstyle.border_width * 2);
         menu->Map(x, y);
@@ -2640,7 +2640,7 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
 
     int workx, worky, workw, workh;
     wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
-    
+
     if (XQueryPointer(display, wascreen->id, &w, &w, &x, &y, &i, &i, &ui)) {
         if (menu->ext_type) menu->Build(wascreen);
         menu->wf = id;
@@ -2649,10 +2649,10 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
         for (exp = 0; it != menu->item_list.end(); ++it)
             exp += (*it)->ExpandAll(this);
         if (exp) menu->Build(wascreen);
-        if ((y + menu->height + wascreen->mstyle.border_width * 2) > 
+        if ((y + menu->height + wascreen->mstyle.border_width * 2) >
             (unsigned int) (workh + worky))
             y -= (menu->height + wascreen->mstyle.border_width * 2);
-        if ((x + menu->width + wascreen->mstyle.border_width * 2) > 
+        if ((x + menu->width + wascreen->mstyle.border_width * 2) >
             (unsigned int) (workw + workx))
             x -= (menu->width + wascreen->mstyle.border_width * 2);
         menu->ignore = true;
@@ -2673,10 +2673,10 @@ void WaWindow::MenuRemap(XEvent *, WaAction *ac, bool focus) {
  */
 void WaWindow::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
     WaMenu *menu = wascreen->GetMenuNamed(ac->param);
-    
+
     if (! menu) return;
     if (waimea->eh->move_resize != EndMoveResizeType) return;
-    
+
     menu->Unmap(focus);
     menu->UnmapSubmenus(focus);
 }
@@ -2691,7 +2691,7 @@ void WaWindow::MenuUnmap(XEvent *, WaAction *ac, bool focus) {
 void WaWindow::Shade(XEvent *, WaAction *) {
     if (master) { master->Shade(NULL, NULL); return; }
     int n_w, n_h;
-    
+
     if (IncSizeCheck(attrib.width, -(handle_w + border_w * 2), &n_w, &n_h)) {
         attrib.width = n_w;
         attrib.height = n_h;
@@ -2718,7 +2718,7 @@ void WaWindow::UnShade(XEvent *, WaAction *) {
     if (master) { master->UnShade(NULL, NULL); return; }
     if (flags.shaded) {
         attrib.height = restore_shade;
-        
+
         MERGED_LOOP {
             _mw->flags.shaded = false;
             net->SetWmState(_mw);
@@ -2796,7 +2796,7 @@ void WaWindow::UnSticky(XEvent *, WaAction *) {
 void WaWindow::ToggleSticky(XEvent *, WaAction *) {
     if (master) { master->ToggleSticky(NULL, NULL); return; }
     flags.sticky = !flags.sticky;
-    
+
     MERGED_LOOP {
         _mw->flags.sticky = flags.sticky;
         net->SetWmState(_mw);
@@ -2874,7 +2874,7 @@ void WaWindow::ToggleMinimize(XEvent *, WaAction *) {
  */
 void WaWindow::FullscreenOn(XEvent *, WaAction *) {
     if (master) { master->FullscreenOn(NULL, NULL); return; }
-    
+
     if (flags.fullscreen) return;
 
     flags.fullscreen = true;
@@ -3127,7 +3127,7 @@ void WaWindow::DecorAllOn(XEvent *, WaAction *) {
 void WaWindow::DecorTitleOff(XEvent *, WaAction *) {
     if (master) { master->DecorTitleOff(NULL, NULL); return; }
     if (flags.shaded || ! flags.title) return;
-    
+
     flags.title = false;
     flags.all = false;
     UpdateAllAttributes();
@@ -3158,7 +3158,7 @@ void WaWindow::DecorTitleOff(XEvent *, WaAction *) {
 void WaWindow::DecorHandleOff(XEvent *, WaAction *) {
     if (master) { master->DecorHandleOff(NULL, NULL); return; }
     if (! flags.handle) return;
-    
+
     flags.handle = false;
     flags.all = false;
     UpdateAllAttributes();
@@ -3188,7 +3188,7 @@ void WaWindow::DecorHandleOff(XEvent *, WaAction *) {
 void WaWindow::DecorBorderOff(XEvent *, WaAction *) {
     if (master) { master->DecorBorderOff(NULL, NULL); return; }
     if (! flags.border) return;
-    
+
     flags.border = false;
     flags.all = false;
     UpdateAllAttributes();
@@ -3467,14 +3467,14 @@ void WaWindow::AcceptConfigRequestToggle(XEvent *, WaAction *) {
 void WaWindow::MoveResize(XEvent *e, WaAction *ac) {
     int x, y, geometry;
     unsigned int width, height;
-    
+
     if (waimea->eh->move_resize != EndMoveResizeType || ! ac->param) return;
     width = attrib.width;
     height = attrib.height;
 
     geometry = XParseGeometry(ac->param, &x, &y, &width, &height);
     IncSizeCheck(width, height, &attrib.width, &attrib.height);
-    
+
     if (geometry & XValue) {
         if (geometry & XNegative)
             attrib.x = wascreen->width + x - attrib.width;
@@ -3504,7 +3504,7 @@ void WaWindow::MoveResize(XEvent *e, WaAction *ac) {
 void WaWindow::MoveResizeVirtual(XEvent *e, WaAction *ac) {
     int x, y, geometry;
     unsigned int width, height;
-    
+
     if (waimea->eh->move_resize != EndMoveResizeType || ! ac->param) return;
     width = attrib.width;
     height = attrib.height;
@@ -3551,11 +3551,11 @@ void WaWindow::MoveWindowToPointer(XEvent *e, WaAction *) {
 
     int workx, worky, workw, workh;
     wascreen->GetWorkareaSize(&workx, &worky, &workw, &workh);
-    
+
     if (attrib.x + border_w * 2 + attrib.width > workw)
         attrib.x = workw - attrib.width - border_w;
     else if (attrib.x < workx) attrib.x = workx + border_w;
-    
+
     if (attrib.y + total_h > workh)
         attrib.y = workh - handle_w - border_w - attrib.height -
             ((handle_w)? border_w: 0);
@@ -3595,11 +3595,11 @@ void WaWindow::MoveWindowToSmartPlace(XEvent *, WaAction *) {
                     (! (*it)->master) && ((*it)->desktop_mask &
                      (1L << wascreen->current_desktop->number)) &&
                     ((((*it)->attrib.x + (*it)->frame->attrib.width) > 0 &&
-                      (*it)->attrib.x < workw) && 
+                      (*it)->attrib.x < workw) &&
                      (((*it)->attrib.y + (*it)->frame->attrib.height) > 0 &&
                       (*it)->attrib.y < workh))) {
                     bw = (*it)->flags.border * (*it)->border_w;
-                    
+
                     th = (*it)->frame->attrib.height + bw * 2;
                     tw = (*it)->frame->attrib.width + bw * 2;
 
@@ -3656,7 +3656,7 @@ void WaWindow::DesktopMask(XEvent *, WaAction *ac) {
             }
         }
         if (desktop_mask == 0) desktop_mask = (1L << 0);
-        
+
         if (desktop_mask & (1L << wascreen->current_desktop->number))
             Show();
         else
@@ -3712,7 +3712,7 @@ void WaWindow::PartDesktop(XEvent *, WaAction *ac) {
             if (new_mask) {
                 desktop_mask = new_mask;
                 if (! (desktop_mask &
-                       (1L << wascreen->current_desktop->number))) 
+                       (1L << wascreen->current_desktop->number)))
                     Hide();
                 MERGED_LOOP {
                     _mw->desktop_mask = desktop_mask;
@@ -3782,9 +3782,9 @@ void WaWindow::JoinAllDesktops(XEvent *, WaAction *) {
 /**
  * @fn    PartAllDesktopsExceptCurrent(XEvent *, WaAction *)
  * @brief Part all desktops
- *  
+ *
  * Part window from all desktops except current desktop.
- */           
+ */
 void WaWindow::PartAllDesktopsExceptCurrent(XEvent *, WaAction *) {
     desktop_mask = (1L << wascreen->current_desktop->number);
     Show();
@@ -3827,7 +3827,7 @@ void WaWindow::PartCurrentJoinDesktop(XEvent *, WaAction *ac) {
  * @fn    Merge(WaWindow *child, int mtype)
  * @brief Merges a child window
  *
- * Adds a window to the list of merged windows. 
+ * Adds a window to the list of merged windows.
  *
  * @param child Window to add to merge list
  * @param mtype Specifies how the window should be merged
@@ -3841,7 +3841,7 @@ void WaWindow::Merge(WaWindow *child, int mtype) {
     if (master) return;
 
     bool had_focus = child->has_focus;
-        
+
     XGrabServer(display);
     if (validatedrawable(id)) {
         XSelectInput(display, child->id, NoEventMask);
@@ -3919,7 +3919,7 @@ void WaWindow::Unmerge(WaWindow *child) {
     if (child->mergetype == CloneMergeType && !child->mergedback)
         ToFront(NULL, NULL);
 
-    UpdateAllAttributes();   
+    UpdateAllAttributes();
 
     child->master = NULL;
     child->mergetype = NullMergeType;
@@ -3928,12 +3928,12 @@ void WaWindow::Unmerge(WaWindow *child) {
         XMapWindow(display, child->frame->id);
         child->Show();
     }
-    
+
     if (! wascreen->shutdown) {
         net->SetMergedState(child);
         net->SetMergeOrder(this);
     }
-    
+
     if (had_focus) child->Focus(false);
 }
 
@@ -3975,7 +3975,7 @@ void WaWindow::Explode(XEvent *, WaAction *) {
  *
  * @param ac WaAction object
  */
-void WaWindow::SetMergeMode(XEvent *, WaAction *ac) {    
+void WaWindow::SetMergeMode(XEvent *, WaAction *ac) {
     if (ac->param) {
         if (! strncasecmp(ac->param, "vert", 4))
             mergemode = VertMergeType;
@@ -4062,10 +4062,10 @@ void WaWindow::ToFront(XEvent *, WaAction *) {
                     (*it)->mergedback = true;
                 }
             }
-        }        
+        }
         mergedback = false;
-        
-#ifdef SHAPE    
+
+#ifdef SHAPE
         Shape();
 #endif // SHAPE
 
@@ -4110,7 +4110,7 @@ bool WaWindow::CheckMoveMerge(int x, int y, int width, int height) {
     }
 
     list<WaWindow *>::iterator it = wascreen->wawindow_list.begin();
-    for (; it != wascreen->wawindow_list.end(); it++) {     
+    for (; it != wascreen->wawindow_list.end(); it++) {
         if (*it != this && !(*it)->master && !(*it)->hidden &&
             !(*it)->flags.shaded && (*it)->flags.tasklist) {
             if (_x > (*it)->frame->attrib.x &&
@@ -4206,7 +4206,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
                      int etype) {
     XEvent fev;
     bool replay = false, wait_release = false, match = false;
-    
+
     list<WaAction *>::iterator it = acts->begin();
     if (waimea->eh->move_resize != EndMoveResizeType)
         ed->mod |= MoveResizeMask;
@@ -4237,7 +4237,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
             XAutoRepeatOn(display);
             if ((*it)->replay && ! wait_release) replay = true;
             if ((*it)->delay.tv_sec || (*it)->delay.tv_usec) {
-                Interrupt *i = new Interrupt(*it, e, id);                
+                Interrupt *i = new Interrupt(*it, e, id);
                 waimea->timer->AddInterrupt(i);
             } else {
                 if ((*it)->exec)
@@ -4251,7 +4251,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
         if (deleted) delete this;
         return;
     }
-    
+
     XSync(display, false);
     while (XCheckTypedEvent(display, FocusOut, &fev))
         waimea->eh->EvFocus(&fev.xfocus);
@@ -4302,7 +4302,7 @@ void WaWindow::EvAct(XEvent *e, EventDetail *ed, list<WaAction *> *acts,
 WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
     WindowObject(0, type) {
     XSetWindowAttributes attrib_set;
-    
+
     wa = wa_win;
     wascreen = wa->wascreen;
     display = wa->display;
@@ -4320,7 +4320,7 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
     attrib.y = 0;
     attrib.width  = 1;
     attrib.height = 1;
-    
+
     switch (type) {
         case FrameType:
             attrib_set.event_mask |= SubstructureRedirectMask;
@@ -4364,7 +4364,7 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
     id = XCreateWindow(display, parent, attrib.x, attrib.y,
                        attrib.width, attrib.height, 0, CopyFromParent,
                        CopyFromParent, CopyFromParent, create_mask,
-                       &attrib_set);    
+                       &attrib_set);
 
 #ifdef XFT
     if (type == LabelType || type == TitleType) {
@@ -4372,7 +4372,7 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
                                 wascreen->visual, wascreen->colormap);
     }
 #endif // XFT
-    
+
     wa->waimea->window_table.insert(make_pair(id, this));
 }
 
@@ -4383,11 +4383,11 @@ WaChildWindow::WaChildWindow(WaWindow *wa_win, Window parent, int type) :
  * Destroys the window and removes it from the window_table hash_map.
  */
 WaChildWindow::~WaChildWindow(void) {
-    
+
 #ifdef XFT
     if (type == LabelType) XftDrawDestroy(xftdraw);
 #endif // XFT
-    
+
     wa->waimea->window_table.erase(id);
     XDestroyWindow(display, id);
 }
@@ -4410,14 +4410,14 @@ void WaChildWindow::Render(void) {
     int pos_y;
     XTranslateCoordinates(display, id, wa->wascreen->id, 0, 0, &pos_x, &pos_y,
                           &wd);
-    
+
     if (texture->getOpacity()) {
         xpixmap = XCreatePixmap(wascreen->pdisplay, wascreen->id,
                                 attrib.width, attrib.height,
                                 wascreen->screen_depth);
     } else if (wa->render_if_opacity && IsDrawable()) return;
 #endif // RENDER
-    
+
     switch (type) {
         case ButtonType: {
             bool flag = false;
@@ -4455,7 +4455,7 @@ void WaChildWindow::Render(void) {
                                      texture, wascreen->xrootpmap_id, pos_x,
                                      pos_y, xpixmap);
 #endif // RENDER
-                
+
         } break;
         case LGripType:
         case RGripType:
@@ -4470,7 +4470,7 @@ void WaChildWindow::Render(void) {
             else
 #endif // RENDER
                 pixmap = (wa->has_focus)? wascreen->fgrip: wascreen->ugrip;
-            
+
             break;
     }
     if (! done) {
@@ -4482,30 +4482,30 @@ void WaChildWindow::Render(void) {
                                      texture, wascreen->xrootpmap_id, pos_x,
                                      pos_y, xpixmap);
 #endif // RENDER
-            
+
         } else
             pixmap = ic->renderImage(attrib.width,
                                      attrib.height, texture
-                                      
+
 #ifdef RENDER
                                      , wascreen->xrootpmap_id, pos_x, pos_y,
                                      xpixmap
 #endif // RENDER
-                                      
+
                                      );
     }
-    
+
     if (pixmap) {
         if (wascreen->config.db) Draw((Drawable) pixmap);
         else XSetWindowBackgroundPixmap(display, id, pixmap);
-        
+
 #ifdef PIXMAP
         if (
-            
-#ifdef RENDER        
+
+#ifdef RENDER
             (! texture->getOpacity()) &&
 #endif // RENDER
-            
+
             (texture->getTexture() & WaImage_Pixmap)) {
             XSync(display, false);
             imlib_context_push(*texture->getContext());
@@ -4514,7 +4514,7 @@ void WaChildWindow::Render(void) {
             pixmap = None;
         }
 #endif // PIXMAP
-        
+
     }
     else {
         if (wascreen->config.db) Draw((Drawable) 2);
@@ -4530,7 +4530,7 @@ void WaChildWindow::Render(void) {
         XFreePixmap(wascreen->pdisplay, pixmap);
     }
 #endif // RENDER
-    
+
 }
 
 /**
@@ -4544,7 +4544,7 @@ void WaChildWindow::Render(void) {
  */
 void WaChildWindow::Draw(Drawable drawable) {
     int x = 0, y = 0, length, text_w;
-    
+
     if (! drawable) XClearWindow(display, id);
     switch (type) {
         case TitleType:
@@ -4596,7 +4596,7 @@ void WaChildWindow::Draw(Drawable drawable) {
             WaFont *wafont = (wa->has_focus)? &wascreen->wstyle.wa_font:
                 &wascreen->wstyle.wa_font_u;
             text_w = wafont->Width(display, wa->name, length);
-    
+
             if (text_w > (wa->label->attrib.width - 10)) x += 2;
             else {
                 switch (wascreen->wstyle.justify) {
@@ -4614,14 +4614,14 @@ void WaChildWindow::Draw(Drawable drawable) {
 
 #ifdef    XFT
             if (drawable) XftDrawChange(xftdraw, p_tmp);
-#endif // XFT            
-            
+#endif // XFT
+
             wafont->Draw(display, (drawable)? p_tmp : id,
-                         
+
 #ifdef    XFT
                          xftdraw,
 #endif // XFT
-                 
+
                          x, y, wa->name, length);
 
             if (drawable) {
@@ -4663,8 +4663,8 @@ void WaChildWindow::Draw(Drawable drawable) {
                     gc = (pressed) ? &bstyle->g_pressed:
                         ((wa->has_focus)? &bstyle->g_focused:
                          &bstyle->g_unfocused);
-                }                    
-                
+                }
+
                 switch (bstyle->cb) {
                     case ShadeCBoxType:
                         XDrawRectangle(display, id, *gc, 2, 3,

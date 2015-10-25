@@ -3,7 +3,7 @@
  * @author David Reveman <david@waimea.org>
  * @date   29-Nov-2001 22:13:22
  *
- * @brief Implementation of DockappHandler class  
+ * @brief Implementation of DockappHandler class
  *
  * This class handles docking of 'dockapp' programs.
  *
@@ -48,7 +48,7 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
         }
     } else
         style->geometry = XValue | YValue | XNegative;
-    
+
     width = 0;
     height = 0;
 
@@ -71,7 +71,7 @@ DockappHandler::DockappHandler(WaScreen *scrn, DockStyle *ds) :
         wascreen->aot_stacking_list.push_back(id);
     else
         wascreen->aab_stacking_list.push_back(id);
-        
+
 
     if (! style->inworkspace) {
         wm_strut = new WMstrut;
@@ -116,8 +116,8 @@ DockappHandler::~DockappHandler(void) {
  */
 void DockappHandler::Update(void) {
     int dock_x = style->gridspace;
-    int dock_y = style->gridspace;    
-    
+    int dock_y = style->gridspace;
+
     if (dockapp_list->empty()) {
         if (! style->inworkspace) {
             wm_strut->left = 0;
@@ -177,12 +177,12 @@ void DockappHandler::Update(void) {
             (*it)->added = true;
             tmp_list->push_back(*it);
         }
-    
+
     while (! dockapp_list->empty())
         dockapp_list->pop_back();
     delete dockapp_list;
     dockapp_list = tmp_list;
-    
+
     it = dockapp_list->begin();
     for (; it != dockapp_list->end(); ++it) {
         switch (style->direction) {
@@ -233,7 +233,7 @@ void DockappHandler::Update(void) {
         if (! style->inworkspace)
             wm_strut->left = map_x + style->style.border_width * 2 + width;
     }
-    
+
     if (style->geometry & YNegative) {
         map_y = wascreen->height - style->style.border_width * 2 -
             height + y;
@@ -273,18 +273,18 @@ void DockappHandler::Update(void) {
  */
 void DockappHandler::Render(void) {
     WaTexture *texture = &style->style.texture;
-    
+
 #ifdef RENDER
     if (texture->getOpacity()) {
         background = XCreatePixmap(wascreen->pdisplay, wascreen->id, width,
                                    height, wascreen->screen_depth);
     }
 #endif // RENDER
-    
+
     if (texture->getTexture() == (WaImage_Flat | WaImage_Solid)) {
         background = None;
         background_pixel = texture->getColor()->getPixel();
-#ifdef RENDER        
+#ifdef RENDER
         if (texture->getOpacity()) {
             background = wascreen->ic->xrender(None, width, height, texture,
                                                wascreen->xrootpmap_id,
@@ -299,7 +299,7 @@ void DockappHandler::Render(void) {
 #else // ! RENDER
         XSetWindowBackground(display, id, background_pixel);
 #endif // RENDER
-        
+
     } else {
         background = wascreen->ic->renderImage(width, height, texture
 
@@ -311,17 +311,17 @@ void DockappHandler::Render(void) {
                                                style->style.border_width,
                                                background
 #endif // RENDER
-                                               
+
                                                );
         XSetWindowBackgroundPixmap(display, id, background);
     }
     XClearWindow(display, id);
-    
-#ifdef RENDER    
+
+#ifdef RENDER
     if (texture->getOpacity()) XFreePixmap(wascreen->pdisplay, background);
 #endif // RENDER
 }
-    
+
 /**
  * @fn    Dockapp(Window win, DockappHandler *dhand)
  * @brief Constructor for Dockapp class
@@ -354,7 +354,7 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
     } else {
         icon_id = None;
         id = client_id;
-    }    
+    }
     XGrabServer(display);
     if (validatedrawable(id)) {
         if (XGetWindowAttributes(display, id, &attrib)) {
@@ -362,7 +362,7 @@ Dockapp::Dockapp(Window win, DockappHandler *dhand) :
             height = attrib.height;
         } else
             width = height = 64;
-        
+
         XSetWindowBorderWidth(display, id, 0);
         XReparentWindow(display, id, dh->id, dh->width, dh->height);
         XMapRaised(display, id);

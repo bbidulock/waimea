@@ -110,12 +110,12 @@ int main(int argc, char **argv) {
     return 1;
 }
 
-/** 
+/**
  * @fn    usage(void)
  * @brief Display brief usage message
  *
  * Prints brief usage message on standard out.
- * 
+ *
  */
 void usage(void) {
     cout << "Usage: " << program_name << " [--display=DISPLAYNAME]" <<
@@ -124,12 +124,12 @@ void usage(void) {
         "\t[--usage]" << " [--help]" << " [--version]" << endl;
 }
 
-/** 
+/**
  * @fn    help(void)
  * @brief Shows help message
  *
  * Prints full command line help message to standard out.
- * 
+ *
  */
 void help(void) {
     cout << "Usage: " << program_name << " [OPTION...]" << endl;

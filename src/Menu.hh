@@ -58,12 +58,12 @@ public:
     void Raise(void);
     void Lower(void);
     void FocusFirst(void);
-    
+
     Waimea *waimea;
     Display *display;
     WaScreen *wascreen;
     WaImageControl *ic;
-    
+
     list<WaMenuItem *> item_list;
 
     Window frame, o_west, o_north, o_south, o_east;
@@ -78,16 +78,16 @@ public:
     WaMenuItem *root_item;
 
     int ext_type;
-    int ftype; 
+    int ftype;
     Window wf;
     WaScreen *rf;
     WaMenuItem *mf;
-    
+
 #ifdef RENDER
     Pixmap pixmap;
     bool render_if_opacity;
 #endif // RENDER
-  
+
 private:
     int f_height, t_height, s_height;
 };
@@ -99,14 +99,14 @@ public:
 
     void Draw(Drawable = 0, bool = false, int = 0);
     void Render(void);
-    
+
     void Hilite(void);
     void DeHilite(void);
     void Focus(void);
     void MapSubmenu(XEvent *, WaAction *, bool, bool = false);
     void RemapSubmenu(XEvent *, WaAction *, bool);
     void UnmapMenu(XEvent *, WaAction *, bool);
-    
+
     void UnLinkMenu(XEvent *, WaAction *);
     inline void MapSubmenu(XEvent *e, WaAction *ac) {
         MapSubmenu(e, ac, false);
@@ -183,11 +183,11 @@ public:
     void Restart(XEvent *, WaAction *);
     void Exit(XEvent *, WaAction *);
     inline void Nop(XEvent *, WaAction *) {}
-    
+
     void EvAct(XEvent *, EventDetail *, list<WaAction *> *);
     void UpdateCBox(void);
     int ExpandAll(WaWindow *);
-    
+
     int func_mask, func_mask1, func_mask2, height, width, dy, realheight,
                            cb, cb_y, cb_width, cb_width1, cb_width2;
     bool hilited, move_resize, in_window, sdyn, sdyn1, sdyn2, db;
@@ -204,11 +204,11 @@ public:
     Window wf;
     WaTexture *texture;
     WaFont *wafont_cb;
-    
-#ifdef XFT        
+
+#ifdef XFT
     XftDraw *xftdraw;
 #endif // XFT
-    
+
 #ifdef RENDER
     Pixmap pixmap;
 #endif // RENDER
@@ -220,7 +220,7 @@ public:
     WindowMenu(void);
 
     void Build(WaScreen *);
-    
+
 private:
     list<WaWindow *> *wawindow_list;
 };
@@ -230,7 +230,7 @@ public:
     MergeMenu(int, const char *, const char *);
 
     void Build(WaScreen *, Window);
-    
+
 private:
     list<WaWindow *> *wawindow_list;
     int mergetype;
