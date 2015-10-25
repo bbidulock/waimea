@@ -1231,12 +1231,12 @@ void WaScreen::ViewportFixedMove(XEvent *, WaAction *ac) {
  * @param ac WaAction object
  */
 void WaScreen::ViewportRelativeMove(XEvent *, WaAction *ac) {
-    int x, y, mask;
+    int x, y;
     unsigned int w = 0, h = 0;
                   
     if (! ac->param) return;
    
-    mask = XParseGeometry(ac->param, &x, &y, &w, &h);
+    XParseGeometry(ac->param, &x, &y, &w, &h);
     MoveViewportTo(v_x + x, v_y + y);
 }
 
@@ -1621,10 +1621,10 @@ void WaScreen::PointerFixedWarp(XEvent *, WaAction *ac) {
  * @param ac WaAction object
  */
 void WaScreen::PointerRelativeWarp(XEvent *, WaAction *ac) {
-    int x, y, mask;
+    int x, y;
     unsigned int w, h;
                     
-    mask = XParseGeometry(ac->param, &x, &y, &w, &h);
+    XParseGeometry(ac->param, &x, &y, &w, &h);
     XWarpPointer(display, None, None, 0, 0, 0, 0, x, y);
 }
 

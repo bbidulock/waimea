@@ -2161,7 +2161,7 @@ Pixmap WaImageControl::searchCache(unsigned int width, unsigned int height,
             if (((*it)->width == width) &&
                 ((*it)->height == height) &&
                 ((*it)->texture == texture) &&
-                ((*it)->pixel1 == c1->getPixel()))
+                ((*it)->pixel1 == c1->getPixel())) {
                 if (texture & WaImage_Gradient) {
                     if ((*it)->pixel2 == c2->getPixel()) {
                         (*it)->count++;
@@ -2171,6 +2171,7 @@ Pixmap WaImageControl::searchCache(unsigned int width, unsigned int height,
                     (*it)->count++;
                     return (*it)->pixmap;
                 }
+            }
         }
     }
     return None;
@@ -2460,11 +2461,12 @@ void WaImageControl::parseTexture(WaTexture *texture, char *t) {
         else
             texture->addTexture(WaImage_Raised);
         
-        if (! (texture->getTexture() & WaImage_Flat))
+        if (! (texture->getTexture() & WaImage_Flat)) {
             if (strstr(ts, "bevel2"))
                 texture->addTexture(WaImage_Bevel2);
             else
                 texture->addTexture(WaImage_Bevel1);
+        }
         
 #ifdef    INTERLACE
         if (strstr(ts, "interlaced"))

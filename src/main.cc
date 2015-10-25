@@ -49,11 +49,14 @@ int main(int argc, char **argv) {
     int i;
     XEvent e;
     char *__m_wastrdup_tmp;
+    char **save_argv;
 
     options.menufile = options.actionfile = options.stylefile =
         options.rcfile = options.display = NULL;
 
+    save_argv = (typeof(save_argv)) calloc(argc + 1, sizeof(*save_argv));
     for (i = 1; i < argc; i++) {
+        save_argv[i] = argv[i];
         if (! strcmp(argv[i], "--display")) {
             if (i + 1 < argc) options.display = argv[i++ + 1];
             else { cerr << program_name << ": option `" <<
@@ -99,10 +102,11 @@ int main(int argc, char **argv) {
                 argv[i] << "'" << endl; usage(); return 1;
         }
     }
-    
-    Waimea *waimea = new Waimea(argv, &options);
+    save_argv[i] = NULL;
+
+    Waimea *waimea = new Waimea(save_argv, &options);
     waimea->eh->EventLoop(waimea->eh->empty_return_mask, &e);
-    
+
     return 1;
 }
 

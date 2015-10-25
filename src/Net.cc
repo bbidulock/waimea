@@ -432,7 +432,7 @@ void NetHandler::SetState(WaWindow *ww, int newstate) {
  * @param ww WaWindow object
  */
 void NetHandler::GetWmState(WaWindow *ww) {
-    long *data;
+    unsigned long *data;
     bool vert = false, horz = false, shaded = false, title = false,
         handle = false, border = false, decor = false;
     unsigned int i;
@@ -855,7 +855,7 @@ void NetHandler::GetVirtualPos(WaWindow *ww) {
  */
 void NetHandler::GetXaName(WaWindow *ww) {
     char *data = NULL;
-    int status;
+    int status = 0;
     char *__m_wastrdup_tmp;
     
     XGrabServer(display);
@@ -891,7 +891,7 @@ void NetHandler::GetXaName(WaWindow *ww) {
  */
 bool NetHandler::GetNetName(WaWindow *ww) {
     char *data;
-    int status;
+    int status = 0;
     char *__m_wastrdup_tmp;
     
     XGrabServer(display);
@@ -1306,7 +1306,7 @@ void NetHandler::GetXRootPMapId(WaScreen *ws) {
  * @param ww WaWindow object
  */
 void NetHandler::GetWmType(WaWindow *ww) {
-    long *data;
+    unsigned long *data;
     int status;
     
     XGrabServer(display);
@@ -1657,7 +1657,7 @@ void NetHandler::SetMergeOrder(WaWindow *ww) {
  * @param ww WaWindow object
  */
 void NetHandler::GetMergeOrder(WaWindow *ww) {
-    long *data;
+    unsigned long *data;
 
     XGrabServer(display);
     if (validatedrawable(ww->id)) {
@@ -1727,7 +1727,7 @@ void NetHandler::SetMergeAtfront(WaWindow *ww, Window win) {
  * @param ww WaWindow object
  */
 void NetHandler::GetMergeAtfront(WaWindow *ww) {
-    long *data;
+    unsigned long *data;
 
     XGrabServer(display);
     if (validatedrawable(ww->id)) {

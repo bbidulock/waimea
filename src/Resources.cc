@@ -2947,7 +2947,7 @@ bool StrComp::Comp(char *s) {
  * @return Trimmed string
  */
 char *strtrim(char *s) {
-    for (; *s != '\0' && *s == ' ' || *s == '\t' || *s == '\n'; s++);
+    for (; *s != '\0' && (*s == ' ' || *s == '\t' || *s == '\n'); s++);
     if (*s == '\0') return s;
     while (s[strlen(s) - 1] == ' ' ||
            s[strlen(s) - 1] == '\t' ||

@@ -1017,7 +1017,7 @@ void WaMenuItem::Draw(Drawable drawable, bool frame, int y) {
     }
     if (! drawable) XClearWindow(menu->display, id);
 
-    Pixmap p_tmp;
+    Pixmap p_tmp = 0;
     if (drawable && !frame) {
         p_tmp = XCreatePixmap(menu->display, menu->wascreen->id,
                               menu->width, height,
@@ -1349,7 +1349,7 @@ void WaMenuItem::Exec(XEvent *, WaAction *) {
 void WaMenuItem::Func(XEvent *e, WaAction *ac) {
     map<Window, WindowObject *>::iterator it;
     Window func_win;
-    char *tmp_param;
+    char *tmp_param = NULL;
 
     if (! in_window) return;
     if (cb) UpdateCBox();
@@ -2026,7 +2026,6 @@ MergeMenu::MergeMenu(int mtype, const char *l, const char *n) : WaMenu(n) {
  * @param ign Window with this id should not be included in menu
  */
 void MergeMenu::Build(WaScreen *wascreen, Window ign) {
-    WaWindow *ww;
     WaMenuItem *m;
     wawindow_list = &wascreen->wawindow_list;
     
@@ -2035,7 +2034,8 @@ void MergeMenu::Build(WaScreen *wascreen, Window ign) {
     list<WaWindow *>::iterator it = wawindow_list->begin();
     for (; it != wawindow_list->end() &&
              ((WaWindow *) *it)->flags.tasklist != true &&
-             ((WaWindow *) *it)->id != ign && !ww->master; ++it);
+             ((WaWindow *) *it)->id != ign &&
+            !((WaWindow *) *it)->master; ++it);
     
     if (it == wawindow_list->end()) return;
 
@@ -2044,7 +2044,7 @@ void MergeMenu::Build(WaScreen *wascreen, Window ign) {
     AddItem(m);
     
     for (; it != wawindow_list->end(); ++it) {
-        ww = (WaWindow *) *it;
+        WaWindow *ww = (WaWindow *) *it;
         if (ww->flags.tasklist && ww->id != ign && !ww->master) {
             m = new WaMenuItem(ww->name);
             m->type = MenuItemType;

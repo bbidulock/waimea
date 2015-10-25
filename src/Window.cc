@@ -1758,11 +1758,11 @@ void WaWindow::Move(XEvent *e, WaAction *) {
  
  */
 void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
-    int px, py, prelx, prely, i;
+    int px = 0, py = 0, prelx, prely, i = 0;
     int sw = attrib.width;
     int sh = attrib.height;
-    unsigned int ui;
-    Window wd;
+    unsigned int ui = 0;
+    Window wd = 0;
     XEvent ed;
     list<XEvent *> maprequest_list;
   
@@ -1792,8 +1792,8 @@ void WaWindow::MoveOpaque(XEvent *e, WaAction *) {
 bool WaWindow::_MoveOpaque(XEvent *e, int saved_w, int saved_h, int px,
                            int py, list<XEvent *> *maprequest_list) {
     WaWindow *w;
-    XEvent event, *map_ev;
-    int sx, sy, nx, ny, mnx, mny;
+    XEvent event = { 0, }, *map_ev;
+    int sx, sy, nx, ny, mnx = 0, mny = 0;
 
     if (master && mergemode == NullMergeType) w = master;
     else w = this;
@@ -4404,7 +4404,7 @@ void WaChildWindow::Render(void) {
     Pixmap pixmap = None;
 
 #ifdef RENDER
-    Pixmap xpixmap;
+    Pixmap xpixmap = 0;
     Window wd;
     int pos_x;
     int pos_y;
